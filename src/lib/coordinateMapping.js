@@ -7,7 +7,6 @@
 
 export const coordinateMapping = {
   1: {
-    
       "tolentino-hall": {
           targetX: 1030, targetY: 260, pathData: "M 1030 1000 L 1030 300",
           style: { width: 940, height: 180, left: 370, top: 120 }, cssClass: "theme-amber"
@@ -193,19 +192,15 @@ export const coordinateMapping = {
 };
 
 // Function to merge coordinate data with database data
-export const mergeOfficeData = (coordinateData, databaseData) => {
+export const mergeOfficeData = (coords, dbData) => {
   const merged = {};
   
-  Object.keys(coordinateData).forEach(structural => {
+  // Siguraduhin na 'floor' ay defined dito
+  Object.keys(coords).forEach((floor) => { 
     merged[floor] = {};
-    
-    Object.keys(coordinateData[floor]).forEach(officeKey => {
-      merged[floor][officeKey] = {
-        // Start with coordinate/style data (always from frontend)
-        ...coordinateData[floor][officeKey],
-        // Merge with database data if available (dynamic fields)
-        ...(databaseData[floor] && databaseData[floor][officeKey] ? databaseData[floor][officeKey] : {})
-      };
+    Object.keys(coords[floor]).forEach((officeKey) => {
+      // Dito mo i-merge ang data
+      merged[floor][officeKey] = { ...coords[floor][officeKey], ...dbData[officeKey] };
     });
   });
   
