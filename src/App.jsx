@@ -39,8 +39,6 @@ export default function App() {
 
   // --- AUTOMATIC PDF GENERATOR LOGIC ---
   const [searchParams] = useSearchParams();
-  
-  // BAGONG STATES PARA SA MOBILE DOWNLOAD SCREEN
   const [isDownloadMode, setIsDownloadMode] = useState(false);
   const [downloadStatus, setDownloadStatus] = useState("Preparing your PDF...");
 
@@ -68,9 +66,7 @@ export default function App() {
   useEffect(() => {
     const downloadKey = searchParams.get('download');
     if (downloadKey) {
-      // PAG NA-DETECT YUNG LINK, I-ON ANG DOWNLOAD MODE PARA HINDI LUMABAS YUNG MAP
       setIsDownloadMode(true);
-      
       if (Object.keys(liveOfficeDatabase).length > 0) {
         const flatOffices = getFlatOffices();
         const targetOffice = flatOffices.find(o => o.key === downloadKey);
@@ -182,11 +178,7 @@ export default function App() {
     const flatList = [];
     Object.entries(liveOfficeDatabase).forEach(([floorNum, floorOffices]) => {
       Object.entries(floorOffices).forEach(([dbKey, officeDetails]) => {
-        flatList.push({
-          key: dbKey,
-          floor: parseInt(floorNum),
-          ...officeDetails
-        });
+        flatList.push({ key: dbKey, floor: parseInt(floorNum), ...officeDetails });
       });
     });
     return flatList;
@@ -199,18 +191,13 @@ export default function App() {
   const selectedOffice = selectedOfficeKey ? liveOfficeDatabase[currentFloor]?.[selectedOfficeKey] : null;
 
   const handleVirtualKeyPress = (key) => {
-    if (key === 'BACKSPACE') {
-      setSearchQuery(prev => prev.slice(0, -1));
-    } else if (key === 'SPACE') {
-      setSearchQuery(prev => prev + ' ');
-    } else if (key === 'CLEAR') {
-      setSearchQuery('');
-    } else {
-      setSearchQuery(prev => prev + key);
-    }
+    if (key === 'BACKSPACE') setSearchQuery(prev => prev.slice(0, -1));
+    else if (key === 'SPACE') setSearchQuery(prev => prev + ' ');
+    else if (key === 'CLEAR') setSearchQuery('');
+    else setSearchQuery(prev => prev + key);
   };
 
-  // --- BAGONG UI PARA SA PHONE KAPAG NAG-SCAN ---
+  // --- MOBILE DOWNLOAD MODE UI ---
   if (isDownloadMode) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#F8FAFC', color: '#0F172A', padding: '20px', textAlign: 'center' }}>
@@ -223,43 +210,15 @@ export default function App() {
     );
   }
 
-  // --- EXISTING LOADING AT KIOSK UI ---
-  if (isLoading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#F8FAFC', color: '#0F172A', fontSize: '2rem', fontWeight: 'bold' }}>
-        Initializing Kiosk Systems...
-      </div>
-    );
-  }
-
-  if (appState === 'welcome') {
-    return <WelcomeScreen onStart={() => setAppState('dashboard')} />;
-  }
-
+  if (isLoading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#F8FAFC', color: '#0F172A', fontSize: '2rem', fontWeight: 'bold' }}>Initializing Kiosk Systems...</div>;
+  if (appState === 'welcome') return <WelcomeScreen onStart={() => setAppState('dashboard')} />;
+  
   if (appState === 'dashboard') {
-    return (
-      <DashboardScreen 
-        tagaytaySeal={tagaytaySeal}
-        onNavigateToDirectory={() => setAppState('home')}
-        onNavigateToMap={() => setAppState('map')}
-        onQuickRoute={(floor, dbKey) => {
-          setAppState('map');
-          handleSelectOffice(dbKey, floor);
-        }}
-        theme={theme} setTheme={setTheme} lang={lang} setLang={setLang} textSize={textSize} setTextSize={setTextSize}
-      />
-    );
+    return <DashboardScreen tagaytaySeal={tagaytaySeal} onNavigateToDirectory={() => setAppState('home')} onNavigateToMap={() => setAppState('map')} onQuickRoute={(floor, dbKey) => { setAppState('map'); handleSelectOffice(dbKey, floor); }} theme={theme} setTheme={setTheme} lang={lang} setLang={setLang} textSize={textSize} setTextSize={setTextSize} />;
   }
 
   if (appState === 'home') {
-    return (
-      <DirectoryScreen
-        theme={theme} setTheme={setTheme} lang={lang} setLang={setLang} textSize={textSize} setTextSize={setTextSize}
-        setAppState={setAppState} tagaytaySeal={tagaytaySeal} time={time} currentFloor={currentFloor}
-        setCurrentFloor={setCurrentFloor} officeDatabase={liveOfficeDatabase} 
-        handleSelectOffice={(key) => handleSelectOffice(key, currentFloor)}
-      />
-    );
+    return <DirectoryScreen theme={theme} setTheme={setTheme} lang={lang} setLang={setLang} textSize={textSize} setTextSize={setTextSize} setAppState={setAppState} tagaytaySeal={tagaytaySeal} time={time} currentFloor={currentFloor} setCurrentFloor={setCurrentFloor} officeDatabase={liveOfficeDatabase} handleSelectOffice={(key) => handleSelectOffice(key, currentFloor)} />;
   }
 
   const isDarkMode = theme === 'dark';
@@ -288,9 +247,7 @@ export default function App() {
         <div className="dir-header-left" onClick={handleLogoTap} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
           <img src={tagaytaySeal} alt="Tagaytay Seal" style={{ width: '65px', height: '65px', borderRadius: '50%', objectFit: 'contain', backgroundColor: 'white', padding: '4px' }} />
           <div className="dir-titles" style={{ marginLeft: '10px' }}>
-            <span className="dir-subtitle" style={{ color: colorPalette.accentText, fontSize: isLarge ? '1.1rem' : '0.9rem', fontWeight: 900, letterSpacing: '1px' }}>
-              {lang === 'EN' ? 'REPUBLIC OF THE PHILIPPINES' : 'REPUBLIKA NG PILIPINAS'}
-            </span>
+            <span className="dir-subtitle" style={{ color: colorPalette.accentText, fontSize: isLarge ? '1.1rem' : '0.9rem', fontWeight: 900, letterSpacing: '1px' }}>{lang === 'EN' ? 'REPUBLIC OF THE PHILIPPINES' : 'REPUBLIKA NG PILIPINAS'}</span>
             <h2 className="dir-title" style={{ color: colorPalette.primaryText, fontSize: isLarge ? '2rem' : '1.7rem', fontWeight: 900, margin: 0 }}>Tagaytay City Hall</h2>
           </div>
         </div>
@@ -307,21 +264,11 @@ export default function App() {
 
       <div className="map-workspace" style={{ position: 'relative', display: 'flex', flexGrow: 1 }}>
         <aside className="map-sidebar" style={{ width: '450px', flexShrink: 0 }}>
-          <button className="back-home-btn" onClick={() => { setAppState('home'); setSearchQuery(""); setShowKeyboard(false); }}>
-            <span>⬅️</span> Back to Directory
-          </button>
+          <button className="back-home-btn" onClick={() => { setAppState('home'); setSearchQuery(""); setShowKeyboard(false); }}><span>⬅️</span> Back to Directory</button>
           
           <div className="sidebar-search-container" style={{ margin: '20px 0', position: 'relative' }}>
             <div style={{ display: 'flex', position: 'relative', alignItems: 'center' }}>
-              <input 
-  type="text" 
-  /* TINANGGAL NATIN ANG readOnly DITO */
-  placeholder={lang === 'EN' ? "🔍 Tap to Search Offices..." : "🔍 Pindutin para maghanap..."}
-  value={searchQuery}
-  onChange={(e) => setSearchQuery(e.target.value)} /* IDINAGDAG ITO PARA GUMANA ANG PHONE KEYBOARD */
-  onClick={() => setShowKeyboard(true)}
-  style={{ width: '100%', padding: '22px 24px', borderRadius: '16px', border: showKeyboard ? '4px solid #4F46E5' : (isDarkMode ? '2px solid #475569' : '2px solid #CBD5E1'), background: isDarkMode ? '#1E293B' : '#FFFFFF', color: colorPalette.primaryText, fontWeight: '800', fontSize: '1.4rem', boxShadow: '0 6px 12px rgba(0,0,0,0.1)', boxSizing: 'border-box', cursor: 'text' }} 
-/>
+              <input type="text" placeholder={lang === 'EN' ? "🔍 Tap to Search Offices..." : "🔍 Pindutin para maghanap..."} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onClick={() => setShowKeyboard(true)} style={{ width: '100%', padding: '22px 24px', borderRadius: '16px', border: showKeyboard ? '4px solid #4F46E5' : (isDarkMode ? '2px solid #475569' : '2px solid #CBD5E1'), background: isDarkMode ? '#1E293B' : '#FFFFFF', color: colorPalette.primaryText, fontWeight: '800', fontSize: '1.4rem', boxShadow: '0 6px 12px rgba(0,0,0,0.1)', boxSizing: 'border-box', cursor: 'text' }} />
               {searchQuery && (
                 <button onClick={(e) => { e.stopPropagation(); setSearchQuery(""); }} style={{ position: 'absolute', right: '20px', background: '#E2E8F0', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: '#1E293B', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900' }}>✕</button>
               )}
@@ -360,22 +307,37 @@ export default function App() {
             )}
           </div>
 
-          {selectedOffice && selectedOffice.requirements?.length > 0 && (
-            <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '0.9rem', fontWeight: '800', textAlign: 'center', color: isDarkMode ? '#94A3B8' : '#475569' }}>
-                📱 I-scan para i-download ang<br/>Requirements (PDF)
-              </span>
-              <div style={{ padding: '10px', backgroundColor: '#FFFFFF', borderRadius: '8px', border: `2px dashed ${isDarkMode ? '#475569' : '#CBD5E1'}` }}>
-                <QRCodeSVG 
-                  value={`${window.location.origin}/?download=${selectedOfficeKey}`} 
-                  size={120} 
-                  bgColor={"#ffffff"}
-                  fgColor={"#0F172A"}
-                />
+          {/* DITO NA ANG BAGO: REQUIREMENTS LIST + QR CODE */}
+          {selectedOffice && selectedOffice.requirements && selectedOffice.requirements.length > 0 && (
+            <div className="requirements-box" style={{ marginTop: '20px', background: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : '#FFFBEB', border: `1px solid ${isDarkMode ? 'rgba(245, 158, 11, 0.3)' : '#FDE68A'}`, padding: '20px', borderRadius: '16px', color: colorPalette.primaryText }}>
+              
+              {/* HEADER NG REQUIREMENTS */}
+              <h3 style={{ fontSize: '1.2rem', marginBottom: '12px', color: isDarkMode ? '#F59E0B' : '#D97706', fontWeight: 800 }}>📋 Transaction Requirements:</h3>
+              
+              {/* BULLET POINTS NG REQUIREMENTS (Ito yung nawawala sa screenshot) */}
+              <ul style={{ fontSize: '1.05rem', paddingLeft: '20px', marginBottom: '25px', lineHeight: '1.6' }}>
+                {selectedOffice.requirements.map((req, i) => (
+                  <li key={i} style={{ marginBottom: '6px' }}>{req}</li>
+                ))}
+              </ul>
+              
+              {/* QR CODE BOX */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', background: isDarkMode ? '#1E293B' : '#FFFFFF', padding: '15px', borderRadius: '12px', border: `2px dashed ${isDarkMode ? '#475569' : '#CBD5E1'}`, boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+                <span style={{ fontSize: '0.9rem', fontWeight: '800', textAlign: 'center', color: colorPalette.primaryText }}>
+                  📱 I-scan para i-download ang<br/>Requirements (PDF)
+                </span>
+                <div style={{ padding: '10px', backgroundColor: '#FFFFFF', borderRadius: '8px' }}>
+                  <QRCodeSVG 
+                    value={`${window.location.origin}/?download=${selectedOfficeKey}`} 
+                    size={120} 
+                    bgColor={"#ffffff"}
+                    fgColor={"#0F172A"}
+                  />
+                </div>
               </div>
+
             </div>
           )}
-
         </aside>
 
         <MapScreen 
@@ -414,13 +376,7 @@ export default function App() {
         )}
       </div>
 
-      {showAdmin && (
-        <AdminPanel 
-          officeDatabase={liveOfficeDatabase} 
-          onClose={() => setShowAdmin(false)} 
-          onDataUpdate={() => { fetchKioskData(); }} 
-        />
-      )}
+      {showAdmin && <AdminPanel officeDatabase={liveOfficeDatabase} onClose={() => setShowAdmin(false)} onDataUpdate={() => { fetchKioskData(); }} />}
     </div>
   );
 }
