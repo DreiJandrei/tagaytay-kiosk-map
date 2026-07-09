@@ -192,15 +192,23 @@ export const coordinateMapping = {
 };
 
 // Function to merge coordinate data with database data
+// Function to merge coordinate data with database data
 export const mergeOfficeData = (coords, dbData) => {
   const merged = {};
   
-  // Siguraduhin na 'floor' ay defined dito
   Object.keys(coords).forEach((floor) => { 
     merged[floor] = {};
     Object.keys(coords[floor]).forEach((officeKey) => {
-      // Dito mo i-merge ang data
-      merged[floor][officeKey] = { ...coords[floor][officeKey], ...dbData[officeKey] };
+      
+      // ITO YUNG NAWALA: Kailangan nating kunin ang data base sa "floor" bago yung "officeKey"
+      const dbOfficeInfo = dbData[floor] ? dbData[floor][officeKey] : {};
+      
+      // Pagsasamahin na ang coordinates (hugis sa mapa) at dbOfficeInfo (text/details)
+      merged[floor][officeKey] = { 
+        ...coords[floor][officeKey], 
+        ...dbOfficeInfo 
+      };
+      
     });
   });
   
