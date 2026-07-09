@@ -371,4 +371,22 @@ img { max-width: 100%; }
     .kiosk-virtual-keyboard {
         display: none !important;
     }
+    /* 6. WELCOME SCREEN MOBILE FIXES (ZOOM OUT EFFECT) */
+    .welcome-seal {
+        width: 120px !important;
+        height: 120px !important;
+    }
+    .welcome-title {
+        font-size: 2.8rem !important; /* Pinaliit mula 5.5rem */
+        line-height: 1.2 !important;
+    }
+    .welcome-subtitle {
+        font-size: 1.1rem !important; /* Pinaliit mula 1.8rem */
+        letter-spacing: 2px !important;
+        margin-bottom: 30px !important;
+    }
+    .touch-prompt {
+        font-size: 1.1rem !important;
+        padding: 14px 30px !important;
+    }
 }
