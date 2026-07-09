@@ -193,6 +193,7 @@ export const coordinateMapping = {
 
 // Function to merge coordinate data with database data
 // Function to merge coordinate data with database data
+// Function to merge coordinate data with database data
 export const mergeOfficeData = (coords, dbData) => {
   const merged = {};
   
@@ -200,10 +201,13 @@ export const mergeOfficeData = (coords, dbData) => {
     merged[floor] = {};
     Object.keys(coords[floor]).forEach((officeKey) => {
       
-      // ITO YUNG NAWALA: Kailangan nating kunin ang data base sa "floor" bago yung "officeKey"
-      const dbOfficeInfo = dbData[floor] ? dbData[floor][officeKey] : {};
-      
-      // Pagsasamahin na ang coordinates (hugis sa mapa) at dbOfficeInfo (text/details)
+      // Hahanapin natin yung text data sa loob ng tamang floor group.
+      // Kung sakaling walang mahanap, gagamit tayo ng {} para hindi mag-crash.
+      const dbOfficeInfo = (dbData && dbData[floor] && dbData[floor][officeKey]) 
+        ? dbData[floor][officeKey] 
+        : {};
+
+      // Pagsasamahin na ang coordinates (mapa) at dbOfficeInfo (text/details)
       merged[floor][officeKey] = { 
         ...coords[floor][officeKey], 
         ...dbOfficeInfo 
