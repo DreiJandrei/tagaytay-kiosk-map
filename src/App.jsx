@@ -39,6 +39,10 @@ export default function App() {
 
   // --- AUTOMATIC PDF GENERATOR LOGIC ---
   const [searchParams] = useSearchParams();
+  
+  // BAGONG STATES PARA SA MOBILE DOWNLOAD SCREEN
+  const [isDownloadMode, setIsDownloadMode] = useState(false);
+  const [downloadStatus, setDownloadStatus] = useState("Preparing your PDF...");
 
   const generatePDF = (office) => {
     const doc = new jsPDF();
@@ -63,11 +67,23 @@ export default function App() {
 
   useEffect(() => {
     const downloadKey = searchParams.get('download');
-    if (downloadKey && Object.keys(liveOfficeDatabase).length > 0) {
-      const flatOffices = getFlatOffices();
-      const targetOffice = flatOffices.find(o => o.key === downloadKey);
-      if (targetOffice) {
-        generatePDF(targetOffice);
+    if (downloadKey) {
+      // PAG NA-DETECT YUNG LINK, I-ON ANG DOWNLOAD MODE PARA HINDI LUMABAS YUNG MAP
+      setIsDownloadMode(true);
+      
+      if (Object.keys(liveOfficeDatabase).length > 0) {
+        const flatOffices = getFlatOffices();
+        const targetOffice = flatOffices.find(o => o.key === downloadKey);
+        
+        if (targetOffice) {
+          setDownloadStatus(`Downloading requirements for ${targetOffice.title}...`);
+          generatePDF(targetOffice);
+          setTimeout(() => {
+             setDownloadStatus("✅ PDF Downloaded! You can now close this tab.");
+          }, 1500);
+        } else {
+          setDownloadStatus("❌ Office not found.");
+        }
       }
     }
   }, [searchParams, liveOfficeDatabase]);
@@ -194,6 +210,20 @@ export default function App() {
     }
   };
 
+  // --- BAGONG UI PARA SA PHONE KAPAG NAG-SCAN ---
+  if (isDownloadMode) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#F8FAFC', color: '#0F172A', padding: '20px', textAlign: 'center' }}>
+        <div style={{ fontSize: '4rem', marginBottom: '15px' }}>📄</div>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>{downloadStatus}</h2>
+        {downloadStatus.includes('✅') && (
+          <p style={{ marginTop: '10px', color: '#64748B' }}>Makikita ang file sa "Downloads" folder ng iyong device.</p>
+        )}
+      </div>
+    );
+  }
+
+  // --- EXISTING LOADING AT KIOSK UI ---
   if (isLoading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#F8FAFC', color: '#0F172A', fontSize: '2rem', fontWeight: 'bold' }}>
@@ -322,7 +352,6 @@ export default function App() {
             )}
           </div>
 
-          {/* DITO YUNG I-ISANG QR CODE NA GAGAMITIN NATIN */}
           {selectedOffice && selectedOffice.requirements?.length > 0 && (
             <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
               <span style={{ fontSize: '0.9rem', fontWeight: '800', textAlign: 'center', color: isDarkMode ? '#94A3B8' : '#475569' }}>
