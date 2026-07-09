@@ -99,15 +99,18 @@ export default function App() {
     const setupKiosk = async () => {
       setIsLoading(true);
       try {
-        console.log("Connecting to Supabase systems...");
         await initializeDatabase(defaultOfficeData);
         await fetchKioskData();
         setIsLoading(false); 
       } catch (error) {
-        console.error("[Kiosk Setup Error] Supabase connection failed:", error);
+        console.error("[Kiosk Setup Error] Failed, using local:", error);
+        
+        // Eto ang "Life Saver" logic:
+        // Siguraduhin na kung mag-error ang API, gagamit lang tayo ng default data
+        // nang hindi nag-e-error sa 'floor' variable.
         const localMergedData = mergeOfficeData(coordinateMapping, defaultOfficeData);
         setLiveOfficeDatabase(localMergedData);
-        setIsLoading(false);
+        setIsLoading(false); // <--- ITO ANG NAGPAPATAPOS SA "Initializing..."
       }
     };
     setupKiosk();
