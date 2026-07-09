@@ -181,9 +181,11 @@ img { max-width: 100%; }
     box-shadow: 0 15px 30px rgba(0,0,0,0.15); 
     border: 1px solid var(--border-subtle-map); 
     /* ITO ANG MAGIC FIX PARA SA IPAD/SAFARI TOUCH BUG */
-    transform: translateZ(1000px) !important; 
-    -webkit-transform: translateZ(1000px) !important; 
+    z-index: 99999 !important; 
+    transform: translateZ(1px) !important; 
+    -webkit-transform: translateZ(1px) !important; 
     pointer-events: auto !important;
+
 }
 .ui-action-btn, .floor-btn { padding: 12px 24px; border-radius: 10px; border: none; background: rgba(128,128,128,0.1); color: var(--text-header-map); font-weight: 800; cursor: pointer; transition: 0.2s; }
 .floor-btn.active { background: #4F46E5; color: white; }
@@ -387,14 +389,14 @@ img { max-width: 100%; }
         max-width: 100% !important; /* Pinipigilan lumagpas sa screen */
         overflow: hidden !important;
     }
-    .floor-selector {
+   .floor-selector {
         top: 15px !important;
         right: 15px !important;
-        /* ISAMA YUNG TRANSLATE Z KAHIT NAKA-SCALE SA MOBILE */
-        transform: scale(0.85) translateZ(1000px) !important;
-        -webkit-transform: scale(0.85) translateZ(1000px) !important;
+        /* Ginawa ring 1px dito */
+        transform: scale(0.85) translateZ(1px) !important;
+        -webkit-transform: scale(0.85) translateZ(1px) !important;
         transform-origin: top right !important;
-        z-index: 9999 !important;
+        z-index: 99999 !important;
     }
 
     /* 5. VIRTUAL KEYBOARD - Itago sa mobile */
