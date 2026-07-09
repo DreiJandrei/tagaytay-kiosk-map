@@ -310,28 +310,30 @@ export default function App() {
           {/* DITO NA ANG BAGO: REQUIREMENTS LIST + QR CODE */}
           {/* DITO NA ANG BAGO: REQUIREMENTS LIST + QR CODE */}
 {/* DITO NA ANG MALINIS NA REQUIREMENTS LIST + QR CODE */}
+{/* DEBUGGING BLOCK - ITO AY PAPASOK KAHIT WALA LAMAN ANG REQUIREMENTS */}
 {selectedOffice && (
-  <div className="requirements-box" style={{ marginTop: '20px', background: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : '#FFFBEB', border: `1px solid ${isDarkMode ? 'rgba(245, 158, 11, 0.3)' : '#FDE68A'}`, padding: '20px', borderRadius: '16px', color: colorPalette.primaryText }}>
+  <div style={{ marginTop: '20px', padding: '20px', border: '2px solid #D97706', borderRadius: '16px', background: '#FFFBEB' }}>
+    <h3 style={{ color: '#D97706', fontWeight: 800 }}>📋 Transaction Requirements (DEBUG):</h3>
     
-    <h3 style={{ fontSize: '1.2rem', marginBottom: '12px', color: isDarkMode ? '#F59E0B' : '#D97706', fontWeight: 800 }}>📋 Transaction Requirements:</h3>
-    
+    {/* DITO NATIN I-PRINT KUNG ANO ANG NAKUKUHA SA DATABASE */}
+    <pre style={{ fontSize: '0.8rem', background: '#eee', padding: '5px' }}>
+      Data: {JSON.stringify(selectedOffice.requirements)}
+    </pre>
+
     {selectedOffice.requirements && selectedOffice.requirements.length > 0 ? (
-      <ul style={{ fontSize: '1.05rem', paddingLeft: '20px', marginBottom: '25px', lineHeight: '1.6' }}>
+      <ul style={{ marginTop: '10px' }}>
         {selectedOffice.requirements.map((req, i) => (
-          <li key={i} style={{ marginBottom: '6px' }}>{req}</li>
+          <li key={i}>{req}</li>
         ))}
       </ul>
     ) : (
-      <p style={{ marginBottom: '20px', fontStyle: 'italic' }}>No requirements listed.</p>
+      <p style={{ marginTop: '10px', color: 'red' }}>WALANG LAMAN ANG DATA SA DATABASE!</p>
     )}
-    
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', background: isDarkMode ? '#1E293B' : '#FFFFFF', padding: '15px', borderRadius: '12px', border: `2px dashed ${isDarkMode ? '#475569' : '#CBD5E1'}`, boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-      <span style={{ fontSize: '0.9rem', fontWeight: '800', textAlign: 'center' }}>
-        📱 I-scan para i-download ang Requirements (PDF)
-      </span>
-      <div style={{ padding: '10px', backgroundColor: '#FFFFFF', borderRadius: '8px' }}>
-        <QRCodeSVG value={`${window.location.origin}/?download=${selectedOfficeKey}`} size={120} />
-      </div>
+
+    {/* QR CODE SA BABA */}
+    <div style={{ marginTop: '20px', textAlign: 'center' }}>
+      <p>I-scan para i-download:</p>
+      <QRCodeSVG value={`${window.location.origin}/?download=${selectedOfficeKey}`} size={100} />
     </div>
   </div>
 )}
