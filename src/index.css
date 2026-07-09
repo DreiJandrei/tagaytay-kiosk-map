@@ -350,17 +350,21 @@ img { max-width: 100%; }
         font-size: 1.5rem !important;
     }
 
-    /* 4. MAP VIEWPORT */
+   /* 4. MAP VIEWPORT & CONTROLS */
     .map-viewport {
         min-height: 70vh !important;
         border-top: 2px solid var(--border-color);
-        width: 100% !important;
+        width: 100vw !important; 
+        max-width: 100% !important; /* Pinipigilan lumagpas sa screen */
+        overflow: hidden !important;
     }
     .floor-selector {
-        top: 15px !important;
-        right: 15px !important;
-        transform: scale(0.85);
-        transform-origin: top right;
+        top: 10px !important;
+        right: 10px !important;
+        transform: scale(0.65) !important; /* Pinaliit para hindi maputol sa kanan */
+        transform-origin: top right !important;
+        z-index: 999 !important;
+        background: rgba(15, 23, 42, 0.6) !important; /* Medyo transparent para kita pa rin yung map */
     }
 
     /* 5. VIRTUAL KEYBOARD - Itago sa mobile */

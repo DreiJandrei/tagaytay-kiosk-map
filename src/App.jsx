@@ -313,7 +313,15 @@ export default function App() {
           
           <div className="sidebar-search-container" style={{ margin: '20px 0', position: 'relative' }}>
             <div style={{ display: 'flex', position: 'relative', alignItems: 'center' }}>
-              <input type="text" readOnly placeholder={lang === 'EN' ? "🔍 Tap to Search Offices..." : "🔍 Pindutin para maghanap..."} value={searchQuery} onClick={() => setShowKeyboard(true)} style={{ width: '100%', padding: '22px 24px', borderRadius: '16px', border: showKeyboard ? '4px solid #4F46E5' : (isDarkMode ? '2px solid #475569' : '2px solid #CBD5E1'), background: isDarkMode ? '#1E293B' : '#FFFFFF', color: colorPalette.primaryText, fontWeight: '800', fontSize: '1.4rem', boxShadow: '0 6px 12px rgba(0,0,0,0.1)', boxSizing: 'border-box', cursor: 'pointer' }} />
+              <input 
+  type="text" 
+  /* TINANGGAL NATIN ANG readOnly DITO */
+  placeholder={lang === 'EN' ? "🔍 Tap to Search Offices..." : "🔍 Pindutin para maghanap..."}
+  value={searchQuery}
+  onChange={(e) => setSearchQuery(e.target.value)} /* IDINAGDAG ITO PARA GUMANA ANG PHONE KEYBOARD */
+  onClick={() => setShowKeyboard(true)}
+  style={{ width: '100%', padding: '22px 24px', borderRadius: '16px', border: showKeyboard ? '4px solid #4F46E5' : (isDarkMode ? '2px solid #475569' : '2px solid #CBD5E1'), background: isDarkMode ? '#1E293B' : '#FFFFFF', color: colorPalette.primaryText, fontWeight: '800', fontSize: '1.4rem', boxShadow: '0 6px 12px rgba(0,0,0,0.1)', boxSizing: 'border-box', cursor: 'text' }} 
+/>
               {searchQuery && (
                 <button onClick={(e) => { e.stopPropagation(); setSearchQuery(""); }} style={{ position: 'absolute', right: '20px', background: '#E2E8F0', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: '#1E293B', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900' }}>✕</button>
               )}
