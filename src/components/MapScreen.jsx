@@ -152,11 +152,15 @@ export default function MapScreen({
           
           {/* FLOOR PLANS PLATES & VECTOR PATH SCHEMATICS */}
           {currentFloor === 1 && <div className="floor-plate" style={{ width: 980, height: 900, left: 350, top: 100 }}></div>}
-          {currentFloor === 2 && (
+         {currentFloor === 2 && (
             <svg width="1400" height="1300" style={{ position: 'absolute', top: 0, left: 0, zIndex: 1, pointerEvents: 'none' }}>
               <g stroke="#9CA3AF" strokeWidth="6" fill="rgba(255,255,255,0.03)">
-                <rect x="30" y="80" width="1000" height="850" rx="4" />
-                <path d="M 30 240 L 80 240 M 120 240 L 190 240 M 230 240 L 310 240 M 350 240 L 430 240 M 470 240 L 66<5 240 M 705 240 L 915 240 M 955 240 L 1030 240" />
+                {/* INAYOS ANG Y AT HEIGHT PARA SAKTO AT KITA ANG BORDER SA TAAS */}
+                <rect x="30" y="70" width="1000" height="860" rx="8" />
+                
+                {/* INAYOS YUNG TYPO NA 66<5 NA SUMIRA SA BUONG LINYA */}
+                <path d="M 30 240 L 80 240 M 120 240 L 190 240 M 230 240 L 310 240 M 350 240 L 430 240 M 470 240 L 665 240 M 705 240 L 915 240 M 955 240 L 1030 240" />
+                
                 <path d="M 30 310 L 380 310" />
                 <path d="M 380 380 L 380 520" />
                 <path d="M 720 490 L 720 280 L 800 280 M 870 280 L 950 280 L 950 490 L 880 490 M 780 490 L 720 490" />
