@@ -7,14 +7,7 @@
 
 export const coordinateMapping = {
   1: {
-    // Sa loob ng coordinateMapping.js (Floor 1 section)
-"floor1-wall": { 
-    type: "grey-wall", 
-    x: 0,    
-    y: 0,    
-    w: 2000, /* GAWING 2000 PARA SIGURADONG BUKAS */
-    h: 2000  /* GAWING 2000 PARA SIGURADONG BUKAS */
-},
+    
       "tolentino-hall": {
           targetX: 1030, targetY: 260, pathData: "M 1030 1000 L 1030 300",
           style: { width: 940, height: 180, left: 370, top: 120 }, cssClass: "theme-amber"
