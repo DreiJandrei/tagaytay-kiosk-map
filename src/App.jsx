@@ -310,18 +310,13 @@ export default function App() {
           {/* DITO NA ANG BAGO: REQUIREMENTS LIST + QR CODE */}
           {selectedOffice && selectedOffice.requirements && selectedOffice.requirements.length > 0 && (
             <div className="requirements-box" style={{ marginTop: '20px', background: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : '#FFFBEB', border: `1px solid ${isDarkMode ? 'rgba(245, 158, 11, 0.3)' : '#FDE68A'}`, padding: '20px', borderRadius: '16px', color: colorPalette.primaryText }}>
-              
-              {/* HEADER NG REQUIREMENTS */}
               <h3 style={{ fontSize: '1.2rem', marginBottom: '12px', color: isDarkMode ? '#F59E0B' : '#D97706', fontWeight: 800 }}>📋 Transaction Requirements:</h3>
-              
-              {/* BULLET POINTS NG REQUIREMENTS (Ito yung nawawala sa screenshot) */}
               <ul style={{ fontSize: '1.05rem', paddingLeft: '20px', marginBottom: '25px', lineHeight: '1.6' }}>
                 {selectedOffice.requirements.map((req, i) => (
                   <li key={i} style={{ marginBottom: '6px' }}>{req}</li>
                 ))}
               </ul>
               
-              {/* QR CODE BOX */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', background: isDarkMode ? '#1E293B' : '#FFFFFF', padding: '15px', borderRadius: '12px', border: `2px dashed ${isDarkMode ? '#475569' : '#CBD5E1'}`, boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
                 <span style={{ fontSize: '0.9rem', fontWeight: '800', textAlign: 'center', color: colorPalette.primaryText }}>
                   📱 I-scan para i-download ang<br/>Requirements (PDF)
@@ -335,7 +330,6 @@ export default function App() {
                   />
                 </div>
               </div>
-
             </div>
           )}
         </aside>
