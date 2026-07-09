@@ -286,67 +286,86 @@ img { max-width: 100%; }
 /* =========================================
    📱 MOBILE RESPONSIVENESS (PHONES & TABLETS)
    ========================================= */
+/* =========================================
+   📱 MOBILE RESPONSIVENESS (PHONES & TABLETS)
+   ========================================= */
 @media (max-width: 1024px) {
-    /* 1. Header Adjustments - Gagawing nakagitna at naka-stack */
+    /* 1. HEADER FIXES - Sapilitang i-wrap para hindi magpatung-patong */
     .dir-header {
-        flex-direction: column;
-        padding: 15px !important;
+        flex-direction: column !important;
         height: auto !important;
-        gap: 15px;
-        text-align: center;
+        min-height: auto !important;
+        padding: 20px 15px !important;
+        gap: 15px !important;
     }
+    
+    /* I-center ang Logo at Title */
     .dir-header-left {
-        flex-direction: column;
+        flex-direction: column !important;
+        text-align: center !important;
+        width: 100% !important;
     }
-    .dir-titles h2 {
-        font-size: 1.5rem !important;
+    .dir-titles {
+        margin-left: 0 !important;
+        margin-top: 10px !important;
     }
-    .dir-header > div:nth-child(2) {
-        flex-wrap: wrap;
-        justify-content: center;
+    .dir-title {
+        font-size: 1.6rem !important;
     }
 
-    /* 2. Map Workspace - Ilalagay sa itaas ang sidebar, sa ibaba ang map */
+    /* 2. BUTTONS CONTAINER FIX - Hayaan silang bumaba kung kulang sa space */
+    .dir-header > div:last-child {
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        width: 100% !important;
+        gap: 10px !important;
+    }
+
+    /* Paliitin ang mismong buttons para magkasya sa phone */
+    .dir-header button, .dir-header .dir-clock {
+        height: 45px !important;
+        padding: 0 18px !important;
+        font-size: 1rem !important;
+        border-radius: 12px !important; /* Tanggalin ang pagka-bilog para mas malinis */
+        width: auto !important;
+    }
+
+    /* 3. SIDEBAR & SEARCH BAR FIXES */
     .map-workspace {
         flex-direction: column !important;
     }
     .map-sidebar {
         width: 100% !important;
-        max-height: 45vh; /* Kalahati lang ng screen ang sakop ng sidebar sa phone */
+        height: auto !important;
+        max-height: none !important;
+        padding: 20px !important;
         border-right: none !important;
-        border-bottom: 2px solid var(--border-color);
-        padding: 20px !important;
+        box-sizing: border-box !important;
     }
+    .sidebar-search-container input {
+        padding: 16px !important;
+        font-size: 1.1rem !important;
+        border-radius: 12px !important;
+    }
+    .destination-card h1 {
+        font-size: 1.5rem !important;
+    }
+
+    /* 4. MAP VIEWPORT - Ilagay sa ilalim ng sidebar nang maayos */
     .map-viewport {
-        min-height: 55vh; /* Yung natirang kalahati ng screen ay para sa map */
+        min-height: 60vh !important;
+        border-top: 2px solid var(--border-color);
+        width: 100% !important;
+    }
+    .floor-selector {
+        top: 15px !important;
+        right: 15px !important;
+        transform: scale(0.85);
+        transform-origin: top right;
     }
 
-    /* 3. Directory at Dashboard Cards - Isang column na lang para hindi siksikan */
-    .dir-grid {
-        grid-template-columns: 1fr !important;
-    }
-    .dir-content > div {
-        flex-direction: column;
-    }
-    .dir-card {
-        min-width: 100% !important;
-        padding: 20px !important;
-    }
-
-    /* 4. Welcome Screen - Lilitan ang font size */
-    .welcome-title {
-        font-size: 3rem !important;
-    }
-    .welcome-subtitle {
-        font-size: 1.2rem !important;
-    }
-    .touch-prompt {
-        padding: 12px 30px !important;
-        font-size: 1.2rem !important;
-    }
-
-    /* 5. Virtual Keyboard - Itatago sa mobile kasi may sariling keyboard ang phone */
+    /* 5. VIRTUAL KEYBOARD - Itago para built-in keyboard ng phone ang lumabas */
     .kiosk-virtual-keyboard {
-        display: none !important; 
+        display: none !important;
     }
 }
