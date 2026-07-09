@@ -10,10 +10,10 @@ export const coordinateMapping = {
     // Sa loob ng coordinateMapping.js (Floor 1 section)
 "floor1-wall": { 
     type: "grey-wall", 
-    x: 10,    // I-adjust kung kailangan i-center
-    y: 10,    // I-adjust kung kailangan i-center
-    w: 1400,  // GAWIN MONG MAS MALAKI (e.g., 1400)
-    h: 1200   // GAWIN MONG MAS MALAKI (e.g., 1200)
+    x: 0,    
+    y: 0,    
+    w: 2000, /* GAWING 2000 PARA SIGURADONG BUKAS */
+    h: 2000  /* GAWING 2000 PARA SIGURADONG BUKAS */
 },
       "tolentino-hall": {
           targetX: 1030, targetY: 260, pathData: "M 1030 1000 L 1030 300",
