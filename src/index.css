@@ -125,7 +125,7 @@ img { max-width: 100%; }
 :root {
     --bg-header-map: #0F172A;
     --text-header-map: #FFFFFF;
-    --text-muted-map: #94A3B8; /* Added for dark mode subtitle */
+    --text-muted-map: #94A3B8;
     --bg-sidebar-map: #0B1120;
     --border-subtle-map: rgba(255, 255, 255, 0.1);
     --bg-map-area: #0F172A;
@@ -135,7 +135,7 @@ img { max-width: 100%; }
 .light-theme {
     --bg-header-map: #FFFFFF;
     --text-header-map: #0F172A;
-    --text-muted-map: #64748B; /* Added for light mode subtitle */
+    --text-muted-map: #64748B;
     --bg-sidebar-map: #FFFFFF;
     --border-subtle-map: rgba(0, 0, 0, 0.05);
     --bg-map-area: #F8FAFC;
@@ -251,8 +251,6 @@ img { max-width: 100%; }
 .legend-color { width: 14px; height: 14px; border-radius: 4px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.2); }
 
 /* EXTRA COLORS FOR LEGEND */
-/* EXTRA COLORS FOR LEGEND */
-/* EXTRA COLORS FOR LEGEND */
 .theme-infra { background: linear-gradient(135deg, #b25000, #7a3600) !important; color: white !important; }
 .theme-finance { background: linear-gradient(135deg, #0c6046, #063828) !important; color: white !important; }
 .theme-halls { background: linear-gradient(135deg, #bd4920, #802e11) !important; color: white !important; }
@@ -266,31 +264,40 @@ img { max-width: 100%; }
   font-weight: 900 !important;
   text-shadow: 1px 1px 4px rgba(0,0,0,0.8) !important;
 }
-/* =========================================
-   GREY WALLS (ARCHITECTURAL OUTLINE)
-   ========================================= */
+
 /* =========================================
    GREY WALLS (ARCHITECTURAL OUTLINE)
    ========================================= */
 .grey-wall {
     position: absolute;
-    border: 3px solid rgba(255, 255, 255, 0.15); /* Soft transparent grey outline */
+    border: 3px solid rgba(255, 255, 255, 0.15);
     border-radius: 12px;
     background: transparent;
     pointer-events: none;
-    z-index: 1; /* Para nasa likod lang ng mga boxes */
+    z-index: 1; 
 }
 .light-theme .grey-wall {
     border-color: rgba(0, 0, 0, 0.15);
 }
-/* =========================================
-   📱 MOBILE RESPONSIVENESS (PHONES & TABLETS)
-   ========================================= */
+
 /* =========================================
    📱 MOBILE RESPONSIVENESS (PHONES & TABLETS)
    ========================================= */
 @media (max-width: 1024px) {
-    /* 1. HEADER FIXES - Sapilitang i-wrap para hindi magpatung-patong */
+    /* 1. TANGGALIN ANG SCROLL LOCK SA MOBILE */
+    .map-screen-container {
+        height: auto !important;
+        min-height: 100vh !important;
+        overflow-y: auto !important; /* Payagan mag-scroll */
+        overflow-x: hidden !important;
+    }
+    .map-workspace {
+        height: auto !important;
+        overflow: visible !important;
+        flex-direction: column !important;
+    }
+
+    /* 2. HEADER FIXES */
     .dir-header {
         flex-direction: column !important;
         height: auto !important;
@@ -298,8 +305,6 @@ img { max-width: 100%; }
         padding: 20px 15px !important;
         gap: 15px !important;
     }
-    
-    /* I-center ang Logo at Title */
     .dir-header-left {
         flex-direction: column !important;
         text-align: center !important;
@@ -312,35 +317,29 @@ img { max-width: 100%; }
     .dir-title {
         font-size: 1.6rem !important;
     }
-
-    /* 2. BUTTONS CONTAINER FIX - Hayaan silang bumaba kung kulang sa space */
     .dir-header > div:last-child {
         flex-wrap: wrap !important;
         justify-content: center !important;
         width: 100% !important;
         gap: 10px !important;
     }
-
-    /* Paliitin ang mismong buttons para magkasya sa phone */
     .dir-header button, .dir-header .dir-clock {
         height: 45px !important;
         padding: 0 18px !important;
         font-size: 1rem !important;
-        border-radius: 12px !important; /* Tanggalin ang pagka-bilog para mas malinis */
+        border-radius: 12px !important;
         width: auto !important;
     }
 
     /* 3. SIDEBAR & SEARCH BAR FIXES */
-    .map-workspace {
-        flex-direction: column !important;
-    }
     .map-sidebar {
         width: 100% !important;
         height: auto !important;
-        max-height: none !important;
+        max-height: none !important; /* Tanggalin ang limit sa taas ng sidebar */
         padding: 20px !important;
         border-right: none !important;
         box-sizing: border-box !important;
+        overflow: visible !important;
     }
     .sidebar-search-container input {
         padding: 16px !important;
@@ -351,9 +350,9 @@ img { max-width: 100%; }
         font-size: 1.5rem !important;
     }
 
-    /* 4. MAP VIEWPORT - Ilagay sa ilalim ng sidebar nang maayos */
+    /* 4. MAP VIEWPORT */
     .map-viewport {
-        min-height: 60vh !important;
+        min-height: 70vh !important;
         border-top: 2px solid var(--border-color);
         width: 100% !important;
     }
@@ -364,7 +363,7 @@ img { max-width: 100%; }
         transform-origin: top right;
     }
 
-    /* 5. VIRTUAL KEYBOARD - Itago para built-in keyboard ng phone ang lumabas */
+    /* 5. VIRTUAL KEYBOARD - Itago sa mobile */
     .kiosk-virtual-keyboard {
         display: none !important;
     }
