@@ -7,6 +7,14 @@
 
 export const coordinateMapping = {
   1: {
+    // Sa loob ng coordinateMapping.js (Floor 1 section)
+"floor1-wall": { 
+    type: "grey-wall", 
+    x: 10,    // I-adjust kung kailangan i-center
+    y: 10,    // I-adjust kung kailangan i-center
+    w: 1400,  // GAWIN MONG MAS MALAKI (e.g., 1400)
+    h: 1200   // GAWIN MONG MAS MALAKI (e.g., 1200)
+},
       "tolentino-hall": {
           targetX: 1030, targetY: 260, pathData: "M 1030 1000 L 1030 300",
           style: { width: 940, height: 180, left: 370, top: 120 }, cssClass: "theme-amber"
@@ -195,7 +203,7 @@ export const coordinateMapping = {
 export const mergeOfficeData = (coordinateData, databaseData) => {
   const merged = {};
   
-  Object.keys(coordinateData).forEach(floor => {
+  Object.keys(coordinateData).forEach(structural => {
     merged[floor] = {};
     
     Object.keys(coordinateData[floor]).forEach(officeKey => {

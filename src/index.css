@@ -301,11 +301,11 @@ img { max-width: 100%; }
 /* GREY WALLS - SAPILITANG IPALABAS SA ITAAS NG GRID */
 .grey-wall {
     position: absolute !important;
-    border: 3px solid rgba(128, 128, 128, 0.8) !important; /* Mas matingkad na kulay */
-    border-radius: 12px !important;
+    border: 4px solid #94A3B8 !important; /* Ginawang mas makapal na grey */
+    border-radius: 16px !important;
     background: transparent !important;
     pointer-events: none !important;
-    z-index: 99 !important; /* Pinakamataas para hindi matakpan */
+    z-index: 5 !important; /* Sakto lang para nasa likod ng kwarto pero kita sa grid */
 }
 .light-theme .grey-wall {
     border-color: rgba(0, 0, 0, 0.4) !important;
