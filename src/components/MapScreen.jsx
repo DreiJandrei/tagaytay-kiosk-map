@@ -89,14 +89,14 @@ export default function MapScreen({
       onTouchEnd={handleDragEnd}
     >
       {/* MAP LEGEND */}
-      <div className="map-legend" style={{ position: 'absolute', top: 30, left: 30, background: 'rgba(15,23,42,0.85)', padding: '15px 20px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', color: 'white', zIndex: 100, pointerEvents: 'none' }}>
-        <div style={{ fontSize: '0.85rem', fontWeight: 800, marginBottom: 10, color: '#94A3B8' }}>MAP LEGEND</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, fontSize: '0.8rem', fontWeight: 600 }}><span style={{ width: 14, height: 14, borderRadius: 4, background: '#06B6D4' }}></span> Public Relations & Tourism</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, fontSize: '0.8rem', fontWeight: 600 }}><span style={{ width: 14, height: 14, borderRadius: 4, background: '#4f46e5' }}></span> Executive & Admin / Legal</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, fontSize: '0.8rem', fontWeight: 600 }}><span style={{ width: 14, height: 14, borderRadius: 4, background: '#0c6046' }}></span> Finance & Internal Audit</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, fontSize: '0.8rem', fontWeight: 600 }}><span style={{ width: 14, height: 14, borderRadius: 4, background: '#4338ca' }}></span> Office of the Mayor</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, fontSize: '0.8rem', fontWeight: 600 }}><span style={{ width: 14, height: 14, borderRadius: 4, background: '#911e1f' }}></span> Security & Support Services</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, fontSize: '0.8rem', fontWeight: 600 }}><span style={{ width: 14, height: 14, borderRadius: 4, background: '#c2410c' }}></span> Public Halls & Events</div>
+      <div className="map-legend" style={{ position: 'absolute', top: '30px', left: '30px', bottom: 'auto', background: 'rgba(15,23,42,0.85)', padding: '15px 20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', color: 'white', zIndex: 100, pointerEvents: 'none', height: 'fit-content', width: 'fit-content' }}>
+        <div style={{ fontSize: '0.85rem', fontWeight: 800, marginBottom: '10px', color: '#94A3B8' }}>MAP LEGEND</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', fontSize: '0.8rem', fontWeight: 600 }}><span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#06B6D4' }}></span> Public Relations & Tourism</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', fontSize: '0.8rem', fontWeight: 600 }}><span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#4f46e5' }}></span> Executive & Admin / Legal</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', fontSize: '0.8rem', fontWeight: 600 }}><span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#0c6046' }}></span> Finance & Internal Audit</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', fontSize: '0.8rem', fontWeight: 600 }}><span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#4338ca' }}></span> Office of the Mayor</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', fontSize: '0.8rem', fontWeight: 600 }}><span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#911e1f' }}></span> Security & Support Services</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', fontSize: '0.8rem', fontWeight: 600 }}><span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#c2410c' }}></span> Public Halls & Events</div>
       </div>
 
       {/* CANVAS ADJUSTMENT CONTROLS */}
@@ -145,7 +145,7 @@ export default function MapScreen({
             <svg width="1400" height="1300" style={{ position: 'absolute', top: 0, left: 0, zIndex: 1, pointerEvents: 'none' }}>
               <g stroke="#9CA3AF" strokeWidth="8" fill="transparent" strokeLinecap="round">
                 <rect x="30" y="80" width="1000" height="850" rx="12" />
-                <path d="M 30 240 L 1030 240" />
+t pu                <path d="M 30 240 L 1030 240" />
                 <path d="M 30 310 L 380 310" />
                 <path d="M 380 380 L 380 520" />
                 <path d="M 720 490 L 720 280 L 800 280 M 870 280 L 950 280 L 950 490 L 880 490 M 780 490 L 720 490" />
