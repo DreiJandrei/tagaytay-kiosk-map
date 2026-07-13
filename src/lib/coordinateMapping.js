@@ -7,6 +7,23 @@
 
 export const coordinateMapping = {
   1: {
+      "elevator-up": {
+          targetX: 1040, targetY: 710,
+          pathData: "M 1030 1000 L 1030 740 L 1040 740 L 1040 710",
+          style: { display: 'none' },
+          isDirectionOnly: true,
+          title: "Elevator to Upper Floors",
+          badge: "Vertical Transport"
+      },
+      "stairs-up": {
+          targetX: 450, targetY: 630,
+          pathData: "M 1030 1000 L 1030 740 L 500 740 L 500 630 L 450 630",
+          style: { display: 'none' },
+          isDirectionOnly: true,
+          title: "Stairs to Upper Floors",
+          badge: "Vertical Transport"
+      },
+
       "tolentino-hall": {
           targetX: 1030, targetY: 260, pathData: "M 1030 1000 L 1030 300",
           style: { width: 940, height: 180, left: 370, top: 120 }, cssClass: "theme-amber"

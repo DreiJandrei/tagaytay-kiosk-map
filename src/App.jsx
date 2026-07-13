@@ -38,6 +38,7 @@ export default function App() {
   // BAGO: SMART ROUTING STATES
   const [routeStep, setRouteStep] = useState('idle'); 
   const [destinationData, setDestinationData] = useState(null);
+  const [transportMethod, setTransportMethod] = useState('elevator'); // Natatandaan kung anong sinakyan
 
   const [searchParams] = useSearchParams();
   const [isDownloadMode, setIsDownloadMode] = useState(false);
@@ -60,7 +61,6 @@ export default function App() {
     } else {
       doc.text("No specific requirements listed.", 25, 60);
     }
-    
     doc.save(`${office.title}_Requirements.pdf`);
   };
 
@@ -71,13 +71,10 @@ export default function App() {
       if (Object.keys(liveOfficeDatabase).length > 0) {
         const flatOffices = getFlatOffices();
         const targetOffice = flatOffices.find(o => o.key === downloadKey);
-        
         if (targetOffice) {
           setDownloadStatus(`Downloading requirements for ${targetOffice.title}...`);
           generatePDF(targetOffice);
-          setTimeout(() => {
-             setDownloadStatus("✅ PDF Downloaded! You can now close this tab.");
-          }, 1500);
+          setTimeout(() => { setDownloadStatus("✅ PDF Downloaded! You can now close this tab."); }, 1500);
         } else {
           setDownloadStatus("❌ Office not found.");
         }
@@ -149,7 +146,6 @@ export default function App() {
       window.addEventListener('click', resetTimer);
       resetTimer();
     }
-
     return () => {
       clearTimeout(timeout);
       window.removeEventListener('mousemove', resetTimer);
@@ -159,16 +155,10 @@ export default function App() {
   }, [appState]);
 
   const handleLogoTap = () => {
-    if (secretClicks + 1 >= 5) {
-      setShowAdmin(true);
-      setSecretClicks(0);
-    } else {
-      setSecretClicks(prev => prev + 1);
-      setTimeout(() => setSecretClicks(0), 3000); 
-    }
+    if (secretClicks + 1 >= 5) { setShowAdmin(true); setSecretClicks(0); } 
+    else { setSecretClicks(prev => prev + 1); setTimeout(() => setSecretClicks(0), 3000); }
   };
 
-  // BAGO: SMART ROUTING LOGIC DITO
   const handleSelectOffice = (key, floor) => {
     const targetOffice = liveOfficeDatabase[floor]?.[key];
 
@@ -213,9 +203,7 @@ export default function App() {
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#F8FAFC', color: '#0F172A', padding: '20px', textAlign: 'center' }}>
         <div style={{ fontSize: '4rem', marginBottom: '15px' }}>📄</div>
         <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>{downloadStatus}</h2>
-        {downloadStatus.includes('✅') && (
-          <p style={{ marginTop: '10px', color: '#64748B' }}>Makikita ang file sa "Downloads" folder ng iyong device.</p>
-        )}
+        {downloadStatus.includes('✅') && <p style={{ marginTop: '10px', color: '#64748B' }}>Makikita ang file sa "Downloads" folder ng iyong device.</p>}
       </div>
     );
   }
@@ -299,7 +287,7 @@ export default function App() {
 
           <div style={{ flex: 1, overflowY: 'auto', paddingRight: '10px' }}>
             
-            {/* STATE 1: WALANG NAKAPILI (SM-STYLE FLOOR LIST) */}
+            {/* STATE 1: WALANG NAKAPILI */}
             {routeStep === 'idle' && !selectedOfficeKey && (
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <div style={{ background: isDarkMode ? 'linear-gradient(135deg, #1E1B4B, #4F46E5)' : 'linear-gradient(135deg, #4F46E5, #3730A3)', padding: '25px 20px', borderRadius: '16px', color: 'white', marginBottom: '20px', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>
@@ -310,7 +298,7 @@ export default function App() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '20px' }}>
                   {liveOfficeDatabase[currentFloor] && Object.keys(liveOfficeDatabase[currentFloor]).length > 0 ? (
                     Object.entries(liveOfficeDatabase[currentFloor]).map(([key, office]) => {
-                      if (key === 'elevator-up' || key === 'stairs-up') return null;
+                      if (key === 'elevator-up' || key === 'stairs-up') return null; // Wag isama yung stairs/elevator sa listahan
                       return (
                       <button
                         key={key}
@@ -336,7 +324,7 @@ export default function App() {
               </div>
             )}
 
-            {/* STATE 2: PIPILI NG TRANSPORT (ELEVATOR / STAIRS) */}
+            {/* STATE 2: PIPILI NG TRANSPORT */}
             {routeStep === 'choose-transport' && destinationData && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 <div className="destination-card" style={{ background: '#F8FAFC', border: '2px solid #CBD5E1', padding: '20px', borderRadius: '16px' }}>
@@ -349,12 +337,12 @@ export default function App() {
                   <h3 style={{ margin: '0 0 15px 0', color: colorPalette.primaryText, fontSize: '1.3rem' }}>How would you like to go up?</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <button 
-                      onClick={() => { setSelectedOfficeKey('elevator-up'); setRouteStep('go-to-transport'); }}
+                      onClick={() => { setSelectedOfficeKey('elevator-up'); setTransportMethod('elevator'); setRouteStep('go-to-transport'); }}
                       style={{ padding: '20px', fontSize: '1.2rem', fontWeight: 800, background: '#EEF2FF', color: '#4F46E5', border: 'none', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}>
                       🛗 Use the Elevator
                     </button>
                     <button 
-                      onClick={() => { setSelectedOfficeKey('stairs-up'); setRouteStep('go-to-transport'); }}
+                      onClick={() => { setSelectedOfficeKey('stairs-up'); setTransportMethod('stairs'); setRouteStep('go-to-transport'); }}
                       style={{ padding: '20px', fontSize: '1.2rem', fontWeight: 800, background: '#F1F5F9', color: '#475569', border: 'none', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}>
                       🚶‍♂️ Use the Stairs
                     </button>
@@ -382,7 +370,7 @@ export default function App() {
               </div>
             )}
 
-            {/* STATE 4: FINAL DESTINATION DETAILS (Kapag umabot na sa Floor X) */}
+            {/* STATE 4: FINAL DESTINATION DETAILS */}
             {(routeStep === 'arrived' || (routeStep === 'idle' && selectedOfficeKey && selectedOfficeKey !== 'elevator-up' && selectedOfficeKey !== 'stairs-up')) && selectedOffice && (
               <div style={{ paddingBottom: '20px' }}>
                 <button 
@@ -417,7 +405,6 @@ export default function App() {
                         <li key={i} style={{ marginBottom: '6px' }}>{req}</li>
                       ))}
                     </ul>
-                    
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', background: isDarkMode ? '#1E293B' : '#FFFFFF', padding: '15px', borderRadius: '12px', border: `2px dashed ${isDarkMode ? '#475569' : '#CBD5E1'}`, boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
                       <span style={{ fontSize: '0.9rem', fontWeight: '800', textAlign: 'center' }}>
                         📱 I-scan para i-download<br/>(PDF)
@@ -442,6 +429,7 @@ export default function App() {
           setSelectedOfficeKey={setSelectedOfficeKey} 
           is3DActive={is3DActive}
           setIs3DActive={setIs3DActive}
+          transportMethod={transportMethod} // BAGO: Ipapasa sa mapa kung Elevator o Stairs
         />
 
         {showKeyboard && (
