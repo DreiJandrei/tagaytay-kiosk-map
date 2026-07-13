@@ -9,7 +9,7 @@ export default function MapScreen({
   setSelectedOfficeKey, 
   is3DActive,
   setIs3DActive,
-  transportMethod = 'elevator' // BAGO: Para alam niya kung san nanggaling!
+  transportMethod = 'elevator' 
 }) {
   const pathRef = useRef(null);
   const isDragging = useRef(false);
@@ -75,18 +75,45 @@ export default function MapScreen({
   }
 
   // ==============================================================
-  // DYNAMIC ROUTE PATH CONNECTING FROM STAIRS TO DESTINATION
+  // SMART ROUTER: BYPASSING ELEVATOR KAPAG STAIRS ANG PINILI
   // ==============================================================
   let finalPathData = selectedOffice ? selectedOffice.pathData : "";
 
   if (selectedOffice && currentFloor !== 1 && transportMethod === 'stairs') {
-      let bridge = "";
-      if (currentFloor === 2) bridge = "M 220 420 L 220 470 L 860 470 "; 
-      else if (currentFloor >= 3 && currentFloor <= 5) bridge = "M 240 720 L 450 720 L 450 480 L 620 480 ";
-      else if (currentFloor === 6) bridge = "M 650 580 L 650 480 ";
-      else if (currentFloor === 7) bridge = "M 600 460 L 580 460 L 580 340 ";
-
-      finalPathData = bridge + finalPathData.replace("M", "L");
+      if (currentFloor === 2) {
+          // Tanggalin ang elevator line, at gumawa ng bagong shortcut mula sa stairs
+          if (finalPathData.includes("L 680 260")) {
+              finalPathData = finalPathData.replace("M 860 490 L 860 470 L 680 470 L 680 260", "M 220 420 L 220 260");
+          } 
+          else if (finalPathData.includes("L 530 470")) {
+              finalPathData = finalPathData.replace("M 860 490 L 860 470 L 530 470", "M 220 420 L 220 470 L 530 470");
+          }
+      } 
+      else if (currentFloor >= 3 && currentFloor <= 5) {
+          if (finalPathData.startsWith("M 620 480 L 450 480")) {
+              finalPathData = finalPathData.replace("M 620 480 L 450 480", "M 240 720 L 450 720 L 450 480");
+          } 
+          else if (finalPathData.startsWith("M 620 480 L 770 480")) {
+              finalPathData = finalPathData.replace("M 620 480 L 770 480", "M 240 720 L 450 720 L 450 480 L 770 480");
+          }
+          else if (finalPathData.startsWith("M 620 480 L 620 520")) {
+              finalPathData = finalPathData.replace("M 620 480 L 620 520", "M 240 720 L 450 720 L 450 520 L 620 520");
+          }
+      }
+      else if (currentFloor === 6) {
+          if (finalPathData.startsWith("M 650 480 L 450 480")) {
+              finalPathData = finalPathData.replace("M 650 480 L 450 480", "M 650 580 L 650 480 L 450 480");
+          }
+          else if (finalPathData.startsWith("M 700 480 L 850 480")) {
+              finalPathData = finalPathData.replace("M 700 480 L 850 480", "M 650 580 L 650 480 L 700 480 L 850 480");
+          }
+          else if (finalPathData.startsWith("M 650 480 L 480 480")) {
+              finalPathData = finalPathData.replace("M 650 480 L 480 480", "M 650 580 L 650 480 L 480 480");
+          }
+      }
+      else if (currentFloor === 7) {
+          finalPathData = finalPathData.replace("M 580 340", "M 600 460 L 580 460 L 580 340");
+      }
   }
 
   const mapTransformStyle = {
