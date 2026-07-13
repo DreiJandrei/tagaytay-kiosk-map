@@ -144,8 +144,13 @@ export default function MapScreen({
           {currentFloor === 2 && (
             <svg width="1400" height="1300" style={{ position: 'absolute', top: 0, left: 0, zIndex: 1, pointerEvents: 'none' }}>
               <g stroke="#9CA3AF" strokeWidth="8" fill="transparent" strokeLinecap="round">
+                {/* 1. OUTER BORDER ng buong floor */}
                 <rect x="30" y="80" width="1000" height="850" rx="12" />
-t pu                <path d="M 30 240 L 1030 240" />
+                
+                {/* 2. IBINALIK ANG MGA PINTO: Putol-putol na ulit ang linya para may entrance ang bawat office */}
+                <path d="M 30 240 L 80 240 M 120 240 L 190 240 M 230 240 L 310 240 M 350 240 L 430 240 M 470 240 L 665 240 M 705 240 L 915 240 M 955 240 L 1030 240" />
+                
+                {/* 3. Mga pader para sa hagdan at ibang kwarto */}
                 <path d="M 30 310 L 380 310" />
                 <path d="M 380 380 L 380 520" />
                 <path d="M 720 490 L 720 280 L 800 280 M 870 280 L 950 280 L 950 490 L 880 490 M 780 490 L 720 490" />
