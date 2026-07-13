@@ -1,13 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
 
 export default function MapScreen({ 
   offices, 
   selectedOfficeKey, 
   onSelectOffice, 
   currentFloor,
-  setCurrentFloor,      // Prop added to allow canvas floor changing
-  setSelectedOfficeKey, // Prop added to reset active rooms on floor change
+  setCurrentFloor,      
+  setSelectedOfficeKey, 
   is3DActive,
   setIs3DActive
 }) {
@@ -18,14 +17,10 @@ export default function MapScreen({
   const [zoom, setZoom] = useState(0.65);
   const [pan, setPan] = useState({ x: 20, y: -120 });
 
-  // Handle drawing path animation whenever selections or floors adjust
-// Handle drawing path animation
   useEffect(() => {
-    // ITAMA NATIN DITO: Siguraduhin na "exist" ang pathRef.current
     if (pathRef.current && selectedOfficeKey && offices?.[selectedOfficeKey]) {
       const routeLine = pathRef.current;
       
-      // I-reset ang styles nang maingat
       routeLine.style.animation = 'none';
       routeLine.style.transition = 'none';
       
@@ -33,13 +28,12 @@ export default function MapScreen({
       routeLine.style.strokeDasharray = totalLength;
       routeLine.style.strokeDashoffset = totalLength;
       
-      // Force repaint
       routeLine.getBoundingClientRect(); 
       
       routeLine.style.transition = 'stroke-dashoffset 1.2s ease-in-out';
       routeLine.style.strokeDashoffset = '0';
     }
-  }, [selectedOfficeKey, offices]); // Trigger kapag nagbago ang selection
+  }, [selectedOfficeKey, offices]); 
 
   const handleDragStart = (clientX, clientY) => {
     isDragging.current = true;
@@ -55,7 +49,6 @@ export default function MapScreen({
 
   const selectedOffice = selectedOfficeKey ? offices?.[selectedOfficeKey] : null;
   
-  // Calculate Kiosk Position pin based on current active floors
   let kioskText = "🔴 YOU ARE HERE (Elevator)";
   let kioskStyle = { left: 860, top: 490 }; 
 
@@ -80,7 +73,7 @@ export default function MapScreen({
       className="map-viewport"
       style={{ flexGrow: 1, position: 'relative', overflow: 'hidden', cursor: isDragging.current ? 'grabbing' : 'grab' }}
       onMouseDown={(e) => {
-        if(!e.target.closest('.room-node') && !e.target.closest('.floor-selector') && !e.target.closest('.map-legend')) {
+        if(!e.target.closest('.room-node') && !e.target.closest('.floor-selector') && !e.target.closest('.map-legend') && !e.target.closest('.bottom-floor-bar')) {
           handleDragStart(e.clientX, e.clientY);
         }
       }}
@@ -88,7 +81,7 @@ export default function MapScreen({
       onMouseUp={handleDragEnd}
       onMouseLeave={handleDragEnd}
       onTouchStart={(e) => {
-        if(!e.target.closest('.room-node') && !e.target.closest('.floor-selector') && !e.target.closest('.map-legend')) {
+        if(!e.target.closest('.room-node') && !e.target.closest('.floor-selector') && !e.target.closest('.map-legend') && !e.target.closest('.bottom-floor-bar')) {
           handleDragStart(e.touches[0].clientX, e.touches[0].clientY);
         }
       }}
@@ -96,7 +89,7 @@ export default function MapScreen({
       onTouchEnd={handleDragEnd}
     >
       {/* MAP LEGEND */}
-      <div className="map-legend" style={{ position: 'absolute', bottom: 30, left: 30, background: 'rgba(15,23,42,0.85)', padding: '15px 20px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', color: 'white', zIndex: 100, pointerEvents: 'none' }}>
+      <div className="map-legend" style={{ position: 'absolute', top: 30, left: 30, background: 'rgba(15,23,42,0.85)', padding: '15px 20px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', color: 'white', zIndex: 100, pointerEvents: 'none' }}>
         <div style={{ fontSize: '0.85rem', fontWeight: 800, marginBottom: 10, color: '#94A3B8' }}>MAP LEGEND</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, fontSize: '0.8rem', fontWeight: 600 }}><span style={{ width: 14, height: 14, borderRadius: 4, background: '#06B6D4' }}></span> Public Relations & Tourism</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, fontSize: '0.8rem', fontWeight: 600 }}><span style={{ width: 14, height: 14, borderRadius: 4, background: '#4f46e5' }}></span> Executive & Admin / Legal</div>
@@ -107,71 +100,60 @@ export default function MapScreen({
       </div>
 
       {/* CANVAS ADJUSTMENT CONTROLS */}
-      <div className="floor-selector" style={{ zIndex: 10, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <button 
-          className="ui-action-btn projection-toggle-btn" 
-          onClick={() => setIs3DActive(!is3DActive)}
-          style={{ padding: '12px', fontSize: '1rem', fontWeight: 'bold' }}
-        >
+      <div className="floor-selector" style={{ position: 'absolute', top: 30, right: 30, zIndex: 10, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <button className="ui-action-btn projection-toggle-btn" onClick={() => setIs3DActive(!is3DActive)} style={{ padding: '12px', fontSize: '1rem', fontWeight: 'bold' }}>
           {is3DActive ? "🗺️ 2D" : "🌐 3D"}
         </button>
         <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => setZoom(z => Math.min(1.8, z + 0.12))}>➕</button>
         <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => setZoom(z => Math.max(0.35, z - 0.12))}>➖</button>
-        
-        <div style={{ width: '100%', height: '2px', background: 'rgba(255,255,255,0.15)', margin: '4px 0' }} />
+      </div>
 
-        {/* FLOATING FLOOR LEVEL SELECTORS */}
-        {[7, 6, 5, 4, 3, 2, 1].map(floor => (
-          <button 
-            key={floor}
-            onClick={() => { setCurrentFloor(floor); setSelectedOfficeKey(null); }}
-            style={{
-              width: '50px',
-              height: '50px',
-              borderRadius: '10px',
-              border: currentFloor === floor ? '2px solid #4F46E5' : '1px solid rgba(255,255,255,0.1)',
-              backgroundColor: currentFloor === floor ? '#4F46E5' : 'rgba(15, 23, 42, 0.85)',
-              color: 'white',
-              fontWeight: '900',
-              cursor: 'pointer',
-              fontSize: '1.1rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 6px rgba(0,0,0,0.2)',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            F{floor}
-          </button>
-        ))}
+      {/* NEW: SM-STYLE SCROLLABLE BOTTOM FLOOR SELECTOR */}
+      <div className="bottom-floor-bar" style={{
+          position: 'absolute', bottom: '30px', left: '50%', transform: 'translateX(-50%)',
+          display: 'flex', gap: '12px', background: 'rgba(15, 23, 42, 0.85)', padding: '15px 25px',
+          borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)',
+          zIndex: 100, boxShadow: '0 20px 40px rgba(0,0,0,0.3)', overflowX: 'auto', maxWidth: '90%', scrollBehavior: 'smooth'
+      }}>
+        {[1, 2, 3, 4, 5, 6, 7].map(floor => {
+          const isActive = currentFloor === floor;
+          return (
+            <button 
+              key={floor}
+              onClick={() => { setCurrentFloor(floor); setSelectedOfficeKey(null); }}
+              style={{
+                minWidth: '130px', padding: '14px 20px', borderRadius: '16px',
+                border: isActive ? '2px solid #4F46E5' : '1px solid rgba(255,255,255,0.2)',
+                backgroundColor: isActive ? '#4F46E5' : 'transparent', color: isActive ? '#FFFFFF' : '#E2E8F0',
+                fontWeight: '900', fontSize: '1.1rem', cursor: 'pointer', transition: 'all 0.2s ease', 
+                whiteSpace: 'nowrap', boxShadow: isActive ? '0 8px 15px rgba(79, 70, 229, 0.4)' : 'none'
+              }}
+            >
+              {floor === 1 ? 'GF / 1st' : `${floor}${floor === 2 ? 'nd' : floor === 3 ? 'rd' : 'th'} Floor`}
+            </button>
+          )
+        })}
       </div>
 
       <div className={`map-canvas-container ${is3DActive ? 'is-3d-active' : ''}`} style={mapTransformStyle}>
         <div className="mock-map-graphic">
           
-          {/* FLOOR PLANS PLATES & VECTOR PATH SCHEMATICS */}
+          {/* ================= FLOOR PLANS ================= */}
           {currentFloor === 1 && <div className="floor-plate" style={{ width: 980, height: 900, left: 350, top: 100 }}></div>}
-         {currentFloor === 2 && (
+          
+          {currentFloor === 2 && (
             <svg width="1400" height="1300" style={{ position: 'absolute', top: 0, left: 0, zIndex: 1, pointerEvents: 'none' }}>
-              {/* Ginawang strokeWidth="8" para mas makapal at kitang-kita */}
               <g stroke="#9CA3AF" strokeWidth="8" fill="transparent" strokeLinecap="round">
-                
-                {/* 1. OUTER BORDER ng buong floor */}
                 <rect x="30" y="80" width="1000" height="850" rx="12" />
-                
-                {/* 2. ITO YUNG DRINAWING MO: Solid at diretsong pader sa ilalim ng mga offices sa taas */}
                 <path d="M 30 240 L 1030 240" />
-                
-                {/* 3. Mga pader para sa hagdan at ibang kwarto */}
                 <path d="M 30 310 L 380 310" />
                 <path d="M 380 380 L 380 520" />
                 <path d="M 720 490 L 720 280 L 800 280 M 870 280 L 950 280 L 950 490 L 880 490 M 780 490 L 720 490" />
                 <path d="M 30 520 L 480 520 M 580 520 L 1030 520" />
-                
               </g>
             </svg>
           )}
+          
           {(currentFloor === 3 || currentFloor === 4 || currentFloor === 5) && (
             <svg width="1400" height="1300" style={{ position: 'absolute', top: 0, left: 0, zIndex: 1, pointerEvents: 'none' }}>
               <g stroke="#9CA3AF" strokeWidth="6" fill="rgba(255,255,255,0.03)">
@@ -185,6 +167,7 @@ export default function MapScreen({
               </g>
             </svg>
           )}
+          
           {currentFloor === 6 && (
             <svg width="1400" height="1300" style={{ position: 'absolute', top: 0, left: 0, zIndex: 1, pointerEvents: 'none' }}>
               <g stroke="#9CA3AF" strokeWidth="6" fill="rgba(255,255,255,0.03)">
@@ -195,6 +178,7 @@ export default function MapScreen({
               </g>
             </svg>
           )}
+          
           {currentFloor === 7 && (
             <svg width="1400" height="1300" style={{ position: 'absolute', zIndex: 1, pointerEvents: 'none' }}>
               <g stroke="#9CA3AF" strokeWidth="6" fill="transparent">
@@ -211,101 +195,63 @@ export default function MapScreen({
             </svg>
           )}
 
-          {/* STRUCTURAL LANDMARKS */}
-          {/* MGA PADER SA 1ST FLOOR HALLWAY (May gap para sa pinto) */}
-{/* ================= FLOOR 1 STRUCTURAL ELEMENTS ================= */}
-        {currentFloor === 1 && (
-          <>
-            {/* Atrium Garden */}
-            <div className="structural-element garden-area" style={{ width: '480px', height: '180px', left: '370px', top: '740px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
-                <div style={{ fontSize: '2.2rem', display: 'flex', gap: '15px', justifyContent: 'center' }}>🌿 🪴 🌴</div>
-                <div style={{ textAlign: 'center', fontWeight: '800', marginTop: '10px' }}>Atrium Garden</div>
+          {/* ================= STRUCTURAL ELEMENTS ================= */}
+          {currentFloor === 1 && (
+            <>
+              <div className="structural-element garden-area" style={{ width: '480px', height: '180px', left: '370px', top: '740px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                  <div style={{ fontSize: '2.2rem', display: 'flex', gap: '15px', justifyContent: 'center' }}>🌿 🪴 🌴</div>
+                  <div style={{ textAlign: 'center', fontWeight: '800', marginTop: '10px' }}>Atrium Garden</div>
+                </div>
               </div>
-            </div>
-
-            {/* Stairs */}
-            <div className="structural-element stairs-block" style={{ width: '255px', height: '100px', left: '370px', top: '585px' }}>
-              <div className="stair-lines"></div>
-              <span className="stair-label">Stairs ▶</span>
-            </div>
-
-            {/* Elevator */}
-            <div className="structural-element elevator-block" style={{ width: '270px', height: '110px', left: '1040px', top: '690px' }}>
-              Elevator
-              <div className="elevator-doors" style={{ left: '105px' }}></div>
-            </div>
-
-            {/* Escalator */}
-            <div className="structural-element escalator-block" style={{ width: '270px', height: '90px', left: '1040px', top: '820px' }}>
-              <div className="stair-lines"></div>
-              <span className="escalator-label">Escalator ◀</span>
-            </div>
-
-            {/* MGA PADER SA MAIN HALLWAY (May butas sa Y=710 para sakto sa likuan ng red line) */}
-            
-            {/* Taas na Pader (Mula sa Tourism Office pababa bago mag-pinto) */}
-            <div 
-              className="grey-wall" 
-              style={{ width: '0px', height: '65px', left: '1010px', top: '615px' }}
-            ></div>
-
-            {/* YUNG PINTO AY NASA top: 680px hanggang 740px (Gitna niya ang 710px kung saan lumiliko ang routing arrow) */}
-
-            {/* Babang Pader (Mula sa pinto pababa hanggang Main Entrance) */}
-            <div 
-              className="grey-wall" 
-              style={{ width: '0px', height: '260px', left: '1010px', top: '740px' }}
-            ></div>
-          </>
-        )}
+              <div className="structural-element stairs-block" style={{ width: '255px', height: '100px', left: '370px', top: '585px' }}>
+                <div className="stair-lines"></div><span className="stair-label">Stairs ▶</span>
+              </div>
+              <div className="structural-element elevator-block" style={{ width: '270px', height: '110px', left: '1040px', top: '690px' }}>
+                Elevator<div className="elevator-doors" style={{ left: '105px' }}></div>
+              </div>
+              <div className="structural-element escalator-block" style={{ width: '270px', height: '90px', left: '1040px', top: '820px' }}>
+                <div className="stair-lines"></div><span className="escalator-label">Escalator ◀</span>
+              </div>
+              <div className="grey-wall" style={{ width: '0px', height: '65px', left: '1010px', top: '615px' }}></div>
+              <div className="grey-wall" style={{ width: '0px', height: '260px', left: '1010px', top: '740px' }}></div>
+            </>
+          )}
+          
           {currentFloor === 2 && (
             <>
-              <div className="structural-element stairs-block" style={{ width: 150, height: 80, left: 150, top: 380, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>
-                <div className="stair-lines"></div><span className="stair-label">Stairs ▼</span>
-              </div>
-              <div className="structural-element stairs-block" style={{ width: 100, height: 80, left: 100, top: 810, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>
-                <div className="stair-lines"></div><span className="stair-label">Stairs ↗</span>
-              </div>
-              <div className="structural-element escalator-block" style={{ width: 150, height: 60, left: 500, top: 590, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>
-                <div className="escalator-lines"></div><span className="escalator-label">Escalator ▼</span>
-              </div>
+              <div className="structural-element stairs-block" style={{ width: 150, height: 80, left: 150, top: 380, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">Stairs ▼</span></div>
+              <div className="structural-element stairs-block" style={{ width: 100, height: 80, left: 100, top: 810, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">Stairs ↗</span></div>
+              <div className="structural-element escalator-block" style={{ width: 150, height: 60, left: 500, top: 590, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="escalator-lines"></div><span className="escalator-label">Escalator ▼</span></div>
               <div style={{ position: 'absolute', width: 40, height: 30, left: 800, top: 460, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
               <div style={{ position: 'absolute', width: 40, height: 30, left: 850, top: 460, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
             </>
           )}
+          
           {(currentFloor >= 3 && currentFloor <= 5) && (
             <>
-              <div className="structural-element stairs-block" style={{ width: 80, height: 80, left: 200, top: 680, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>
-                <div className="stair-lines"></div><span className="stair-label">Stairs ↙</span>
-              </div>
-              <div className="structural-element stairs-block" style={{ width: 80, height: 80, left: 280, top: 740, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>
-                <div className="stair-lines"></div><span className="stair-label">Stairs ↗</span>
-              </div>
+              <div className="structural-element stairs-block" style={{ width: 80, height: 80, left: 200, top: 680, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">Stairs ↙</span></div>
+              <div className="structural-element stairs-block" style={{ width: 80, height: 80, left: 280, top: 740, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">Stairs ↗</span></div>
               <div style={{ position: 'absolute', width: 40, height: 30, left: 560, top: 410, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
               <div style={{ position: 'absolute', width: 40, height: 30, left: 640, top: 410, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
               {(currentFloor === 4 || currentFloor === 5) && (
-                  <div className="structural-element escalator-block" style={{ width: 120, height: 50, left: 560, top: 480, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>
-                      <div className="escalator-lines"></div><span className="escalator-label">Escalator ▼</span>
-                  </div>
+                  <div className="structural-element escalator-block" style={{ width: 120, height: 50, left: 560, top: 480, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="escalator-lines"></div><span className="escalator-label">Escalator ▼</span></div>
               )}
             </>
           )}
+          
           {currentFloor === 6 && (
             <>
               <div style={{ position: 'absolute', width: 50, height: 40, left: 570, top: 350, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
               <div style={{ position: 'absolute', width: 50, height: 40, left: 680, top: 350, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
-              <div className="structural-element stairs-block" style={{ width: 200, height: 60, left: 550, top: 550, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>
-                <div className="stair-lines"></div><span className="stair-label">Stairs ↙ ↗</span>
-              </div>
+              <div className="structural-element stairs-block" style={{ width: 200, height: 60, left: 550, top: 550, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">Stairs ↙ ↗</span></div>
             </>
           )}
+          
           {currentFloor === 7 && (
             <>
               <div style={{ position: 'absolute', width: 60, height: 40, left: 550, top: 320, background: '#9CA3AF', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937', zIndex: 5 }}>ELEV</div>
-              <div className="structural-element stairs-block" style={{ width: 100, height: 60, left: 550, top: 430, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>
-                <div className="stair-lines"></div><span className="stair-label">Stairs ↙</span>
-              </div>
+              <div className="structural-element stairs-block" style={{ width: 100, height: 60, left: 550, top: 430, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">Stairs ↙</span></div>
             </>
           )}
 

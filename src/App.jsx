@@ -7,12 +7,10 @@ import MapScreen from './components/MapScreen';
 import AdminPanel from './admin/AdminPanel';
 import './index.css';
 
-// QR at PDF Imports
 import { QRCodeSVG } from 'qrcode.react'; 
 import { jsPDF } from 'jspdf';
 import { useSearchParams } from 'react-router-dom';
 
-// Dynamic Data Imports
 import { getAllOffices, initializeDatabase } from './lib/api';
 import { coordinateMapping, mergeOfficeData } from './lib/coordinateMapping';
 import { defaultOfficeData } from './lib/defaultOfficeData';
@@ -37,7 +35,6 @@ export default function App() {
   const [showAdmin, setShowAdmin] = useState(false);
   const [secretClicks, setSecretClicks] = useState(0);
 
-  // --- AUTOMATIC PDF GENERATOR LOGIC ---
   const [searchParams] = useSearchParams();
   const [isDownloadMode, setIsDownloadMode] = useState(false);
   const [downloadStatus, setDownloadStatus] = useState("Preparing your PDF...");
@@ -83,7 +80,6 @@ export default function App() {
       }
     }
   }, [searchParams, liveOfficeDatabase]);
-  // ------------------------------------
 
   const fetchKioskData = async () => {
     try {
@@ -104,13 +100,9 @@ export default function App() {
         setIsLoading(false); 
       } catch (error) {
         console.error("[Kiosk Setup Error] Failed, using local:", error);
-        
-        // Eto ang "Life Saver" logic:
-        // Siguraduhin na kung mag-error ang API, gagamit lang tayo ng default data
-        // nang hindi nag-e-error sa 'floor' variable.
         const localMergedData = mergeOfficeData(coordinateMapping, defaultOfficeData);
         setLiveOfficeDatabase(localMergedData);
-        setIsLoading(false); // <--- ITO ANG NAGPAPATAPOS SA "Initializing..."
+        setIsLoading(false);
       }
     };
     setupKiosk();
@@ -200,7 +192,6 @@ export default function App() {
     else setSearchQuery(prev => prev + key);
   };
 
-  // --- MOBILE DOWNLOAD MODE UI ---
   if (isDownloadMode) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#F8FAFC', color: '#0F172A', padding: '20px', textAlign: 'center' }}>
@@ -214,7 +205,9 @@ export default function App() {
   }
 
   if (isLoading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#F8FAFC', color: '#0F172A', fontSize: '2rem', fontWeight: 'bold' }}>Initializing Kiosk Systems...</div>;
-  if (appState === 'welcome') return <WelcomeScreen onStart={() => setAppState('dashboard')} />;
+  
+  // DIRETSO NA SA MAP PAGKA-TOUCH NG WELCOME SCREEN
+  if (appState === 'welcome') return <WelcomeScreen onStart={() => setAppState('map')} />;
   
   if (appState === 'dashboard') {
     return <DashboardScreen tagaytaySeal={tagaytaySeal} onNavigateToDirectory={() => setAppState('home')} onNavigateToMap={() => setAppState('map')} onQuickRoute={(floor, dbKey) => { setAppState('map'); handleSelectOffice(dbKey, floor); }} theme={theme} setTheme={setTheme} lang={lang} setLang={setLang} textSize={textSize} setTextSize={setTextSize} />;
@@ -266,9 +259,8 @@ export default function App() {
       </header>
 
       <div className="map-workspace" style={{ position: 'relative', display: 'flex', flexGrow: 1 }}>
-        <aside className="map-sidebar" style={{ width: '450px', flexShrink: 0 }}>
-          <button className="back-home-btn" onClick={() => { setAppState('home'); setSearchQuery(""); setShowKeyboard(false); }}><span>⬅️</span> Back to Directory</button>
-          
+        
+        <aside className="map-sidebar" style={{ width: '450px', flexShrink: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div className="sidebar-search-container" style={{ margin: '20px 0', position: 'relative' }}>
             <div style={{ display: 'flex', position: 'relative', alignItems: 'center' }}>
               <input type="text" placeholder={lang === 'EN' ? "🔍 Tap to Search Offices..." : "🔍 Pindutin para maghanap..."} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onClick={() => setShowKeyboard(true)} style={{ width: '100%', padding: '22px 24px', borderRadius: '16px', border: showKeyboard ? '4px solid #4F46E5' : (isDarkMode ? '2px solid #475569' : '2px solid #CBD5E1'), background: isDarkMode ? '#1E293B' : '#FFFFFF', color: colorPalette.primaryText, fontWeight: '800', fontSize: '1.4rem', boxShadow: '0 6px 12px rgba(0,0,0,0.1)', boxSizing: 'border-box', cursor: 'text' }} />
@@ -289,52 +281,89 @@ export default function App() {
             )}
           </div>
 
-          <hr className="divider" />
-          
-          <div className="destination-card">
-            <p className="label">DESTINATION / PAROROOAN</p>
-            <h1 className="office-title" style={{ fontSize: '1.8rem' }}>{selectedOffice ? selectedOffice.title : "Select an Office"}</h1>
-            <span className="floor-badge" style={{ fontSize: '1.1rem', padding: '6px 14px' }}>{selectedOffice ? selectedOffice.badge : `Level ${currentFloor} Blueprint`}</span>
-          </div>
+          <hr className="divider" style={{ margin: '0 0 20px 0', borderTop: isDarkMode ? '2px solid #334155' : '2px solid #E2E8F0' }} />
 
-          <div className="office-meta" style={{ fontSize: '1.1rem' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingRight: '10px' }}>
             {!selectedOffice ? (
-              <p>Tap any room on the interactive floor plan or use the search bar above to generate step-by-step navigation paths.</p>
-            ) : selectedOffice.isDirectionOnly ? (
-              <p className="direction-highlight-notice">🚶‍♂️ <strong>Wayfinding Path Generated:</strong> Please follow the blinking red path indicator.</p>
-            ) : (
-              <>
-                <p>🕒 <strong>Hours:</strong> {selectedOffice.hours}</p>
-                <p>👤 <strong>Head:</strong> {selectedOffice.head}</p>
-              </>
-            )}
-          </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <div style={{ background: isDarkMode ? 'linear-gradient(135deg, #1E1B4B, #4F46E5)' : 'linear-gradient(135deg, #4F46E5, #3730A3)', padding: '25px 20px', borderRadius: '16px', color: 'white', marginBottom: '20px', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>
+                  <h2 style={{ fontSize: '1.8rem', margin: 0, fontWeight: 900 }}>Floor {currentFloor} Directory</h2>
+                  <p style={{ margin: '5px 0 0 0', opacity: 0.9, fontSize: '1rem' }}>Select a room below or tap on the map.</p>
+                </div>
 
-          {/* DITO NA ANG BAGO: REQUIREMENTS LIST + QR CODE */}
-          {selectedOffice && selectedOffice.requirements && selectedOffice.requirements.length > 0 && (
-            <div className="requirements-box" style={{ marginTop: '20px', background: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : '#FFFBEB', border: `1px solid ${isDarkMode ? 'rgba(245, 158, 11, 0.3)' : '#FDE68A'}`, padding: '20px', borderRadius: '16px', color: colorPalette.primaryText }}>
-              <h3 style={{ fontSize: '1.2rem', marginBottom: '12px', color: isDarkMode ? '#F59E0B' : '#D97706', fontWeight: 800 }}>📋 Transaction Requirements:</h3>
-              <ul style={{ fontSize: '1.05rem', paddingLeft: '20px', marginBottom: '25px', lineHeight: '1.6' }}>
-                {selectedOffice.requirements.map((req, i) => (
-                  <li key={i} style={{ marginBottom: '6px' }}>{req}</li>
-                ))}
-              </ul>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', background: isDarkMode ? '#1E293B' : '#FFFFFF', padding: '15px', borderRadius: '12px', border: `2px dashed ${isDarkMode ? '#475569' : '#CBD5E1'}`, boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-                <span style={{ fontSize: '0.9rem', fontWeight: '800', textAlign: 'center', color: colorPalette.primaryText }}>
-                  📱 I-scan para i-download ang<br/>Requirements (PDF)
-                </span>
-                <div style={{ padding: '10px', backgroundColor: '#FFFFFF', borderRadius: '8px' }}>
-                  <QRCodeSVG 
-                    value={`${window.location.origin}/?download=${selectedOfficeKey}`} 
-                    size={120} 
-                    bgColor={"#ffffff"}
-                    fgColor={"#0F172A"}
-                  />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '20px' }}>
+                  {liveOfficeDatabase[currentFloor] && Object.keys(liveOfficeDatabase[currentFloor]).length > 0 ? (
+                    Object.entries(liveOfficeDatabase[currentFloor]).map(([key, office]) => (
+                      <button
+                        key={key}
+                        onClick={() => handleSelectOffice(key, currentFloor)}
+                        style={{
+                          display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
+                          padding: '16px 20px', borderRadius: '14px', border: isDarkMode ? '1px solid #334155' : '1px solid #E2E8F0',
+                          background: isDarkMode ? '#1E293B' : '#FFFFFF', cursor: 'pointer',
+                          textAlign: 'left', transition: 'all 0.2s', width: '100%', boxShadow: '0 4px 6px rgba(0,0,0,0.02)'
+                        }}
+                      >
+                        <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#4F46E5', marginBottom: '6px', background: isDarkMode ? '#0F172A' : '#EEF2FF', padding: '4px 10px', borderRadius: '6px' }}>{office.badge || `F${currentFloor}`}</span>
+                        <span style={{ fontSize: '1.2rem', fontWeight: 800, color: colorPalette.primaryText }}>{office.title}</span>
+                      </button>
+                    ))
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '30px 10px', color: colorPalette.secondaryText }}>
+                      <span style={{ fontSize: '2rem' }}>🚧</span>
+                      <p style={{ fontWeight: 700, marginTop: '10px' }}>No offices mapped for this floor yet.</p>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          )}
+            ) : (
+              <div style={{ paddingBottom: '20px' }}>
+                <button 
+                  onClick={() => setSelectedOfficeKey(null)}
+                  style={{ background: isDarkMode ? '#334155' : '#E2E8F0', color: colorPalette.primaryText, border: 'none', padding: '10px 18px', borderRadius: '50px', fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '20px' }}
+                >
+                  ⬅️ Back to Floor {currentFloor} List
+                </button>
+
+                <div className="destination-card" style={{ marginBottom: '20px' }}>
+                  <p className="label" style={{ color: colorPalette.secondaryText, fontSize: '0.9rem', fontWeight: 800, letterSpacing: '1px' }}>DESTINATION / PAROROOAN</p>
+                  <h1 className="office-title" style={{ fontSize: '1.8rem', color: colorPalette.primaryText, margin: '5px 0' }}>{selectedOffice.title}</h1>
+                  <span className="floor-badge" style={{ fontSize: '1.1rem', padding: '6px 14px', display: 'inline-block', marginTop: '10px', background: '#4F46E5', color: 'white', borderRadius: '8px', fontWeight: 800 }}>{selectedOffice.badge}</span>
+                </div>
+
+                <div className="office-meta" style={{ fontSize: '1.1rem', color: colorPalette.secondaryText, marginBottom: '20px' }}>
+                  {selectedOffice.isDirectionOnly ? (
+                    <p style={{ background: '#FEF2F2', color: '#E11D48', padding: '15px', borderRadius: '12px', border: '1px solid #FECDD3', fontWeight: 600 }}>🚶‍♂️ <strong>Wayfinding Path Generated:</strong> Please follow the blinking red path indicator.</p>
+                  ) : (
+                    <>
+                      <p style={{ marginBottom: '8px' }}>🕒 <strong style={{ color: colorPalette.primaryText }}>Hours:</strong> {selectedOffice.hours}</p>
+                      <p>👤 <strong style={{ color: colorPalette.primaryText }}>Head:</strong> {selectedOffice.head}</p>
+                    </>
+                  )}
+                </div>
+
+                {selectedOffice.requirements && selectedOffice.requirements.length > 0 && (
+                  <div className="requirements-box" style={{ background: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : '#FFFBEB', border: `1px solid ${isDarkMode ? 'rgba(245, 158, 11, 0.3)' : '#FDE68A'}`, padding: '20px', borderRadius: '16px', color: colorPalette.primaryText }}>
+                    <h3 style={{ fontSize: '1.2rem', marginBottom: '12px', color: isDarkMode ? '#F59E0B' : '#D97706', fontWeight: 800 }}>📋 Transaction Requirements:</h3>
+                    <ul style={{ fontSize: '1.05rem', paddingLeft: '20px', marginBottom: '25px', lineHeight: '1.6' }}>
+                      {selectedOffice.requirements.map((req, i) => (
+                        <li key={i} style={{ marginBottom: '6px' }}>{req}</li>
+                      ))}
+                    </ul>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', background: isDarkMode ? '#1E293B' : '#FFFFFF', padding: '15px', borderRadius: '12px', border: `2px dashed ${isDarkMode ? '#475569' : '#CBD5E1'}`, boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+                      <span style={{ fontSize: '0.9rem', fontWeight: '800', textAlign: 'center' }}>
+                        📱 I-scan para i-download<br/>(PDF)
+                      </span>
+                      <div style={{ padding: '10px', backgroundColor: '#FFFFFF', borderRadius: '8px' }}>
+                        <QRCodeSVG value={`${window.location.origin}/?download=${selectedOfficeKey}`} size={120} bgColor={"#ffffff"} fgColor={"#0F172A"} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </aside>
 
         <MapScreen 
