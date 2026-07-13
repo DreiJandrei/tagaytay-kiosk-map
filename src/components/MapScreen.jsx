@@ -89,7 +89,7 @@ export default function MapScreen({
       onTouchEnd={handleDragEnd}
     >
       {/* MAP LEGEND */}
-      <div className="map-legend" style={{ position: 'absolute', top: '30px', left: '30px', bottom: 'auto', background: 'rgba(15,23,42,0.85)', padding: '15px 20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', color: 'white', zIndex: 100, pointerEvents: 'none', height: 'fit-content', width: 'fit-content' }}>
+      <div className="map-legend">
         <div style={{ fontSize: '0.85rem', fontWeight: 800, marginBottom: '10px', color: '#94A3B8' }}>MAP LEGEND</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', fontSize: '0.8rem', fontWeight: 600 }}><span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#06B6D4' }}></span> Public Relations & Tourism</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', fontSize: '0.8rem', fontWeight: 600 }}><span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#4f46e5' }}></span> Executive & Admin / Legal</div>

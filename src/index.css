@@ -257,10 +257,15 @@ img { max-width: 100%; }
 /* =========================================
    MAP LEGEND (Added safely at bottom-left)
    ========================================= */
+/* =========================================
+   MAP LEGEND (Nilipat sa Top-Left para hindi humaba)
+   ========================================= */
 .map-legend {
     position: absolute;
-    bottom: 30px;
+    top: 30px; /* <--- BAGO: Nakapako na sa taas */
     left: 30px;
+    bottom: auto !important; /* <--- BAGO: Pinipigilan humatak pababa */
+    height: auto !important; /* <--- BAGO: Para sumakto lang sa text */
     background: rgba(15, 23, 42, 0.85);
     padding: 15px 20px;
     border-radius: 12px;
