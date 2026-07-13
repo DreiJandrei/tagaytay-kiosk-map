@@ -35,10 +35,10 @@ export default function App() {
   const [showAdmin, setShowAdmin] = useState(false);
   const [secretClicks, setSecretClicks] = useState(0);
 
-  // BAGO: SMART ROUTING STATES
+  // SMART ROUTING STATES
   const [routeStep, setRouteStep] = useState('idle'); 
   const [destinationData, setDestinationData] = useState(null);
-  const [transportMethod, setTransportMethod] = useState('elevator'); // Natatandaan kung anong sinakyan
+  const [transportMethod, setTransportMethod] = useState('elevator');
 
   const [searchParams] = useSearchParams();
   const [isDownloadMode, setIsDownloadMode] = useState(false);
@@ -175,6 +175,23 @@ export default function App() {
     }
   };
 
+  // ==============================================================
+  // BAGO: AUTOMATIC TIMEOUT LOGIC
+  // Kusang lilipat sa next floor pagkatapos ng 4 seconds
+  // ==============================================================
+  useEffect(() => {
+    let animationTimer;
+    if (routeStep === 'go-to-transport' && destinationData) {
+      animationTimer = setTimeout(() => {
+        setCurrentFloor(destinationData.floor);
+        setSelectedOfficeKey(destinationData.key);
+        setRouteStep('arrived');
+      }, 4000); // 4 seconds display time sa Ground Floor
+    }
+    return () => clearTimeout(animationTimer);
+  }, [routeStep, destinationData]);
+
+
   const getFlatOffices = () => {
     const flatList = [];
     Object.entries(liveOfficeDatabase).forEach(([floorNum, floorOffices]) => {
@@ -298,7 +315,7 @@ export default function App() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '20px' }}>
                   {liveOfficeDatabase[currentFloor] && Object.keys(liveOfficeDatabase[currentFloor]).length > 0 ? (
                     Object.entries(liveOfficeDatabase[currentFloor]).map(([key, office]) => {
-                      if (key === 'elevator-up' || key === 'stairs-up') return null; // Wag isama yung stairs/elevator sa listahan
+                      if (key === 'elevator-up' || key === 'stairs-up') return null; 
                       return (
                       <button
                         key={key}
@@ -352,21 +369,18 @@ export default function App() {
               </div>
             )}
 
-            {/* STATE 3: PAPUNTA SA ELEVATOR / STAIRS (Nasa 1st Floor) */}
+            {/* STATE 3: PAPUNTA SA ELEVATOR / STAIRS (Walang Button na, puro loading text nalang!) */}
             {routeStep === 'go-to-transport' && destinationData && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div style={{ background: '#FEF2F2', border: '2px solid #FECDD3', padding: '25px', borderRadius: '16px', textAlign: 'center' }}>
-                  <span style={{ fontSize: '3rem' }}>📍</span>
-                  <h2 style={{ color: '#E11D48', margin: '10px 0', fontSize: '1.4rem' }}>Follow the red line on the map.</h2>
-                  <p style={{ color: '#9F1239', fontWeight: 600 }}>Please proceed to the {selectedOfficeKey === 'elevator-up' ? 'Elevator' : 'Stairs'} to go to Floor {destinationData.floor}.</p>
+                  <span style={{ fontSize: '3rem', display: 'inline-block' }}>📍</span>
+                  <h2 style={{ color: '#E11D48', margin: '10px 0', fontSize: '1.3rem' }}>Showing route on Ground Floor...</h2>
+                  <p style={{ color: '#9F1239', fontWeight: 600 }}>Please proceed to the {transportMethod === 'elevator' ? 'Elevator' : 'Stairs'}.</p>
                 </div>
 
-                <button 
-                  onClick={() => { setCurrentFloor(destinationData.floor); setSelectedOfficeKey(destinationData.key); setRouteStep('arrived'); }}
-                  style={{ background: '#10B981', color: 'white', border: 'none', padding: '20px', fontSize: '1.2rem', fontWeight: 800, borderRadius: '16px', cursor: 'pointer', boxShadow: '0 10px 20px rgba(16, 185, 129, 0.3)' }}
-                >
-                  I'm at Floor {destinationData.floor} ➡️
-                </button>
+                <div style={{ background: '#1E293B', color: 'white', padding: '18px', borderRadius: '12px', textAlign: 'center', fontWeight: 800, border: '2px solid #334155', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>
+                  ⏳ Switching to Floor {destinationData.floor} in a few seconds...
+                </div>
               </div>
             )}
 
@@ -429,7 +443,7 @@ export default function App() {
           setSelectedOfficeKey={setSelectedOfficeKey} 
           is3DActive={is3DActive}
           setIs3DActive={setIs3DActive}
-          transportMethod={transportMethod} // BAGO: Ipapasa sa mapa kung Elevator o Stairs
+          transportMethod={transportMethod} 
         />
 
         {showKeyboard && (

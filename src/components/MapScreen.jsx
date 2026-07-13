@@ -8,7 +8,8 @@ export default function MapScreen({
   setCurrentFloor,      
   setSelectedOfficeKey, 
   is3DActive,
-  setIs3DActive
+  setIs3DActive,
+  transportMethod = 'elevator' // BAGO: Para alam niya kung san nanggaling!
 }) {
   const pathRef = useRef(null);
   const isDragging = useRef(false);
@@ -20,7 +21,6 @@ export default function MapScreen({
   useEffect(() => {
     if (pathRef.current && selectedOfficeKey && offices?.[selectedOfficeKey]) {
       const routeLine = pathRef.current;
-      
       routeLine.style.animation = 'none';
       routeLine.style.transition = 'none';
       
@@ -29,7 +29,6 @@ export default function MapScreen({
       routeLine.style.strokeDashoffset = totalLength;
       
       routeLine.getBoundingClientRect(); 
-      
       routeLine.style.transition = 'stroke-dashoffset 1.2s ease-in-out';
       routeLine.style.strokeDashoffset = '0';
     }
@@ -49,18 +48,45 @@ export default function MapScreen({
 
   const selectedOffice = selectedOfficeKey ? offices?.[selectedOfficeKey] : null;
   
-  let kioskText = "🔴 YOU ARE HERE (Elevator)";
-  let kioskStyle = { left: 860, top: 490 }; 
+  // ==============================================================
+  // DYNAMIC KIOSK PIN PLACEMENT (ELEVATOR VS STAIRS)
+  // ==============================================================
+  let kioskText = "";
+  let kioskStyle = { display: 'none' }; 
 
   if (currentFloor === 1) {
       kioskText = "🔴 YOU ARE HERE (Main Entrance)";
-      kioskStyle = { left: 1030, top: 1000 };
-  } else if (currentFloor >= 3 && currentFloor <= 5) {
-      kioskStyle = { left: 620, top: 480 }; 
-  } else if (currentFloor === 6) {
-      kioskStyle = { left: 650, top: 480 }; 
-  } else if (currentFloor === 7) {
-      kioskStyle = { left: 550, top: 320 }; 
+      kioskStyle = { left: 1030, top: 1000, display: 'block' }; 
+  } else {
+      kioskStyle = { display: 'block' };
+      if (transportMethod === 'stairs') {
+          kioskText = "🚶‍♂️ ARRIVED VIA STAIRS";
+          if (currentFloor === 2) kioskStyle = { left: 220, top: 420 };
+          else if (currentFloor >= 3 && currentFloor <= 5) kioskStyle = { left: 240, top: 720 };
+          else if (currentFloor === 6) kioskStyle = { left: 650, top: 580 };
+          else if (currentFloor === 7) kioskStyle = { left: 600, top: 460 };
+      } else {
+          kioskText = "🛗 ARRIVED VIA ELEVATOR";
+          if (currentFloor === 2) kioskStyle = { left: 820, top: 460 };
+          else if (currentFloor >= 3 && currentFloor <= 5) kioskStyle = { left: 600, top: 410 };
+          else if (currentFloor === 6) kioskStyle = { left: 620, top: 350 };
+          else if (currentFloor === 7) kioskStyle = { left: 580, top: 320 };
+      }
+  }
+
+  // ==============================================================
+  // DYNAMIC ROUTE PATH CONNECTING FROM STAIRS TO DESTINATION
+  // ==============================================================
+  let finalPathData = selectedOffice ? selectedOffice.pathData : "";
+
+  if (selectedOffice && currentFloor !== 1 && transportMethod === 'stairs') {
+      let bridge = "";
+      if (currentFloor === 2) bridge = "M 220 420 L 220 470 L 860 470 "; 
+      else if (currentFloor >= 3 && currentFloor <= 5) bridge = "M 240 720 L 450 720 L 450 480 L 620 480 ";
+      else if (currentFloor === 6) bridge = "M 650 580 L 650 480 ";
+      else if (currentFloor === 7) bridge = "M 600 460 L 580 460 L 580 340 ";
+
+      finalPathData = bridge + finalPathData.replace("M", "L");
   }
 
   const mapTransformStyle = {
@@ -88,7 +114,6 @@ export default function MapScreen({
       onTouchMove={(e) => handleDragMove(e.touches[0].clientX, e.touches[0].clientY)}
       onTouchEnd={handleDragEnd}
     >
-      {/* MAP LEGEND */}
       <div className="map-legend">
         <div style={{ fontSize: '0.85rem', fontWeight: 800, marginBottom: '10px', color: '#94A3B8' }}>MAP LEGEND</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', fontSize: '0.8rem', fontWeight: 600 }}><span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#06B6D4' }}></span> Public Relations & Tourism</div>
@@ -99,7 +124,6 @@ export default function MapScreen({
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', fontSize: '0.8rem', fontWeight: 600 }}><span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#c2410c' }}></span> Public Halls & Events</div>
       </div>
 
-      {/* CANVAS ADJUSTMENT CONTROLS */}
       <div className="floor-selector" style={{ position: 'absolute', top: 30, right: 30, zIndex: 10, display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <button className="ui-action-btn projection-toggle-btn" onClick={() => setIs3DActive(!is3DActive)} style={{ padding: '12px', fontSize: '1rem', fontWeight: 'bold' }}>
           {is3DActive ? "🗺️ 2D" : "🌐 3D"}
@@ -108,7 +132,6 @@ export default function MapScreen({
         <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => setZoom(z => Math.max(0.35, z - 0.12))}>➖</button>
       </div>
 
-      {/* NEW: SM-STYLE SCROLLABLE BOTTOM FLOOR SELECTOR */}
       <div className="bottom-floor-bar" style={{
           position: 'absolute', bottom: '30px', left: '50%', transform: 'translateX(-50%)',
           display: 'flex', gap: '12px', background: 'rgba(15, 23, 42, 0.85)', padding: '15px 25px',
@@ -138,19 +161,13 @@ export default function MapScreen({
       <div className={`map-canvas-container ${is3DActive ? 'is-3d-active' : ''}`} style={mapTransformStyle}>
         <div className="mock-map-graphic">
           
-          {/* ================= FLOOR PLANS ================= */}
           {currentFloor === 1 && <div className="floor-plate" style={{ width: 980, height: 900, left: 350, top: 100 }}></div>}
           
           {currentFloor === 2 && (
             <svg width="1400" height="1300" style={{ position: 'absolute', top: 0, left: 0, zIndex: 1, pointerEvents: 'none' }}>
               <g stroke="#9CA3AF" strokeWidth="8" fill="transparent" strokeLinecap="round">
-                {/* 1. OUTER BORDER ng buong floor */}
                 <rect x="30" y="80" width="1000" height="850" rx="12" />
-                
-                {/* 2. IBINALIK ANG MGA PINTO: Putol-putol na ulit ang linya para may entrance ang bawat office */}
                 <path d="M 30 240 L 80 240 M 120 240 L 190 240 M 230 240 L 310 240 M 350 240 L 430 240 M 470 240 L 665 240 M 705 240 L 915 240 M 955 240 L 1030 240" />
-                
-                {/* 3. Mga pader para sa hagdan at ibang kwarto */}
                 <path d="M 30 310 L 380 310" />
                 <path d="M 380 380 L 380 520" />
                 <path d="M 720 490 L 720 280 L 800 280 M 870 280 L 950 280 L 950 490 L 880 490 M 780 490 L 720 490" />
@@ -200,7 +217,6 @@ export default function MapScreen({
             </svg>
           )}
 
-          {/* ================= STRUCTURAL ELEMENTS ================= */}
           {currentFloor === 1 && (
             <>
               <div className="structural-element garden-area" style={{ width: '480px', height: '180px', left: '370px', top: '740px' }}>
@@ -260,7 +276,6 @@ export default function MapScreen({
             </>
           )}
 
-          {/* ROOM INTERFACES MAP */}
           {Object.entries(offices || {}).map(([key, office]) => {
             const isVertical = office.cssClass && office.cssClass.includes('vertical-text-wrapper');
             const activeStyle = selectedOfficeKey === key ? {
@@ -285,17 +300,14 @@ export default function MapScreen({
             );
           })}
 
-          {/* NAVIGATION HUD TRAIL */}
           <svg className="path-overlay" width="100%" height="100%">
-            <path ref={pathRef} d={selectedOffice ? selectedOffice.pathData : ""} className="marching-route-line" />
+            <path ref={pathRef} d={finalPathData} className="marching-route-line" />
           </svg>
           
-          {/* USER GEOLOCATION PIN */}
-          <div className="node pin-kiosk" style={{ display: 'block', ...kioskStyle }}>
+          <div className="node pin-kiosk" style={{ ...kioskStyle }}>
             <span className="pulse-ring"></span>{kioskText}
           </div>
 
-          {/* ENDPOINT PIN */}
           {selectedOffice && selectedOffice.targetX && (
             <div className="node pin-destination" style={{ display: 'block', left: selectedOffice.targetX, top: selectedOffice.targetY, zIndex: 100 }}>
               🎯 {selectedOffice.title}
