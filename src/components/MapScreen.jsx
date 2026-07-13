@@ -49,7 +49,7 @@ export default function MapScreen({
   const selectedOffice = selectedOfficeKey ? offices?.[selectedOfficeKey] : null;
   
   // ==============================================================
-  // DYNAMIC KIOSK PIN PLACEMENT (ELEVATOR VS STAIRS)
+  // DYNAMIC KIOSK PIN PLACEMENT
   // ==============================================================
   let kioskText = "";
   let kioskStyle = { display: 'none' }; 
@@ -75,44 +75,53 @@ export default function MapScreen({
   }
 
   // ==============================================================
-  // SMART ROUTER: BYPASSING ELEVATOR KAPAG STAIRS ANG PINILI
+  // SMART ROUTER: AVOIDING WALLS FOR STAIRS & ELEVATORS
   // ==============================================================
   let finalPathData = selectedOffice ? selectedOffice.pathData : "";
 
-  if (selectedOffice && currentFloor !== 1 && transportMethod === 'stairs') {
+  if (selectedOffice && currentFloor !== 1) {
       if (currentFloor === 2) {
-          // Tanggalin ang elevator line, at gumawa ng bagong shortcut mula sa stairs
-          if (finalPathData.includes("L 680 260")) {
-              finalPathData = finalPathData.replace("M 860 490 L 860 470 L 680 470 L 680 260", "M 220 420 L 220 260");
-          } 
-          else if (finalPathData.includes("L 530 470")) {
-              finalPathData = finalPathData.replace("M 860 490 L 860 470 L 530 470", "M 220 420 L 220 470 L 530 470");
+          if (transportMethod === 'stairs') {
+              if (finalPathData.includes("L 680 260")) {
+                  // Lilikod siya para umiwas sa solid horizontal wall (y=310)
+                  finalPathData = finalPathData.replace(
+                      "M 860 490 L 860 470 L 680 470 L 680 260", 
+                      "M 220 420 L 220 350 L 420 350 L 420 260 L 680 260"
+                  );
+              } else if (finalPathData.includes("L 530 470")) {
+                  // Pagpunta sa Library, dadaan sa gap
+                  finalPathData = finalPathData.replace(
+                      "M 860 490 L 860 470 L 530 470 L 530 560", 
+                      "M 220 420 L 220 350 L 530 350 L 530 560"
+                  );
+              }
           }
       } 
       else if (currentFloor >= 3 && currentFloor <= 5) {
-          if (finalPathData.startsWith("M 620 480 L 450 480")) {
-              finalPathData = finalPathData.replace("M 620 480 L 450 480", "M 240 720 L 450 720 L 450 480");
-          } 
-          else if (finalPathData.startsWith("M 620 480 L 770 480")) {
-              finalPathData = finalPathData.replace("M 620 480 L 770 480", "M 240 720 L 450 720 L 450 480 L 770 480");
-          }
-          else if (finalPathData.startsWith("M 620 480 L 620 520")) {
-              finalPathData = finalPathData.replace("M 620 480 L 620 520", "M 240 720 L 450 720 L 450 520 L 620 520");
+          if (transportMethod === 'stairs') {
+              if (finalPathData.startsWith("M 620 480 L 450 480")) {
+                  finalPathData = finalPathData.replace("M 620 480 L 450 480", "M 240 720 L 370 720 L 370 630 L 450 630 L 450 480");
+              } else if (finalPathData.startsWith("M 620 480 L 770 480")) {
+                  finalPathData = finalPathData.replace("M 620 480 L 770 480", "M 240 720 L 370 720 L 370 630 L 450 630 L 450 480 L 770 480");
+              } else if (finalPathData.startsWith("M 620 480 L 620 520")) {
+                  finalPathData = finalPathData.replace("M 620 480 L 620 520", "M 240 720 L 370 720 L 370 630 L 450 630 L 450 480 L 620 480 L 620 520");
+              }
           }
       }
       else if (currentFloor === 6) {
-          if (finalPathData.startsWith("M 650 480 L 450 480")) {
-              finalPathData = finalPathData.replace("M 650 480 L 450 480", "M 650 580 L 650 480 L 450 480");
-          }
-          else if (finalPathData.startsWith("M 700 480 L 850 480")) {
-              finalPathData = finalPathData.replace("M 700 480 L 850 480", "M 650 580 L 650 480 L 700 480 L 850 480");
-          }
-          else if (finalPathData.startsWith("M 650 480 L 480 480")) {
-              finalPathData = finalPathData.replace("M 650 480 L 480 480", "M 650 580 L 650 480 L 480 480");
+          if (transportMethod === 'stairs') {
+              if (finalPathData.startsWith("M 650 480 L 450 480")) finalPathData = finalPathData.replace("M 650 480 L 450 480", "M 650 580 L 650 480 L 450 480");
+              else if (finalPathData.startsWith("M 700 480 L 850 480")) finalPathData = finalPathData.replace("M 700 480 L 850 480", "M 650 580 L 650 480 L 700 480 L 850 480");
+              else if (finalPathData.startsWith("M 650 480 L 480 480")) finalPathData = finalPathData.replace("M 650 480 L 480 480", "M 650 580 L 650 480 L 480 480");
           }
       }
       else if (currentFloor === 7) {
-          finalPathData = finalPathData.replace("M 580 340", "M 600 460 L 580 460 L 580 340");
+          // Umiwas sa pagtagos sa y=380 wall
+          if (transportMethod === 'stairs') {
+              finalPathData = finalPathData.replace("M 580 340 L 580 400", "M 600 460 L 430 460 L 430 400 L 580 400");
+          } else if (transportMethod === 'elevator') {
+              finalPathData = finalPathData.replace("M 580 340 L 580 400", "M 580 340 L 430 340 L 430 400 L 580 400");
+          }
       }
   }
 
@@ -194,7 +203,7 @@ export default function MapScreen({
             <svg width="1400" height="1300" style={{ position: 'absolute', top: 0, left: 0, zIndex: 1, pointerEvents: 'none' }}>
               <g stroke="#9CA3AF" strokeWidth="8" fill="transparent" strokeLinecap="round">
                 <rect x="30" y="80" width="1000" height="850" rx="12" />
-                <path d="M 30 240 L 80 240 M 120 240 L 190 240 M 230 240 L 310 240 M 350 240 L 430 240 M 470 240 L 665 240 M 705 240 L 915 240 M 955 240 L 1030 240" />
+                <path d="M 30 240 L 1030 240" />
                 <path d="M 30 310 L 380 310" />
                 <path d="M 380 380 L 380 520" />
                 <path d="M 720 490 L 720 280 L 800 280 M 870 280 L 950 280 L 950 490 L 880 490 M 780 490 L 720 490" />
