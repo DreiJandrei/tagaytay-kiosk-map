@@ -319,6 +319,7 @@ img { max-width: 100%; }
 /* =========================================
    📱 MOBILE RESPONSIVENESS (PHONES & TABLETS)
    ========================================= */
+
 @media (max-width: 1024px) {
     /* 1. TANGGALIN ANG SCROLL LOCK SA MOBILE */
     .map-screen-container {
@@ -371,7 +372,7 @@ img { max-width: 100%; }
     .map-sidebar {
         width: 100% !important;
         height: auto !important;
-        max-height: none !important; /* Tanggalin ang limit sa taas ng sidebar */
+        max-height: none !important;
         padding: 20px !important;
         border-right: none !important;
         box-sizing: border-box !important;
@@ -388,37 +389,59 @@ img { max-width: 100%; }
 
    /* 4. MAP VIEWPORT & CONTROLS */
     .map-viewport {
-        min-height: 70vh !important;
+        min-height: 60vh !important;
         border-top: 2px solid var(--border-color);
         width: 100vw !important; 
-        max-width: 100% !important; /* Pinipigilan lumagpas sa screen */
+        max-width: 100% !important;
         overflow: hidden !important;
     }
-   .floor-selector {
+
+    /* BAGO: Itago ang Map Legend sa phone para hindi makasagabal */
+    .map-legend {
+        display: none !important;
+    }
+
+    /* BAGO: Liitan ang bottom floor selector para magkasya sa phone */
+    .bottom-floor-bar {
+        width: 90% !important;
+        bottom: 15px !important;
+        padding: 10px !important;
+        gap: 8px !important;
+        border-radius: 16px !important;
+    }
+    .bottom-floor-bar button {
+        min-width: 90px !important;
+        padding: 10px 12px !important;
+        font-size: 0.85rem !important;
+        border-radius: 10px !important;
+    }
+
+    /* Liitan ang 3D at Zoom controls sa phone */
+    .floor-selector {
         top: 15px !important;
         right: 15px !important;
-        /* Ginawa ring 1px dito */
-        transform: scale(0.85) translateZ(1px) !important;
-        -webkit-transform: scale(0.85) translateZ(1px) !important;
+        transform: scale(0.75) translateZ(1px) !important;
+        -webkit-transform: scale(0.75) translateZ(1px) !important;
         transform-origin: top right !important;
         z-index: 99999 !important;
     }
 
-    /* 5. VIRTUAL KEYBOARD - Itago sa mobile */
+    /* 5. VIRTUAL KEYBOARD - Itago sa mobile (may sariling keyboard ang phone) */
     .kiosk-virtual-keyboard {
         display: none !important;
     }
-    /* 6. WELCOME SCREEN MOBILE FIXES (ZOOM OUT EFFECT) */
+
+    /* 6. WELCOME SCREEN MOBILE FIXES */
     .welcome-seal {
         width: 120px !important;
         height: 120px !important;
     }
     .welcome-title {
-        font-size: 2.8rem !important; /* Pinaliit mula 5.5rem */
+        font-size: 2.8rem !important; 
         line-height: 1.2 !important;
     }
     .welcome-subtitle {
-        font-size: 1.1rem !important; /* Pinaliit mula 1.8rem */
+        font-size: 1.1rem !important; 
         letter-spacing: 2px !important;
         margin-bottom: 30px !important;
     }
