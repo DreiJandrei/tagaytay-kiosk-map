@@ -396,9 +396,15 @@ img { max-width: 100%; }
         overflow: hidden !important;
     }
 
-    /* BAGO: Itago ang Map Legend sa phone para hindi makasagabal */
+    
+  /* BAGO: Ibalik ang Map Legend pero pinaliit nang husto para hindi nakaharang */
     .map-legend {
-        display: none !important;
+        display: block !important;
+        top: 10px !important;
+        left: 10px !important;
+        transform: scale(0.65) !important; /* Pinaliit ng 35% para sumakto sa mobile */
+        transform-origin: top left !important; /* Para sa top-left ang bagsak ng pagliit */
+        padding: 12px !important;
     }
 
     /* BAGO: Liitan ang bottom floor selector para magkasya sa phone */
