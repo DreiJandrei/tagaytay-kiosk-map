@@ -6,18 +6,19 @@
 // This data stays in the frontend and is NOT stored in the database.
 
 export const coordinateMapping = {
-  1: {
+ 1: {
+      // ======== MULTI-FLOOR TRANSPORT ROUTES ========
       "elevator-up": {
-          targetX: 1040, targetY: 710,
-          pathData: "M 1030 1000 L 1030 740 L 1040 740 L 1040 710",
-          style: { display: 'none' },
+          targetX: 1175, targetY: 795, 
+          pathData: "M 1030 1000 L 1030 810 L 1175 810 L 1175 795",
+          style: { display: 'none' }, 
           isDirectionOnly: true,
           title: "Elevator to Upper Floors",
           badge: "Vertical Transport"
       },
       "stairs-up": {
-          targetX: 450, targetY: 630,
-          pathData: "M 1030 1000 L 1030 740 L 500 740 L 500 630 L 450 630",
+          targetX: 450, targetY: 630, 
+          pathData: "M 1030 1000 L 1030 710 L 500 710 L 500 630 L 450 630",
           style: { display: 'none' },
           isDirectionOnly: true,
           title: "Stairs to Upper Floors",
