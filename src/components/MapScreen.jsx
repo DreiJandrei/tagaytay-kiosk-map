@@ -18,7 +18,9 @@ export default function MapScreen({
   // Auto-detect kung mobile (width <= 1024px) para naka-zoom out agad at nakagitna
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 1024;
   const [zoom, setZoom] = useState(isMobile ? 0.35 : 0.65);
-  const [pan, setPan] = useState(isMobile ? { x: -120, y: 40 } : { x: 20, y: -120 });
+  
+  // BAGO: Ginawang negative ang 'y' (-250) para hatakin paitaas ang mapa, at inayos ang 'x' (-80) para pumagitna
+  const [pan, setPan] = useState(isMobile ? { x: -80, y: -250 } : { x: 20, y: -120 });
 
   useEffect(() => {
     if (pathRef.current && selectedOfficeKey && offices?.[selectedOfficeKey]) {
