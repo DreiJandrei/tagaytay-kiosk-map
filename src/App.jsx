@@ -35,6 +35,10 @@ export default function App() {
   const [showAdmin, setShowAdmin] = useState(false);
   const [secretClicks, setSecretClicks] = useState(0);
 
+  // BAGO: SMART ROUTING STATES
+  const [routeStep, setRouteStep] = useState('idle'); 
+  const [destinationData, setDestinationData] = useState(null);
+
   const [searchParams] = useSearchParams();
   const [isDownloadMode, setIsDownloadMode] = useState(false);
   const [downloadStatus, setDownloadStatus] = useState("Preparing your PDF...");
@@ -134,6 +138,8 @@ export default function App() {
         setSelectedOfficeKey(null);
         setSearchQuery("");
         setShowKeyboard(false);
+        setRouteStep('idle');
+        setDestinationData(null);
       }, 45000); 
     };
 
@@ -162,11 +168,21 @@ export default function App() {
     }
   };
 
-  const handleSelectOffice = (key, forcedFloor = null) => {
-    if (forcedFloor !== null) {
-      setCurrentFloor(forcedFloor);
+  // BAGO: SMART ROUTING LOGIC DITO
+  const handleSelectOffice = (key, floor) => {
+    const targetOffice = liveOfficeDatabase[floor]?.[key];
+
+    if (floor === 1) {
+      setCurrentFloor(1);
+      setSelectedOfficeKey(key);
+      setRouteStep('idle');
+      setDestinationData(null);
+    } else {
+      setDestinationData({ key, floor, ...targetOffice });
+      setCurrentFloor(1); 
+      setSelectedOfficeKey(null);
+      setRouteStep('choose-transport'); 
     }
-    setSelectedOfficeKey(key);
   };
 
   const getFlatOffices = () => {
@@ -206,7 +222,6 @@ export default function App() {
 
   if (isLoading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#F8FAFC', color: '#0F172A', fontSize: '2rem', fontWeight: 'bold' }}>Initializing Kiosk Systems...</div>;
   
-  // DIRETSO NA SA MAP PAGKA-TOUCH NG WELCOME SCREEN
   if (appState === 'welcome') return <WelcomeScreen onStart={() => setAppState('map')} />;
   
   if (appState === 'dashboard') {
@@ -250,14 +265,9 @@ export default function App() {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <button onClick={() => setTextSize(textSize === 'normal' ? 'large' : 'normal')} style={{ background: isLarge ? '#4F46E5' : colorPalette.buttonAccentBg, color: isLarge ? 'white' : '#4F46E5', border: isLarge ? 'none' : '2px solid #4F46E5', width: '60px', height: '60px', borderRadius: '50%', fontWeight: 900, fontSize: '1.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>{isLarge ? 'A+' : 'A'}</button>
-          
           <button onClick={() => setLang(lang === 'EN' ? 'TL' : 'EN')} style={{ background: colorPalette.buttonAccentBg, color: '#4F46E5', border: '2px solid #4F46E5', padding: '0 24px', height: '60px', borderRadius: '50px', fontWeight: 900, fontSize: isLarge ? '1.2rem' : '1.05rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>🌐 {lang === 'EN' ? 'English' : 'Tagalog'}</button>
-          
           <button className="ui-action-btn theme-toggle-btn" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} style={{ height: '60px', background: colorPalette.buttonAccentBg, color: '#4F46E5', border: '2px solid #4F46E5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: isLarge ? '1.2rem' : '1.05rem', borderRadius: '14px', padding: '0 25px', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>{isDarkMode ? "☀️ Light" : "🌙 Dark"}</button>
-          
           <div style={{ width: '2px', height: '40px', background: isDarkMode ? '#475569' : '#CBD5E1', margin: '0 5px' }} />
-          
-          {/* TANGGAL NA YUNG HOME BUTTON DITO. CLOCK NALANG ANG NATIRA SA DULO */}
           <div style={{ color: colorPalette.primaryText, background: isDarkMode ? '#1E293B' : '#F1F5F9', padding: '10px 24px', borderRadius: '24px', fontWeight: 800, fontSize: isLarge ? '1.4rem' : '1.2rem', border: colorPalette.cardBorder, display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '130px' }}>{time}</div>
         </div>
       </header>
@@ -288,7 +298,9 @@ export default function App() {
           <hr className="divider" style={{ margin: '0 0 20px 0', borderTop: isDarkMode ? '2px solid #334155' : '2px solid #E2E8F0' }} />
 
           <div style={{ flex: 1, overflowY: 'auto', paddingRight: '10px' }}>
-            {!selectedOffice ? (
+            
+            {/* STATE 1: WALANG NAKAPILI (SM-STYLE FLOOR LIST) */}
+            {routeStep === 'idle' && !selectedOfficeKey && (
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <div style={{ background: isDarkMode ? 'linear-gradient(135deg, #1E1B4B, #4F46E5)' : 'linear-gradient(135deg, #4F46E5, #3730A3)', padding: '25px 20px', borderRadius: '16px', color: 'white', marginBottom: '20px', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>
                   <h2 style={{ fontSize: '1.8rem', margin: 0, fontWeight: 900 }}>Floor {currentFloor} Directory</h2>
@@ -297,7 +309,9 @@ export default function App() {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '20px' }}>
                   {liveOfficeDatabase[currentFloor] && Object.keys(liveOfficeDatabase[currentFloor]).length > 0 ? (
-                    Object.entries(liveOfficeDatabase[currentFloor]).map(([key, office]) => (
+                    Object.entries(liveOfficeDatabase[currentFloor]).map(([key, office]) => {
+                      if (key === 'elevator-up' || key === 'stairs-up') return null;
+                      return (
                       <button
                         key={key}
                         onClick={() => handleSelectOffice(key, currentFloor)}
@@ -311,7 +325,7 @@ export default function App() {
                         <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#4F46E5', marginBottom: '6px', background: isDarkMode ? '#0F172A' : '#EEF2FF', padding: '4px 10px', borderRadius: '6px' }}>{office.badge || `F${currentFloor}`}</span>
                         <span style={{ fontSize: '1.2rem', fontWeight: 800, color: colorPalette.primaryText }}>{office.title}</span>
                       </button>
-                    ))
+                    )})
                   ) : (
                     <div style={{ textAlign: 'center', padding: '30px 10px', color: colorPalette.secondaryText }}>
                       <span style={{ fontSize: '2rem' }}>🚧</span>
@@ -320,10 +334,59 @@ export default function App() {
                   )}
                 </div>
               </div>
-            ) : (
+            )}
+
+            {/* STATE 2: PIPILI NG TRANSPORT (ELEVATOR / STAIRS) */}
+            {routeStep === 'choose-transport' && destinationData && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                <div className="destination-card" style={{ background: '#F8FAFC', border: '2px solid #CBD5E1', padding: '20px', borderRadius: '16px' }}>
+                  <p className="label" style={{ color: '#475569', fontSize: '0.9rem', fontWeight: 800 }}>🎯 DESTINATION</p>
+                  <h1 className="office-title" style={{ fontSize: '1.6rem', color: '#0F172A', margin: '5px 0' }}>{destinationData.title}</h1>
+                  <span className="floor-badge" style={{ background: '#4F46E5', color: 'white', padding: '6px 12px', borderRadius: '8px', fontWeight: 800 }}>Floor {destinationData.floor}</span>
+                </div>
+
+                <div style={{ background: isDarkMode ? '#1E293B' : '#FFFFFF', padding: '25px', borderRadius: '16px', border: colorPalette.cardBorder }}>
+                  <h3 style={{ margin: '0 0 15px 0', color: colorPalette.primaryText, fontSize: '1.3rem' }}>How would you like to go up?</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <button 
+                      onClick={() => { setSelectedOfficeKey('elevator-up'); setRouteStep('go-to-transport'); }}
+                      style={{ padding: '20px', fontSize: '1.2rem', fontWeight: 800, background: '#EEF2FF', color: '#4F46E5', border: 'none', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      🛗 Use the Elevator
+                    </button>
+                    <button 
+                      onClick={() => { setSelectedOfficeKey('stairs-up'); setRouteStep('go-to-transport'); }}
+                      style={{ padding: '20px', fontSize: '1.2rem', fontWeight: 800, background: '#F1F5F9', color: '#475569', border: 'none', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      🚶‍♂️ Use the Stairs
+                    </button>
+                  </div>
+                  <button onClick={() => { setRouteStep('idle'); setDestinationData(null); }} style={{ marginTop: '15px', background: 'transparent', border: 'none', color: '#EF4444', fontWeight: 800, cursor: 'pointer', width: '100%' }}>Cancel Navigation</button>
+                </div>
+              </div>
+            )}
+
+            {/* STATE 3: PAPUNTA SA ELEVATOR / STAIRS (Nasa 1st Floor) */}
+            {routeStep === 'go-to-transport' && destinationData && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div style={{ background: '#FEF2F2', border: '2px solid #FECDD3', padding: '25px', borderRadius: '16px', textAlign: 'center' }}>
+                  <span style={{ fontSize: '3rem' }}>📍</span>
+                  <h2 style={{ color: '#E11D48', margin: '10px 0', fontSize: '1.4rem' }}>Follow the red line on the map.</h2>
+                  <p style={{ color: '#9F1239', fontWeight: 600 }}>Please proceed to the {selectedOfficeKey === 'elevator-up' ? 'Elevator' : 'Stairs'} to go to Floor {destinationData.floor}.</p>
+                </div>
+
+                <button 
+                  onClick={() => { setCurrentFloor(destinationData.floor); setSelectedOfficeKey(destinationData.key); setRouteStep('arrived'); }}
+                  style={{ background: '#10B981', color: 'white', border: 'none', padding: '20px', fontSize: '1.2rem', fontWeight: 800, borderRadius: '16px', cursor: 'pointer', boxShadow: '0 10px 20px rgba(16, 185, 129, 0.3)' }}
+                >
+                  I'm at Floor {destinationData.floor} ➡️
+                </button>
+              </div>
+            )}
+
+            {/* STATE 4: FINAL DESTINATION DETAILS (Kapag umabot na sa Floor X) */}
+            {(routeStep === 'arrived' || (routeStep === 'idle' && selectedOfficeKey && selectedOfficeKey !== 'elevator-up' && selectedOfficeKey !== 'stairs-up')) && selectedOffice && (
               <div style={{ paddingBottom: '20px' }}>
                 <button 
-                  onClick={() => setSelectedOfficeKey(null)}
+                  onClick={() => { setSelectedOfficeKey(null); setRouteStep('idle'); setDestinationData(null); }}
                   style={{ background: isDarkMode ? '#334155' : '#E2E8F0', color: colorPalette.primaryText, border: 'none', padding: '10px 18px', borderRadius: '50px', fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '20px' }}
                 >
                   ⬅️ Back to Floor {currentFloor} List
