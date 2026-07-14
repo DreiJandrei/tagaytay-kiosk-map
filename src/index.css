@@ -319,140 +319,77 @@ img { max-width: 100%; }
 /* =========================================
    📱 MOBILE RESPONSIVENESS (PHONES & TABLETS)
    ========================================= */
-
 @media (max-width: 1024px) {
-    /* 1. TANGGALIN ANG SCROLL LOCK SA MOBILE */
+    /* BAGO: FULL MAP COMPANION APP MODE PARA SA PHONE */
+    .map-screen-container .dir-header {
+        display: none !important; /* Itago ang header sa phone para walang sagabal */
+    }
+    .map-screen-container .map-sidebar {
+        display: none !important; /* Itago ang puting sidebar na may QR code sa phone */
+    }
+    
     .map-screen-container {
-        height: auto !important;
-        min-height: 100vh !important;
-        overflow-y: auto !important; /* Payagan mag-scroll */
-        overflow-x: hidden !important;
+        height: 100vh !important;
+        overflow: hidden !important; /* I-lock ang screen, bawal mag-scroll down */
     }
+    
     .map-workspace {
-        height: auto !important;
-        overflow: visible !important;
+        height: 100vh !important;
         flex-direction: column !important;
-    }
-
-    /* 2. HEADER FIXES */
-    .dir-header {
-        flex-direction: column !important;
-        height: auto !important;
-        min-height: auto !important;
-        padding: 20px 15px !important;
-        gap: 15px !important;
-    }
-    .dir-header-left {
-        flex-direction: column !important;
-        text-align: center !important;
-        width: 100% !important;
-    }
-    .dir-titles {
-        margin-left: 0 !important;
-        margin-top: 10px !important;
-    }
-    .dir-title {
-        font-size: 1.6rem !important;
-    }
-    .dir-header > div:last-child {
-        flex-wrap: wrap !important;
-        justify-content: center !important;
-        width: 100% !important;
-        gap: 10px !important;
-    }
-    .dir-header button, .dir-header .dir-clock {
-        height: 45px !important;
-        padding: 0 18px !important;
-        font-size: 1rem !important;
-        border-radius: 12px !important;
-        width: auto !important;
-    }
-
-    /* 3. SIDEBAR & SEARCH BAR FIXES */
-    .map-sidebar {
-        width: 100% !important;
-        height: auto !important;
-        max-height: none !important;
-        padding: 20px !important;
-        border-right: none !important;
-        box-sizing: border-box !important;
-        overflow: visible !important;
-    }
-    .sidebar-search-container input {
-        padding: 16px !important;
-        font-size: 1.1rem !important;
-        border-radius: 12px !important;
-    }
-    .destination-card h1 {
-        font-size: 1.5rem !important;
-    }
-
-   /* 4. MAP VIEWPORT & CONTROLS */
-    .map-viewport {
-        min-height: 60vh !important;
-        border-top: 2px solid var(--border-color);
-        width: 100vw !important; 
-        max-width: 100% !important;
         overflow: hidden !important;
     }
-
     
-  /* BAGO: Ibalik ang Map Legend pero pinaliit nang husto para hindi nakaharang */
-    .map-legend {
-        display: block !important;
-        top: 10px !important;
-        left: 10px !important;
-        transform: scale(0.65) !important; /* Pinaliit ng 35% para sumakto sa mobile */
-        transform-origin: top left !important; /* Para sa top-left ang bagsak ng pagliit */
-        padding: 12px !important;
+    .map-viewport {
+        height: 100vh !important;
+        min-height: 100vh !important;
+        width: 100vw !important;
+        border-top: none !important;
+        background-color: var(--bg-map-area);
     }
 
-    /* BAGO: Liitan ang bottom floor selector para magkasya sa phone */
+    /* I-adjust ang Floor Selector sa baba para mas malinis */
     .bottom-floor-bar {
-        width: 90% !important;
-        bottom: 15px !important;
-        padding: 10px !important;
-        gap: 8px !important;
-        border-radius: 16px !important;
+        width: 95% !important;
+        bottom: 25px !important;
+        padding: 12px !important;
+        gap: 6px !important;
+        border-radius: 20px !important;
+        background: rgba(15, 23, 42, 0.95) !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
     }
     .bottom-floor-bar button {
-        min-width: 90px !important;
-        padding: 10px 12px !important;
-        font-size: 0.85rem !important;
+        min-width: 80px !important;
+        padding: 8px 10px !important;
+        font-size: 0.8rem !important;
         border-radius: 10px !important;
     }
 
-    /* Liitan ang 3D at Zoom controls sa phone */
+    /* Map Legend at Controls */
+    .map-legend {
+        display: block !important;
+        top: 20px !important;
+        left: 20px !important;
+        transform: scale(0.60) !important;
+        transform-origin: top left !important;
+    }
+
     .floor-selector {
-        top: 15px !important;
-        right: 15px !important;
-        transform: scale(0.75) translateZ(1px) !important;
-        -webkit-transform: scale(0.75) translateZ(1px) !important;
+        top: 20px !important;
+        right: 20px !important;
+        transform: scale(0.70) translateZ(1px) !important;
         transform-origin: top right !important;
         z-index: 99999 !important;
     }
 
-    /* 5. VIRTUAL KEYBOARD - Itago sa mobile (may sariling keyboard ang phone) */
+    /* Itago ang virtual keyboard ng kiosk */
     .kiosk-virtual-keyboard {
         display: none !important;
     }
 
-    /* 6. WELCOME SCREEN MOBILE FIXES */
-    .welcome-seal {
-        width: 120px !important;
-        height: 120px !important;
-    }
-    .welcome-title {
-        font-size: 2.8rem !important; 
-        line-height: 1.2 !important;
-    }
-    .welcome-subtitle {
-        font-size: 1.1rem !important; 
-        letter-spacing: 2px !important;
-        margin-bottom: 30px !important;
-    }
-    .touch-prompt {
-        font-size: 1.1rem !important;
-        padding: 14px 30px !important;
-    }
+    /* Welcome Screen Fixes kung sakaling buksan ang home sa phone */
+    .welcome-seal { width: 120px !important; height: 120px !important; }
+    .welcome-title { font-size: 2.8rem !important; line-height: 1.2 !important; }
+    .welcome-subtitle { font-size: 1.1rem !important; letter-spacing: 2px !important; margin-bottom: 30px !important; }
+    .touch-prompt { font-size: 1.1rem !important; padding: 14px 30px !important; }
 }

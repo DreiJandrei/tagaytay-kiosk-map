@@ -17,22 +17,21 @@ export default function MapScreen({
 
   // Auto-detect kung mobile (width <= 1024px) para naka-zoom out agad at nakagitna
   // Auto-detect kung mobile (width <= 1024px) para naka-zoom out agad at nakagitna
+ // Auto-detect kung mobile (width <= 1024px)
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 1024;
-  const [zoom, setZoom] = useState(isMobile ? 0.35 : 0.65);
   
-  // Hinatak pakaliwa nang husto (x: -350) at in-adjust ang taas (y: -150) para pumagitna sa phone
-  const [pan, setPan] = useState(isMobile ? { x: -350, y: -150 } : { x: 20, y: -120 });
+  // BAGO: Pinaliit ang zoom (0.28) para magkasya buong mapa, at ini-center ang pan.
+  const [zoom, setZoom] = useState(isMobile ? 0.28 : 0.65);
+  const [pan, setPan] = useState(isMobile ? { x: -350, y: -180 } : { x: 20, y: -120 });
 
   useEffect(() => {
     if (pathRef.current && selectedOfficeKey && offices?.[selectedOfficeKey]) {
       const routeLine = pathRef.current;
       routeLine.style.animation = 'none';
       routeLine.style.transition = 'none';
-      
       const totalLength = routeLine.getTotalLength() || 1000;
       routeLine.style.strokeDasharray = totalLength;
       routeLine.style.strokeDashoffset = totalLength;
-      
       routeLine.getBoundingClientRect(); 
       routeLine.style.transition = 'stroke-dashoffset 1.2s ease-in-out';
       routeLine.style.strokeDashoffset = '0';
@@ -40,12 +39,13 @@ export default function MapScreen({
   }, [selectedOfficeKey, offices]); 
 
   const handleDragStart = (clientX, clientY) => {
+    if (isMobile) return; // BAGO: I-LOCK ANG MAPA SA PHONE (Bawal i-drag)
     isDragging.current = true;
     dragStart.current = { x: clientX - pan.x, y: clientY - pan.y };
   };
 
   const handleDragMove = (clientX, clientY) => {
-    if (!isDragging.current) return;
+    if (isMobile || !isDragging.current) return; // BAGO: I-LOCK DIN DITO
     setPan({ x: clientX - dragStart.current.x, y: clientY - dragStart.current.y });
   };
 
