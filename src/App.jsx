@@ -144,13 +144,18 @@ export default function App() {
 
   const handleSelectOffice = (key, floor) => {
     const targetOffice = liveOfficeDatabase[floor]?.[key];
+    
+    // BAGO: I-detect kung phone ang gamit
+    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 1024;
 
-    if (floor === 1) {
-      setCurrentFloor(1);
+    // BAGO: Kapag Floor 1 O KAYA ay phone ang gamit, idiretso na agad (wag na magtanong ng transport)
+    if (floor === 1 || isMobile) {
+      setCurrentFloor(floor);
       setSelectedOfficeKey(key);
-      setRouteStep('idle');
+      setRouteStep('arrived');
       setDestinationData(null);
     } else {
+      // Ito yung original na logic para sa malaking Kiosk (hihingi muna ng Elevator/Stairs)
       setDestinationData({ key, floor, ...targetOffice });
       setCurrentFloor(1); 
       setSelectedOfficeKey(null);
