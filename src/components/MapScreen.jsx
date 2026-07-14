@@ -18,11 +18,13 @@ export default function MapScreen({
   // Auto-detect kung mobile (width <= 1024px) para naka-zoom out agad at nakagitna
   // Auto-detect kung mobile (width <= 1024px) para naka-zoom out agad at nakagitna
  // Auto-detect kung mobile (width <= 1024px)
+// Auto-detect kung mobile (width <= 1024px)
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 1024;
   
-  // BAGO: Pinaliit ang zoom (0.28) para magkasya buong mapa, at ini-center ang pan.
   const [zoom, setZoom] = useState(isMobile ? 0.28 : 0.65);
-  const [pan, setPan] = useState(isMobile ? { x: -350, y: -180 } : { x: 20, y: -120 });
+  
+  // BAGO: Hinatak natin pataas (y: -350) at pakaliwa (x: -450) para saktong pumagitna sa phone!
+  const [pan, setPan] = useState(isMobile ? { x: -450, y: -350 } : { x: 20, y: -120 });
 
   useEffect(() => {
     if (pathRef.current && selectedOfficeKey && offices?.[selectedOfficeKey]) {

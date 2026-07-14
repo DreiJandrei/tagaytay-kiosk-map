@@ -45,6 +45,8 @@ export default function App() {
   // BAGO: QR CODE MOBILE ROUTING LOGIC
   // Kapag in-scan sa phone, didiretso agad sa Map at iguguhit ang ruta
   // ==============================================================
+ 
+  
   useEffect(() => {
     const routeKey = searchParams.get('route');
     if (routeKey && Object.keys(liveOfficeDatabase).length > 0) {
@@ -55,18 +57,10 @@ export default function App() {
 
       if (foundFloor) {
         setAppState('map');
-        if (foundFloor === 1) {
-          setCurrentFloor(1);
-          setSelectedOfficeKey(routeKey);
-          setRouteStep('idle');
-          setDestinationData(null);
-        } else {
-          const targetOffice = liveOfficeDatabase[foundFloor][routeKey];
-          setDestinationData({ key: routeKey, floor: foundFloor, ...targetOffice });
-          setCurrentFloor(1); 
-          setSelectedOfficeKey(null);
-          setRouteStep('choose-transport'); 
-        }
+        // BAGO: Direkta na siya tatalon sa floor kung nasaan yung opisina! Wala nang tanong-tanong.
+        setCurrentFloor(foundFloor);
+        setSelectedOfficeKey(routeKey);
+        setRouteStep('arrived');
       }
     }
   }, [searchParams, liveOfficeDatabase]);
