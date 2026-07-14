@@ -8,7 +8,6 @@ import AdminPanel from './admin/AdminPanel';
 import './index.css';
 
 import { QRCodeSVG } from 'qrcode.react'; 
-import { jsPDF } from 'jspdf';
 import { useSearchParams } from 'react-router-dom';
 
 import { getAllOffices, initializeDatabase } from './lib/api';
@@ -41,42 +40,32 @@ export default function App() {
   const [transportMethod, setTransportMethod] = useState('elevator');
 
   const [searchParams] = useSearchParams();
-  const [isDownloadMode, setIsDownloadMode] = useState(false);
-  const [downloadStatus, setDownloadStatus] = useState("Preparing your PDF...");
 
-  const generatePDF = (office) => {
-    const doc = new jsPDF();
-    doc.setFontSize(20);
-    doc.text("Tagaytay City Hall", 105, 20, { align: 'center' });
-    doc.setFontSize(16);
-    doc.text(office.title, 105, 30, { align: 'center' });
-    doc.line(20, 35, 190, 35);
-    doc.setFontSize(12);
-    doc.text("Transaction Requirements:", 20, 50);
-    
-    if (office.requirements && office.requirements.length > 0) {
-      office.requirements.forEach((req, index) => {
-        doc.text(`• ${req}`, 25, 60 + (index * 10));
-      });
-    } else {
-      doc.text("No specific requirements listed.", 25, 60);
-    }
-    doc.save(`${office.title}_Requirements.pdf`);
-  };
-
+  // ==============================================================
+  // BAGO: QR CODE MOBILE ROUTING LOGIC
+  // Kapag in-scan sa phone, didiretso agad sa Map at iguguhit ang ruta
+  // ==============================================================
   useEffect(() => {
-    const downloadKey = searchParams.get('download');
-    if (downloadKey) {
-      setIsDownloadMode(true);
-      if (Object.keys(liveOfficeDatabase).length > 0) {
-        const flatOffices = getFlatOffices();
-        const targetOffice = flatOffices.find(o => o.key === downloadKey);
-        if (targetOffice) {
-          setDownloadStatus(`Downloading requirements for ${targetOffice.title}...`);
-          generatePDF(targetOffice);
-          setTimeout(() => { setDownloadStatus("✅ PDF Downloaded! You can now close this tab."); }, 1500);
+    const routeKey = searchParams.get('route');
+    if (routeKey && Object.keys(liveOfficeDatabase).length > 0) {
+      let foundFloor = null;
+      Object.entries(liveOfficeDatabase).forEach(([floorNum, offices]) => {
+        if (offices[routeKey]) foundFloor = parseInt(floorNum);
+      });
+
+      if (foundFloor) {
+        setAppState('map');
+        if (foundFloor === 1) {
+          setCurrentFloor(1);
+          setSelectedOfficeKey(routeKey);
+          setRouteStep('idle');
+          setDestinationData(null);
         } else {
-          setDownloadStatus("❌ Office not found.");
+          const targetOffice = liveOfficeDatabase[foundFloor][routeKey];
+          setDestinationData({ key: routeKey, floor: foundFloor, ...targetOffice });
+          setCurrentFloor(1); 
+          setSelectedOfficeKey(null);
+          setRouteStep('choose-transport'); 
         }
       }
     }
@@ -175,10 +164,6 @@ export default function App() {
     }
   };
 
-  // ==============================================================
-  // BAGO: AUTOMATIC TIMEOUT LOGIC
-  // Kusang lilipat sa next floor pagkatapos ng 4 seconds
-  // ==============================================================
   useEffect(() => {
     let animationTimer;
     if (routeStep === 'go-to-transport' && destinationData) {
@@ -186,7 +171,7 @@ export default function App() {
         setCurrentFloor(destinationData.floor);
         setSelectedOfficeKey(destinationData.key);
         setRouteStep('arrived');
-      }, 4000); // 4 seconds display time sa Ground Floor
+      }, 4000); 
     }
     return () => clearTimeout(animationTimer);
   }, [routeStep, destinationData]);
@@ -214,16 +199,6 @@ export default function App() {
     else if (key === 'CLEAR') setSearchQuery('');
     else setSearchQuery(prev => prev + key);
   };
-
-  if (isDownloadMode) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#F8FAFC', color: '#0F172A', padding: '20px', textAlign: 'center' }}>
-        <div style={{ fontSize: '4rem', marginBottom: '15px' }}>📄</div>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>{downloadStatus}</h2>
-        {downloadStatus.includes('✅') && <p style={{ marginTop: '10px', color: '#64748B' }}>Makikita ang file sa "Downloads" folder ng iyong device.</p>}
-      </div>
-    );
-  }
 
   if (isLoading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#F8FAFC', color: '#0F172A', fontSize: '2rem', fontWeight: 'bold' }}>Initializing Kiosk Systems...</div>;
   
@@ -304,7 +279,6 @@ export default function App() {
 
           <div style={{ flex: 1, overflowY: 'auto', paddingRight: '10px' }}>
             
-            {/* STATE 1: WALANG NAKAPILI */}
             {routeStep === 'idle' && !selectedOfficeKey && (
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <div style={{ background: isDarkMode ? 'linear-gradient(135deg, #1E1B4B, #4F46E5)' : 'linear-gradient(135deg, #4F46E5, #3730A3)', padding: '25px 20px', borderRadius: '16px', color: 'white', marginBottom: '20px', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>
@@ -320,12 +294,7 @@ export default function App() {
                       <button
                         key={key}
                         onClick={() => handleSelectOffice(key, currentFloor)}
-                        style={{
-                          display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
-                          padding: '16px 20px', borderRadius: '14px', border: isDarkMode ? '1px solid #334155' : '1px solid #E2E8F0',
-                          background: isDarkMode ? '#1E293B' : '#FFFFFF', cursor: 'pointer',
-                          textAlign: 'left', transition: 'all 0.2s', width: '100%', boxShadow: '0 4px 6px rgba(0,0,0,0.02)'
-                        }}
+                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '16px 20px', borderRadius: '14px', border: isDarkMode ? '1px solid #334155' : '1px solid #E2E8F0', background: isDarkMode ? '#1E293B' : '#FFFFFF', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s', width: '100%', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}
                       >
                         <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#4F46E5', marginBottom: '6px', background: isDarkMode ? '#0F172A' : '#EEF2FF', padding: '4px 10px', borderRadius: '6px' }}>{office.badge || `F${currentFloor}`}</span>
                         <span style={{ fontSize: '1.2rem', fontWeight: 800, color: colorPalette.primaryText }}>{office.title}</span>
@@ -341,7 +310,6 @@ export default function App() {
               </div>
             )}
 
-            {/* STATE 2: PIPILI NG TRANSPORT */}
             {routeStep === 'choose-transport' && destinationData && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 <div className="destination-card" style={{ background: '#F8FAFC', border: '2px solid #CBD5E1', padding: '20px', borderRadius: '16px' }}>
@@ -369,7 +337,6 @@ export default function App() {
               </div>
             )}
 
-            {/* STATE 3: PAPUNTA SA ELEVATOR / STAIRS (Walang Button na, puro loading text nalang!) */}
             {routeStep === 'go-to-transport' && destinationData && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div style={{ background: '#FEF2F2', border: '2px solid #FECDD3', padding: '25px', borderRadius: '16px', textAlign: 'center' }}>
@@ -384,7 +351,6 @@ export default function App() {
               </div>
             )}
 
-            {/* STATE 4: FINAL DESTINATION DETAILS */}
             {(routeStep === 'arrived' || (routeStep === 'idle' && selectedOfficeKey && selectedOfficeKey !== 'elevator-up' && selectedOfficeKey !== 'stairs-up')) && selectedOffice && (
               <div style={{ paddingBottom: '20px' }}>
                 <button 
@@ -400,13 +366,11 @@ export default function App() {
                   <span className="floor-badge" style={{ fontSize: '1.1rem', padding: '6px 14px', display: 'inline-block', marginTop: '10px', background: '#4F46E5', color: 'white', borderRadius: '8px', fontWeight: 800 }}>{selectedOffice.badge}</span>
                 </div>
 
-                {/* HANAPIN AT PALITAN ANG BUONG BLOCK NA ITO SA APP.JSX */}
                 <div className="office-meta" style={{ fontSize: '1.1rem', color: colorPalette.secondaryText, marginBottom: '20px' }}>
                   {selectedOffice.isDirectionOnly ? (
                     <p style={{ background: '#FEF2F2', color: '#E11D48', padding: '15px', borderRadius: '12px', border: '1px solid #FECDD3', fontWeight: 600 }}>🚶‍♂️ <strong>Wayfinding Path Generated:</strong> Please follow the blinking red path indicator.</p>
                   ) : (
                     <>
-                      {/* BAGO: Idinagdag natin ang Status sa Map Sidebar */}
                       <p style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ fontSize: '1.2rem' }}>
                           {selectedOffice.status === 'In a Meeting' ? '🔴' : selectedOffice.status === 'Out of Office' ? '🟡' : selectedOffice.status === 'Closed' ? '⚫' : '🟢'}
@@ -433,10 +397,10 @@ export default function App() {
                     </ul>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', background: isDarkMode ? '#1E293B' : '#FFFFFF', padding: '15px', borderRadius: '12px', border: `2px dashed ${isDarkMode ? '#475569' : '#CBD5E1'}`, boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
                       <span style={{ fontSize: '0.9rem', fontWeight: '800', textAlign: 'center' }}>
-                        📱 I-scan para i-download<br/>(PDF)
+                        📱 I-scan para makita ang<br/>direksyon sa phone
                       </span>
                       <div style={{ padding: '10px', backgroundColor: '#FFFFFF', borderRadius: '8px' }}>
-                        <QRCodeSVG value={`${window.location.origin}/?download=${selectedOfficeKey}`} size={120} bgColor={"#ffffff"} fgColor={"#0F172A"} />
+                        <QRCodeSVG value={`${window.location.origin}/?route=${selectedOfficeKey}`} size={120} bgColor={"#ffffff"} fgColor={"#0F172A"} />
                       </div>
                     </div>
                   </div>
