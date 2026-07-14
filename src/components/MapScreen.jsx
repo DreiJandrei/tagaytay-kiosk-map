@@ -208,11 +208,9 @@ export default function MapScreen({
             <svg width="1400" height="1300" style={{ position: 'absolute', top: 0, left: 0, zIndex: 1, pointerEvents: 'none' }}>
               <g stroke="#9CA3AF" strokeWidth="8" fill="transparent" strokeLinecap="round">
                 <rect x="30" y="80" width="1000" height="850" rx="12" />
-                <path d="M 30 240 L 1030 240" />
+                {/* BAGO: Ibinalik na natin yung gaps at pinto para sa mga opisina sa itaas! */}
+                <path d="M 30 240 L 80 240 M 120 240 L 190 240 M 230 240 L 310 240 M 350 240 L 430 240 M 470 240 L 665 240 M 705 240 L 915 240 M 955 240 L 1030 240" />
                 <path d="M 30 310 L 380 310" />
-                <path d="M 380 380 L 380 520" />
-                <path d="M 720 490 L 720 280 L 800 280 M 870 280 L 950 280 L 950 490 L 880 490 M 780 490 L 720 490" />
-                <path d="M 30 520 L 480 520 M 580 520 L 1030 520" />
               </g>
             </svg>
           )}
