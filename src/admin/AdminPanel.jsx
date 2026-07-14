@@ -16,13 +16,15 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
   const getOfficesForSelectedFloor = () => {
     if (!officeDatabase) return [];
     if (officeDatabase[selectedFloor]) {
-      return Object.entries(officeDatabase[selectedFloor]).map(([key, details]) => ({
-        key: key,
-        ...details
-      }));
+      return Object.entries(officeDatabase[selectedFloor])
+        .filter(([key]) => key !== 'elevator-up' && key !== 'stairs-up') // BAGO: Itinago nang tuluyan ang stairs at elevator sa admin list
+        .map(([key, details]) => ({
+          key: key,
+          ...details
+        }));
     }
     if (Array.isArray(officeDatabase)) {
-      return officeDatabase.filter(off => Number(off.floor) === Number(selectedFloor));
+      return officeDatabase.filter(off => Number(off.floor) === Number(selectedFloor) && off.key !== 'elevator-up' && off.key !== 'stairs-up');
     }
     return [];
   };
