@@ -29,7 +29,8 @@ export const initializeDatabase = async (seedData) => {
           badge: item.badge || '',
           hours: item.hours || '',
           head: item.head || '',
-          requirements: item.requirements || []
+          requirements: item.requirements || [],
+          status: item.status || 'Available' // BAGO: Default status
         });
       });
     });
@@ -61,7 +62,8 @@ export const getAllOffices = async () => {
         hours: row.hours,
         head: row.head,
         requirements: row.requirements,
-        cssClass: row.css_class // <-- BINABASA NA NIYA YUNG KULAY
+        cssClass: row.css_class,
+        status: row.status || 'Available' // BAGO: Kumukuha ng status sa database
       };
     });
 
@@ -83,7 +85,8 @@ export const updateOffice = async (officeKey, updates) => {
         hours: updates.hours,
         head: updates.head,
         requirements: updates.requirements,
-        css_class: updates.cssClass // <-- SINE-SAVE NA NIYA YUNG KULAY
+        css_class: updates.cssClass,
+        status: updates.status // BAGO: Nagse-save ng status sa database
       })
       .eq('office_key', officeKey)
       .select();

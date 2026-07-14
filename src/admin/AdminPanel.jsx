@@ -11,6 +11,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
   const [formHead, setFormHead] = useState('');
   const [formRequirements, setFormRequirements] = useState('');
   const [formCssClass, setFormCssClass] = useState('');
+  const [formStatus, setFormStatus] = useState('Available'); // BAGO: Status state
 
   const getOfficesForSelectedFloor = () => {
     if (!officeDatabase) return [];
@@ -35,6 +36,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
       setFormHours(currentOffice.hours || '');
       setFormHead(currentOffice.head || '');
       setFormCssClass(currentOffice.cssClass || '');
+      setFormStatus(currentOffice.status || 'Available'); // BAGO: Set initial status
       
       if (Array.isArray(currentOffice.requirements)) {
         setFormRequirements(currentOffice.requirements.join('\n'));
@@ -66,7 +68,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
         head: formHead,
         badge: currentOffice?.badge || '',
         requirements: requirementsArray,
-        cssClass: formCssClass
+        cssClass: formCssClass,
+        status: formStatus // BAGO: Pinapasa ang status sa backend
       });
 
       if (onDataUpdate) onDataUpdate();
@@ -172,7 +175,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
                   <div>
                     <label style={{ display: 'block', fontWeight: '700', color: '#475569', marginBottom: '6px', fontSize: '0.95rem' }}>Department Head</label>
                     <input type="text" value={formHead} onChange={(e) => setFormHead(e.target.value)} style={{
@@ -181,7 +184,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                   </div>
                   
                   <div>
-                    <label style={{ display: 'block', fontWeight: '700', color: '#475569', marginBottom: '6px', fontSize: '0.95rem' }}>Room Theme / Status</label>
+                    <label style={{ display: 'block', fontWeight: '700', color: '#475569', marginBottom: '6px', fontSize: '0.95rem' }}>Room Theme</label>
                     <select value={formCssClass} onChange={(e) => setFormCssClass(e.target.value)} style={{
                       width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '1rem', outline: 'none', backgroundColor: '#F8FAFC'
                     }}>
@@ -193,6 +196,19 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                       <option value="theme-purple">🟣 Purple</option>
                       <option value="theme-teal">🟢 Teal</option>
                       <option value="theme-gray">🔘 Dark Gray</option>
+                    </select>
+                  </div>
+
+                  {/* BAGO: Status Dropdown */}
+                  <div>
+                    <label style={{ display: 'block', fontWeight: '700', color: '#475569', marginBottom: '6px', fontSize: '0.95rem' }}>Current Status</label>
+                    <select value={formStatus} onChange={(e) => setFormStatus(e.target.value)} style={{
+                      width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '1rem', outline: 'none', backgroundColor: '#F8FAFC'
+                    }}>
+                      <option value="Available">🟢 Available</option>
+                      <option value="In a Meeting">🔴 In a Meeting</option>
+                      <option value="Out of Office">🟡 Out of Office</option>
+                      <option value="Closed">⚫ Closed</option>
                     </select>
                   </div>
                 </div>

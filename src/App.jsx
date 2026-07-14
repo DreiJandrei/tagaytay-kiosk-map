@@ -400,13 +400,25 @@ export default function App() {
                   <span className="floor-badge" style={{ fontSize: '1.1rem', padding: '6px 14px', display: 'inline-block', marginTop: '10px', background: '#4F46E5', color: 'white', borderRadius: '8px', fontWeight: 800 }}>{selectedOffice.badge}</span>
                 </div>
 
+                {/* HANAPIN AT PALITAN ANG BUONG BLOCK NA ITO SA APP.JSX */}
                 <div className="office-meta" style={{ fontSize: '1.1rem', color: colorPalette.secondaryText, marginBottom: '20px' }}>
                   {selectedOffice.isDirectionOnly ? (
                     <p style={{ background: '#FEF2F2', color: '#E11D48', padding: '15px', borderRadius: '12px', border: '1px solid #FECDD3', fontWeight: 600 }}>🚶‍♂️ <strong>Wayfinding Path Generated:</strong> Please follow the blinking red path indicator.</p>
                   ) : (
                     <>
-                      <p style={{ marginBottom: '8px' }}>🕒 <strong style={{ color: colorPalette.primaryText }}>Hours:</strong> {selectedOffice.hours}</p>
-                      <p>👤 <strong style={{ color: colorPalette.primaryText }}>Head:</strong> {selectedOffice.head}</p>
+                      {/* BAGO: Idinagdag natin ang Status sa Map Sidebar */}
+                      <p style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '1.2rem' }}>
+                          {selectedOffice.status === 'In a Meeting' ? '🔴' : selectedOffice.status === 'Out of Office' ? '🟡' : selectedOffice.status === 'Closed' ? '⚫' : '🟢'}
+                        </span>
+                        <strong style={{ color: colorPalette.primaryText }}>{lang === 'EN' ? 'Status:' : 'Estado:'}</strong>
+                        <span style={{ color: selectedOffice.status === 'In a Meeting' ? '#EF4444' : selectedOffice.status === 'Out of Office' ? '#F59E0B' : selectedOffice.status === 'Closed' ? '#64748B' : '#10B981', fontWeight: 900 }}>
+                          {selectedOffice.status === 'In a Meeting' && lang === 'TL' ? 'May Pulong' : selectedOffice.status === 'Out of Office' && lang === 'TL' ? 'Wala sa Opisina' : selectedOffice.status === 'Closed' && lang === 'TL' ? 'Sarado' : selectedOffice.status === 'Available' && lang === 'TL' ? 'Maaaring Kausapin' : selectedOffice.status || 'Available'}
+                        </span>
+                      </p>
+                      
+                      <p style={{ marginBottom: '8px' }}>🕒 <strong style={{ color: colorPalette.primaryText }}>{lang === 'EN' ? 'Hours:' : 'Oras:'}</strong> {selectedOffice.hours}</p>
+                      <p>👤 <strong style={{ color: colorPalette.primaryText }}>{lang === 'EN' ? 'Head:' : 'Pinuno:'}</strong> {selectedOffice.head}</p>
                     </>
                   )}
                 </div>
