@@ -96,6 +96,14 @@ export default function MapScreen({
   // ==============================================================
   let finalPathData = selectedOffice ? selectedOffice.pathData : "";
 
+  // BAGO: Visual Red Line kapag nag-cli-climb ng stairs para hindi blangko
+  if (routeStep === 'climbing-stairs' && transportMethod === 'stairs') {
+      const x = kioskStyle.left;
+      const y = kioskStyle.top;
+      // Gagawa ng maliit na zigzag path na mukhang hagdan paakyat
+      finalPathData = `M ${x} ${y} L ${x} ${y - 20} L ${x + 20} ${y - 20} L ${x + 20} ${y - 40} L ${x + 40} ${y - 40}`;
+  }
+
   if (selectedOffice && currentFloor !== 1) {
       if (currentFloor === 2) {
           if (transportMethod === 'stairs') {
