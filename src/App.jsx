@@ -18,6 +18,9 @@ export default function App() {
   const [liveOfficeDatabase, setLiveOfficeDatabase] = useState({});
   const [isLoading, setIsLoading] = useState(true);
 
+  // BAGO: Authorization State para sa Link Security
+  const [isAuthorized, setIsAuthorized] = useState(false);
+
   const [appState, setAppState] = useState('welcome');
   const [theme, setTheme] = useState('light'); 
   const [currentFloor, setCurrentFloor] = useState(1);
@@ -42,11 +45,26 @@ export default function App() {
   const [searchParams] = useSearchParams();
 
   // ==============================================================
-  // BAGO: QR CODE MOBILE ROUTING LOGIC
-  // Kapag in-scan sa phone, didiretso agad sa Map at iguguhit ang ruta
+  // BAGO: KIOSK SECURITY LOCK
   // ==============================================================
- 
-  
+  useEffect(() => {
+    // I-check kung na-authorize na dati ang browser na ito
+    const authorized = localStorage.getItem('kiosk_authorized');
+    if (authorized === 'true') {
+      setIsAuthorized(true);
+    } else {
+      // Kung hindi pa, hanapin yung secret key sa URL
+      const key = searchParams.get('key');
+      if (key === 'cct-bsit-kiosk') { 
+        localStorage.setItem('kiosk_authorized', 'true');
+        setIsAuthorized(true);
+      }
+    }
+  }, [searchParams]);
+
+  // ==============================================================
+  // BAGO: QR CODE MOBILE ROUTING LOGIC
+  // ==============================================================
   useEffect(() => {
     const routeKey = searchParams.get('route');
     if (routeKey && Object.keys(liveOfficeDatabase).length > 0) {
@@ -57,7 +75,7 @@ export default function App() {
 
       if (foundFloor) {
         setAppState('map');
-        // BAGO: Direkta na siya tatalon sa floor kung nasaan yung opisina! Wala nang tanong-tanong.
+        // BAGO: Direkta na siya tatalon sa floor kung nasaan yung opisina!
         setCurrentFloor(foundFloor);
         setSelectedOfficeKey(routeKey);
         setRouteStep('arrived');
@@ -145,17 +163,15 @@ export default function App() {
   const handleSelectOffice = (key, floor) => {
     const targetOffice = liveOfficeDatabase[floor]?.[key];
     
-    // BAGO: I-detect kung phone ang gamit
+    // I-detect kung phone ang gamit
     const isMobile = typeof window !== 'undefined' && window.innerWidth <= 1024;
 
-    // BAGO: Kapag Floor 1 O KAYA ay phone ang gamit, idiretso na agad (wag na magtanong ng transport)
     if (floor === 1 || isMobile) {
       setCurrentFloor(floor);
       setSelectedOfficeKey(key);
       setRouteStep('arrived');
       setDestinationData(null);
     } else {
-      // Ito yung original na logic para sa malaking Kiosk (hihingi muna ng Elevator/Stairs)
       setDestinationData({ key, floor, ...targetOffice });
       setCurrentFloor(1); 
       setSelectedOfficeKey(null);
@@ -180,7 +196,7 @@ export default function App() {
     const flatList = [];
     Object.entries(liveOfficeDatabase).forEach(([floorNum, floorOffices]) => {
       Object.entries(floorOffices).forEach(([dbKey, officeDetails]) => {
-        // BAGO: Wag isama ang elevator at stairs sa listahan ng search at frequently searched
+        // BAGO: Wag isama ang elevator at stairs sa search list
         if (dbKey !== 'elevator-up' && dbKey !== 'stairs-up') {
           flatList.push({ key: dbKey, floor: parseInt(floorNum), ...officeDetails });
         }
@@ -189,11 +205,11 @@ export default function App() {
     return flatList;
   };
 
- const filteredSearchOptions = searchQuery.trim() === "" ? [] : getFlatOffices().filter(off => 
+  const filteredSearchOptions = searchQuery.trim() === "" ? [] : getFlatOffices().filter(off => 
     off.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // BAGO: Kunin ang top 4 na pinakamadalas i-search
+  // BAGO: Top 4 Frequently Searched
   const popularSearches = getFlatOffices()
     .sort((a, b) => (b.searchCount || 0) - (a.searchCount || 0))
     .slice(0, 4);
@@ -204,9 +220,8 @@ export default function App() {
     setSearchQuery("");
     setShowKeyboard(false);
     
-    await incrementSearchCount(key); // Dagdag +1 sa database
+    await incrementSearchCount(key); 
     
-    // Auto-update sa screen para updated agad ang count
     setLiveOfficeDatabase(prev => {
       const newData = { ...prev };
       if (newData[floor] && newData[floor][key]) {
@@ -224,6 +239,21 @@ export default function App() {
     else if (key === 'CLEAR') setSearchQuery('');
     else setSearchQuery(prev => prev + key);
   };
+
+  // ==============================================================
+  // BAGO: I-block ang mga users na nag-open lang ng link
+  // ==============================================================
+  if (!isAuthorized) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#0F172A', color: 'white', textAlign: 'center', padding: '20px' }}>
+        <h1 style={{ fontSize: '5rem', margin: 0 }}>🔒</h1>
+        <h2 style={{ fontSize: '2.5rem', marginTop: '20px' }}>System Locked</h2>
+        <p style={{ color: '#94A3B8', fontSize: '1.2rem', maxWidth: '500px', lineHeight: '1.6' }}>
+          This system is restricted and can only be accessed from the physical Tagaytay City Hall Kiosk Terminal.
+        </p>
+      </div>
+    );
+  }
 
   if (isLoading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#F8FAFC', color: '#0F172A', fontSize: '2rem', fontWeight: 'bold' }}>Initializing Kiosk Systems...</div>;
   
@@ -288,7 +318,7 @@ export default function App() {
               )}
             </div>
 
-            {/* 1. KUNG MAY TINA-TYPE NA ANG USER (REGULAR SEARCH RESULTS) */}
+            {/* 1. REGULAR SEARCH RESULTS */}
             {searchQuery.trim() !== "" && filteredSearchOptions.length > 0 && (
               <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF', border: '3px solid #4F46E5', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.4)', zIndex: 200, maxHeight: '360px', overflowY: 'auto', marginTop: '10px' }}>
                 {filteredSearchOptions.map((officeItem) => (
@@ -300,7 +330,7 @@ export default function App() {
               </div>
             )}
 
-            {/* 2. KUNG WALA PANG TINA-TYPE (FREQUENTLY SEARCHED / TRENDING) */}
+            {/* 2. FREQUENTLY SEARCHED */}
             {searchQuery.trim() === "" && showKeyboard && popularSearches.length > 0 && (
               <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF', border: '3px solid #4F46E5', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.4)', zIndex: 200, marginTop: '10px', overflow: 'hidden' }}>
                 <div style={{ padding: '15px 24px', background: isDarkMode ? '#334155' : '#EEF2FF', borderBottom: isDarkMode ? '2px solid #475569' : '2px solid #E2E8F0', fontWeight: '900', color: '#4F46E5', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
