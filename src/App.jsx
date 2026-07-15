@@ -549,6 +549,33 @@ export default function App() {
           transportMethod={transportMethod} 
         />
 
+        {/* BAGO: SCREENSHOT REMINDER PARA SA MOBILE QR USERS */}
+        {searchParams.get('route') && (
+          <div style={{
+            position: 'absolute',
+            top: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: '#FEF3C7',
+            color: '#92400E',
+            padding: '12px 20px',
+            borderRadius: '12px',
+            border: '2px solid #F59E0B',
+            zIndex: 99999,
+            width: '85%',
+            maxWidth: '400px',
+            textAlign: 'center',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+          }}>
+            <span style={{ display: 'block', fontSize: '1.1rem', fontWeight: '900', marginBottom: '4px' }}>
+              📸 Take a Screenshot!
+            </span>
+            <span style={{ fontSize: '0.85rem', fontWeight: '700', lineHeight: '1.4' }}>
+              This map session will expire automatically if you lock your phone or switch apps.
+            </span>
+          </div>
+        )}
+
         {showKeyboard && (
           <div className="kiosk-virtual-keyboard" style={{ position: 'absolute', bottom: '20px', left: '480px', right: '30px', backgroundColor: isDarkMode ? '#1E293B' : '#F1F5F9', border: '4px solid #4F46E5', borderRadius: '24px', padding: '25px', zIndex: 1000, display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
