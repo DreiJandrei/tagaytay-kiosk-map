@@ -180,7 +180,10 @@ export default function App() {
     const flatList = [];
     Object.entries(liveOfficeDatabase).forEach(([floorNum, floorOffices]) => {
       Object.entries(floorOffices).forEach(([dbKey, officeDetails]) => {
-        flatList.push({ key: dbKey, floor: parseInt(floorNum), ...officeDetails });
+        // BAGO: Wag isama ang elevator at stairs sa listahan ng search at frequently searched
+        if (dbKey !== 'elevator-up' && dbKey !== 'stairs-up') {
+          flatList.push({ key: dbKey, floor: parseInt(floorNum), ...officeDetails });
+        }
       });
     });
     return flatList;
