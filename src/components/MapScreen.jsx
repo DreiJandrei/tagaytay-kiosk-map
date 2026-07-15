@@ -23,8 +23,9 @@ export default function MapScreen({
   
   const [zoom, setZoom] = useState(isMobile ? 0.28 : 0.65);
   
-  // BAGO: Hinatak natin pataas (y: -350) at pakaliwa (x: -450) para saktong pumagitna sa phone!
-  const [pan, setPan] = useState(isMobile ? { x: -450, y: -350 } : { x: 20, y: -120 });
+  
+  // BAGO: Ibinalik natin sa gitna ang mapa (ginawang y: -80) para hindi sumiksik sa taas
+  const [pan, setPan] = useState(isMobile ? { x: -450, y: -80 } : { x: 20, y: -120 });
 
   useEffect(() => {
     if (pathRef.current && selectedOfficeKey && offices?.[selectedOfficeKey]) {

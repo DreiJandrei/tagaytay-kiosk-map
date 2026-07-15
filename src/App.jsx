@@ -550,28 +550,30 @@ export default function App() {
         />
 
         {/* BAGO: SCREENSHOT REMINDER PARA SA MOBILE QR USERS */}
+       {/* BAGO: SCREENSHOT REMINDER PARA SA MOBILE QR USERS (Pinaliit) */}
         {searchParams.get('route') && (
           <div style={{
             position: 'absolute',
-            top: '20px',
+            top: '15px',
             left: '50%',
             transform: 'translateX(-50%)',
-            background: '#FEF3C7',
+            background: 'rgba(254, 243, 199, 0.95)',
+            backdropFilter: 'blur(4px)',
             color: '#92400E',
-            padding: '12px 20px',
+            padding: '10px 15px',
             borderRadius: '12px',
             border: '2px solid #F59E0B',
             zIndex: 99999,
-            width: '85%',
-            maxWidth: '400px',
+            width: '90%',
+            maxWidth: '350px',
             textAlign: 'center',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+            boxShadow: '0 8px 20px rgba(0,0,0,0.15)'
           }}>
-            <span style={{ display: 'block', fontSize: '1.1rem', fontWeight: '900', marginBottom: '4px' }}>
+            <span style={{ display: 'block', fontSize: '1rem', fontWeight: '900', marginBottom: '2px' }}>
               📸 Take a Screenshot!
             </span>
-            <span style={{ fontSize: '0.85rem', fontWeight: '700', lineHeight: '1.4' }}>
-              This map session will expire automatically if you lock your phone or switch apps.
+            <span style={{ fontSize: '0.8rem', fontWeight: '700', lineHeight: '1.2' }}>
+              Session expires when screen is locked or idle.
             </span>
           </div>
         )}
