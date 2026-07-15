@@ -549,11 +549,12 @@ export default function App() {
           transportMethod={transportMethod} 
         />
 
-        {/* BAGO: SCREENSHOT REMINDER PARA SA MOBILE QR USERS (Pinaliit) */}
+        {/* BAGO: SCREENSHOT REMINDER PARA SA MOBILE QR USERS (Nasa Ibaba na) */}
         {searchParams.get('route') && (
           <div style={{
             position: 'absolute',
-            top: '15px',
+            bottom: '100px', /* BAGO: Inilagay sa ibaba, sa ibabaw ng floor buttons */
+            top: 'auto',     /* BAGO: Tinanggal ang pagkapako sa taas */
             left: '50%',
             transform: 'translateX(-50%)',
             background: 'rgba(254, 243, 199, 0.95)',
