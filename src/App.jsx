@@ -18,8 +18,9 @@ export default function App() {
   const [liveOfficeDatabase, setLiveOfficeDatabase] = useState({});
   const [isLoading, setIsLoading] = useState(true);
 
-  // BAGO: Authorization State para sa Link Security
+  // SECURITY STATES
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isMobileSessionExpired, setIsMobileSessionExpired] = useState(false); // BAGO: State para sa Self-Destruct
 
   const [appState, setAppState] = useState('welcome');
   const [theme, setTheme] = useState('light'); 
@@ -37,7 +38,6 @@ export default function App() {
   const [showAdmin, setShowAdmin] = useState(false);
   const [secretClicks, setSecretClicks] = useState(0);
 
-  // SMART ROUTING STATES
   const [routeStep, setRouteStep] = useState('idle'); 
   const [destinationData, setDestinationData] = useState(null);
   const [transportMethod, setTransportMethod] = useState('elevator');
@@ -45,25 +45,69 @@ export default function App() {
   const [searchParams] = useSearchParams();
 
   // ==============================================================
-  // BAGO: KIOSK SECURITY LOCK
+  // KIOSK SECURITY LOCK (Updated para papasukin ang QR Scanners)
   // ==============================================================
   useEffect(() => {
-    // I-check kung na-authorize na dati ang browser na ito
     const authorized = localStorage.getItem('kiosk_authorized');
+    const key = searchParams.get('key');
+    const routeKey = searchParams.get('route'); // Check kung scan galing sa QR
+    
     if (authorized === 'true') {
       setIsAuthorized(true);
-    } else {
-      // Kung hindi pa, hanapin yung secret key sa URL
-      const key = searchParams.get('key');
-      if (key === 'cct-bsit-kiosk') { 
-        localStorage.setItem('kiosk_authorized', 'true');
-        setIsAuthorized(true);
-      }
+    } else if (key === 'cct-bsit-kiosk') { 
+      localStorage.setItem('kiosk_authorized', 'true');
+      setIsAuthorized(true);
+    } else if (routeKey) {
+      // Kung galing sa QR code, i-allow para lumabas ang map sa phone nila
+      setIsAuthorized(true);
     }
   }, [searchParams]);
 
   // ==============================================================
-  // BAGO: QR CODE MOBILE ROUTING LOGIC
+  // BAGO: SELF-DESTRUCT & ANTI-IDLE LOGIC PARA SA PHONES
+  // ==============================================================
+  useEffect(() => {
+    const routeKey = searchParams.get('route');
+    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 1024;
+
+    // Aandar lang ang self-destruct kung phone ang gamit at galing sa QR scan
+    if (isMobile && routeKey) {
+      
+      // 1. Kapag pinatay ang screen o ni-minimize ang browser
+      const handleVisibilityChange = () => {
+        if (document.hidden) {
+          setIsMobileSessionExpired(true);
+        }
+      };
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+
+      // 2. Kapag walang ginagawa (idle) ng 5 minuto
+      let idleTimeout;
+      const resetIdleTimer = () => {
+        clearTimeout(idleTimeout);
+        idleTimeout = setTimeout(() => {
+          setIsMobileSessionExpired(true);
+        }, 300000); // 300000 ms = 5 minutes
+      };
+
+      window.addEventListener('mousemove', resetIdleTimer);
+      window.addEventListener('touchstart', resetIdleTimer);
+      window.addEventListener('click', resetIdleTimer);
+      
+      resetIdleTimer();
+
+      return () => {
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+        clearTimeout(idleTimeout);
+        window.removeEventListener('mousemove', resetIdleTimer);
+        window.removeEventListener('touchstart', resetIdleTimer);
+        window.removeEventListener('click', resetIdleTimer);
+      };
+    }
+  }, [searchParams]);
+
+  // ==============================================================
+  // QR CODE MOBILE ROUTING LOGIC
   // ==============================================================
   useEffect(() => {
     const routeKey = searchParams.get('route');
@@ -75,7 +119,6 @@ export default function App() {
 
       if (foundFloor) {
         setAppState('map');
-        // BAGO: Direkta na siya tatalon sa floor kung nasaan yung opisina!
         setCurrentFloor(foundFloor);
         setSelectedOfficeKey(routeKey);
         setRouteStep('arrived');
@@ -162,8 +205,6 @@ export default function App() {
 
   const handleSelectOffice = (key, floor) => {
     const targetOffice = liveOfficeDatabase[floor]?.[key];
-    
-    // I-detect kung phone ang gamit
     const isMobile = typeof window !== 'undefined' && window.innerWidth <= 1024;
 
     if (floor === 1 || isMobile) {
@@ -196,7 +237,6 @@ export default function App() {
     const flatList = [];
     Object.entries(liveOfficeDatabase).forEach(([floorNum, floorOffices]) => {
       Object.entries(floorOffices).forEach(([dbKey, officeDetails]) => {
-        // BAGO: Wag isama ang elevator at stairs sa search list
         if (dbKey !== 'elevator-up' && dbKey !== 'stairs-up') {
           flatList.push({ key: dbKey, floor: parseInt(floorNum), ...officeDetails });
         }
@@ -209,12 +249,10 @@ export default function App() {
     off.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // BAGO: Top 4 Frequently Searched
   const popularSearches = getFlatOffices()
     .sort((a, b) => (b.searchCount || 0) - (a.searchCount || 0))
     .slice(0, 4);
 
-  // BAGO: Pag may pinili sa search, mag-a-add ng +1 sa count tapos pupunta sa opisina
   const handleSearchSelect = async (key, floor) => {
     handleSelectOffice(key, floor);
     setSearchQuery("");
@@ -241,8 +279,25 @@ export default function App() {
   };
 
   // ==============================================================
-  // BAGO: I-block ang mga users na nag-open lang ng link
+  // RENDER BLOCKS: SECURITY LOCKS & LOADING
   // ==============================================================
+  
+  // 1. Kapag nag-self destruct sa phone
+  if (isMobileSessionExpired) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#FFFFFF', color: '#0F172A', textAlign: 'center', padding: '30px' }}>
+        <span style={{ fontSize: '5rem', marginBottom: '20px' }}>⏱️</span>
+        <h2 style={{ fontSize: '2.5rem', fontWeight: 900, color: '#E11D48', margin: '0 0 15px 0' }}>Session Expired</h2>
+        <p style={{ fontSize: '1.1rem', color: '#475569', maxWidth: '400px', fontWeight: 600, lineHeight: '1.6', margin: 0 }}>
+          For security purposes, this mobile map link has self-destructed because you minimized the app or turned off your screen.
+          <br/><br/>
+          Please return to the Tagaytay City Hall Directory Kiosk and scan the QR code again.
+        </p>
+      </div>
+    );
+  }
+
+  // 2. Kapag in-open yung link sa labas na walang secret key
   if (!isAuthorized) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#0F172A', color: 'white', textAlign: 'center', padding: '20px' }}>
@@ -255,6 +310,7 @@ export default function App() {
     );
   }
 
+  // 3. Normal Loading Screen
   if (isLoading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#F8FAFC', color: '#0F172A', fontSize: '2rem', fontWeight: 'bold' }}>Initializing Kiosk Systems...</div>;
   
   if (appState === 'welcome') return <WelcomeScreen onStart={() => setAppState('map')} />;
@@ -318,7 +374,6 @@ export default function App() {
               )}
             </div>
 
-            {/* 1. REGULAR SEARCH RESULTS */}
             {searchQuery.trim() !== "" && filteredSearchOptions.length > 0 && (
               <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF', border: '3px solid #4F46E5', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.4)', zIndex: 200, maxHeight: '360px', overflowY: 'auto', marginTop: '10px' }}>
                 {filteredSearchOptions.map((officeItem) => (
@@ -330,7 +385,6 @@ export default function App() {
               </div>
             )}
 
-            {/* 2. FREQUENTLY SEARCHED */}
             {searchQuery.trim() === "" && showKeyboard && popularSearches.length > 0 && (
               <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF', border: '3px solid #4F46E5', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.4)', zIndex: 200, marginTop: '10px', overflow: 'hidden' }}>
                 <div style={{ padding: '15px 24px', background: isDarkMode ? '#334155' : '#EEF2FF', borderBottom: isDarkMode ? '2px solid #475569' : '2px solid #E2E8F0', fontWeight: '900', color: '#4F46E5', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
