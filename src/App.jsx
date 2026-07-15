@@ -549,8 +549,7 @@ export default function App() {
           transportMethod={transportMethod} 
         />
 
-        {/* BAGO: SCREENSHOT REMINDER PARA SA MOBILE QR USERS */}
-       {/* BAGO: SCREENSHOT REMINDER PARA SA MOBILE QR USERS (Pinaliit) */}
+        {/* BAGO: SCREENSHOT REMINDER PARA SA MOBILE QR USERS (Pinaliit) */}
         {searchParams.get('route') && (
           <div style={{
             position: 'absolute',
