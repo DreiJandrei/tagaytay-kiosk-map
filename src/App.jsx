@@ -438,29 +438,65 @@ export default function App() {
             )}
 
             {routeStep === 'choose-transport' && destinationData && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <div className="destination-card" style={{ background: '#F8FAFC', border: '2px solid #CBD5E1', padding: '20px', borderRadius: '16px' }}>
-                  <p className="label" style={{ color: '#475569', fontSize: '0.9rem', fontWeight: 800 }}>🎯 DESTINATION</p>
-                  <h1 className="office-title" style={{ fontSize: '1.6rem', color: '#0F172A', margin: '5px 0' }}>{destinationData.title}</h1>
-                  <span className="floor-badge" style={{ background: '#4F46E5', color: 'white', padding: '6px 12px', borderRadius: '8px', fontWeight: 800 }}>Floor {destinationData.floor}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', paddingBottom: '20px' }}>
+                <div className="destination-card" style={{ marginBottom: '20px' }}>
+                  <p className="label" style={{ color: colorPalette.secondaryText, fontSize: '0.9rem', fontWeight: 800, letterSpacing: '1px' }}>DESTINATION / PAROROOAN</p>
+                  <h1 className="office-title" style={{ fontSize: '1.8rem', color: colorPalette.primaryText, margin: '5px 0' }}>{destinationData.title}</h1>
+                  <span className="floor-badge" style={{ fontSize: '1.1rem', padding: '6px 14px', display: 'inline-block', marginTop: '10px', background: '#4F46E5', color: 'white', borderRadius: '8px', fontWeight: 800 }}>{destinationData.badge || `Floor ${destinationData.floor}`}</span>
                 </div>
 
-                <div style={{ background: isDarkMode ? '#1E293B' : '#FFFFFF', padding: '25px', borderRadius: '16px', border: colorPalette.cardBorder }}>
-                  <h3 style={{ margin: '0 0 15px 0', color: colorPalette.primaryText, fontSize: '1.3rem' }}>How would you like to go up?</h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {!destinationData.isDirectionOnly && (
+                  <div className="office-meta" style={{ fontSize: '1.1rem', color: colorPalette.secondaryText, marginBottom: '20px' }}>
+                    <p style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '1.2rem' }}>
+                        {destinationData.status === 'In a Meeting' ? '🔴' : destinationData.status === 'Out of Office' ? '🟡' : destinationData.status === 'Closed' ? '⚫' : '🟢'}
+                      </span>
+                      <strong style={{ color: colorPalette.primaryText }}>{lang === 'EN' ? 'Status:' : 'Estado:'}</strong>
+                      <span style={{ color: destinationData.status === 'In a Meeting' ? '#EF4444' : destinationData.status === 'Out of Office' ? '#F59E0B' : destinationData.status === 'Closed' ? '#64748B' : '#10B981', fontWeight: 900 }}>
+                        {destinationData.status === 'In a Meeting' && lang === 'TL' ? 'May Pulong' : destinationData.status === 'Out of Office' && lang === 'TL' ? 'Wala sa Opisina' : destinationData.status === 'Closed' && lang === 'TL' ? 'Sarado' : destinationData.status === 'Available' && lang === 'TL' ? 'Maaaring Kausapin' : destinationData.status || 'Available'}
+                      </span>
+                    </p>
+                    <p style={{ marginBottom: '8px' }}>🕒 <strong style={{ color: colorPalette.primaryText }}>{lang === 'EN' ? 'Hours:' : 'Oras:'}</strong> {destinationData.hours}</p>
+                    <p>👤 <strong style={{ color: colorPalette.primaryText }}>{lang === 'EN' ? 'Head:' : 'Pinuno:'}</strong> {destinationData.head}</p>
+                  </div>
+                )}
+
+                {/* BAGO: Ginawa kong magkatabi yung Elevator at Stairs button para hindi masyadong mahaba */}
+                <div style={{ background: isDarkMode ? '#1E293B' : '#FFFFFF', padding: '20px', borderRadius: '16px', border: colorPalette.cardBorder, marginBottom: '20px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+                  <h3 style={{ margin: '0 0 15px 0', color: colorPalette.primaryText, fontSize: '1.1rem', textAlign: 'center' }}>Elevator or Stairs?</h3>
+                  <div style={{ display: 'flex', gap: '10px' }}>
                     <button 
                       onClick={() => { setSelectedOfficeKey('elevator-up'); setTransportMethod('elevator'); setRouteStep('go-to-transport'); }}
-                      style={{ padding: '20px', fontSize: '1.2rem', fontWeight: 800, background: '#EEF2FF', color: '#4F46E5', border: 'none', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      🛗 Use the Elevator
+                      style={{ flex: 1, padding: '15px', fontSize: '1rem', fontWeight: 800, background: '#EEF2FF', color: '#4F46E5', border: 'none', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      🛗 Elevator
                     </button>
                     <button 
                       onClick={() => { setSelectedOfficeKey('stairs-up'); setTransportMethod('stairs'); setRouteStep('go-to-transport'); }}
-                      style={{ padding: '20px', fontSize: '1.2rem', fontWeight: 800, background: '#F1F5F9', color: '#475569', border: 'none', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      🚶‍♂️ Use the Stairs
+                      style={{ flex: 1, padding: '15px', fontSize: '1rem', fontWeight: 800, background: '#F1F5F9', color: '#475569', border: 'none', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      🚶‍♂️ Stairs
                     </button>
                   </div>
-                  <button onClick={() => { setRouteStep('idle'); setDestinationData(null); }} style={{ marginTop: '15px', background: 'transparent', border: 'none', color: '#EF4444', fontWeight: 800, cursor: 'pointer', width: '100%' }}>Cancel Navigation</button>
+                  <button onClick={() => { setRouteStep('idle'); setDestinationData(null); }} style={{ marginTop: '12px', background: 'transparent', border: 'none', color: '#EF4444', fontWeight: 800, cursor: 'pointer', width: '100%', padding: '10px' }}>Cancel Navigation</button>
                 </div>
+
+                {destinationData.requirements && destinationData.requirements.length > 0 && (
+                  <div className="requirements-box" style={{ background: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : '#FFFBEB', border: `1px solid ${isDarkMode ? 'rgba(245, 158, 11, 0.3)' : '#FDE68A'}`, padding: '20px', borderRadius: '16px', color: colorPalette.primaryText }}>
+                    <h3 style={{ fontSize: '1.2rem', marginBottom: '12px', color: isDarkMode ? '#F59E0B' : '#D97706', fontWeight: 800 }}>📋 Transaction Requirements:</h3>
+                    <ul style={{ fontSize: '1.05rem', paddingLeft: '20px', marginBottom: '25px', lineHeight: '1.6' }}>
+                      {destinationData.requirements.map((req, i) => (
+                        <li key={i} style={{ marginBottom: '6px' }}>{req}</li>
+                      ))}
+                    </ul>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', background: isDarkMode ? '#1E293B' : '#FFFFFF', padding: '15px', borderRadius: '12px', border: `2px dashed ${isDarkMode ? '#475569' : '#CBD5E1'}`, boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+                      <span style={{ fontSize: '0.9rem', fontWeight: '800', textAlign: 'center' }}>
+                        📱 I-scan para makita ang<br/>direksyon sa phone
+                      </span>
+                      <div style={{ padding: '10px', backgroundColor: '#FFFFFF', borderRadius: '8px' }}>
+                        <QRCodeSVG value={`${window.location.origin}/?route=${destinationData.key}`} size={120} bgColor={"#ffffff"} fgColor={"#0F172A"} />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
