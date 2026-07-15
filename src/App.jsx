@@ -220,17 +220,47 @@ export default function App() {
     }
   };
 
+  // ==============================================================
+  // BAGO: DYNAMIC STAIRS CLIMBING LOGIC VS ELEVATOR DIRECT JUMP
+  // ==============================================================
   useEffect(() => {
-    let animationTimer;
+    let timeoutIds = [];
+
     if (routeStep === 'go-to-transport' && destinationData) {
-      animationTimer = setTimeout(() => {
-        setCurrentFloor(destinationData.floor);
-        setSelectedOfficeKey(destinationData.key);
-        setRouteStep('arrived');
-      }, 4000); 
+      if (transportMethod === 'elevator') {
+        // ELEVATOR: Direktang tatalon sa floor pagkatapos ng 4 seconds
+        const timer = setTimeout(() => {
+          setCurrentFloor(destinationData.floor);
+          setSelectedOfficeKey(destinationData.key);
+          setRouteStep('arrived');
+        }, 4000);
+        timeoutIds.push(timer);
+      } else if (transportMethod === 'stairs') {
+        // STAIRS: Isa-isang aakyat sa bawat floor!
+        let currentDelay = 4000; // Stay sa Ground Floor ng 4 seconds para makita ruta papuntang stairs
+        
+        for (let i = 2; i <= destinationData.floor; i++) {
+          const t = setTimeout(() => {
+            setCurrentFloor(i);
+            
+            if (i === destinationData.floor) {
+              // Pagdating sa huling floor (Target)
+              setSelectedOfficeKey(destinationData.key);
+              setRouteStep('arrived');
+            } else {
+              // Habang umaakyat (Passing by intermediate floors)
+              setSelectedOfficeKey(null);
+              setRouteStep('climbing-stairs'); // Bagong state natin para may special UI!
+            }
+          }, currentDelay);
+          timeoutIds.push(t);
+          
+          currentDelay += 1500; // Bawat floor ay lilipas ng 1.5 seconds bago umakyat ulit
+        }
+      }
     }
-    return () => clearTimeout(animationTimer);
-  }, [routeStep, destinationData]);
+    return () => timeoutIds.forEach(id => clearTimeout(id));
+  }, [routeStep, destinationData, transportMethod]);
 
 
   const getFlatOffices = () => {
@@ -509,7 +539,22 @@ export default function App() {
                 </div>
 
                 <div style={{ background: '#1E293B', color: 'white', padding: '18px', borderRadius: '12px', textAlign: 'center', fontWeight: 800, border: '2px solid #334155', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>
-                  ⏳ Switching to Floor {destinationData.floor} in a few seconds...
+                  ⏳ {transportMethod === 'elevator' ? `Going up to Floor ${destinationData.floor}...` : 'Walking to the stairs...'}
+                </div>
+              </div>
+            )}
+
+            {/* BAGO: UI Kapag literal na paakyat na ng stairs (Floor by Floor) */}
+            {routeStep === 'climbing-stairs' && destinationData && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div style={{ background: '#FFFBEB', border: '2px solid #FDE68A', padding: '25px', borderRadius: '16px', textAlign: 'center' }}>
+                  <span style={{ fontSize: '4rem', display: 'inline-block' }}>🚶‍♂️</span>
+                  <h2 style={{ color: '#D97706', margin: '10px 0', fontSize: '1.5rem' }}>Climbing Stairs...</h2>
+                  <p style={{ color: '#B45309', fontWeight: 900, fontSize: '1.3rem' }}>Currently passing Floor {currentFloor}</p>
+                </div>
+                
+                <div style={{ background: '#1E293B', color: 'white', padding: '18px', borderRadius: '12px', textAlign: 'center', fontWeight: 800, border: '2px solid #334155', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>
+                  🎯 Target: Floor {destinationData.floor}
                 </div>
               </div>
             )}
