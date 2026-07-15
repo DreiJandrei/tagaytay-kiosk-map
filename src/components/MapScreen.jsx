@@ -9,7 +9,8 @@ export default function MapScreen({
   setSelectedOfficeKey, 
   is3DActive,
   setIs3DActive,
-  transportMethod = 'elevator' 
+  transportMethod = 'elevator',
+  routeStep // BAGO: Dinagdag natin dito
 }) {
  const pathRef = useRef(null);
   const isDragging = useRef(false);
@@ -69,8 +70,14 @@ export default function MapScreen({
       kioskStyle = { left: 1030, top: 1000, display: 'block' }; 
   } else {
       kioskStyle = { display: 'block' };
+      
+      // BAGO: Inaalam natin kung "passing through" pa lang ba o nakarating na talaga
+      const isClimbing = routeStep === 'climbing-stairs';
+
       if (transportMethod === 'stairs') {
-          kioskText = "🚶‍♂️ ARRIVED VIA STAIRS";
+          // BAGO: Papalitan ang text habang umaakyat para kitang-kita ng user na umaandar siya!
+          kioskText = isClimbing ? "⬆️ CLIMBING STAIRS..." : "🚶‍♂️ ARRIVED VIA STAIRS";
+          
           if (currentFloor === 2) kioskStyle = { left: 220, top: 420 };
           else if (currentFloor >= 3 && currentFloor <= 5) kioskStyle = { left: 240, top: 720 };
           else if (currentFloor === 6) kioskStyle = { left: 650, top: 580 };
