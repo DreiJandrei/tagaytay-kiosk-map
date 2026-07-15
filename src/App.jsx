@@ -221,46 +221,46 @@ export default function App() {
   };
 
   // ==============================================================
-  // BAGO: DYNAMIC STAIRS CLIMBING LOGIC VS ELEVATOR DIRECT JUMP
+  // BAGO: DYNAMIC STAIRS CLIMBING LOGIC VS ELEVATOR DIRECT JUMP (FIXED)
   // ==============================================================
+  
+  // 1. Unang step: Pag-alis sa Ground Floor
   useEffect(() => {
-    let timeoutIds = [];
-
+    let timeoutId;
     if (routeStep === 'go-to-transport' && destinationData) {
       if (transportMethod === 'elevator') {
-        // ELEVATOR: Direktang tatalon sa floor pagkatapos ng 4 seconds
-        const timer = setTimeout(() => {
+        timeoutId = setTimeout(() => {
           setCurrentFloor(destinationData.floor);
           setSelectedOfficeKey(destinationData.key);
           setRouteStep('arrived');
         }, 4000);
-        timeoutIds.push(timer);
       } else if (transportMethod === 'stairs') {
-        // STAIRS: Isa-isang aakyat sa bawat floor!
-        let currentDelay = 4000; // Stay sa Ground Floor ng 4 seconds para makita ruta papuntang stairs
-        
-        for (let i = 2; i <= destinationData.floor; i++) {
-          const t = setTimeout(() => {
-            setCurrentFloor(i);
-            
-            if (i === destinationData.floor) {
-              // Pagdating sa huling floor (Target)
-              setSelectedOfficeKey(destinationData.key);
-              setRouteStep('arrived');
-            } else {
-              // Habang umaakyat (Passing by intermediate floors)
-              setSelectedOfficeKey(null);
-              setRouteStep('climbing-stairs'); // Bagong state natin para may special UI!
-            }
-          }, currentDelay);
-          timeoutIds.push(t);
-          
-          currentDelay += 1500; // Bawat floor ay lilipas ng 1.5 seconds bago umakyat ulit
-        }
+        timeoutId = setTimeout(() => {
+          setRouteStep('climbing-stairs');
+          setCurrentFloor(2); // Umpisa akyat sa Floor 2
+        }, 4000);
       }
     }
-    return () => timeoutIds.forEach(id => clearTimeout(id));
+    return () => clearTimeout(timeoutId);
   }, [routeStep, destinationData, transportMethod]);
+
+  // 2. Pangalawang step: Ang tuloy-tuloy na pag-akyat per floor (Stairs Loop)
+  useEffect(() => {
+    let timeoutId;
+    if (routeStep === 'climbing-stairs' && destinationData) {
+      if (currentFloor < destinationData.floor) {
+        // Lilipat ng floor kada 1.5 seconds
+        timeoutId = setTimeout(() => {
+          setCurrentFloor(prev => prev + 1);
+        }, 1500);
+      } else if (currentFloor === destinationData.floor) {
+        // Pagdating sa mismong floor, lalabas na ang red pin ng opisina!
+        setSelectedOfficeKey(destinationData.key);
+        setRouteStep('arrived');
+      }
+    }
+    return () => clearTimeout(timeoutId);
+  }, [routeStep, currentFloor, destinationData]);
 
 
   const getFlatOffices = () => {
