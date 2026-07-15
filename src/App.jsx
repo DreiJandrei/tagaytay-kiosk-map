@@ -10,7 +10,7 @@ import './index.css';
 import { QRCodeSVG } from 'qrcode.react'; 
 import { useSearchParams } from 'react-router-dom';
 
-import { getAllOffices, initializeDatabase } from './lib/api';
+import { getAllOffices, initializeDatabase, incrementSearchCount } from './lib/api';
 import { coordinateMapping, mergeOfficeData } from './lib/coordinateMapping';
 import { defaultOfficeData } from './lib/defaultOfficeData';
 
@@ -186,9 +186,32 @@ export default function App() {
     return flatList;
   };
 
-  const filteredSearchOptions = searchQuery.trim() === "" ? [] : getFlatOffices().filter(off => 
+ const filteredSearchOptions = searchQuery.trim() === "" ? [] : getFlatOffices().filter(off => 
     off.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // BAGO: Kunin ang top 4 na pinakamadalas i-search
+  const popularSearches = getFlatOffices()
+    .sort((a, b) => (b.searchCount || 0) - (a.searchCount || 0))
+    .slice(0, 4);
+
+  // BAGO: Pag may pinili sa search, mag-a-add ng +1 sa count tapos pupunta sa opisina
+  const handleSearchSelect = async (key, floor) => {
+    handleSelectOffice(key, floor);
+    setSearchQuery("");
+    setShowKeyboard(false);
+    
+    await incrementSearchCount(key); // Dagdag +1 sa database
+    
+    // Auto-update sa screen para updated agad ang count
+    setLiveOfficeDatabase(prev => {
+      const newData = { ...prev };
+      if (newData[floor] && newData[floor][key]) {
+        newData[floor][key].searchCount = (newData[floor][key].searchCount || 0) + 1;
+      }
+      return newData;
+    });
+  };
 
   const selectedOffice = selectedOfficeKey ? liveOfficeDatabase[currentFloor]?.[selectedOfficeKey] : null;
 
@@ -262,12 +285,30 @@ export default function App() {
               )}
             </div>
 
-            {filteredSearchOptions.length > 0 && (
+            {/* 1. KUNG MAY TINA-TYPE NA ANG USER (REGULAR SEARCH RESULTS) */}
+            {searchQuery.trim() !== "" && filteredSearchOptions.length > 0 && (
               <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF', border: '3px solid #4F46E5', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.4)', zIndex: 200, maxHeight: '360px', overflowY: 'auto', marginTop: '10px' }}>
                 {filteredSearchOptions.map((officeItem) => (
-                  <div key={`${officeItem.floor}-${officeItem.key}`} onClick={() => { handleSelectOffice(officeItem.key, officeItem.floor); setSearchQuery(""); setShowKeyboard(false); }} style={{ padding: '20px 24px', borderBottom: isDarkMode ? '2px solid #334155' : '2px solid #F1F5F9', cursor: 'pointer', display: 'flex', flexDirection: 'column' }} className="search-result-row-kiosk">
+                  <div key={`search-${officeItem.floor}-${officeItem.key}`} onClick={() => handleSearchSelect(officeItem.key, officeItem.floor)} style={{ padding: '20px 24px', borderBottom: isDarkMode ? '2px solid #334155' : '2px solid #F1F5F9', cursor: 'pointer', display: 'flex', flexDirection: 'column' }} className="search-result-row-kiosk">
                     <span style={{ fontWeight: '900', color: colorPalette.primaryText, fontSize: '1.25rem' }}>{officeItem.title}</span>
                     <span style={{ fontSize: '1.05rem', color: isDarkMode ? '#38BDF8' : '#4F46E5', fontWeight: '800', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>📍 {officeItem.badge}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 2. KUNG WALA PANG TINA-TYPE (FREQUENTLY SEARCHED / TRENDING) */}
+            {searchQuery.trim() === "" && showKeyboard && popularSearches.length > 0 && (
+              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF', border: '3px solid #4F46E5', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.4)', zIndex: 200, marginTop: '10px', overflow: 'hidden' }}>
+                <div style={{ padding: '15px 24px', background: isDarkMode ? '#334155' : '#EEF2FF', borderBottom: isDarkMode ? '2px solid #475569' : '2px solid #E2E8F0', fontWeight: '900', color: '#4F46E5', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  🔥 {lang === 'EN' ? 'Frequently Searched' : 'Madalas Hanapin'}
+                </div>
+                {popularSearches.map((officeItem) => (
+                  <div key={`pop-${officeItem.floor}-${officeItem.key}`} onClick={() => handleSearchSelect(officeItem.key, officeItem.floor)} style={{ padding: '20px 24px', borderBottom: isDarkMode ? '2px solid #334155' : '2px solid #F1F5F9', cursor: 'pointer', display: 'flex', flexDirection: 'column' }} className="search-result-row-kiosk">
+                    <span style={{ fontWeight: '900', color: colorPalette.primaryText, fontSize: '1.25rem' }}>{officeItem.title}</span>
+                    <span style={{ fontSize: '1.05rem', color: isDarkMode ? '#94A3B8' : '#64748B', fontWeight: '800', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      📍 {officeItem.badge} • 🔍 {officeItem.searchCount || 0} {lang === 'EN' ? 'searches' : 'beses hinanap'}
+                    </span>
                   </div>
                 ))}
               </div>
