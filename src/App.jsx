@@ -116,24 +116,41 @@ export default function App() {
     }
   }, [searchParams]);
 
+ // ==============================================================
+  // BAGO: SELF-DESTRUCT & ANTI-IDLE LOGIC PARA SA PHONES (ANTI-REFRESH)
+  // ==============================================================
   useEffect(() => {
     const routeKey = searchParams.get('route');
     const isMobile = typeof window !== 'undefined' && window.innerWidth <= 1024;
 
     if (isMobile && routeKey) {
+      // 1. Pagka-load o pagka-refresh ng page, check agad sa browser memory kung na-flag na siyang expired!
+      if (sessionStorage.getItem('mobile_session_expired') === 'true') {
+        setIsMobileSessionExpired(true);
+        return; // I-stop agad ang code, wag nang i-load ang map!
+      }
+
+      // 2. Function para i-lock at i-save sa browser memory yung pagka-expire
+      const triggerSelfDestruct = () => {
+        setIsMobileSessionExpired(true);
+        sessionStorage.setItem('mobile_session_expired', 'true'); // Isusulat sa memory ng phone na hindi nabubura sa refresh!
+      };
+
+      // 3. Kapag pinatay ang screen o ni-minimize ang browser
       const handleVisibilityChange = () => {
         if (document.hidden) {
-          setIsMobileSessionExpired(true);
+          triggerSelfDestruct();
         }
       };
       document.addEventListener("visibilitychange", handleVisibilityChange);
 
+      // 4. Kapag walang ginagawa (idle) ng 5 minuto
       let idleTimeout;
       const resetIdleTimer = () => {
         clearTimeout(idleTimeout);
         idleTimeout = setTimeout(() => {
-          setIsMobileSessionExpired(true);
-        }, 300000); 
+          triggerSelfDestruct();
+        }, 300000); // 300000 ms = 5 minutes
       };
 
       window.addEventListener('mousemove', resetIdleTimer);
