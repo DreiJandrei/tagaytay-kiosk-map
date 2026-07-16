@@ -14,13 +14,68 @@ import { getAllOffices, initializeDatabase, incrementSearchCount } from './lib/a
 import { coordinateMapping, mergeOfficeData } from './lib/coordinateMapping';
 import { defaultOfficeData } from './lib/defaultOfficeData';
 
+// ==============================================================
+// BAGO: SERVICE GUIDES CONFIGURATION (Para sa Sidebar)
+// ==============================================================
+const serviceGuidesConfig = [
+  {
+    id: 'business-permit',
+    icon: '💼',
+    titleEn: 'Business Permit',
+    titleTl: 'Business Permit',
+    isExternal: true, // Annex (Walang Map Route)
+    locationTextEn: 'Please proceed to the BPLO at the Annex Building (Old City Hall). This is located outside the main building.',
+    locationTextTl: 'Mangyaring pumunta sa BPLO sa Annex Building (Lumang City Hall). Ito ay nasa labas ng gusaling ito.',
+    requirements: [
+      '1. DTI / SEC / CDA Registration',
+      '2. Barangay Clearance for Business',
+      '3. Contract of Lease (if renting) or Land Title',
+      '4. Picture of Business Establishment'
+    ]
+  },
+  {
+    id: 'building-permit',
+    icon: '🏗️',
+    titleEn: 'Building Permit',
+    titleTl: 'Building Permit',
+    isExternal: false, // Nasa Main Building (May Map Route)
+    floor: 3, 
+    dbKey: 'building-official', 
+    locationTextEn: 'Please proceed to the Office of the Building Official (OBO), 3rd Floor.',
+    locationTextTl: 'Mangyaring pumunta sa Office of the Building Official (OBO), Ika-3 Palapag.',
+    requirements: [
+      '1. 5 Sets of Architectural/Engineering Plans',
+      '2. Barangay Clearance for Construction',
+      '3. Certified True Copy of Transfer Certificate of Title (TCT)',
+      '4. Tax Declaration and Latest Tax Receipt'
+    ]
+  },
+  {
+    id: 'tax-dec',
+    icon: '📄',
+    titleEn: 'Tax Declaration',
+    titleTl: 'Tax Declaration',
+    isExternal: false, // Nasa Main Building (May Map Route)
+    floor: 3, 
+    dbKey: 'treasure-office', 
+    locationTextEn: 'Please proceed to the Assessor / City Treasurer Office, 3rd Floor.',
+    locationTextTl: 'Mangyaring pumunta sa Assessor / City Treasurer Office, Ika-3 Palapag.',
+    requirements: [
+      '1. Valid Government ID of the property owner',
+      '2. Latest Real Property Tax Receipt',
+      '3. Notarized Authorization Letter (if representative)',
+      '4. Copy of Land Title (TCT)'
+    ]
+  }
+];
+
 export default function App() {
   const [liveOfficeDatabase, setLiveOfficeDatabase] = useState({});
   const [isLoading, setIsLoading] = useState(true);
 
   // SECURITY STATES
   const [isAuthorized, setIsAuthorized] = useState(false);
-  const [isMobileSessionExpired, setIsMobileSessionExpired] = useState(false); // BAGO: State para sa Self-Destruct
+  const [isMobileSessionExpired, setIsMobileSessionExpired] = useState(false);
 
   const [appState, setAppState] = useState('welcome');
   const [theme, setTheme] = useState('light'); 
@@ -31,6 +86,8 @@ export default function App() {
   const [selectedOfficeKey, setSelectedOfficeKey] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showKeyboard, setShowKeyboard] = useState(false);
+  
+  const [selectedService, setSelectedService] = useState(null); // BAGO: State para sa Service Popup
 
   const [lang, setLang] = useState('EN');     
   const [textSize, setTextSize] = useState('normal'); 
@@ -44,13 +101,10 @@ export default function App() {
 
   const [searchParams] = useSearchParams();
 
-  // ==============================================================
-  // KIOSK SECURITY LOCK (Updated para papasukin ang QR Scanners)
-  // ==============================================================
   useEffect(() => {
     const authorized = localStorage.getItem('kiosk_authorized');
     const key = searchParams.get('key');
-    const routeKey = searchParams.get('route'); // Check kung scan galing sa QR
+    const routeKey = searchParams.get('route'); 
     
     if (authorized === 'true') {
       setIsAuthorized(true);
@@ -58,22 +112,15 @@ export default function App() {
       localStorage.setItem('kiosk_authorized', 'true');
       setIsAuthorized(true);
     } else if (routeKey) {
-      // Kung galing sa QR code, i-allow para lumabas ang map sa phone nila
       setIsAuthorized(true);
     }
   }, [searchParams]);
 
-  // ==============================================================
-  // BAGO: SELF-DESTRUCT & ANTI-IDLE LOGIC PARA SA PHONES
-  // ==============================================================
   useEffect(() => {
     const routeKey = searchParams.get('route');
     const isMobile = typeof window !== 'undefined' && window.innerWidth <= 1024;
 
-    // Aandar lang ang self-destruct kung phone ang gamit at galing sa QR scan
     if (isMobile && routeKey) {
-      
-      // 1. Kapag pinatay ang screen o ni-minimize ang browser
       const handleVisibilityChange = () => {
         if (document.hidden) {
           setIsMobileSessionExpired(true);
@@ -81,13 +128,12 @@ export default function App() {
       };
       document.addEventListener("visibilitychange", handleVisibilityChange);
 
-      // 2. Kapag walang ginagawa (idle) ng 5 minuto
       let idleTimeout;
       const resetIdleTimer = () => {
         clearTimeout(idleTimeout);
         idleTimeout = setTimeout(() => {
           setIsMobileSessionExpired(true);
-        }, 300000); // 300000 ms = 5 minutes
+        }, 300000); 
       };
 
       window.addEventListener('mousemove', resetIdleTimer);
@@ -106,9 +152,6 @@ export default function App() {
     }
   }, [searchParams]);
 
-  // ==============================================================
-  // QR CODE MOBILE ROUTING LOGIC
-  // ==============================================================
   useEffect(() => {
     const routeKey = searchParams.get('route');
     if (routeKey && Object.keys(liveOfficeDatabase).length > 0) {
@@ -144,7 +187,6 @@ export default function App() {
         await fetchKioskData();
         setIsLoading(false); 
       } catch (error) {
-        console.error("[Kiosk Setup Error] Failed, using local:", error);
         const localMergedData = mergeOfficeData(coordinateMapping, defaultOfficeData);
         setLiveOfficeDatabase(localMergedData);
         setIsLoading(false);
@@ -179,6 +221,7 @@ export default function App() {
         setSelectedOfficeKey(null);
         setSearchQuery("");
         setShowKeyboard(false);
+        setSelectedService(null);
         setRouteStep('idle');
         setDestinationData(null);
       }, 45000); 
@@ -220,10 +263,6 @@ export default function App() {
     }
   };
 
-  // ==============================================================
-  // BAGO: DYNAMIC STAIRS CLIMBING LOGIC VS ELEVATOR DIRECT JUMP (FIXED)
-  // ==============================================================
-  
   // 1. Unang step: Pag-alis sa Ground Floor
   useEffect(() => {
     let timeoutId;
@@ -237,7 +276,7 @@ export default function App() {
       } else if (transportMethod === 'stairs') {
         timeoutId = setTimeout(() => {
           setRouteStep('climbing-stairs');
-          setCurrentFloor(2); // Umpisa akyat sa Floor 2
+          setCurrentFloor(2); 
         }, 4000);
       }
     }
@@ -249,12 +288,10 @@ export default function App() {
     let timeoutId;
     if (routeStep === 'climbing-stairs' && destinationData) {
       if (currentFloor < destinationData.floor) {
-        // Lilipat ng floor kada 1.5 seconds
         timeoutId = setTimeout(() => {
           setCurrentFloor(prev => prev + 1);
         }, 1500);
       } else if (currentFloor === destinationData.floor) {
-        // Pagdating sa mismong floor, lalabas na ang red pin ng opisina!
         setSelectedOfficeKey(destinationData.key);
         setRouteStep('arrived');
       }
@@ -309,10 +346,9 @@ export default function App() {
   };
 
   // ==============================================================
-  // RENDER BLOCKS: SECURITY LOCKS & LOADING
+  // RENDER BLOCKS
   // ==============================================================
   
-  // 1. Kapag nag-self destruct sa phone
   if (isMobileSessionExpired) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#FFFFFF', color: '#0F172A', textAlign: 'center', padding: '30px' }}>
@@ -327,7 +363,6 @@ export default function App() {
     );
   }
 
-  // 2. Kapag in-open yung link sa labas na walang secret key
   if (!isAuthorized) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#0F172A', color: 'white', textAlign: 'center', padding: '20px' }}>
@@ -340,18 +375,9 @@ export default function App() {
     );
   }
 
-  // 3. Normal Loading Screen
   if (isLoading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#F8FAFC', color: '#0F172A', fontSize: '2rem', fontWeight: 'bold' }}>Initializing Kiosk Systems...</div>;
   
   if (appState === 'welcome') return <WelcomeScreen onStart={() => setAppState('map')} />;
-  
-  if (appState === 'dashboard') {
-    return <DashboardScreen tagaytaySeal={tagaytaySeal} onNavigateToDirectory={() => setAppState('home')} onNavigateToMap={() => setAppState('map')} onQuickRoute={(floor, dbKey) => { setAppState('map'); handleSelectOffice(dbKey, floor); }} theme={theme} setTheme={setTheme} lang={lang} setLang={setLang} textSize={textSize} setTextSize={setTextSize} />;
-  }
-
-  if (appState === 'home') {
-    return <DirectoryScreen theme={theme} setTheme={setTheme} lang={lang} setLang={setLang} textSize={textSize} setTextSize={setTextSize} setAppState={setAppState} tagaytaySeal={tagaytaySeal} time={time} currentFloor={currentFloor} setCurrentFloor={setCurrentFloor} officeDatabase={liveOfficeDatabase} handleSelectOffice={(key) => handleSelectOffice(key, currentFloor)} />;
-  }
 
   const isDarkMode = theme === 'dark';
   const isLarge = textSize === 'large';
@@ -359,6 +385,7 @@ export default function App() {
   const colorPalette = {
     headerBg: isDarkMode ? '#1E1B4B' : '#FFFFFF',
     primaryText: isDarkMode ? '#FFFFFF' : '#0F172A',
+    secondaryText: isDarkMode ? '#94A3B8' : '#64748B',
     cardBorder: isDarkMode ? '2px solid #475569' : '2px solid #E2E8F0',
     buttonAccentBg: isDarkMode ? '#334155' : '#EEF2FF',
     accentText: isDarkMode ? '#F59E0B' : '#B45309'
@@ -436,11 +463,41 @@ export default function App() {
 
           <div style={{ flex: 1, overflowY: 'auto', paddingRight: '10px' }}>
             
+            {/* ============================================================== */}
+            {/* BAGO: QUICK SERVICES SECTION SA MAP SIDEBAR */}
+            {/* ============================================================== */}
+            {routeStep === 'idle' && !selectedOfficeKey && (
+              <div style={{ marginBottom: '25px' }}>
+                <h3 style={{ fontSize: '1.1rem', color: colorPalette.primaryText, marginBottom: '12px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  📋 {lang === 'EN' ? 'Quick Service Guides' : 'Mabilisang Serbisyo'}
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  {serviceGuidesConfig.map((service, idx) => (
+                    <button 
+                      key={idx}
+                      onClick={() => setSelectedService(service)}
+                      style={{ 
+                        background: isDarkMode ? '#1E293B' : '#FFFFFF', border: colorPalette.cardBorder, 
+                        borderRadius: '12px', padding: '15px 10px', display: 'flex', flexDirection: 'column', 
+                        alignItems: 'center', gap: '8px', cursor: 'pointer', transition: 'all 0.2s', 
+                        boxShadow: '0 4px 6px rgba(0,0,0,0.02)' 
+                      }}
+                    >
+                      <span style={{ fontSize: '1.8rem' }}>{service.icon}</span>
+                      <span style={{ color: colorPalette.primaryText, fontWeight: 800, fontSize: '0.9rem', textAlign: 'center' }}>
+                        {lang === 'EN' ? service.titleEn : service.titleTl}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* EXISTING: FLOOR DIRECTORY */}
             {routeStep === 'idle' && !selectedOfficeKey && (
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <div style={{ background: isDarkMode ? 'linear-gradient(135deg, #1E1B4B, #4F46E5)' : 'linear-gradient(135deg, #4F46E5, #3730A3)', padding: '25px 20px', borderRadius: '16px', color: 'white', marginBottom: '20px', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>
-                  <h2 style={{ fontSize: '1.8rem', margin: 0, fontWeight: 900 }}>Floor {currentFloor} Directory</h2>
-                  <p style={{ margin: '5px 0 0 0', opacity: 0.9, fontSize: '1rem' }}>Select a room below or tap on the map.</p>
+                <div style={{ background: isDarkMode ? 'linear-gradient(135deg, #1E1B4B, #4F46E5)' : 'linear-gradient(135deg, #4F46E5, #3730A3)', padding: '20px', borderRadius: '16px', color: 'white', marginBottom: '20px', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>
+                  <h2 style={{ fontSize: '1.6rem', margin: 0, fontWeight: 900 }}>Floor {currentFloor} Directory</h2>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '20px' }}>
@@ -467,6 +524,7 @@ export default function App() {
               </div>
             )}
 
+            {/* ROUTING TRANSPORT UI */}
             {routeStep === 'choose-transport' && destinationData && (
               <div style={{ display: 'flex', flexDirection: 'column', paddingBottom: '20px' }}>
                 <div className="destination-card" style={{ marginBottom: '20px' }}>
@@ -491,7 +549,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* BAGO: Ginawa kong magkatabi yung Elevator at Stairs button para hindi masyadong mahaba */}
                 <div style={{ background: isDarkMode ? '#1E293B' : '#FFFFFF', padding: '20px', borderRadius: '16px', border: colorPalette.cardBorder, marginBottom: '20px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
                   <h3 style={{ margin: '0 0 15px 0', color: colorPalette.primaryText, fontSize: '1.1rem', textAlign: 'center' }}>Elevator or Stairs?</h3>
                   <div style={{ display: 'flex', gap: '10px' }}>
@@ -544,7 +601,6 @@ export default function App() {
               </div>
             )}
 
-            {/* BAGO: UI Kapag literal na paakyat na ng stairs (Floor by Floor) */}
             {routeStep === 'climbing-stairs' && destinationData && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div style={{ background: '#FFFBEB', border: '2px solid #FDE68A', padding: '25px', borderRadius: '16px', textAlign: 'center' }}>
@@ -628,27 +684,15 @@ export default function App() {
           is3DActive={is3DActive}
           setIs3DActive={setIs3DActive}
           transportMethod={transportMethod} 
+          routeStep={routeStep}
         />
 
-        {/* BAGO: SCREENSHOT REMINDER PARA SA MOBILE QR USERS (Nasa Ibaba na) */}
         {searchParams.get('route') && (
           <div style={{
-            position: 'absolute',
-            bottom: '100px', /* BAGO: Inilagay sa ibaba, sa ibabaw ng floor buttons */
-            top: 'auto',     /* BAGO: Tinanggal ang pagkapako sa taas */
-            left: '50%',
-            transform: 'translateX(-50%)',
-            background: 'rgba(254, 243, 199, 0.95)',
-            backdropFilter: 'blur(4px)',
-            color: '#92400E',
-            padding: '10px 15px',
-            borderRadius: '12px',
-            border: '2px solid #F59E0B',
-            zIndex: 99999,
-            width: '90%',
-            maxWidth: '350px',
-            textAlign: 'center',
-            boxShadow: '0 8px 20px rgba(0,0,0,0.15)'
+            position: 'absolute', bottom: '100px', top: 'auto', left: '50%', transform: 'translateX(-50%)',
+            background: 'rgba(254, 243, 199, 0.95)', backdropFilter: 'blur(4px)', color: '#92400E',
+            padding: '10px 15px', borderRadius: '12px', border: '2px solid #F59E0B', zIndex: 99999,
+            width: '90%', maxWidth: '350px', textAlign: 'center', boxShadow: '0 8px 20px rgba(0,0,0,0.15)'
           }}>
             <span style={{ display: 'block', fontSize: '1rem', fontWeight: '900', marginBottom: '2px' }}>
               📸 Take a Screenshot!
@@ -682,7 +726,75 @@ export default function App() {
             ))}
           </div>
         )}
+
       </div>
+
+      {/* ============================================================== */}
+      {/* BAGO: POPUP MODAL SA IBABAW NG MAPA */}
+      {/* ============================================================== */}
+      {selectedService && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(8px)',
+          display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 99999
+        }}>
+          <div style={{
+            backgroundColor: colorPalette.cardBg, borderRadius: '24px', padding: '40px',
+            maxWidth: '650px', width: '90%', border: colorPalette.cardBorder,
+            boxShadow: '0 25px 50px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', gap: '25px'
+          }}>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <span style={{ fontSize: '3rem', display: 'block', marginBottom: '10px' }}>{selectedService.icon}</span>
+                <h2 style={{ margin: 0, color: colorPalette.primaryText, fontSize: '2.2rem', fontWeight: 900 }}>
+                  {lang === 'EN' ? selectedService.titleEn : selectedService.titleTl}
+                </h2>
+              </div>
+              <button 
+                onClick={() => setSelectedService(null)} 
+                style={{ background: '#E2E8F0', border: 'none', color: '#0F172A', width: '45px', height: '45px', borderRadius: '50%', fontSize: '1.2rem', fontWeight: 900, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ background: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : '#FFFBEB', border: `2px solid ${isDarkMode ? 'rgba(245, 158, 11, 0.3)' : '#FDE68A'}`, padding: '25px', borderRadius: '16px' }}>
+              <h3 style={{ margin: '0 0 15px 0', color: isDarkMode ? '#F59E0B' : '#D97706', fontSize: '1.3rem', fontWeight: 900 }}>
+                📋 {lang === 'EN' ? 'Requirements Needed:' : 'Mga Kailangang Dalhin:'}
+              </h3>
+              <ul style={{ margin: 0, paddingLeft: '20px', color: colorPalette.primaryText, fontSize: '1.15rem', lineHeight: '1.8', fontWeight: 600 }}>
+                {selectedService.requirements.map((req, i) => <li key={i}>{req}</li>)}
+              </ul>
+            </div>
+
+            <div style={{ background: selectedService.isExternal ? '#FEF2F2' : '#EEF2FF', border: `2px solid ${selectedService.isExternal ? '#FECDD3' : '#C7D2FE'}`, padding: '20px', borderRadius: '16px', color: selectedService.isExternal ? '#9F1239' : '#3730A3', fontSize: '1.2rem', fontWeight: 800, display: 'flex', gap: '15px', alignItems: 'center', lineHeight: '1.5' }}>
+              <span style={{ fontSize: '2rem' }}>{selectedService.isExternal ? '🏛️' : '📍'}</span>
+              {lang === 'EN' ? selectedService.locationTextEn : selectedService.locationTextTl}
+            </div>
+
+            {selectedService.isExternal ? (
+              <button 
+                onClick={() => setSelectedService(null)}
+                style={{ width: '100%', padding: '20px', borderRadius: '16px', background: '#10B981', color: 'white', border: 'none', fontSize: '1.3rem', fontWeight: 900, cursor: 'pointer', marginTop: '10px', boxShadow: '0 10px 20px rgba(16, 185, 129, 0.3)' }}
+              >
+                👍 {lang === 'EN' ? 'Got it, thank you!' : 'Sige po, salamat!'}
+              </button>
+            ) : (
+              <button 
+                onClick={() => {
+                  handleSelectOffice(selectedService.dbKey, selectedService.floor);
+                  setSelectedService(null);
+                }}
+                style={{ width: '100%', padding: '20px', borderRadius: '16px', background: '#4F46E5', color: 'white', border: 'none', fontSize: '1.3rem', fontWeight: 900, cursor: 'pointer', marginTop: '10px', boxShadow: '0 10px 20px rgba(79, 70, 229, 0.3)' }}
+              >
+                🗺️ {lang === 'EN' ? 'Show me the way' : 'Ituro ang daan sa mapa'}
+              </button>
+            )}
+
+          </div>
+        </div>
+      )}
 
       {showAdmin && <AdminPanel officeDatabase={liveOfficeDatabase} onClose={() => setShowAdmin(false)} onDataUpdate={() => { fetchKioskData(); }} />}
     </div>
