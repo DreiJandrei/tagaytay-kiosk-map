@@ -220,7 +220,8 @@ export default function MapScreen({
       </div>
 
       <div className={`map-canvas-container ${is3DActive ? 'is-3d-active' : ''}`} style={mapTransformStyle}>
-        <div className="mock-map-graphic">
+        {/* BAGO: Dinagdagan natin ng 'floor-transition' class at 'key={currentFloor}' para ma-trigger ang flip animation! */}
+        <div className="mock-map-graphic floor-transition" key={currentFloor}>
           
           {currentFloor === 1 && <div className="floor-plate" style={{ width: 980, height: 900, left: 350, top: 100 }}></div>}
           
