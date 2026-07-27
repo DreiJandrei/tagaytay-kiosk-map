@@ -87,12 +87,17 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showKeyboard, setShowKeyboard] = useState(false);
   
-  const [selectedService, setSelectedService] = useState(null); // BAGO: State para sa Service Popup
+  const [selectedService, setSelectedService] = useState(null);
 
   const [lang, setLang] = useState('EN');     
   const [textSize, setTextSize] = useState('normal'); 
 
+  // ==============================================================
+  // BAGO: ADMIN SECURITY STATES
+  // ==============================================================
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false); // Pop-up para sa password
+  const [adminPasswordInput, setAdminPasswordInput] = useState(''); // Text field ng password
   const [secretClicks, setSecretClicks] = useState(0);
 
   const [routeStep, setRouteStep] = useState('idle'); 
@@ -116,41 +121,33 @@ export default function App() {
     }
   }, [searchParams]);
 
- // ==============================================================
-  // BAGO: SELF-DESTRUCT & ANTI-IDLE LOGIC PARA SA PHONES (ANTI-REFRESH)
-  // ==============================================================
+  // SELF-DESTRUCT & ANTI-IDLE LOGIC PARA SA PHONES (ANTI-REFRESH)
   useEffect(() => {
     const routeKey = searchParams.get('route');
     const isMobile = typeof window !== 'undefined' && window.innerWidth <= 1024;
 
     if (isMobile && routeKey) {
-      // 1. Pagka-load o pagka-refresh ng page, check agad sa browser memory kung na-flag na siyang expired!
       if (sessionStorage.getItem('mobile_session_expired') === 'true') {
         setIsMobileSessionExpired(true);
-        return; // I-stop agad ang code, wag nang i-load ang map!
+        return; 
       }
 
-      // 2. Function para i-lock at i-save sa browser memory yung pagka-expire
       const triggerSelfDestruct = () => {
         setIsMobileSessionExpired(true);
-        sessionStorage.setItem('mobile_session_expired', 'true'); // Isusulat sa memory ng phone na hindi nabubura sa refresh!
+        sessionStorage.setItem('mobile_session_expired', 'true'); 
       };
 
-      // 3. Kapag pinatay ang screen o ni-minimize ang browser
       const handleVisibilityChange = () => {
-        if (document.hidden) {
-          triggerSelfDestruct();
-        }
+        if (document.hidden) triggerSelfDestruct();
       };
       document.addEventListener("visibilitychange", handleVisibilityChange);
 
-      // 4. Kapag walang ginagawa (idle) ng 5 minuto
       let idleTimeout;
       const resetIdleTimer = () => {
         clearTimeout(idleTimeout);
         idleTimeout = setTimeout(() => {
           triggerSelfDestruct();
-        }, 300000); // 300000 ms = 5 minutes
+        }, 300000); 
       };
 
       window.addEventListener('mousemove', resetIdleTimer);
@@ -241,6 +238,10 @@ export default function App() {
         setSelectedService(null);
         setRouteStep('idle');
         setDestinationData(null);
+        // Isara din ang admin pag nag-idle
+        setShowAdmin(false);
+        setShowAdminLogin(false);
+        setAdminPasswordInput('');
       }, 45000); 
     };
 
@@ -258,9 +259,29 @@ export default function App() {
     };
   }, [appState]);
 
+  // ==============================================================
+  // BAGO: UPDATED LOGO TAP LOGIC
+  // ==============================================================
   const handleLogoTap = () => {
-    if (secretClicks + 1 >= 5) { setShowAdmin(true); setSecretClicks(0); } 
-    else { setSecretClicks(prev => prev + 1); setTimeout(() => setSecretClicks(0), 3000); }
+    if (secretClicks + 1 >= 5) { 
+      setShowAdminLogin(true); // Papalabasin ang password modal imbes na Admin agad
+      setSecretClicks(0); 
+    } else { 
+      setSecretClicks(prev => prev + 1); 
+      setTimeout(() => setSecretClicks(0), 3000); 
+    }
+  };
+
+  const handleAdminLogin = (e) => {
+    e.preventDefault(); // Iwas refresh kung mag-enter sa keyboard
+    if (adminPasswordInput === 'admin123') {
+      setShowAdminLogin(false);
+      setAdminPasswordInput('');
+      setShowAdmin(true); // Buksan na ang admin panel kapag tama
+    } else {
+      alert('Incorrect Password! Access Denied.');
+      setAdminPasswordInput('');
+    }
   };
 
   const handleSelectOffice = (key, floor) => {
@@ -280,7 +301,6 @@ export default function App() {
     }
   };
 
-  // 1. Unang step: Pag-alis sa Ground Floor
   useEffect(() => {
     let timeoutId;
     if (routeStep === 'go-to-transport' && destinationData) {
@@ -300,7 +320,6 @@ export default function App() {
     return () => clearTimeout(timeoutId);
   }, [routeStep, destinationData, transportMethod]);
 
-  // 2. Pangalawang step: Ang tuloy-tuloy na pag-akyat per floor (Stairs Loop)
   useEffect(() => {
     let timeoutId;
     if (routeStep === 'climbing-stairs' && destinationData) {
@@ -480,9 +499,6 @@ export default function App() {
 
           <div style={{ flex: 1, overflowY: 'auto', paddingRight: '10px' }}>
             
-            {/* ============================================================== */}
-            {/* BAGO: QUICK SERVICES SECTION SA MAP SIDEBAR */}
-            {/* ============================================================== */}
             {routeStep === 'idle' && !selectedOfficeKey && (
               <div style={{ marginBottom: '25px' }}>
                 <h3 style={{ fontSize: '1.1rem', color: colorPalette.primaryText, marginBottom: '12px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -510,7 +526,6 @@ export default function App() {
               </div>
             )}
 
-            {/* EXISTING: FLOOR DIRECTORY */}
             {routeStep === 'idle' && !selectedOfficeKey && (
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <div style={{ background: isDarkMode ? 'linear-gradient(135deg, #1E1B4B, #4F46E5)' : 'linear-gradient(135deg, #4F46E5, #3730A3)', padding: '20px', borderRadius: '16px', color: 'white', marginBottom: '20px', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>
@@ -541,7 +556,6 @@ export default function App() {
               </div>
             )}
 
-            {/* ROUTING TRANSPORT UI */}
             {routeStep === 'choose-transport' && destinationData && (
               <div style={{ display: 'flex', flexDirection: 'column', paddingBottom: '20px' }}>
                 <div className="destination-card" style={{ marginBottom: '20px' }}>
@@ -746,9 +760,7 @@ export default function App() {
 
       </div>
 
-      {/* ============================================================== */}
-      {/* BAGO: POPUP MODAL SA IBABAW NG MAPA */}
-      {/* ============================================================== */}
+      {/* POPUP MODAL FOR REQUIREMENTS & ROUTING */}
       {selectedService && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -813,6 +825,34 @@ export default function App() {
         </div>
       )}
 
+      {/* ============================================================== */}
+      {/* BAGO: ADMIN PASSWORD MODAL */}
+      {/* ============================================================== */}
+      {showAdminLogin && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#FFFFFF', padding: '30px', borderRadius: '16px', width: '400px', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)' }}>
+            <h2 style={{ margin: '0 0 15px 0', color: '#0F172A', fontSize: '1.8rem' }}>🔒 Admin Access</h2>
+            <p style={{ color: '#475569', marginBottom: '20px', fontSize: '1.1rem' }}>Please enter password to access admin panel.</p>
+            
+            <form onSubmit={handleAdminLogin}>
+              <input 
+                type="password" 
+                value={adminPasswordInput}
+                onChange={(e) => setAdminPasswordInput(e.target.value)}
+                placeholder="Enter password..."
+                style={{ width: '100%', padding: '15px', borderRadius: '8px', border: '2px solid #CBD5E1', fontSize: '1.2rem', marginBottom: '20px', textAlign: 'center', boxSizing: 'border-box', outline: 'none' }}
+                autoFocus
+              />
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button type="button" onClick={() => { setShowAdminLogin(false); setAdminPasswordInput(''); }} style={{ flex: 1, padding: '15px', background: '#E2E8F0', color: '#475569', border: 'none', borderRadius: '8px', fontWeight: 800, cursor: 'pointer', fontSize: '1.1rem' }}>Cancel</button>
+                <button type="submit" style={{ flex: 1, padding: '15px', background: '#4F46E5', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 800, cursor: 'pointer', fontSize: '1.1rem' }}>Enter</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ADMIN PANEL */}
       {showAdmin && <AdminPanel officeDatabase={liveOfficeDatabase} onClose={() => setShowAdmin(false)} onDataUpdate={() => { fetchKioskData(); }} />}
     </div>
   );
