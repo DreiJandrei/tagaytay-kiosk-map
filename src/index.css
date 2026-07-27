@@ -401,12 +401,13 @@ img { max-width: 100%; }
   bottom: 0;
   left: 0;
   width: 100vw;
-  background: rgba(225, 29, 72, 0.95); /* Mapulang background */
+  background: rgba(30, 58, 138, 0.95); /* BAGO: Deep Blue Theme ni Mayor */
+  border-top: 2px solid #60A5FA;       /* BAGO: Light blue na linya sa ibabaw para mas lutang */
   color: white;
   padding: 15px 0;
   overflow: hidden;
   white-space: nowrap;
-  box-shadow: 0 -10px 30px rgba(0,0,0,0.3);
+  box-shadow: 0 -10px 30px rgba(0,0,0,0.4);
   z-index: 100;
   backdrop-filter: blur(10px);
 }
