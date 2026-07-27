@@ -65,4 +65,33 @@ export const incrementSearchCount = async (officeKey) => {
     if (updateError) throw updateError;
     return true;
   } catch (error) { console.error(`Error incrementing search count:`, error); return false; }
+  
+};
+// ==============================================================
+// BAGO: ANNOUNCEMENT SETTINGS API
+// ==============================================================
+export const getAnnouncement = async () => {
+  try {
+    const { data, error } = await supabase.from('settings').select('announcement_text').eq('id', 1).single();
+    if (error && error.code !== 'PGRST116') throw error; 
+    return data ? data.announcement_text : "";
+  } catch (error) { 
+    console.error('Error fetching announcement:', error); 
+    return ""; 
+  }
+};
+
+export const updateAnnouncement = async (text) => {
+  try {
+    const { data: existing } = await supabase.from('settings').select('id').eq('id', 1).single();
+    if (existing) {
+      await supabase.from('settings').update({ announcement_text: text }).eq('id', 1);
+    } else {
+      await supabase.from('settings').insert([{ id: 1, announcement_text: text }]);
+    }
+    return true;
+  } catch (error) { 
+    console.error('Error updating announcement:', error); 
+    return false; 
+  }
 };

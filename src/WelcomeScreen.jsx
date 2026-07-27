@@ -1,14 +1,30 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import tagaytaySeal from './assets/tagaytay-seal.jpg';
-import cityhallBg from './assets/cityhall.jpg'; // Ibinalik ko na ang pag-import sa picture ng City Hall niyo!
+import cityhallBg from './assets/cityhall.jpg';
+import { getAnnouncement } from './lib/api'; // Kukunin natin ang API logic
 
 export default function WelcomeScreen({ onStart }) {
+  const [announcement, setAnnouncement] = useState("");
+
+  // Kukunin ang text galing database tuwing maglo-load ang Idle Screen
+  useEffect(() => {
+    const fetchAnnouncement = async () => {
+      const text = await getAnnouncement();
+      if (text) setAnnouncement(text);
+    };
+    
+    fetchAnnouncement();
+
+    // Re-check natin ang database every 1 minute incase may in-update sa admin
+    const interval = setInterval(fetchAnnouncement, 60000); 
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div 
       className="welcome-screen" 
       onClick={onStart}
       style={{
-        /* Dito natin ibinalik yung cityhallBg na galing sa assets ninyo */
         backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.95)), url(${cityhallBg})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
@@ -23,6 +39,15 @@ export default function WelcomeScreen({ onStart }) {
           <span className="pulse-icon">👆</span> Touch the screen to start
         </button>
       </div>
+
+      {/* BAGO: Ipapalabas lang natin ito kung may laman ang announcement! */}
+      {announcement && announcement.trim() !== "" && (
+        <div className="announcement-bar">
+          <div className="marquee">
+            📢 CITY HALL ADVISORY: {announcement}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
