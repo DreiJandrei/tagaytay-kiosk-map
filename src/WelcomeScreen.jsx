@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import tagaytaySeal from './assets/tagaytay-seal.jpg';
 import cityhallBg from './assets/cityhall.jpg';
-import { getAnnouncement } from './lib/api'; // Kukunin natin ang API logic
+import { getAnnouncement } from './lib/api'; 
 
 export default function WelcomeScreen({ onStart }) {
   const [announcement, setAnnouncement] = useState("");
@@ -40,11 +40,22 @@ export default function WelcomeScreen({ onStart }) {
         </button>
       </div>
 
-      {/* BAGO: Ipapalabas lang natin ito kung may laman ang announcement! */}
+      {/* BAGO: Matalinong line-break formatter para sa scrolling banner */}
       {announcement && announcement.trim() !== "" && (
         <div className="announcement-bar">
           <div className="marquee">
-            📢 CITY HALL ADVISORY: {announcement}
+            <span style={{ color: '#FBBF24', marginRight: '10px', fontWeight: '900' }}>📢 CITY HALL ADVISORY:</span>
+            
+            {/* Hinihiwalay niya yung mga lines base sa "Enter" at nilalagyan ng 🔹 sa gitna */}
+            {announcement.split('\n').map((line, index, array) => (
+              <React.Fragment key={index}>
+                {line}
+                {index !== array.length - 1 && (
+                  <span style={{ margin: '0 25px', color: '#60A5FA' }}> 🔹 </span>
+                )}
+              </React.Fragment>
+            ))}
+            
           </div>
         </div>
       )}
