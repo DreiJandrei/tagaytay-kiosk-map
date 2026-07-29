@@ -6,7 +6,6 @@ import { getAnnouncement } from './lib/api';
 export default function WelcomeScreen({ onStart }) {
   const [announcement, setAnnouncement] = useState("");
 
-  // Kukunin ang text galing database tuwing maglo-load ang Idle Screen
   useEffect(() => {
     const fetchAnnouncement = async () => {
       const text = await getAnnouncement();
@@ -14,8 +13,6 @@ export default function WelcomeScreen({ onStart }) {
     };
     
     fetchAnnouncement();
-
-    // Re-check natin ang database every 1 minute incase may in-update sa admin
     const interval = setInterval(fetchAnnouncement, 60000); 
     return () => clearInterval(interval);
   }, []);
@@ -40,13 +37,10 @@ export default function WelcomeScreen({ onStart }) {
         </button>
       </div>
 
-      {/* BAGO: Matalinong line-break formatter para sa scrolling banner */}
       {announcement && announcement.trim() !== "" && (
         <div className="announcement-bar">
           <div className="marquee">
             <span style={{ color: '#FBBF24', marginRight: '10px', fontWeight: '900' }}>📢 CITY HALL ADVISORY:</span>
-            
-            {/* Hinihiwalay niya yung mga lines base sa "Enter" at nilalagyan ng 🔹 sa gitna */}
             {announcement.split('\n').map((line, index, array) => (
               <React.Fragment key={index}>
                 {line}
@@ -55,7 +49,6 @@ export default function WelcomeScreen({ onStart }) {
                 )}
               </React.Fragment>
             ))}
-            
           </div>
         </div>
       )}
