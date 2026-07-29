@@ -152,39 +152,40 @@ export default function MapScreen({
       onTouchMove={(e) => handleDragMove(e.touches[0].clientX, e.touches[0].clientY)}
       onTouchEnd={handleDragEnd}
     >
-      {/* TINANGGAL NA YUNG MAP LEGEND DITO */}
 
       <div className="floor-selector" style={{ position: 'absolute', top: 30, right: 30, zIndex: 10, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {/* TINANGGAL NA YUNG 3D TOGGLE BUTTON DITO */}
         <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => setZoom(z => Math.min(1.8, z + 0.12))}>➕</button>
         <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => setZoom(z => Math.max(0.35, z - 0.12))}>➖</button>
       </div>
 
-      <div className="bottom-floor-bar" style={{
-          position: 'absolute', bottom: '30px', left: '50%', transform: 'translateX(-50%)',
-          display: 'flex', gap: '12px', background: 'rgba(15, 23, 42, 0.85)', padding: '15px 25px',
-          borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)',
-          zIndex: 100, boxShadow: '0 20px 40px rgba(0,0,0,0.3)', overflowX: 'auto', maxWidth: '90%', scrollBehavior: 'smooth'
-      }}>
-        {[1, 2, 3, 4, 5, 6, 7].map(floor => {
-          const isActive = currentFloor === floor;
-          return (
-            <button 
-              key={floor}
-              onClick={() => { setCurrentFloor(floor); setSelectedOfficeKey(null); }}
-              style={{
-                minWidth: '130px', padding: '14px 20px', borderRadius: '16px',
-                border: isActive ? '2px solid #4F46E5' : '1px solid rgba(255,255,255,0.2)',
-                backgroundColor: isActive ? '#4F46E5' : 'transparent', color: isActive ? '#FFFFFF' : '#E2E8F0',
-                fontWeight: '900', fontSize: '1.1rem', cursor: 'pointer', transition: 'all 0.2s ease', 
-                whiteSpace: 'nowrap', boxShadow: isActive ? '0 8px 15px rgba(79, 70, 229, 0.4)' : 'none'
-              }}
-            >
-              {floor === 1 ? 'GF / 1st' : `${floor}${floor === 2 ? 'nd' : floor === 3 ? 'rd' : 'th'} Floor`}
-            </button>
-          )
-        })}
-      </div>
+      {/* BAGO: Itatago na natin 'tong buong bar na 'to kapag ang gamit ay cellphone (isMobile) */}
+      {!isMobile && (
+        <div className="bottom-floor-bar" style={{
+            position: 'absolute', bottom: '30px', left: '50%', transform: 'translateX(-50%)',
+            display: 'flex', gap: '12px', background: 'rgba(15, 23, 42, 0.85)', padding: '15px 25px',
+            borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)',
+            zIndex: 100, boxShadow: '0 20px 40px rgba(0,0,0,0.3)', overflowX: 'auto', maxWidth: '90%', scrollBehavior: 'smooth'
+        }}>
+          {[1, 2, 3, 4, 5, 6, 7].map(floor => {
+            const isActive = currentFloor === floor;
+            return (
+              <button 
+                key={floor}
+                onClick={() => { setCurrentFloor(floor); setSelectedOfficeKey(null); }}
+                style={{
+                  minWidth: '130px', padding: '14px 20px', borderRadius: '16px',
+                  border: isActive ? '2px solid #4F46E5' : '1px solid rgba(255,255,255,0.2)',
+                  backgroundColor: isActive ? '#4F46E5' : 'transparent', color: isActive ? '#FFFFFF' : '#E2E8F0',
+                  fontWeight: '900', fontSize: '1.1rem', cursor: 'pointer', transition: 'all 0.2s ease', 
+                  whiteSpace: 'nowrap', boxShadow: isActive ? '0 8px 15px rgba(79, 70, 229, 0.4)' : 'none'
+                }}
+              >
+                {floor === 1 ? 'GF / 1st' : `${floor}${floor === 2 ? 'nd' : floor === 3 ? 'rd' : 'th'} Floor`}
+              </button>
+            )
+          })}
+        </div>
+      )}
 
       <div className="map-canvas-container" style={mapTransformStyle}>
         <div className="mock-map-graphic floor-transition" key={currentFloor}>
