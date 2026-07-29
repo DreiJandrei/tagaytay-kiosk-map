@@ -69,7 +69,13 @@ export default function MapScreen({
           else if (currentFloor >= 3 && currentFloor <= 5) kioskStyle = { left: 240, top: 720 };
           else if (currentFloor === 6) kioskStyle = { left: 650, top: 580 };
           else if (currentFloor === 7) kioskStyle = { left: 600, top: 460 };
-      } else {
+      } 
+      // BAGO: ESCALATOR PIN PARA SA FLOOR 2
+      else if (transportMethod === 'escalator') {
+          kioskText = "🪜 ARRIVED VIA ESCALATOR";
+          if (currentFloor === 2) kioskStyle = { left: 575, top: 670 };
+      } 
+      else {
           kioskText = "🛗 ARRIVED VIA ELEVATOR";
           if (currentFloor === 2) kioskStyle = { left: 820, top: 460 };
           else if (currentFloor >= 3 && currentFloor <= 5) kioskStyle = { left: 600, top: 410 };
@@ -89,6 +95,11 @@ export default function MapScreen({
       finalPathData = `M ${x} ${y} L ${x} ${y - 20} L ${x + 20} ${y - 20} L ${x + 20} ${y - 40} L ${x + 40} ${y - 40}`;
   }
 
+  // BAGO: Ito na 'yung eksaktong drawing mo sa Floor 1 Escalator! U-turn sa kanan.
+  if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-to-transport') {
+      finalPathData = "M 1030 1000 L 1330 1000 L 1330 860 L 1250 860"; 
+  }
+
   if (selectedOffice && currentFloor !== 1) {
       if (currentFloor === 2) {
           if (transportMethod === 'stairs') {
@@ -96,6 +107,14 @@ export default function MapScreen({
                   finalPathData = finalPathData.replace("M 860 490 L 860 470 L 680 470 L 680 260", "M 220 420 L 220 350 L 420 350 L 420 260 L 680 260");
               } else if (finalPathData.includes("L 530 470")) {
                   finalPathData = finalPathData.replace("M 860 490 L 860 470 L 530 470 L 530 560", "M 220 420 L 220 350 L 530 350 L 530 560");
+              }
+          } 
+          // BAGO: Kung sa escalator galing, babaguhin niya yung start ng line papunta sa Escalator
+          else if (transportMethod === 'escalator') {
+              if (finalPathData.includes("L 680 260")) {
+                  finalPathData = finalPathData.replace("M 860 490 L 860 470 L 680 470 L 680 260", "M 575 670 L 575 470 L 680 470 L 680 260");
+              } else if (finalPathData.includes("L 530 470")) {
+                  finalPathData = finalPathData.replace("M 860 490 L 860 470 L 530 470 L 530 560", "M 575 670 L 575 470 L 530 470 L 530 560");
               }
           }
       } 
@@ -126,7 +145,6 @@ export default function MapScreen({
       }
   }
 
-  // TANGGAL NA ANG 3D ROTATION DITO (Laging 0deg na ang X at Z axis)
   const mapTransformStyle = {
     transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom}) rotateX(0deg) rotateZ(0deg)`,
     transition: isDragging.current ? 'none' : 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
@@ -158,7 +176,6 @@ export default function MapScreen({
         <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => setZoom(z => Math.max(0.35, z - 0.12))}>➖</button>
       </div>
 
-      {/* BAGO: Itatago na natin 'tong buong bar na 'to kapag ang gamit ay cellphone (isMobile) */}
       {!isMobile && (
         <div className="bottom-floor-bar" style={{
             position: 'absolute', bottom: '30px', left: '50%', transform: 'translateX(-50%)',
