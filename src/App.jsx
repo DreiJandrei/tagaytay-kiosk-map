@@ -84,7 +84,6 @@ export default function App() {
   const [selectedOfficeKey, setSelectedOfficeKey] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showKeyboard, setShowKeyboard] = useState(false);
-  
   const [selectedService, setSelectedService] = useState(null);
 
   const [lang, setLang] = useState('EN');     
@@ -95,10 +94,13 @@ export default function App() {
   const [adminPasswordInput, setAdminPasswordInput] = useState(''); 
   const [secretClicks, setSecretClicks] = useState(0);
 
+  // ==============================================================
+  // BAGO: State para sa About Us Modal sa Main Screen
+  // ==============================================================
+  const [showAbout, setShowAbout] = useState(false); 
+
   const [routeStep, setRouteStep] = useState('idle'); 
   const [destinationData, setDestinationData] = useState(null);
-
-  // BAGO: Unang mount pa lang, babasahin na agad ng state ang link para hindi magkamali ang phone
   const [transportMethod, setTransportMethod] = useState(() => searchParams.get('transport') || 'elevator');
 
   useEffect(() => {
@@ -162,6 +164,8 @@ export default function App() {
 
   useEffect(() => {
     const routeKey = searchParams.get('route');
+    const transportParam = searchParams.get('transport'); 
+
     if (routeKey && Object.keys(liveOfficeDatabase).length > 0) {
       let foundFloor = null;
       Object.entries(liveOfficeDatabase).forEach(([floorNum, offices]) => {
@@ -172,6 +176,7 @@ export default function App() {
         setAppState('map');
         setCurrentFloor(foundFloor);
         setSelectedOfficeKey(routeKey);
+        if (transportParam) setTransportMethod(transportParam); 
         setRouteStep('arrived');
       }
     }
@@ -235,6 +240,7 @@ export default function App() {
         setShowAdmin(false);
         setShowAdminLogin(false);
         setAdminPasswordInput('');
+        setShowAbout(false); // Isasara din ito pag nag idle
       }, 45000); 
     };
 
@@ -377,6 +383,10 @@ export default function App() {
     else setSearchQuery(prev => prev + key);
   };
 
+  // ==============================================================
+  // RENDER BLOCKS
+  // ==============================================================
+  
   if (isMobileSessionExpired) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#FFFFFF', color: '#0F172A', textAlign: 'center', padding: '30px' }}>
@@ -416,7 +426,8 @@ export default function App() {
     secondaryText: isDarkMode ? '#94A3B8' : '#64748B',
     cardBorder: isDarkMode ? '2px solid #475569' : '2px solid #E2E8F0',
     buttonAccentBg: isDarkMode ? '#334155' : '#EEF2FF',
-    accentText: isDarkMode ? '#F59E0B' : '#B45309'
+    accentText: isDarkMode ? '#F59E0B' : '#B45309',
+    cardBg: isDarkMode ? '#1E293B' : '#FFFFFF'
   };
 
   const keyboardRows = [
@@ -440,6 +451,17 @@ export default function App() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          
+          {/* ============================================================== */}
+          {/* BAGO: INFO BUTTON ("i") DITO SA HEADER */}
+          {/* ============================================================== */}
+          <button 
+            onClick={() => setShowAbout(true)} 
+            style={{ background: colorPalette.buttonAccentBg, color: '#4F46E5', border: '2px solid #4F46E5', width: '60px', height: '60px', borderRadius: '50%', fontWeight: 900, fontSize: '1.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+          >
+            ℹ️
+          </button>
+
           <button onClick={() => setTextSize(textSize === 'normal' ? 'large' : 'normal')} style={{ background: isLarge ? '#4F46E5' : colorPalette.buttonAccentBg, color: isLarge ? 'white' : '#4F46E5', border: isLarge ? 'none' : '2px solid #4F46E5', width: '60px', height: '60px', borderRadius: '50%', fontWeight: 900, fontSize: '1.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>{isLarge ? 'A+' : 'A'}</button>
           <button onClick={() => setLang(lang === 'EN' ? 'TL' : 'EN')} style={{ background: colorPalette.buttonAccentBg, color: '#4F46E5', border: '2px solid #4F46E5', padding: '0 24px', height: '60px', borderRadius: '50px', fontWeight: 900, fontSize: isLarge ? '1.2rem' : '1.05rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>🌐 {lang === 'EN' ? 'English' : 'Tagalog'}</button>
           <button className="ui-action-btn theme-toggle-btn" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} style={{ height: '60px', background: colorPalette.buttonAccentBg, color: '#4F46E5', border: '2px solid #4F46E5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: isLarge ? '1.2rem' : '1.05rem', borderRadius: '14px', padding: '0 25px', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>{isDarkMode ? "☀️ Light" : "🌙 Dark"}</button>
@@ -823,6 +845,77 @@ export default function App() {
               </button>
             )}
 
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* BAGO: ABOUT US MODAL (Nilipat sa Main Screen) */}
+      {/* ============================================================== */}
+      {showAbout && (
+        <div 
+          style={{
+            position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.85)', 
+            backdropFilter: 'blur(8px)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'default'
+          }}
+          onClick={() => setShowAbout(false)} 
+        >
+          <div 
+            style={{ 
+              background: colorPalette.cardBg, padding: '40px', borderRadius: '24px', width: '90%', maxWidth: '650px', 
+              color: colorPalette.primaryText, cursor: 'default', boxShadow: '0 25px 50px rgba(0,0,0,0.5)', position: 'relative',
+              border: `4px solid #4F46E5`
+            }}
+            onClick={(e) => e.stopPropagation()} 
+          >
+            <button 
+              onClick={() => setShowAbout(false)}
+              style={{
+                position: 'absolute', top: '20px', right: '20px', background: isDarkMode ? '#334155' : '#E2E8F0', border: 'none', 
+                width: '45px', height: '45px', borderRadius: '50%', fontSize: '1.2rem', fontWeight: 'bold', 
+                cursor: 'pointer', color: colorPalette.primaryText, display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}
+            >
+              ✕
+            </button>
+            
+            <h2 style={{ fontSize: '2.4rem', fontWeight: '900', color: isDarkMode ? '#FFFFFF' : '#1E1B4B', margin: '0 0 15px 0', textAlign: 'center' }}>
+              About the Project
+            </h2>
+            
+            <p style={{ fontSize: '1.15rem', color: colorPalette.secondaryText, lineHeight: '1.6', textAlign: 'center', margin: '0 auto 30px auto', maxWidth: '550px', fontWeight: '600' }}>
+              This Interactive Directory Kiosk was developed by 4th-year Bachelor of Science in Information Technology (BSIT) students from the City College of Tagaytay. Our goal is to enhance public service by providing an accessible, easy-to-use digital mapping system that helps citizens seamlessly locate offices and navigate the City Hall.
+            </p>
+
+            <div style={{ background: isDarkMode ? '#0F172A' : '#F8FAFC', border: colorPalette.cardBorder, borderRadius: '16px', padding: '25px' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#4F46E5', margin: '0 0 20px 0', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '1.5px' }}>
+                The Development Team
+              </h3>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: colorPalette.cardBorder, paddingBottom: '12px' }}>
+                  <span style={{ fontSize: '1.3rem', fontWeight: '900', color: colorPalette.primaryText }}>Franz Jandrei Valderama</span>
+                  <span style={{ fontSize: '1.05rem', fontWeight: '800', color: '#4F46E5', background: isDarkMode ? 'rgba(79, 70, 229, 0.2)' : '#EEF2FF', padding: '6px 14px', borderRadius: '20px' }}>Full Stack Developer</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: colorPalette.cardBorder, paddingBottom: '12px' }}>
+                  <span style={{ fontSize: '1.3rem', fontWeight: '900', color: colorPalette.primaryText }}>Neftali Luya</span>
+                  <span style={{ fontSize: '1.05rem', fontWeight: '800', color: '#059669', background: isDarkMode ? 'rgba(5, 150, 105, 0.2)' : '#ECFDF5', padding: '6px 14px', borderRadius: '20px' }}>Front End Developer</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: colorPalette.cardBorder, paddingBottom: '12px' }}>
+                  <span style={{ fontSize: '1.3rem', fontWeight: '900', color: colorPalette.primaryText }}>Ricalyn Mereyes</span>
+                  <span style={{ fontSize: '1.05rem', fontWeight: '800', color: '#D97706', background: isDarkMode ? 'rgba(217, 119, 6, 0.2)' : '#FFFBEB', padding: '6px 14px', borderRadius: '20px' }}>Main Documentation</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '1.3rem', fontWeight: '900', color: colorPalette.primaryText }}>Marlon Panganiban</span>
+                  <span style={{ fontSize: '1.05rem', fontWeight: '800', color: '#D97706', background: isDarkMode ? 'rgba(217, 119, 6, 0.2)' : '#FFFBEB', padding: '6px 14px', borderRadius: '20px' }}>Documentation</span>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ textAlign: 'center', marginTop: '25px' }}>
+              <img src={tagaytaySeal} alt="City College of Tagaytay" style={{ width: '70px', height: '70px', borderRadius: '50%', objectFit: 'contain', background: 'white', padding: '2px' }} />
+            </div>
           </div>
         </div>
       )}
