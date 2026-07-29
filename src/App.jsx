@@ -23,7 +23,7 @@ const serviceGuidesConfig = [
     icon: '💼',
     titleEn: 'Business Permit',
     titleTl: 'Business Permit',
-    isExternal: true, // Annex (Walang Map Route)
+    isExternal: true, 
     locationTextEn: 'Please proceed to the BPLO at the Annex Building (Old City Hall). This is located outside the main building.',
     locationTextTl: 'Mangyaring pumunta sa BPLO sa Annex Building (Lumang City Hall). Ito ay nasa labas ng gusaling ito.',
     requirements: [
@@ -38,7 +38,7 @@ const serviceGuidesConfig = [
     icon: '🏗️',
     titleEn: 'Building Permit',
     titleTl: 'Building Permit',
-    isExternal: false, // Nasa Main Building (May Map Route)
+    isExternal: false, 
     floor: 3, 
     dbKey: 'building-official', 
     locationTextEn: 'Please proceed to the Office of the Building Official (OBO), 3rd Floor.',
@@ -55,7 +55,7 @@ const serviceGuidesConfig = [
     icon: '📄',
     titleEn: 'Tax Declaration',
     titleTl: 'Tax Declaration',
-    isExternal: false, // Nasa Main Building (May Map Route)
+    isExternal: false, 
     floor: 3, 
     dbKey: 'treasure-office', 
     locationTextEn: 'Please proceed to the Assessor / City Treasurer Office, 3rd Floor.',
@@ -119,7 +119,6 @@ export default function App() {
     }
   }, [searchParams]);
 
-  // SELF-DESTRUCT & ANTI-IDLE LOGIC PARA SA PHONES (ANTI-REFRESH)
   useEffect(() => {
     const routeKey = searchParams.get('route');
     const isMobile = typeof window !== 'undefined' && window.innerWidth <= 1024;
@@ -164,12 +163,9 @@ export default function App() {
     }
   }, [searchParams]);
 
-  // ==============================================================
-  // BAGO: DINAGDAG NA ANG PAG-CHECK NG 'transport' MULA SA QR
-  // ==============================================================
   useEffect(() => {
     const routeKey = searchParams.get('route');
-    const transportParam = searchParams.get('transport'); // Kinukuha na dito kung stairs o elevator
+    const transportParam = searchParams.get('transport'); 
 
     if (routeKey && Object.keys(liveOfficeDatabase).length > 0) {
       let foundFloor = null;
@@ -181,11 +177,7 @@ export default function App() {
         setAppState('map');
         setCurrentFloor(foundFloor);
         setSelectedOfficeKey(routeKey);
-        
-        if (transportParam) {
-          setTransportMethod(transportParam); // Sine-set para malaman ng phone kung ano gagamitin
-        }
-
+        if (transportParam) setTransportMethod(transportParam); 
         setRouteStep('arrived');
       }
     }
@@ -305,10 +297,17 @@ export default function App() {
     }
   };
 
+  // BAGO: DINAGDAG ANG ESCALATOR LOGIC DITO
   useEffect(() => {
     let timeoutId;
     if (routeStep === 'go-to-transport' && destinationData) {
       if (transportMethod === 'elevator') {
+        timeoutId = setTimeout(() => {
+          setCurrentFloor(destinationData.floor);
+          setSelectedOfficeKey(destinationData.key);
+          setRouteStep('arrived');
+        }, 4000);
+      } else if (transportMethod === 'escalator') {
         timeoutId = setTimeout(() => {
           setCurrentFloor(destinationData.floor);
           setSelectedOfficeKey(destinationData.key);
@@ -584,17 +583,29 @@ export default function App() {
                   </div>
                 )}
 
+                {/* BAGO: DINAGDAG NA ANG ESCALATOR OPTION KUNG 2ND FLOOR ANG PUPUNTAHAN */}
                 <div style={{ background: isDarkMode ? '#1E293B' : '#FFFFFF', padding: '20px', borderRadius: '16px', border: colorPalette.cardBorder, marginBottom: '20px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-                  <h3 style={{ margin: '0 0 15px 0', color: colorPalette.primaryText, fontSize: '1.1rem', textAlign: 'center' }}>Elevator or Stairs?</h3>
+                  <h3 style={{ margin: '0 0 15px 0', color: colorPalette.primaryText, fontSize: '1.1rem', textAlign: 'center' }}>
+                    {destinationData.floor === 2 ? (lang === 'EN' ? 'Choose your transport:' : 'Piliin ang daan papunta:') : (lang === 'EN' ? 'Elevator or Stairs?' : 'Elevator o Hagdan?')}
+                  </h3>
                   <div style={{ display: 'flex', gap: '10px' }}>
                     <button 
                       onClick={() => { setSelectedOfficeKey('elevator-up'); setTransportMethod('elevator'); setRouteStep('go-to-transport'); }}
-                      style={{ flex: 1, padding: '15px', fontSize: '1rem', fontWeight: 800, background: '#EEF2FF', color: '#4F46E5', border: 'none', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      style={{ flex: 1, padding: '15px', fontSize: '0.9rem', fontWeight: 800, background: '#EEF2FF', color: '#4F46E5', border: 'none', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                       🛗 Elevator
                     </button>
+                    
+                    {destinationData.floor === 2 && (
+                      <button 
+                        onClick={() => { setSelectedOfficeKey('elevator-up'); setTransportMethod('escalator'); setRouteStep('go-to-transport'); }}
+                        style={{ flex: 1, padding: '15px', fontSize: '0.9rem', fontWeight: 800, background: '#ECFEFF', color: '#0891B2', border: 'none', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                        🪜 Escalator
+                      </button>
+                    )}
+
                     <button 
                       onClick={() => { setSelectedOfficeKey('stairs-up'); setTransportMethod('stairs'); setRouteStep('go-to-transport'); }}
-                      style={{ flex: 1, padding: '15px', fontSize: '1rem', fontWeight: 800, background: '#F1F5F9', color: '#475569', border: 'none', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      style={{ flex: 1, padding: '15px', fontSize: '0.9rem', fontWeight: 800, background: '#F1F5F9', color: '#475569', border: 'none', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                       🚶‍♂️ Stairs
                     </button>
                   </div>
@@ -627,11 +638,11 @@ export default function App() {
                 <div style={{ background: '#FEF2F2', border: '2px solid #FECDD3', padding: '25px', borderRadius: '16px', textAlign: 'center' }}>
                   <span style={{ fontSize: '3rem', display: 'inline-block' }}>📍</span>
                   <h2 style={{ color: '#E11D48', margin: '10px 0', fontSize: '1.3rem' }}>Showing route on Ground Floor...</h2>
-                  <p style={{ color: '#9F1239', fontWeight: 600 }}>Please proceed to the {transportMethod === 'elevator' ? 'Elevator' : 'Stairs'}.</p>
+                  <p style={{ color: '#9F1239', fontWeight: 600 }}>Please proceed to the {transportMethod === 'elevator' ? 'Elevator' : transportMethod === 'escalator' ? 'Escalator' : 'Stairs'}.</p>
                 </div>
 
                 <div style={{ background: '#1E293B', color: 'white', padding: '18px', borderRadius: '12px', textAlign: 'center', fontWeight: 800, border: '2px solid #334155', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>
-                  ⏳ {transportMethod === 'elevator' ? `Going up to Floor ${destinationData.floor}...` : 'Walking to the stairs...'}
+                  ⏳ {transportMethod === 'elevator' ? `Going up to Floor ${destinationData.floor}...` : transportMethod === 'escalator' ? `Taking the escalator to Floor 2...` : 'Walking to the stairs...'}
                 </div>
               </div>
             )}
