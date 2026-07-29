@@ -10,24 +10,15 @@ export default function MapScreen({
   is3DActive,
   setIs3DActive,
   transportMethod = 'elevator',
-  routeStep // BAGO: Dinagdag natin dito
+  routeStep 
 }) {
  const pathRef = useRef(null);
   const isDragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0 });
 
-  // Auto-detect kung mobile (width <= 1024px) para naka-zoom out agad at nakagitna
-  // Auto-detect kung mobile (width <= 1024px) para naka-zoom out agad at nakagitna
- // Auto-detect kung mobile (width <= 1024px)
-// Auto-detect kung mobile (width <= 1024px)
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 1024;
   
   const [zoom, setZoom] = useState(isMobile ? 0.28 : 0.65);
-  
-  
-
- // BAGO: Hinatak sa saktong gitna (y: -230)
-  // BAGO: Hinatak sa saktong gitna (y: -230)
   const [pan, setPan] = useState(isMobile ? { x: -450, y: -230 } : { x: 20, y: -120 });
 
   useEffect(() => {
@@ -45,13 +36,13 @@ export default function MapScreen({
   }, [selectedOfficeKey, offices]); 
 
   const handleDragStart = (clientX, clientY) => {
-    if (isMobile) return; // BAGO: I-LOCK ANG MAPA SA PHONE (Bawal i-drag)
+    if (isMobile) return; 
     isDragging.current = true;
     dragStart.current = { x: clientX - pan.x, y: clientY - pan.y };
   };
 
   const handleDragMove = (clientX, clientY) => {
-    if (isMobile || !isDragging.current) return; // BAGO: I-LOCK DIN DITO
+    if (isMobile || !isDragging.current) return; 
     setPan({ x: clientX - dragStart.current.x, y: clientY - dragStart.current.y });
   };
 
@@ -70,14 +61,10 @@ export default function MapScreen({
       kioskStyle = { left: 1030, top: 1000, display: 'block' }; 
   } else {
       kioskStyle = { display: 'block' };
-      
-      // BAGO: Inaalam natin kung "passing through" pa lang ba o nakarating na talaga
       const isClimbing = routeStep === 'climbing-stairs';
 
       if (transportMethod === 'stairs') {
-          // BAGO: Papalitan ang text habang umaakyat para kitang-kita ng user na umaandar siya!
           kioskText = isClimbing ? "⬆️ CLIMBING STAIRS..." : "🚶‍♂️ ARRIVED VIA STAIRS";
-          
           if (currentFloor === 2) kioskStyle = { left: 220, top: 420 };
           else if (currentFloor >= 3 && currentFloor <= 5) kioskStyle = { left: 240, top: 720 };
           else if (currentFloor === 6) kioskStyle = { left: 650, top: 580 };
@@ -96,11 +83,9 @@ export default function MapScreen({
   // ==============================================================
   let finalPathData = selectedOffice ? selectedOffice.pathData : "";
 
-  // BAGO: Visual Red Line kapag nag-cli-climb ng stairs para hindi blangko
   if (routeStep === 'climbing-stairs' && transportMethod === 'stairs') {
       const x = kioskStyle.left;
       const y = kioskStyle.top;
-      // Gagawa ng maliit na zigzag path na mukhang hagdan paakyat
       finalPathData = `M ${x} ${y} L ${x} ${y - 20} L ${x + 20} ${y - 20} L ${x + 20} ${y - 40} L ${x + 40} ${y - 40}`;
   }
 
@@ -108,17 +93,9 @@ export default function MapScreen({
       if (currentFloor === 2) {
           if (transportMethod === 'stairs') {
               if (finalPathData.includes("L 680 260")) {
-                  // Lilikod siya para umiwas sa solid horizontal wall (y=310)
-                  finalPathData = finalPathData.replace(
-                      "M 860 490 L 860 470 L 680 470 L 680 260", 
-                      "M 220 420 L 220 350 L 420 350 L 420 260 L 680 260"
-                  );
+                  finalPathData = finalPathData.replace("M 860 490 L 860 470 L 680 470 L 680 260", "M 220 420 L 220 350 L 420 350 L 420 260 L 680 260");
               } else if (finalPathData.includes("L 530 470")) {
-                  // Pagpunta sa Library, dadaan sa gap
-                  finalPathData = finalPathData.replace(
-                      "M 860 490 L 860 470 L 530 470 L 530 560", 
-                      "M 220 420 L 220 350 L 530 350 L 530 560"
-                  );
+                  finalPathData = finalPathData.replace("M 860 490 L 860 470 L 530 470 L 530 560", "M 220 420 L 220 350 L 530 350 L 530 560");
               }
           }
       } 
@@ -141,7 +118,6 @@ export default function MapScreen({
           }
       }
       else if (currentFloor === 7) {
-          // Umiwas sa pagtagos sa y=380 wall
           if (transportMethod === 'stairs') {
               finalPathData = finalPathData.replace("M 580 340 L 580 400", "M 600 460 L 430 460 L 430 400 L 580 400");
           } else if (transportMethod === 'elevator') {
@@ -150,8 +126,9 @@ export default function MapScreen({
       }
   }
 
+  // TANGGAL NA ANG 3D ROTATION DITO (Laging 0deg na ang X at Z axis)
   const mapTransformStyle = {
-    transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom}) rotateX(${is3DActive ? '35deg' : '0deg'}) rotateZ(${is3DActive ? '-4deg' : '0deg'})`,
+    transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom}) rotateX(0deg) rotateZ(0deg)`,
     transition: isDragging.current ? 'none' : 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
   };
 
@@ -175,20 +152,10 @@ export default function MapScreen({
       onTouchMove={(e) => handleDragMove(e.touches[0].clientX, e.touches[0].clientY)}
       onTouchEnd={handleDragEnd}
     >
-      <div className="map-legend">
-        <div style={{ fontSize: '0.85rem', fontWeight: 800, marginBottom: '10px', color: '#94A3B8' }}>MAP LEGEND</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', fontSize: '0.8rem', fontWeight: 600 }}><span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#06B6D4' }}></span> Public Relations & Tourism</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', fontSize: '0.8rem', fontWeight: 600 }}><span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#4f46e5' }}></span> Executive & Admin / Legal</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', fontSize: '0.8rem', fontWeight: 600 }}><span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#0c6046' }}></span> Finance & Internal Audit</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', fontSize: '0.8rem', fontWeight: 600 }}><span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#4338ca' }}></span> Office of the Mayor</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', fontSize: '0.8rem', fontWeight: 600 }}><span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#911e1f' }}></span> Security & Support Services</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', fontSize: '0.8rem', fontWeight: 600 }}><span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#c2410c' }}></span> Public Halls & Events</div>
-      </div>
+      {/* TINANGGAL NA YUNG MAP LEGEND DITO */}
 
       <div className="floor-selector" style={{ position: 'absolute', top: 30, right: 30, zIndex: 10, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <button className="ui-action-btn projection-toggle-btn" onClick={() => setIs3DActive(!is3DActive)} style={{ padding: '12px', fontSize: '1rem', fontWeight: 'bold' }}>
-          {is3DActive ? "🗺️ 2D" : "🌐 3D"}
-        </button>
+        {/* TINANGGAL NA YUNG 3D TOGGLE BUTTON DITO */}
         <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => setZoom(z => Math.min(1.8, z + 0.12))}>➕</button>
         <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => setZoom(z => Math.max(0.35, z - 0.12))}>➖</button>
       </div>
@@ -219,8 +186,7 @@ export default function MapScreen({
         })}
       </div>
 
-      <div className={`map-canvas-container ${is3DActive ? 'is-3d-active' : ''}`} style={mapTransformStyle}>
-        {/* BAGO: Dinagdagan natin ng 'floor-transition' class at 'key={currentFloor}' para ma-trigger ang flip animation! */}
+      <div className="map-canvas-container" style={mapTransformStyle}>
         <div className="mock-map-graphic floor-transition" key={currentFloor}>
           
           {currentFloor === 1 && <div className="floor-plate" style={{ width: 980, height: 900, left: 350, top: 100 }}></div>}
@@ -229,9 +195,7 @@ export default function MapScreen({
             <svg width="1400" height="1300" style={{ position: 'absolute', top: 0, left: 0, zIndex: 1, pointerEvents: 'none' }}>
               <g stroke="#9CA3AF" strokeWidth="8" fill="transparent" strokeLinecap="round">
                 <rect x="30" y="80" width="1000" height="850" rx="12" />
-                {/* Ito yung may butas na pinto sa taas: */}
                 <path d="M 30 240 L 80 240 M 120 240 L 190 240 M 230 240 L 310 240 M 350 240 L 430 240 M 470 240 L 665 240 M 705 240 L 915 240 M 955 240 L 1030 240" />
-                {/* Ito yung mga walls sa ibaba na nawala kanina (ibinalik na natin): */}
                 <path d="M 30 310 L 380 310" />
                 <path d="M 380 380 L 380 520" />
                 <path d="M 720 490 L 720 280 L 800 280 M 870 280 L 950 280 L 950 490 L 880 490 M 780 490 L 720 490" />

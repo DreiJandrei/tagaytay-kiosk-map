@@ -443,3 +443,11 @@ img { max-width: 100%; }
     opacity: 1;
   }
 }
+/* =========================================
+   BAGO: FORCE BLUE THEME SA LAHAT NG OFFICES
+   ========================================= */
+.room-node:not(.active-room):not(.theme-const) {
+  background: linear-gradient(135deg, #1e40af, #3b82f6) !important;
+  color: white !important;
+  border: 1px solid #93c5fd !important;
+}
