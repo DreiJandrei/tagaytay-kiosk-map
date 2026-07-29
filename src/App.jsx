@@ -14,9 +14,6 @@ import { getAllOffices, initializeDatabase, incrementSearchCount } from './lib/a
 import { coordinateMapping, mergeOfficeData } from './lib/coordinateMapping';
 import { defaultOfficeData } from './lib/defaultOfficeData';
 
-// ==============================================================
-// SERVICE GUIDES CONFIGURATION (Para sa Sidebar)
-// ==============================================================
 const serviceGuidesConfig = [
   {
     id: 'business-permit',
@@ -70,10 +67,11 @@ const serviceGuidesConfig = [
 ];
 
 export default function App() {
+  const [searchParams] = useSearchParams();
+
   const [liveOfficeDatabase, setLiveOfficeDatabase] = useState({});
   const [isLoading, setIsLoading] = useState(true);
 
-  // SECURITY STATES
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isMobileSessionExpired, setIsMobileSessionExpired] = useState(false);
 
@@ -92,7 +90,6 @@ export default function App() {
   const [lang, setLang] = useState('EN');     
   const [textSize, setTextSize] = useState('normal'); 
 
-  // ADMIN SECURITY STATES
   const [showAdmin, setShowAdmin] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false); 
   const [adminPasswordInput, setAdminPasswordInput] = useState(''); 
@@ -100,9 +97,9 @@ export default function App() {
 
   const [routeStep, setRouteStep] = useState('idle'); 
   const [destinationData, setDestinationData] = useState(null);
-  const [transportMethod, setTransportMethod] = useState('elevator');
 
-  const [searchParams] = useSearchParams();
+  // BAGO: Unang mount pa lang, babasahin na agad ng state ang link para hindi magkamali ang phone
+  const [transportMethod, setTransportMethod] = useState(() => searchParams.get('transport') || 'elevator');
 
   useEffect(() => {
     const authorized = localStorage.getItem('kiosk_authorized');
@@ -165,8 +162,6 @@ export default function App() {
 
   useEffect(() => {
     const routeKey = searchParams.get('route');
-    const transportParam = searchParams.get('transport'); 
-
     if (routeKey && Object.keys(liveOfficeDatabase).length > 0) {
       let foundFloor = null;
       Object.entries(liveOfficeDatabase).forEach(([floorNum, offices]) => {
@@ -177,7 +172,6 @@ export default function App() {
         setAppState('map');
         setCurrentFloor(foundFloor);
         setSelectedOfficeKey(routeKey);
-        if (transportParam) setTransportMethod(transportParam); 
         setRouteStep('arrived');
       }
     }
@@ -297,7 +291,6 @@ export default function App() {
     }
   };
 
-  // BAGO: DINAGDAG ANG ESCALATOR LOGIC DITO
   useEffect(() => {
     let timeoutId;
     if (routeStep === 'go-to-transport' && destinationData) {
@@ -384,10 +377,6 @@ export default function App() {
     else setSearchQuery(prev => prev + key);
   };
 
-  // ==============================================================
-  // RENDER BLOCKS
-  // ==============================================================
-  
   if (isMobileSessionExpired) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#FFFFFF', color: '#0F172A', textAlign: 'center', padding: '30px' }}>
@@ -583,7 +572,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* BAGO: DINAGDAG NA ANG ESCALATOR OPTION KUNG 2ND FLOOR ANG PUPUNTAHAN */}
                 <div style={{ background: isDarkMode ? '#1E293B' : '#FFFFFF', padding: '20px', borderRadius: '16px', border: colorPalette.cardBorder, marginBottom: '20px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
                   <h3 style={{ margin: '0 0 15px 0', color: colorPalette.primaryText, fontSize: '1.1rem', textAlign: 'center' }}>
                     {destinationData.floor === 2 ? (lang === 'EN' ? 'Choose your transport:' : 'Piliin ang daan papunta:') : (lang === 'EN' ? 'Elevator or Stairs?' : 'Elevator o Hagdan?')}
@@ -775,7 +763,6 @@ export default function App() {
 
       </div>
 
-      {/* POPUP MODAL FOR REQUIREMENTS & ROUTING */}
       {selectedService && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -840,7 +827,6 @@ export default function App() {
         </div>
       )}
 
-      {/* ADMIN PASSWORD MODAL */}
       {showAdminLogin && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: '#FFFFFF', padding: '30px', borderRadius: '16px', width: '400px', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)' }}>
@@ -865,7 +851,6 @@ export default function App() {
         </div>
       )}
 
-      {/* ADMIN PANEL */}
       {showAdmin && <AdminPanel officeDatabase={liveOfficeDatabase} onClose={() => setShowAdmin(false)} onDataUpdate={() => { fetchKioskData(); }} />}
     </div>
   );
