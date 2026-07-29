@@ -15,7 +15,7 @@ import { coordinateMapping, mergeOfficeData } from './lib/coordinateMapping';
 import { defaultOfficeData } from './lib/defaultOfficeData';
 
 // ==============================================================
-// BAGO: SERVICE GUIDES CONFIGURATION (Para sa Sidebar)
+// SERVICE GUIDES CONFIGURATION (Para sa Sidebar)
 // ==============================================================
 const serviceGuidesConfig = [
   {
@@ -92,12 +92,10 @@ export default function App() {
   const [lang, setLang] = useState('EN');     
   const [textSize, setTextSize] = useState('normal'); 
 
-  // ==============================================================
-  // BAGO: ADMIN SECURITY STATES
-  // ==============================================================
+  // ADMIN SECURITY STATES
   const [showAdmin, setShowAdmin] = useState(false);
-  const [showAdminLogin, setShowAdminLogin] = useState(false); // Pop-up para sa password
-  const [adminPasswordInput, setAdminPasswordInput] = useState(''); // Text field ng password
+  const [showAdminLogin, setShowAdminLogin] = useState(false); 
+  const [adminPasswordInput, setAdminPasswordInput] = useState(''); 
   const [secretClicks, setSecretClicks] = useState(0);
 
   const [routeStep, setRouteStep] = useState('idle'); 
@@ -166,8 +164,13 @@ export default function App() {
     }
   }, [searchParams]);
 
+  // ==============================================================
+  // BAGO: DINAGDAG NA ANG PAG-CHECK NG 'transport' MULA SA QR
+  // ==============================================================
   useEffect(() => {
     const routeKey = searchParams.get('route');
+    const transportParam = searchParams.get('transport'); // Kinukuha na dito kung stairs o elevator
+
     if (routeKey && Object.keys(liveOfficeDatabase).length > 0) {
       let foundFloor = null;
       Object.entries(liveOfficeDatabase).forEach(([floorNum, offices]) => {
@@ -178,6 +181,11 @@ export default function App() {
         setAppState('map');
         setCurrentFloor(foundFloor);
         setSelectedOfficeKey(routeKey);
+        
+        if (transportParam) {
+          setTransportMethod(transportParam); // Sine-set para malaman ng phone kung ano gagamitin
+        }
+
         setRouteStep('arrived');
       }
     }
@@ -238,7 +246,6 @@ export default function App() {
         setSelectedService(null);
         setRouteStep('idle');
         setDestinationData(null);
-        // Isara din ang admin pag nag-idle
         setShowAdmin(false);
         setShowAdminLogin(false);
         setAdminPasswordInput('');
@@ -259,12 +266,9 @@ export default function App() {
     };
   }, [appState]);
 
-  // ==============================================================
-  // BAGO: UPDATED LOGO TAP LOGIC
-  // ==============================================================
   const handleLogoTap = () => {
     if (secretClicks + 1 >= 5) { 
-      setShowAdminLogin(true); // Papalabasin ang password modal imbes na Admin agad
+      setShowAdminLogin(true); 
       setSecretClicks(0); 
     } else { 
       setSecretClicks(prev => prev + 1); 
@@ -273,11 +277,11 @@ export default function App() {
   };
 
   const handleAdminLogin = (e) => {
-    e.preventDefault(); // Iwas refresh kung mag-enter sa keyboard
+    e.preventDefault(); 
     if (adminPasswordInput === 'admin123') {
       setShowAdminLogin(false);
       setAdminPasswordInput('');
-      setShowAdmin(true); // Buksan na ang admin panel kapag tama
+      setShowAdmin(true); 
     } else {
       alert('Incorrect Password! Access Denied.');
       setAdminPasswordInput('');
@@ -610,7 +614,7 @@ export default function App() {
                         📱 I-scan para makita ang<br/>direksyon sa phone
                       </span>
                       <div style={{ padding: '10px', backgroundColor: '#FFFFFF', borderRadius: '8px' }}>
-                        <QRCodeSVG value={`${window.location.origin}/?route=${destinationData.key}`} size={120} bgColor={"#ffffff"} fgColor={"#0F172A"} />
+                        <QRCodeSVG value={`${window.location.origin}/?route=${destinationData.key}&transport=${transportMethod}`} size={120} bgColor={"#ffffff"} fgColor={"#0F172A"} />
                       </div>
                     </div>
                   </div>
@@ -695,7 +699,7 @@ export default function App() {
                         📱 I-scan para makita ang<br/>direksyon sa phone
                       </span>
                       <div style={{ padding: '10px', backgroundColor: '#FFFFFF', borderRadius: '8px' }}>
-                        <QRCodeSVG value={`${window.location.origin}/?route=${selectedOfficeKey}`} size={120} bgColor={"#ffffff"} fgColor={"#0F172A"} />
+                        <QRCodeSVG value={`${window.location.origin}/?route=${selectedOfficeKey}&transport=${transportMethod}`} size={120} bgColor={"#ffffff"} fgColor={"#0F172A"} />
                       </div>
                     </div>
                   </div>
@@ -825,9 +829,7 @@ export default function App() {
         </div>
       )}
 
-      {/* ============================================================== */}
-      {/* BAGO: ADMIN PASSWORD MODAL */}
-      {/* ============================================================== */}
+      {/* ADMIN PASSWORD MODAL */}
       {showAdminLogin && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: '#FFFFFF', padding: '30px', borderRadius: '16px', width: '400px', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)' }}>
