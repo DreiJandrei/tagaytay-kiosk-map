@@ -86,7 +86,7 @@ export default function MapScreen({
   }
 
   // ==============================================================
-  // SMART ROUTER: AVOIDING WALLS FOR STAIRS & ELEVATORS
+  // SMART ROUTER: AVOIDING WALLS FOR STAIRS & ELEVATORS & CUSTOM OVERRIDES
   // ==============================================================
   let finalPathData = selectedOffice ? selectedOffice.pathData : "";
 
@@ -98,6 +98,13 @@ export default function MapScreen({
 
   if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-to-transport') {
       finalPathData = "M 1030 1000 L 1330 1000 L 1330 860 L 1250 860"; 
+  }
+
+  // ==============================================================
+  // BAGO: CANTEEN CUSTOM RED PATH (EKSAKTONG-EKSAKTO SA RED DRAWING MO!)
+  // ==============================================================
+  if (currentFloor === 1 && selectedOfficeKey === 'canteen') {
+      finalPathData = "M 1030 1000 L 1030 710 L 640 710 L 640 565 L 330 565 L 330 710 L 190 710 L 190 530";
   }
 
   if (selectedOffice && currentFloor !== 1) {
@@ -227,10 +234,6 @@ export default function MapScreen({
       <div className="map-canvas-container" style={mapTransformStyle}>
         <div className="mock-map-graphic floor-transition" key={currentFloor}>
           
-          {/* ============================================================== */}
-          {/* BAGO: PERFECT ARCHITECTURAL WALL OUTLINE PARA SA FLOOR 1 */}
-          {/* (MAY CANTEEN DOORWAY GAP, TOLENTINO DOORWAY GAP, AT REMOVED LIGHT BLUE SEGMENT) */}
-          {/* ============================================================== */}
           {currentFloor === 1 && (
             <svg width="1400" height="1300" style={{ position: 'absolute', top: 0, left: 0, zIndex: 1, pointerEvents: 'none' }}>
               <g stroke="#9CA3AF" strokeWidth="8" fill="transparent" strokeLinecap="round">
@@ -238,7 +241,7 @@ export default function MapScreen({
                 <path d="M 1010 960 L 330 960 L 330 560 M 330 480 L 330 75 L 1350 75 L 1350 960 L 1100 960" />
                 {/* Horizontal Hallway Wall sa ilalim ng Tolentino Hall WITH DOORWAY GAP (x=1000 to 1060 open!) */}
                 <path d="M 330 310 L 1000 310 M 1060 310 L 1350 310" />
-                {/* Horizontal Hallway Wall sa ibabaw ng Atrium Garden / Restroom / Elevator (y=575) - BURADO ANG LIGHT BLUE SEGMENT M 330 575 L 440 575 */}
+                {/* Horizontal Hallway Wall sa ibabaw ng Atrium Garden / Restroom / Elevator (y=575) - BURADO ANG LIGHT BLUE SEGMENT */}
                 <path d="M 720 575 L 980 575 M 1080 575 L 1350 575" />
               </g>
             </svg>
@@ -318,7 +321,7 @@ export default function MapScreen({
               <div className="grey-wall" style={{ width: '0px', height: '65px', left: '1010px', top: '615px' }}></div>
               <div className="grey-wall" style={{ width: '0px', height: '220px', left: '1010px', top: '740px' }}></div>
               
-              {/* EXIT BADGE SA FLOOR 1 (Dikit sa wall edge) */}
+              {/* EXIT BADGE SA FLOOR 1 */}
               <div style={exitBadgeStyle(1010, 655)}>FIRE EXIT</div>
             </>
           )}
@@ -382,7 +385,6 @@ export default function MapScreen({
               zIndex: 20
             } : { transition: 'all 0.3s ease' };
 
-            // Visual offset para sa Canteen (nilayo ng ~100px sa building wall nang hindi ginagalaw ang mapping)
             const canteenOffset = key === 'canteen' ? { left: -50 } : {};
 
             return (
