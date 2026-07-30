@@ -101,7 +101,7 @@ export default function MapScreen({
   }
 
   // ==============================================================
-  // BAGO: CANTEEN CUSTOM RED PATH (EKSAKTONG-EKSAKTO SA RED DRAWING MO!)
+  // CANTEEN CUSTOM RED PATH (EKSAKTONG-EKSAKTO SA RED DRAWING MO!)
   // ==============================================================
   if (currentFloor === 1 && selectedOfficeKey === 'canteen') {
       finalPathData = "M 1030 1000 L 1030 710 L 640 710 L 640 565 L 330 565 L 330 710 L 190 710 L 190 530";
@@ -241,8 +241,10 @@ export default function MapScreen({
                 <path d="M 1010 960 L 330 960 L 330 560 M 330 480 L 330 75 L 1350 75 L 1350 960 L 1100 960" />
                 {/* Horizontal Hallway Wall sa ilalim ng Tolentino Hall WITH DOORWAY GAP (x=1000 to 1060 open!) */}
                 <path d="M 330 310 L 1000 310 M 1060 310 L 1350 310" />
-                {/* Horizontal Hallway Wall sa ibabaw ng Atrium Garden / Restroom / Elevator (y=575) - BURADO ANG LIGHT BLUE SEGMENT */}
-                <path d="M 720 575 L 980 575 M 1080 575 L 1350 575" />
+                {/* Horizontal Hallway Wall sa ibabaw ng Atrium Garden / Restroom / Elevator (y=575) - BURADO ANG BLUE DRAWING MO */}
+                <path d="M 720 575 L 980 575" />
+                {/* BAGO: GREY WALL SEGMENT SA RIGHT SIDE NG ELEVATOR (y=740, x=1310..1350) EKSATONG-EKSAKTO SA GREY DRAWING MO */}
+                <path d="M 1310 740 L 1350 740" />
               </g>
             </svg>
           )}
@@ -321,8 +323,8 @@ export default function MapScreen({
               <div className="grey-wall" style={{ width: '0px', height: '65px', left: '1010px', top: '615px' }}></div>
               <div className="grey-wall" style={{ width: '0px', height: '220px', left: '1010px', top: '740px' }}></div>
               
-              {/* EXIT BADGE SA FLOOR 1 */}
-              <div style={exitBadgeStyle(1010, 655)}>FIRE EXIT</div>
+              {/* BAGO: FIRE EXIT BADGE SA FLOOR 1 (Nakalagay mismo sa grey wall na ginuhit mo sa kanan ng Elevator) */}
+              <div style={exitBadgeStyle(1245, 735)}>FIRE EXIT</div>
             </>
           )}
           
