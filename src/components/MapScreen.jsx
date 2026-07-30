@@ -51,7 +51,7 @@ export default function MapScreen({
   const selectedOffice = selectedOfficeKey ? offices?.[selectedOfficeKey] : null;
   
   // ==============================================================
-  // DYNAMIC KIOSK PIN PLACEMENT
+  // DYNAMIC KIOSK PIN PLACEMENT (FIXED: HINDI NA LALABAS PAG IDLE SA UPPER FLOORS)
   // ==============================================================
   let kioskText = "";
   let kioskStyle = { display: 'none' }; 
@@ -228,18 +228,18 @@ export default function MapScreen({
         <div className="mock-map-graphic floor-transition" key={currentFloor}>
           
           {/* ============================================================== */}
-          {/* BAGO: UPDATED ARCHITECTURAL WALL OUTLINE PARA SA FLOOR 1 */}
-          {/* (MAY DOORWAY SA TOLENTINO HALL AT BOTTOM WALL EXTENSION) */}
+          {/* BAGO: PERFECT ARCHITECTURAL WALL OUTLINE PARA SA FLOOR 1 */}
+          {/* (MAY CANTEEN DOORWAY GAP, TOLENTINO DOORWAY GAP, AT REMOVED LIGHT BLUE SEGMENT) */}
           {/* ============================================================== */}
           {currentFloor === 1 && (
             <svg width="1400" height="1300" style={{ position: 'absolute', top: 0, left: 0, zIndex: 1, pointerEvents: 'none' }}>
               <g stroke="#9CA3AF" strokeWidth="8" fill="transparent" strokeLinecap="round">
-                {/* Main Building Perimeter Box (Inextend sa ibaba mula x=1010 para sumakto sa entrance) */}
-                <path d="M 1010 960 L 330 960 L 330 75 L 1350 75 L 1350 960 L 1100 960" />
-                {/* Horizontal Hallway Wall sa ilalim ng Tolentino Hall WITH DOORWAY GAP (x=1000 to 1060) */}
+                {/* Main Building Perimeter Box WITH CANTEEN DOORWAY GAP (x=330, y=480 hanggang 560 open!) */}
+                <path d="M 1010 960 L 330 960 L 330 560 M 330 480 L 330 75 L 1350 75 L 1350 960 L 1100 960" />
+                {/* Horizontal Hallway Wall sa ilalim ng Tolentino Hall WITH DOORWAY GAP (x=1000 to 1060 open!) */}
                 <path d="M 330 310 L 1000 310 M 1060 310 L 1350 310" />
-                {/* Horizontal Hallway Wall sa ibabaw ng Atrium Garden / Restroom / Elevator (y=575) */}
-                <path d="M 330 575 L 440 575 M 720 575 L 980 575 M 1080 575 L 1350 575" />
+                {/* Horizontal Hallway Wall sa ibabaw ng Atrium Garden / Restroom / Elevator (y=575) - BURADO ANG LIGHT BLUE SEGMENT M 330 575 L 440 575 */}
+                <path d="M 720 575 L 980 575 M 1080 575 L 1350 575" />
               </g>
             </svg>
           )}
@@ -382,11 +382,14 @@ export default function MapScreen({
               zIndex: 20
             } : { transition: 'all 0.3s ease' };
 
+            // Visual offset para sa Canteen (nilayo ng ~100px sa building wall nang hindi ginagalaw ang mapping)
+            const canteenOffset = key === 'canteen' ? { left: -50 } : {};
+
             return (
               <div 
                 key={key}
                 className={`room-node ${office.cssClass || ''} ${selectedOfficeKey === key ? 'active-room' : ''}`}
-                style={{...office.style, ...activeStyle}}
+                style={{...office.style, ...canteenOffset, ...activeStyle}}
                 onClick={() => onSelectOffice(key)}
               >
                 <span className="room-label">
