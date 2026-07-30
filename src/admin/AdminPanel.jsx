@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { updateOffice, getAnnouncement, updateAnnouncement } from '../lib/api';
 
 export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
-  // BAGO: 'announcements' na ang default active tab dahil ito na ang unang tab sa listahan
   const [activeTab, setActiveTab] = useState('announcements');
   const [announcementText, setAnnouncementText] = useState('');
 
@@ -123,9 +122,6 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
           </button>
         </div>
 
-        {/* ============================================================== */}
-        {/* BAGO: PINAGPALIT NA ANG PWESTO NG TABS (ANNOUNCEMENTS NA ANG UNA!) */}
-        {/* ============================================================== */}
         <div style={{ display: 'flex', background: '#F8FAFC', borderBottom: '2px solid #E2E8F0' }}>
           <button onClick={() => setActiveTab('announcements')} style={{ flex: 1, padding: '15px', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer', border: 'none', background: activeTab === 'announcements' ? '#FFFFFF' : 'transparent', color: activeTab === 'announcements' ? '#4F46E5' : '#64748B', borderBottom: activeTab === 'announcements' ? '4px solid #4F46E5' : '4px solid transparent' }}>
             📢 System Announcements (Idle Screen)
@@ -187,11 +183,25 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                     <div><label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem' }}>Title</label><input type="text" value={formTitle} onChange={(e) => setFormTitle(e.target.value)} required style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px' }} /></div>
                     <div><label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem' }}>Hours</label><input type="text" value={formHours} onChange={(e) => setFormHours(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px' }} /></div>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
-                    <div><label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem' }}>Head</label><input type="text" value={formHead} onChange={(e) => setFormHead(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px' }} /></div>
-                    <div><label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem' }}>Theme</label><select value={formCssClass} onChange={(e) => setFormCssClass(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px' }}><option value="">Default Normal Color</option><option value="theme-const">🚧 Under Construction</option><option value="theme-amber">🟠 Amber</option><option value="theme-blue">🔵 Blue</option></select></div>
-                    <div><label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem' }}>Status</label><select value={formStatus} onChange={(e) => setFormStatus(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px' }}><option value="Available">🟢 Available</option><option value="In a Meeting">🔴 In a Meeting</option><option value="Out of Office">🟡 Out of Office</option><option value="Closed">⚫ Closed</option></select></div>
+                  
+                  {/* ============================================================== */}
+                  {/* BAGO: TINANGGAL ANG THEME AT CLOSED SA STATUS (2 COLUMNS NA LANG) */}
+                  {/* ============================================================== */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                    <div>
+                      <label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem' }}>Head</label>
+                      <input type="text" value={formHead} onChange={(e) => setFormHead(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px' }} />
+                    </div>
+                    <div>
+                      <label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem' }}>Status</label>
+                      <select value={formStatus} onChange={(e) => setFormStatus(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px' }}>
+                        <option value="Available">🟢 Available</option>
+                        <option value="In a Meeting">🔴 In a Meeting</option>
+                        <option value="Out of Office">🟡 Out of Office</option>
+                      </select>
+                    </div>
                   </div>
+
                   <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
                     <label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem' }}>Requirements</label>
                     <textarea value={formRequirements} onChange={(e) => setFormRequirements(e.target.value)} style={{ width: '100%', flexGrow: 1, padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px', resize: 'none' }} />
@@ -213,7 +223,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
               Change the password required to open this Admin Panel. Make sure to remember your new password! 
               <br />
               <span style={{ color: '#E11D48', fontWeight: '700' }}>
-                Note: Default password is <strong>admin123</strong>. If you ever forget your custom password, clearing the terminal browser cache will reset it back to default.
+                Note: Default password is <strong>admin123</strong>. If you ever forget your custom password, type cctreset on password, and it will return to admin123
               </span>
             </p>
             
