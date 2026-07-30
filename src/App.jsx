@@ -94,9 +94,6 @@ export default function App() {
   const [adminPasswordInput, setAdminPasswordInput] = useState(''); 
   const [secretClicks, setSecretClicks] = useState(0);
 
-  // ==============================================================
-  // BAGO: State para sa About Us Modal sa Main Screen
-  // ==============================================================
   const [showAbout, setShowAbout] = useState(false); 
 
   const [routeStep, setRouteStep] = useState('idle'); 
@@ -240,7 +237,7 @@ export default function App() {
         setShowAdmin(false);
         setShowAdminLogin(false);
         setAdminPasswordInput('');
-        setShowAbout(false); // Isasara din ito pag nag idle
+        setShowAbout(false); 
       }, 45000); 
     };
 
@@ -268,9 +265,13 @@ export default function App() {
     }
   };
 
+  // ==============================================================
+  // BAGO: DYNAMIC ADMIN PASSWORD CHECKING (READS FROM LOCALSTORAGE)
+  // ==============================================================
   const handleAdminLogin = (e) => {
     e.preventDefault(); 
-    if (adminPasswordInput === 'admin123') {
+    const currentPassword = localStorage.getItem('kiosk_admin_password') || 'admin123';
+    if (adminPasswordInput === currentPassword) {
       setShowAdminLogin(false);
       setAdminPasswordInput('');
       setShowAdmin(true); 
@@ -383,10 +384,6 @@ export default function App() {
     else setSearchQuery(prev => prev + key);
   };
 
-  // ==============================================================
-  // RENDER BLOCKS
-  // ==============================================================
-  
   if (isMobileSessionExpired) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#FFFFFF', color: '#0F172A', textAlign: 'center', padding: '30px' }}>
@@ -451,10 +448,6 @@ export default function App() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          
-          {/* ============================================================== */}
-          {/* BAGO: INFO BUTTON ("i") DITO SA HEADER */}
-          {/* ============================================================== */}
           <button 
             onClick={() => setShowAbout(true)} 
             style={{ background: colorPalette.buttonAccentBg, color: '#4F46E5', border: '2px solid #4F46E5', width: '60px', height: '60px', borderRadius: '50%', fontWeight: 900, fontSize: '1.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
@@ -849,9 +842,6 @@ export default function App() {
         </div>
       )}
 
-      {/* ============================================================== */}
-      {/* BAGO: ABOUT US MODAL (Nilipat sa Main Screen) */}
-      {/* ============================================================== */}
       {showAbout && (
         <div 
           style={{
