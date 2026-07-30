@@ -147,25 +147,29 @@ export default function MapScreen({
     transition: isDragging.current ? 'none' : 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
   };
 
-  // HELPER STYLE PARA SA FIRE EXIT BADGE NANG HINDI HUMAHABA ANG CODE
+  // ==============================================================
+  // BAGO: MAS MALAKI AT MALINAW NA FIRE EXIT BADGE PARA SA MATATANDA
+  // (Nakadikit mismo sa gilid ng Grey Wall / Elevator edge)
+  // ==============================================================
   const exitBadgeStyle = (leftPos, topPos) => ({
     position: 'absolute',
     left: leftPos,
     top: topPos,
-    background: '#10B981',
+    background: '#16A34A',
     color: 'white',
-    padding: '4px 8px',
-    borderRadius: '6px',
-    fontSize: '11px',
+    padding: '7px 12px',
+    borderRadius: '8px',
+    fontSize: '13px',
     fontWeight: '900',
-    border: '1px solid #059669',
+    border: '2px solid #FFFFFF',
     display: 'flex',
     alignItems: 'center',
-    gap: '4px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+    gap: '6px',
+    boxShadow: '0 4px 10px rgba(0,0,0,0.4)',
     zIndex: 15,
     pointerEvents: 'none',
-    letterSpacing: '0.5px'
+    letterSpacing: '0.5px',
+    whiteSpace: 'nowrap'
   });
 
   return (
@@ -301,8 +305,8 @@ export default function MapScreen({
               <div className="grey-wall" style={{ width: '0px', height: '65px', left: '1010px', top: '615px' }}></div>
               <div className="grey-wall" style={{ width: '0px', height: '260px', left: '1010px', top: '740px' }}></div>
               
-              {/* BAGO: EXIT BADGE SA FLOOR 1 (SA ITAAS NG ELEVATOR) */}
-              <div style={exitBadgeStyle(1050, 660)}>🏃 EXIT</div>
+              {/* EXIT BADGE SA FLOOR 1 (Dikit sa ibabaw ng Elevator wall edge) */}
+              <div style={exitBadgeStyle(1040, 646)}>🏃 FIRE EXIT • LABASAN</div>
             </>
           )}
           
@@ -314,8 +318,8 @@ export default function MapScreen({
               <div style={{ position: 'absolute', width: 40, height: 30, left: 800, top: 460, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
               <div style={{ position: 'absolute', width: 40, height: 30, left: 850, top: 460, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
               
-              {/* BAGO: EXIT BADGE SA FLOOR 2 */}
-              <div style={exitBadgeStyle(900, 458)}>🏃 EXIT</div>
+              {/* EXIT BADGE SA FLOOR 2 (Dikit sa kanang gilid ng ELEV wall edge) */}
+              <div style={exitBadgeStyle(895, 458)}>🏃 FIRE EXIT • LABASAN</div>
             </>
           )}
           
@@ -329,8 +333,8 @@ export default function MapScreen({
                   <div className="structural-element escalator-block" style={{ width: 120, height: 50, left: 560, top: 480, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="escalator-lines"></div><span className="escalator-label">Escalator ▼</span></div>
               )}
               
-              {/* BAGO: EXIT BADGE SA FLOORS 3, 4, AT 5 */}
-              <div style={exitBadgeStyle(690, 408)}>🏃 EXIT</div>
+              {/* EXIT BADGE SA FLOORS 3, 4, AT 5 (Dikit sa kanang gilid ng ELEV wall edge) */}
+              <div style={exitBadgeStyle(685, 408)}>🏃 FIRE EXIT • LABASAN</div>
             </>
           )}
           
@@ -340,8 +344,8 @@ export default function MapScreen({
               <div style={{ position: 'absolute', width: 50, height: 40, left: 680, top: 350, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
               <div className="structural-element stairs-block" style={{ width: 200, height: 60, left: 550, top: 550, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">Stairs ↙ ↗</span></div>
               
-              {/* BAGO: EXIT BADGE SA FLOOR 6 */}
-              <div style={exitBadgeStyle(740, 350)}>🏃 EXIT</div>
+              {/* EXIT BADGE SA FLOOR 6 (Dikit sa kanang gilid ng ELEV wall edge) */}
+              <div style={exitBadgeStyle(735, 348)}>🏃 FIRE EXIT • LABASAN</div>
             </>
           )}
           
@@ -350,8 +354,8 @@ export default function MapScreen({
               <div style={{ position: 'absolute', width: 60, height: 40, left: 550, top: 320, background: '#9CA3AF', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937', zIndex: 5 }}>ELEV</div>
               <div className="structural-element stairs-block" style={{ width: 100, height: 60, left: 550, top: 430, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">Stairs ↙</span></div>
               
-              {/* BAGO: EXIT BADGE SA FLOOR 7 */}
-              <div style={exitBadgeStyle(620, 325)}>🏃 EXIT</div>
+              {/* EXIT BADGE SA FLOOR 7 (Dikit sa kanang gilid ng ELEV wall edge) */}
+              <div style={exitBadgeStyle(615, 318)}>🏃 FIRE EXIT • LABASAN</div>
             </>
           )}
 
