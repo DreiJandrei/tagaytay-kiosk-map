@@ -2,8 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { updateOffice, getAnnouncement, updateAnnouncement } from '../lib/api';
 
 export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
-  const [activeTab, setActiveTab] = useState('offices'); // BAGO: Tab switcher
-  const [announcementText, setAnnouncementText] = useState(''); // BAGO: Announcement state
+  const [activeTab, setActiveTab] = useState('offices');
+  const [announcementText, setAnnouncementText] = useState('');
+
+  // BAGO: States para sa Change Password Form
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const [selectedFloor, setSelectedFloor] = useState(1);
   const [selectedOfficeKey, setSelectedOfficeKey] = useState(null);
@@ -16,7 +20,6 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
   const [formCssClass, setFormCssClass] = useState('');
   const [formStatus, setFormStatus] = useState('Available'); 
 
-  // Kukunin ang current announcement pagka-open ng Admin Panel
   useEffect(() => {
     const fetchAdminData = async () => {
       const text = await getAnnouncement();
@@ -87,6 +90,25 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
     } finally { setIsSaving(false); }
   };
 
+  // ==============================================================
+  // FUNCTION PARA SA PAG-CHANGE NG ADMIN PASSWORD
+  // ==============================================================
+  const handleSavePassword = (e) => {
+    e.preventDefault();
+    if (!newPassword || newPassword.trim() === '') {
+      alert('Please enter a valid password.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      alert('Passwords do not match! Please try again.');
+      return;
+    }
+    localStorage.setItem('kiosk_admin_password', newPassword);
+    setNewPassword('');
+    setConfirmPassword('');
+    alert('✅ Admin Password changed successfully! Use your new password next time you login.');
+  };
+
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
       <div style={{ backgroundColor: '#FFFFFF', width: '90%', maxWidth: '1100px', height: '700px', borderRadius: '20px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -100,13 +122,18 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
           </button>
         </div>
 
-        {/* BAGO: TAB SWITCHER */}
+        {/* ============================================================== */}
+        {/* BAGO: ADDED "CHANGE PASSWORD" SA TABS (3 TABS NA RITO!) */}
+        {/* ============================================================== */}
         <div style={{ display: 'flex', background: '#F8FAFC', borderBottom: '2px solid #E2E8F0' }}>
           <button onClick={() => setActiveTab('offices')} style={{ flex: 1, padding: '15px', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer', border: 'none', background: activeTab === 'offices' ? '#FFFFFF' : 'transparent', color: activeTab === 'offices' ? '#4F46E5' : '#64748B', borderBottom: activeTab === 'offices' ? '4px solid #4F46E5' : '4px solid transparent' }}>
             🏢 Office Directory Management
           </button>
           <button onClick={() => setActiveTab('announcements')} style={{ flex: 1, padding: '15px', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer', border: 'none', background: activeTab === 'announcements' ? '#FFFFFF' : 'transparent', color: activeTab === 'announcements' ? '#4F46E5' : '#64748B', borderBottom: activeTab === 'announcements' ? '4px solid #4F46E5' : '4px solid transparent' }}>
             📢 System Announcements (Idle Screen)
+          </button>
+          <button onClick={() => setActiveTab('security')} style={{ flex: 1, padding: '15px', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer', border: 'none', background: activeTab === 'security' ? '#FFFFFF' : 'transparent', color: activeTab === 'security' ? '#4F46E5' : '#64748B', borderBottom: activeTab === 'security' ? '4px solid #4F46E5' : '4px solid transparent' }}>
+            🔒 Change Admin Password
           </button>
         </div>
 
@@ -172,6 +199,50 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
               />
               <button type="submit" disabled={isSaving} style={{ padding: '20px', borderRadius: '12px', border: 'none', backgroundColor: '#F59E0B', color: '#FFFFFF', fontWeight: '900', fontSize: '1.2rem', cursor: isSaving ? 'not-allowed' : 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
                 {isSaving ? 'Deploying to Kiosks...' : '📢 Publish Announcement'}
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* ============================================================== */}
+        {/* TAB 3: SECURITY / CHANGE PASSWORD */}
+        {/* ============================================================== */}
+        {activeTab === 'security' && (
+          <div style={{ padding: '40px', display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#FFFFFF' }}>
+            <h2 style={{ color: '#0F172A', marginBottom: '10px' }}>🔒 Security & Admin Access</h2>
+            <p style={{ color: '#64748B', marginBottom: '30px', fontSize: '1.05rem', lineHeight: '1.6' }}>
+              Change the password required to open this Admin Panel. Make sure to remember your new password! 
+              <br />
+              <span style={{ color: '#E11D48', fontWeight: '700' }}>
+                Note: Default password is <strong>admin123</strong>. If you ever forget your custom password, clearing the terminal browser cache will reset it back to default.
+              </span>
+            </p>
+            
+            <form onSubmit={handleSavePassword} style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '480px' }}>
+              <div>
+                <label style={{ display: 'block', fontWeight: '800', color: '#475569', marginBottom: '8px' }}>New Admin Password:</label>
+                <input 
+                  type="password" 
+                  value={newPassword} 
+                  onChange={(e) => setNewPassword(e.target.value)} 
+                  placeholder="Enter new password..." 
+                  required 
+                  style={{ width: '100%', padding: '15px', border: '2px solid #CBD5E1', borderRadius: '10px', fontSize: '1.1rem', outline: 'none' }} 
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontWeight: '800', color: '#475569', marginBottom: '8px' }}>Confirm New Password:</label>
+                <input 
+                  type="password" 
+                  value={confirmPassword} 
+                  onChange={(e) => setConfirmPassword(e.target.value)} 
+                  placeholder="Re-type new password..." 
+                  required 
+                  style={{ width: '100%', padding: '15px', border: '2px solid #CBD5E1', borderRadius: '10px', fontSize: '1.1rem', outline: 'none' }} 
+                />
+              </div>
+              <button type="submit" style={{ padding: '18px', borderRadius: '12px', border: 'none', backgroundColor: '#4F46E5', color: '#FFFFFF', fontWeight: '900', fontSize: '1.1rem', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', marginTop: '10px' }}>
+                💾 Update Admin Password
               </button>
             </form>
           </div>
