@@ -268,10 +268,22 @@ export default function App() {
   // ==============================================================
   // BAGO: DYNAMIC ADMIN PASSWORD CHECKING (READS FROM LOCALSTORAGE)
   // ==============================================================
+  // ==============================================================
+  // ADMIN LOGIN WITH MASTER RECOVERY CODE
+  // ==============================================================
   const handleAdminLogin = (e) => {
     e.preventDefault(); 
     const currentPassword = localStorage.getItem('kiosk_admin_password') || 'admin123';
-    if (adminPasswordInput === currentPassword) {
+    
+    // BAGO: Master Recovery Code! Kapag itinype ang "cctreset", marereset agad sa default.
+    if (adminPasswordInput === 'cctreset') {
+      localStorage.removeItem('kiosk_admin_password'); // Burado ang custom password
+      setShowAdminLogin(false);
+      setAdminPasswordInput('');
+      setShowAdmin(true); 
+      alert('🔄 Master Recovery Code used! Password has been reset back to default: admin123');
+    } 
+    else if (adminPasswordInput === currentPassword) {
       setShowAdminLogin(false);
       setAdminPasswordInput('');
       setShowAdmin(true); 
