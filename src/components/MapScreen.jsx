@@ -70,7 +70,6 @@ export default function MapScreen({
           else if (currentFloor === 6) kioskStyle = { left: 650, top: 580 };
           else if (currentFloor === 7) kioskStyle = { left: 600, top: 460 };
       } 
-      // BAGO: ESCALATOR PIN PARA SA FLOOR 2
       else if (transportMethod === 'escalator') {
           kioskText = "🪜 ARRIVED VIA ESCALATOR";
           if (currentFloor === 2) kioskStyle = { left: 575, top: 670 };
@@ -95,7 +94,6 @@ export default function MapScreen({
       finalPathData = `M ${x} ${y} L ${x} ${y - 20} L ${x + 20} ${y - 20} L ${x + 20} ${y - 40} L ${x + 40} ${y - 40}`;
   }
 
-  // BAGO: Ito na 'yung eksaktong drawing mo sa Floor 1 Escalator! U-turn sa kanan.
   if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-to-transport') {
       finalPathData = "M 1030 1000 L 1330 1000 L 1330 860 L 1250 860"; 
   }
@@ -109,7 +107,6 @@ export default function MapScreen({
                   finalPathData = finalPathData.replace("M 860 490 L 860 470 L 530 470 L 530 560", "M 220 420 L 220 350 L 530 350 L 530 560");
               }
           } 
-          // BAGO: Kung sa escalator galing, babaguhin niya yung start ng line papunta sa Escalator
           else if (transportMethod === 'escalator') {
               if (finalPathData.includes("L 680 260")) {
                   finalPathData = finalPathData.replace("M 860 490 L 860 470 L 680 470 L 680 260", "M 575 670 L 575 470 L 680 470 L 680 260");
@@ -292,6 +289,31 @@ export default function MapScreen({
               <div className="structural-element escalator-block" style={{ width: 150, height: 60, left: 500, top: 590, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="escalator-lines"></div><span className="escalator-label">Escalator ▼</span></div>
               <div style={{ position: 'absolute', width: 40, height: 30, left: 800, top: 460, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
               <div style={{ position: 'absolute', width: 40, height: 30, left: 850, top: 460, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
+              
+              {/* ============================================================== */}
+              {/* BAGO: EMERGENCY FIRE EXIT BADGE (STATIC / DISPLAY ONLY) */}
+              {/* ============================================================== */}
+              <div style={{ 
+                position: 'absolute', 
+                left: 900, 
+                top: 458, 
+                background: '#10B981', 
+                color: 'white', 
+                padding: '4px 8px', 
+                borderRadius: '6px', 
+                fontSize: '11px', 
+                fontWeight: '900', 
+                border: '1px solid #059669', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '4px', 
+                boxShadow: '0 2px 4px rgba(0,0,0,0.3)', 
+                zIndex: 15, 
+                pointerEvents: 'none',
+                letterSpacing: '0.5px'
+              }}>
+                🏃 EXIT
+              </div>
             </>
           )}
           
