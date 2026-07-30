@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { updateOffice, getAnnouncement, updateAnnouncement } from '../lib/api';
 
 export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
-  const [activeTab, setActiveTab] = useState('offices');
+  // BAGO: 'announcements' na ang default active tab dahil ito na ang unang tab sa listahan
+  const [activeTab, setActiveTab] = useState('announcements');
   const [announcementText, setAnnouncementText] = useState('');
 
-  // BAGO: States para sa Change Password Form
+  // States para sa Change Password Form
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
@@ -123,21 +124,41 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
         </div>
 
         {/* ============================================================== */}
-        {/* BAGO: ADDED "CHANGE PASSWORD" SA TABS (3 TABS NA RITO!) */}
+        {/* BAGO: PINAGPALIT NA ANG PWESTO NG TABS (ANNOUNCEMENTS NA ANG UNA!) */}
         {/* ============================================================== */}
         <div style={{ display: 'flex', background: '#F8FAFC', borderBottom: '2px solid #E2E8F0' }}>
-          <button onClick={() => setActiveTab('offices')} style={{ flex: 1, padding: '15px', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer', border: 'none', background: activeTab === 'offices' ? '#FFFFFF' : 'transparent', color: activeTab === 'offices' ? '#4F46E5' : '#64748B', borderBottom: activeTab === 'offices' ? '4px solid #4F46E5' : '4px solid transparent' }}>
-            🏢 Office Directory Management
-          </button>
           <button onClick={() => setActiveTab('announcements')} style={{ flex: 1, padding: '15px', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer', border: 'none', background: activeTab === 'announcements' ? '#FFFFFF' : 'transparent', color: activeTab === 'announcements' ? '#4F46E5' : '#64748B', borderBottom: activeTab === 'announcements' ? '4px solid #4F46E5' : '4px solid transparent' }}>
             📢 System Announcements (Idle Screen)
+          </button>
+          <button onClick={() => setActiveTab('offices')} style={{ flex: 1, padding: '15px', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer', border: 'none', background: activeTab === 'offices' ? '#FFFFFF' : 'transparent', color: activeTab === 'offices' ? '#4F46E5' : '#64748B', borderBottom: activeTab === 'offices' ? '4px solid #4F46E5' : '4px solid transparent' }}>
+            🏢 Office Directory Management
           </button>
           <button onClick={() => setActiveTab('security')} style={{ flex: 1, padding: '15px', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer', border: 'none', background: activeTab === 'security' ? '#FFFFFF' : 'transparent', color: activeTab === 'security' ? '#4F46E5' : '#64748B', borderBottom: activeTab === 'security' ? '4px solid #4F46E5' : '4px solid transparent' }}>
             🔒 Change Admin Password
           </button>
         </div>
 
-        {/* TAB 1: OFFICES */}
+        {/* TAB 1: ANNOUNCEMENTS */}
+        {activeTab === 'announcements' && (
+          <div style={{ padding: '40px', display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#FFFFFF' }}>
+            <h2 style={{ color: '#0F172A', marginBottom: '10px' }}>Kiosk Idle Screen Announcements</h2>
+            <p style={{ color: '#64748B', marginBottom: '30px' }}>Enter the advisory or announcement you want to scroll at the bottom of the kiosk when no one is using it. Leave it blank to hide the announcement bar.</p>
+            
+            <form onSubmit={handleSaveAnnouncement} style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, gap: '20px' }}>
+              <textarea 
+                value={announcementText} 
+                onChange={(e) => setAnnouncementText(e.target.value)} 
+                placeholder="e.g. CITY HALL ADVISORY: Work is suspended tomorrow due to typhoon..."
+                style={{ width: '100%', flexGrow: 1, padding: '20px', border: '2px solid #CBD5E1', borderRadius: '12px', fontSize: '1.4rem', outline: 'none', fontFamily: 'inherit', resize: 'none', background: '#F8FAFC' }} 
+              />
+              <button type="submit" disabled={isSaving} style={{ padding: '20px', borderRadius: '12px', border: 'none', backgroundColor: '#F59E0B', color: '#FFFFFF', fontWeight: '900', fontSize: '1.2rem', cursor: isSaving ? 'not-allowed' : 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                {isSaving ? 'Deploying to Kiosks...' : '📢 Publish Announcement'}
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* TAB 2: OFFICES */}
         {activeTab === 'offices' && (
           <div style={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
             <div style={{ width: '320px', borderRight: '1px solid #E2E8F0', padding: '24px', display: 'flex', flexDirection: 'column', backgroundColor: '#F8FAFC' }}>
@@ -184,29 +205,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
           </div>
         )}
 
-        {/* TAB 2: ANNOUNCEMENTS */}
-        {activeTab === 'announcements' && (
-          <div style={{ padding: '40px', display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#FFFFFF' }}>
-            <h2 style={{ color: '#0F172A', marginBottom: '10px' }}>Kiosk Idle Screen Announcements</h2>
-            <p style={{ color: '#64748B', marginBottom: '30px' }}>Enter the advisory or announcement you want to scroll at the bottom of the kiosk when no one is using it. Leave it blank to hide the announcement bar.</p>
-            
-            <form onSubmit={handleSaveAnnouncement} style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, gap: '20px' }}>
-              <textarea 
-                value={announcementText} 
-                onChange={(e) => setAnnouncementText(e.target.value)} 
-                placeholder="e.g. CITY HALL ADVISORY: Work is suspended tomorrow due to typhoon..."
-                style={{ width: '100%', flexGrow: 1, padding: '20px', border: '2px solid #CBD5E1', borderRadius: '12px', fontSize: '1.4rem', outline: 'none', fontFamily: 'inherit', resize: 'none', background: '#F8FAFC' }} 
-              />
-              <button type="submit" disabled={isSaving} style={{ padding: '20px', borderRadius: '12px', border: 'none', backgroundColor: '#F59E0B', color: '#FFFFFF', fontWeight: '900', fontSize: '1.2rem', cursor: isSaving ? 'not-allowed' : 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-                {isSaving ? 'Deploying to Kiosks...' : '📢 Publish Announcement'}
-              </button>
-            </form>
-          </div>
-        )}
-
-        {/* ============================================================== */}
         {/* TAB 3: SECURITY / CHANGE PASSWORD */}
-        {/* ============================================================== */}
         {activeTab === 'security' && (
           <div style={{ padding: '40px', display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#FFFFFF' }}>
             <h2 style={{ color: '#0F172A', marginBottom: '10px' }}>🔒 Security & Admin Access</h2>
