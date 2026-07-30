@@ -149,7 +149,6 @@ export default function MapScreen({
     transition: isDragging.current ? 'none' : 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
   };
 
-  // COMPACT FIRE EXIT BADGE (DIKIT SA GREY WALL CORNER NG ELEVATOR)
   const exitBadgeStyle = (leftPos, topPos) => ({
     position: 'absolute',
     left: leftPos,
@@ -229,22 +228,17 @@ export default function MapScreen({
         <div className="mock-map-graphic floor-transition" key={currentFloor}>
           
           {/* ============================================================== */}
-          {/* BAGO: FULL ARCHITECTURAL WALL OUTLINE PARA SA FLOOR 1 */}
+          {/* BAGO: EXPANDED PERIMETER WALL OUTLINE PARA SA FLOOR 1 (WALA NANG CANTEEN BOX AT VERTICAL LINES) */}
           {/* ============================================================== */}
           {currentFloor === 1 && (
             <svg width="1400" height="1300" style={{ position: 'absolute', top: 0, left: 0, zIndex: 1, pointerEvents: 'none' }}>
               <g stroke="#9CA3AF" strokeWidth="8" fill="transparent" strokeLinecap="round">
-                {/* Main Building Perimeter Box (may opening sa ibaba para sa entrance line x=980..1080) */}
-                <path d="M 980 940 L 345 940 L 345 95 L 1335 95 L 1335 940 L 1080 940" />
-                {/* Canteen Wing Perimeter Box sa kaliwa (may doorway opening x=160..220) */}
-                <path d="M 345 375 L 30 375 L 30 675 L 160 675 M 220 675 L 345 675" />
+                {/* Main Building Perimeter Box (Pinalaki at nilayo: top=75, left=330, right=1350, bottom=960) */}
+                <path d="M 980 960 L 330 960 L 330 75 L 1350 75 L 1350 960 L 1100 960" />
                 {/* Horizontal Hallway Wall sa ilalim ng Tolentino Hall (y=310) */}
-                <path d="M 345 310 L 980 310 M 1080 310 L 1335 310" />
+                <path d="M 330 310 L 1350 310" />
                 {/* Horizontal Hallway Wall sa ibabaw ng Atrium Garden / Elevator (y=575) */}
-                <path d="M 345 575 L 440 575 M 720 575 L 980 575 M 1080 575 L 1335 575" />
-                {/* Vertical Partition Walls sa pagitan ng mga departamento */}
-                <path d="M 640 310 L 640 575" />
-                <path d="M 1025 310 L 1025 575" />
+                <path d="M 330 575 L 440 575 M 720 575 L 980 575 M 1080 575 L 1350 575" />
               </g>
             </svg>
           )}
@@ -321,7 +315,11 @@ export default function MapScreen({
                 <div className="stair-lines"></div><span className="escalator-label">Escalator ◀</span>
               </div>
               
-              {/* EXIT BADGE SA FLOOR 1 (Dikit sa wall edge) */}
+              {/* BAGO: DALAWANG VERTICAL GREY WALLS NA EKSATONG-EKSAKTO SA DARK GREY SCRIBBLE MO */}
+              <div className="grey-wall" style={{ width: '0px', height: '65px', left: '1010px', top: '615px' }}></div>
+              <div className="grey-wall" style={{ width: '0px', height: '220px', left: '1010px', top: '740px' }}></div>
+              
+              {/* EXIT BADGE SA FLOOR 1 (Dikit sa grey wall line na katabi ng elevator) */}
               <div style={exitBadgeStyle(1010, 655)}>FIRE EXIT</div>
             </>
           )}
@@ -334,7 +332,7 @@ export default function MapScreen({
               <div style={{ position: 'absolute', width: 40, height: 30, left: 800, top: 460, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
               <div style={{ position: 'absolute', width: 40, height: 30, left: 850, top: 460, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
               
-              {/* EXIT BADGE SA FLOOR 2 */}
+              {/* EXIT BADGE SA FLOOR 2 (Dikit sa bottom-right structural wall corner: x=950, y=490) */}
               <div style={exitBadgeStyle(910, 480)}>FIRE EXIT</div>
             </>
           )}
@@ -349,7 +347,7 @@ export default function MapScreen({
                   <div className="structural-element escalator-block" style={{ width: 120, height: 50, left: 560, top: 480, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="escalator-lines"></div><span className="escalator-label">Escalator ▼</span></div>
               )}
               
-              {/* EXIT BADGE SA FLOORS 3, 4, AT 5 */}
+              {/* EXIT BADGE SA FLOORS 3, 4, AT 5 (Dikit sa bottom-right structural wall corner: x=730, y=460) */}
               <div style={exitBadgeStyle(700, 445)}>FIRE EXIT</div>
             </>
           )}
@@ -360,7 +358,7 @@ export default function MapScreen({
               <div style={{ position: 'absolute', width: 50, height: 40, left: 680, top: 350, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
               <div className="structural-element stairs-block" style={{ width: 200, height: 60, left: 550, top: 550, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">Stairs ↙ ↗</span></div>
               
-              {/* EXIT BADGE SA FLOOR 6 */}
+              {/* EXIT BADGE SA FLOOR 6 (Dikit sa bottom-right structural wall corner: x=800, y=450) */}
               <div style={exitBadgeStyle(765, 435)}>FIRE EXIT</div>
             </>
           )}
@@ -370,7 +368,7 @@ export default function MapScreen({
               <div style={{ position: 'absolute', width: 60, height: 40, left: 550, top: 320, background: '#9CA3AF', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937', zIndex: 5 }}>ELEV</div>
               <div className="structural-element stairs-block" style={{ width: 100, height: 60, left: 550, top: 430, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">Stairs ↙</span></div>
               
-              {/* EXIT BADGE SA FLOOR 7 */}
+              {/* EXIT BADGE SA FLOOR 7 (Dikit sa right structural wall line: x=680, y=380) */}
               <div style={exitBadgeStyle(655, 360)}>FIRE EXIT</div>
             </>
           )}
