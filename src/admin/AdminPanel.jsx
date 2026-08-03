@@ -3,9 +3,11 @@ import { updateOffice, getAnnouncement, updateAnnouncement } from '../lib/api';
 
 export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
   const [activeTab, setActiveTab] = useState('announcements');
+  
+  // BAGO: Hinati natin sa dalawang state ang mga text
+  const [advisoryText, setAdvisoryText] = useState('');
   const [announcementText, setAnnouncementText] = useState('');
 
-  // States para sa Change Password Form
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
@@ -23,7 +25,13 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
   useEffect(() => {
     const fetchAdminData = async () => {
       const text = await getAnnouncement();
-      setAnnouncementText(text);
+      try {
+        const parsed = JSON.parse(text);
+        setAdvisoryText(parsed.advisory || '');
+        setAnnouncementText(parsed.announcement || '');
+      } catch (e) {
+        setAdvisoryText(text); // Default fallback
+      }
     };
     fetchAdminData();
   }, []);
@@ -83,16 +91,15 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
     e.preventDefault();
     setIsSaving(true);
     try {
-      await updateAnnouncement(announcementText);
-      alert('System Announcement updated successfully!');
+      // BAGO: Pinagsasama natin sila bago i-save sa database para hindi na kailangan ng bagong table column!
+      const combined = JSON.stringify({ advisory: advisoryText, announcement: announcementText });
+      await updateAnnouncement(combined);
+      alert('System Announcements & Advisories updated successfully!');
     } catch (error) {
       alert('Failed to update announcement.');
     } finally { setIsSaving(false); }
   };
 
-  // ==============================================================
-  // FUNCTION PARA SA PAG-CHANGE NG ADMIN PASSWORD
-  // ==============================================================
   const handleSavePassword = (e) => {
     e.preventDefault();
     if (!newPassword || newPassword.trim() === '') {
@@ -111,7 +118,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
 
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
-      <div style={{ backgroundColor: '#FFFFFF', width: '90%', maxWidth: '1100px', height: '700px', borderRadius: '20px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ backgroundColor: '#FFFFFF', width: '90%', maxWidth: '1100px', height: '750px', borderRadius: '20px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         
         <div style={{ backgroundColor: '#4F46E5', padding: '20px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#FFFFFF' }}>
           <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -124,7 +131,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
 
         <div style={{ display: 'flex', background: '#F8FAFC', borderBottom: '2px solid #E2E8F0' }}>
           <button onClick={() => setActiveTab('announcements')} style={{ flex: 1, padding: '15px', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer', border: 'none', background: activeTab === 'announcements' ? '#FFFFFF' : 'transparent', color: activeTab === 'announcements' ? '#4F46E5' : '#64748B', borderBottom: activeTab === 'announcements' ? '4px solid #4F46E5' : '4px solid transparent' }}>
-            📢 System Announcements (Idle Screen)
+            📢 Announcements & Advisories
           </button>
           <button onClick={() => setActiveTab('offices')} style={{ flex: 1, padding: '15px', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer', border: 'none', background: activeTab === 'offices' ? '#FFFFFF' : 'transparent', color: activeTab === 'offices' ? '#4F46E5' : '#64748B', borderBottom: activeTab === 'offices' ? '4px solid #4F46E5' : '4px solid transparent' }}>
             🏢 Office Directory Management
@@ -134,21 +141,36 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
           </button>
         </div>
 
-        {/* TAB 1: ANNOUNCEMENTS */}
+        {/* TAB 1: ANNOUNCEMENTS & ADVISORIES */}
         {activeTab === 'announcements' && (
-          <div style={{ padding: '40px', display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#FFFFFF' }}>
-            <h2 style={{ color: '#0F172A', marginBottom: '10px' }}>Kiosk Idle Screen Announcements</h2>
-            <p style={{ color: '#64748B', marginBottom: '30px' }}>Enter the advisory or announcement you want to scroll at the bottom of the kiosk when no one is using it. Leave it blank to hide the announcement bar.</p>
+          <div style={{ padding: '40px', display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#FFFFFF', overflowY: 'auto' }}>
+            <h2 style={{ color: '#0F172A', marginBottom: '10px' }}>📢 Announcements & Advisories</h2>
+            <p style={{ color: '#64748B', marginBottom: '20px' }}>Manage the idle screen displays. Leave a field blank to hide it.</p>
             
             <form onSubmit={handleSaveAnnouncement} style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, gap: '20px' }}>
-              <textarea 
-                value={announcementText} 
-                onChange={(e) => setAnnouncementText(e.target.value)} 
-                placeholder="e.g. CITY HALL ADVISORY: Work is suspended tomorrow due to typhoon..."
-                style={{ width: '100%', flexGrow: 1, padding: '20px', border: '2px solid #CBD5E1', borderRadius: '12px', fontSize: '1.4rem', outline: 'none', fontFamily: 'inherit', resize: 'none', background: '#F8FAFC' }} 
-              />
-              <button type="submit" disabled={isSaving} style={{ padding: '20px', borderRadius: '12px', border: 'none', backgroundColor: '#F59E0B', color: '#FFFFFF', fontWeight: '900', fontSize: '1.2rem', cursor: isSaving ? 'not-allowed' : 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-                {isSaving ? 'Deploying to Kiosks...' : '📢 Publish Announcement'}
+              
+              <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                <label style={{ fontWeight: 800, color: '#1E40AF', marginBottom: '8px' }}>1. Official Announcement (Board)</label>
+                <textarea 
+                  value={announcementText} 
+                  onChange={(e) => setAnnouncementText(e.target.value)} 
+                  placeholder="e.g. Walang pasok bukas dahil sa bagyo... (Appears in a large card below the title)"
+                  style={{ width: '100%', flexGrow: 1, padding: '20px', border: '2px solid #CBD5E1', borderRadius: '12px', fontSize: '1.2rem', outline: 'none', fontFamily: 'inherit', resize: 'none', background: '#F8FAFC', boxSizing: 'border-box' }} 
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                <label style={{ fontWeight: 800, color: '#E11D48', marginBottom: '8px' }}>2. Scrolling Advisory (Marquee)</label>
+                <textarea 
+                  value={advisoryText} 
+                  onChange={(e) => setAdvisoryText(e.target.value)} 
+                  placeholder="e.g. Please secure your belongings... (Scrolling ticker at the absolute bottom)"
+                  style={{ width: '100%', flexGrow: 1, padding: '20px', border: '2px solid #CBD5E1', borderRadius: '12px', fontSize: '1.2rem', outline: 'none', fontFamily: 'inherit', resize: 'none', background: '#FEF2F2', boxSizing: 'border-box' }} 
+                />
+              </div>
+
+              <button type="submit" disabled={isSaving} style={{ padding: '20px', borderRadius: '12px', border: 'none', backgroundColor: '#3B82F6', color: '#FFFFFF', fontWeight: '900', fontSize: '1.2rem', cursor: isSaving ? 'not-allowed' : 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', marginTop: '10px' }}>
+                {isSaving ? 'Deploying to Kiosks...' : '📢 Publish Updates'}
               </button>
             </form>
           </div>
@@ -180,21 +202,18 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
               ) : (
                 <form onSubmit={handleSaveOffice} style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                    <div><label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem' }}>Title</label><input type="text" value={formTitle} onChange={(e) => setFormTitle(e.target.value)} required style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px' }} /></div>
-                    <div><label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem' }}>Hours</label><input type="text" value={formHours} onChange={(e) => setFormHours(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px' }} /></div>
+                    <div><label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem' }}>Title</label><input type="text" value={formTitle} onChange={(e) => setFormTitle(e.target.value)} required style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px', boxSizing: 'border-box' }} /></div>
+                    <div><label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem' }}>Hours</label><input type="text" value={formHours} onChange={(e) => setFormHours(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px', boxSizing: 'border-box' }} /></div>
                   </div>
                   
-                  {/* ============================================================== */}
-                  {/* BAGO: TINANGGAL ANG THEME AT CLOSED SA STATUS (2 COLUMNS NA LANG) */}
-                  {/* ============================================================== */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                     <div>
                       <label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem' }}>Head</label>
-                      <input type="text" value={formHead} onChange={(e) => setFormHead(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px' }} />
+                      <input type="text" value={formHead} onChange={(e) => setFormHead(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px', boxSizing: 'border-box' }} />
                     </div>
                     <div>
                       <label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem' }}>Status</label>
-                      <select value={formStatus} onChange={(e) => setFormStatus(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px' }}>
+                      <select value={formStatus} onChange={(e) => setFormStatus(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px', boxSizing: 'border-box' }}>
                         <option value="Available">🟢 Available</option>
                         <option value="In a Meeting">🔴 In a Meeting</option>
                         <option value="Out of Office">🟡 Out of Office</option>
@@ -204,7 +223,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
 
                   <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
                     <label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem' }}>Requirements</label>
-                    <textarea value={formRequirements} onChange={(e) => setFormRequirements(e.target.value)} style={{ width: '100%', flexGrow: 1, padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px', resize: 'none' }} />
+                    <textarea value={formRequirements} onChange={(e) => setFormRequirements(e.target.value)} style={{ width: '100%', flexGrow: 1, padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px', resize: 'none', boxSizing: 'border-box' }} />
                   </div>
                   <button type="submit" disabled={isSaving} style={{ padding: '15px', borderRadius: '8px', background: '#4F46E5', color: 'white', fontWeight: '800', fontSize: '1.1rem', border: 'none', cursor: 'pointer' }}>
                     {isSaving ? 'Saving...' : '💾 Save Office Metadata'}
@@ -236,7 +255,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                   onChange={(e) => setNewPassword(e.target.value)} 
                   placeholder="Enter new password..." 
                   required 
-                  style={{ width: '100%', padding: '15px', border: '2px solid #CBD5E1', borderRadius: '10px', fontSize: '1.1rem', outline: 'none' }} 
+                  style={{ width: '100%', padding: '15px', border: '2px solid #CBD5E1', borderRadius: '10px', fontSize: '1.1rem', outline: 'none', boxSizing: 'border-box' }} 
                 />
               </div>
               <div>
@@ -247,7 +266,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                   onChange={(e) => setConfirmPassword(e.target.value)} 
                   placeholder="Re-type new password..." 
                   required 
-                  style={{ width: '100%', padding: '15px', border: '2px solid #CBD5E1', borderRadius: '10px', fontSize: '1.1rem', outline: 'none' }} 
+                  style={{ width: '100%', padding: '15px', border: '2px solid #CBD5E1', borderRadius: '10px', fontSize: '1.1rem', outline: 'none', boxSizing: 'border-box' }} 
                 />
               </div>
               <button type="submit" style={{ padding: '18px', borderRadius: '12px', border: 'none', backgroundColor: '#4F46E5', color: '#FFFFFF', fontWeight: '900', fontSize: '1.1rem', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', marginTop: '10px' }}>
