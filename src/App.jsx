@@ -380,8 +380,6 @@ export default function App() {
     });
   };
 
-  const selectedOffice = selectedOfficeKey ? liveOfficeDatabase[currentFloor]?.[selectedOfficeKey] : null;
-
   const handleVirtualKeyPress = (key) => {
     if (key === 'BACKSPACE') setSearchQuery(prev => prev.slice(0, -1));
     else if (key === 'SPACE') setSearchQuery(prev => prev + ' ');
@@ -472,55 +470,60 @@ export default function App() {
         
         <aside className="map-sidebar" style={{ width: '450px', flexShrink: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           
-          {/* SEARCH BAR & DROPDOWN CONTAINER (Position Relative) */}
-          <div className="sidebar-search-container" style={{ margin: '20px 0 10px 0', position: 'relative', zIndex: 300 }}>
+          {/* SEARCH BAR INPUT (Fixed at the top of the sidebar, walang nakalutang dito) */}
+          <div className="sidebar-search-container" style={{ margin: '20px 0 10px 0', position: 'relative', zIndex: 100 }}>
             <div style={{ display: 'flex', position: 'relative', alignItems: 'center' }}>
               <input type="text" placeholder={lang === 'EN' ? "🔍 Tap to Search Offices..." : "🔍 Pindutin para maghanap..."} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onClick={() => setShowKeyboard(true)} style={{ width: '100%', padding: '22px 24px', borderRadius: '16px', border: showKeyboard ? '4px solid #4F46E5' : (isDarkMode ? '2px solid #475569' : '2px solid #CBD5E1'), background: isDarkMode ? '#1E293B' : '#FFFFFF', color: colorPalette.primaryText, fontWeight: '800', fontSize: '1.4rem', boxShadow: '0 6px 12px rgba(0,0,0,0.1)', boxSizing: 'border-box', cursor: 'text' }} />
               {searchQuery && (
                 <button onClick={(e) => { e.stopPropagation(); setSearchQuery(""); }} style={{ position: 'absolute', right: '20px', background: '#E2E8F0', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: '#1E293B', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900' }}>✕</button>
               )}
             </div>
+          </div>
 
-            {/* RESTORED DROPDOWN: SEARCH RESULTS */}
+          <hr className="divider" style={{ margin: '10px 0 20px 0', borderTop: isDarkMode ? '2px solid #334155' : '2px solid #E2E8F0', flexShrink: 0 }} />
+
+          {/* SCROLLABLE AREA: INLINE FLOW NA LAHAT (SEARCH RESULTS -> QUICK GUIDES -> DIRECTORY) */}
+          <div style={{ flex: 1, overflowY: 'auto', paddingRight: '10px', position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column' }}>
+            
+            {/* 1. INLINE SEARCH RESULTS */}
             {searchQuery.trim() !== "" && filteredSearchOptions.length > 0 && (
-              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF', border: '3px solid #4F46E5', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.4)', zIndex: 400, maxHeight: '450px', overflowY: 'auto', marginTop: '10px' }}>
+              <div style={{ backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF', border: '3px solid #4F46E5', borderRadius: '16px', marginBottom: '25px', flexShrink: 0, overflow: 'hidden', boxShadow: '0 6px 12px rgba(0,0,0,0.05)' }}>
                 <div style={{ background: isDarkMode ? '#334155' : '#EEF2FF', padding: '15px 20px', borderBottom: isDarkMode ? '2px solid #475569' : '2px solid #E2E8F0', color: '#4F46E5', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}>
                   🔍 {lang === 'EN' ? 'Search Results' : 'Resulta ng Paghahanap'}
                 </div>
-                {filteredSearchOptions.map((officeItem) => (
-                  <div key={`search-${officeItem.floor}-${officeItem.key}`} onClick={() => handleSearchSelect(officeItem.key, officeItem.floor)} style={{ padding: '18px 20px', borderBottom: isDarkMode ? '1px solid #334155' : '1px solid #E2E8F0', cursor: 'pointer', display: 'flex', flexDirection: 'column' }} className="search-result-row-kiosk">
-                    <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#4F46E5', marginBottom: '6px', background: isDarkMode ? '#0F172A' : '#EEF2FF', padding: '4px 10px', borderRadius: '6px', width: 'fit-content' }}>📍 {officeItem.badge}</span>
-                    <span style={{ fontWeight: '900', color: colorPalette.primaryText, fontSize: '1.25rem' }}>{officeItem.title}</span>
-                  </div>
-                ))}
+                <div>
+                  {filteredSearchOptions.map((officeItem) => (
+                    <div key={`search-${officeItem.floor}-${officeItem.key}`} onClick={() => handleSearchSelect(officeItem.key, officeItem.floor)} style={{ padding: '18px 20px', borderBottom: isDarkMode ? '1px solid #334155' : '1px solid #E2E8F0', cursor: 'pointer', display: 'flex', flexDirection: 'column' }} className="search-result-row-kiosk">
+                      <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#4F46E5', marginBottom: '6px', background: isDarkMode ? '#0F172A' : '#EEF2FF', padding: '4px 10px', borderRadius: '6px', width: 'fit-content' }}>📍 {officeItem.badge}</span>
+                      <span style={{ fontWeight: '900', color: colorPalette.primaryText, fontSize: '1.25rem' }}>{officeItem.title}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
-            {/* RESTORED DROPDOWN: FREQUENTLY SEARCHED */}
+            {/* 2. INLINE FREQUENTLY SEARCHED */}
             {searchQuery.trim() === "" && showKeyboard && popularSearches.length > 0 && (
-              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF', border: '3px solid #4F46E5', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.4)', zIndex: 400, marginTop: '10px', overflow: 'hidden' }}>
+              <div style={{ backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF', border: '3px solid #F59E0B', borderRadius: '16px', marginBottom: '25px', flexShrink: 0, overflow: 'hidden', boxShadow: '0 6px 12px rgba(0,0,0,0.05)' }}>
                 <div style={{ padding: '15px 24px', background: isDarkMode ? '#334155' : '#FFFBEB', borderBottom: isDarkMode ? '2px solid #475569' : '2px solid #E2E8F0', fontWeight: '900', color: isDarkMode ? '#FBBF24' : '#D97706', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   🔥 {lang === 'EN' ? 'Frequently Searched' : 'Madalas Hanapin'}
                 </div>
-                {popularSearches.map((officeItem) => (
-                  <div key={`pop-${officeItem.floor}-${officeItem.key}`} onClick={() => handleSearchSelect(officeItem.key, officeItem.floor)} style={{ padding: '18px 20px', borderBottom: isDarkMode ? '1px solid #334155' : '1px solid #E2E8F0', cursor: 'pointer', display: 'flex', flexDirection: 'column' }} className="search-result-row-kiosk">
-                    <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#4F46E5', marginBottom: '6px', background: isDarkMode ? '#0F172A' : '#EEF2FF', padding: '4px 10px', borderRadius: '6px', width: 'fit-content' }}>📍 {officeItem.badge} • 🔍 {officeItem.searchCount || 0}</span>
-                    <span style={{ fontWeight: '900', color: colorPalette.primaryText, fontSize: '1.25rem' }}>{officeItem.title}</span>
-                  </div>
-                ))}
+                <div>
+                  {popularSearches.map((officeItem) => (
+                    <div key={`pop-${officeItem.floor}-${officeItem.key}`} onClick={() => handleSearchSelect(officeItem.key, officeItem.floor)} style={{ padding: '18px 20px', borderBottom: isDarkMode ? '1px solid #334155' : '1px solid #E2E8F0', cursor: 'pointer', display: 'flex', flexDirection: 'column' }} className="search-result-row-kiosk">
+                      <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#F59E0B', marginBottom: '6px', background: isDarkMode ? '#0F172A' : '#FEF3C7', padding: '4px 10px', borderRadius: '6px', width: 'fit-content' }}>📍 {officeItem.badge} • 🔍 {officeItem.searchCount || 0}</span>
+                      <span style={{ fontWeight: '900', color: colorPalette.primaryText, fontSize: '1.25rem' }}>{officeItem.title}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
-          </div>
 
-          <hr className="divider" style={{ margin: '10px 0 20px 0', borderTop: isDarkMode ? '2px solid #334155' : '2px solid #E2E8F0' }} />
-
-          {/* SCROLLABLE AREA: QUICK GUIDES & DIRECTORY */}
-          <div style={{ flex: 1, overflowY: 'auto', paddingRight: '10px', position: 'relative', zIndex: 10 }}>
-            
+            {/* 3. QUICK SERVICE GUIDES & FLOOR DIRECTORY */}
             {routeStep === 'idle' && !selectedOfficeKey && (
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
                 
-                {/* 1. QUICK SERVICE GUIDES (Always visible in idle mode) */}
+                {/* QUICK SERVICE GUIDES */}
                 <div style={{ marginBottom: '30px' }}>
                   <h3 style={{ fontSize: '1.25rem', color: colorPalette.primaryText, marginBottom: '15px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}>
                     📋 {lang === 'EN' ? 'Quick Service Guides' : 'Mabilisang Serbisyo'}
@@ -553,11 +556,12 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* 2. FLOOR DIRECTORY (Always visible below guides in idle mode) */}
+                {/* FLOOR DIRECTORY HEADER */}
                 <div style={{ background: isDarkMode ? 'linear-gradient(135deg, #1E1B4B, #4F46E5)' : 'linear-gradient(135deg, #4F46E5, #3730A3)', padding: '20px', borderRadius: '16px', color: 'white', marginBottom: '20px', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>
                   <h2 style={{ fontSize: '1.6rem', margin: 0, fontWeight: 900 }}>Floor {currentFloor} Directory</h2>
                 </div>
 
+                {/* FLOOR DIRECTORY BUTTONS */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '20px' }}>
                   {liveOfficeDatabase[currentFloor] && Object.keys(liveOfficeDatabase[currentFloor]).length > 0 ? (
                     Object.entries(liveOfficeDatabase[currentFloor]).map(([key, office]) => {
