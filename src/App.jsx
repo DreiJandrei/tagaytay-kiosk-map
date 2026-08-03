@@ -472,121 +472,113 @@ export default function App() {
         
         <aside className="map-sidebar" style={{ width: '450px', flexShrink: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           
-          {/* SEARCH BAR */}
-          <div className="sidebar-search-container" style={{ margin: '20px 0 10px 0', position: 'relative' }}>
+          {/* SEARCH BAR & DROPDOWN CONTAINER (Position Relative) */}
+          <div className="sidebar-search-container" style={{ margin: '20px 0 10px 0', position: 'relative', zIndex: 300 }}>
             <div style={{ display: 'flex', position: 'relative', alignItems: 'center' }}>
               <input type="text" placeholder={lang === 'EN' ? "🔍 Tap to Search Offices..." : "🔍 Pindutin para maghanap..."} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onClick={() => setShowKeyboard(true)} style={{ width: '100%', padding: '22px 24px', borderRadius: '16px', border: showKeyboard ? '4px solid #4F46E5' : (isDarkMode ? '2px solid #475569' : '2px solid #CBD5E1'), background: isDarkMode ? '#1E293B' : '#FFFFFF', color: colorPalette.primaryText, fontWeight: '800', fontSize: '1.4rem', boxShadow: '0 6px 12px rgba(0,0,0,0.1)', boxSizing: 'border-box', cursor: 'text' }} />
               {searchQuery && (
                 <button onClick={(e) => { e.stopPropagation(); setSearchQuery(""); }} style={{ position: 'absolute', right: '20px', background: '#E2E8F0', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: '#1E293B', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900' }}>✕</button>
               )}
             </div>
+
+            {/* RESTORED DROPDOWN: SEARCH RESULTS */}
+            {searchQuery.trim() !== "" && filteredSearchOptions.length > 0 && (
+              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF', border: '3px solid #4F46E5', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.4)', zIndex: 400, maxHeight: '450px', overflowY: 'auto', marginTop: '10px' }}>
+                <div style={{ background: isDarkMode ? '#334155' : '#EEF2FF', padding: '15px 20px', borderBottom: isDarkMode ? '2px solid #475569' : '2px solid #E2E8F0', color: '#4F46E5', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  🔍 {lang === 'EN' ? 'Search Results' : 'Resulta ng Paghahanap'}
+                </div>
+                {filteredSearchOptions.map((officeItem) => (
+                  <div key={`search-${officeItem.floor}-${officeItem.key}`} onClick={() => handleSearchSelect(officeItem.key, officeItem.floor)} style={{ padding: '18px 20px', borderBottom: isDarkMode ? '1px solid #334155' : '1px solid #E2E8F0', cursor: 'pointer', display: 'flex', flexDirection: 'column' }} className="search-result-row-kiosk">
+                    <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#4F46E5', marginBottom: '6px', background: isDarkMode ? '#0F172A' : '#EEF2FF', padding: '4px 10px', borderRadius: '6px', width: 'fit-content' }}>📍 {officeItem.badge}</span>
+                    <span style={{ fontWeight: '900', color: colorPalette.primaryText, fontSize: '1.25rem' }}>{officeItem.title}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* RESTORED DROPDOWN: FREQUENTLY SEARCHED */}
+            {searchQuery.trim() === "" && showKeyboard && popularSearches.length > 0 && (
+              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF', border: '3px solid #4F46E5', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.4)', zIndex: 400, marginTop: '10px', overflow: 'hidden' }}>
+                <div style={{ padding: '15px 24px', background: isDarkMode ? '#334155' : '#FFFBEB', borderBottom: isDarkMode ? '2px solid #475569' : '2px solid #E2E8F0', fontWeight: '900', color: isDarkMode ? '#FBBF24' : '#D97706', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  🔥 {lang === 'EN' ? 'Frequently Searched' : 'Madalas Hanapin'}
+                </div>
+                {popularSearches.map((officeItem) => (
+                  <div key={`pop-${officeItem.floor}-${officeItem.key}`} onClick={() => handleSearchSelect(officeItem.key, officeItem.floor)} style={{ padding: '18px 20px', borderBottom: isDarkMode ? '1px solid #334155' : '1px solid #E2E8F0', cursor: 'pointer', display: 'flex', flexDirection: 'column' }} className="search-result-row-kiosk">
+                    <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#4F46E5', marginBottom: '6px', background: isDarkMode ? '#0F172A' : '#EEF2FF', padding: '4px 10px', borderRadius: '6px', width: 'fit-content' }}>📍 {officeItem.badge} • 🔍 {officeItem.searchCount || 0}</span>
+                    <span style={{ fontWeight: '900', color: colorPalette.primaryText, fontSize: '1.25rem' }}>{officeItem.title}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <hr className="divider" style={{ margin: '10px 0 20px 0', borderTop: isDarkMode ? '2px solid #334155' : '2px solid #E2E8F0' }} />
 
-          <div style={{ flex: 1, overflowY: 'auto', paddingRight: '10px' }}>
+          {/* SCROLLABLE AREA: QUICK GUIDES & DIRECTORY */}
+          <div style={{ flex: 1, overflowY: 'auto', paddingRight: '10px', position: 'relative', zIndex: 10 }}>
             
-            {/* 1. QUICK SERVICE GUIDES - Made larger and persistent during search */}
-            {routeStep === 'idle' && !selectedOfficeKey && (
-              <div style={{ marginBottom: '30px' }}>
-                <h3 style={{ fontSize: '1.25rem', color: colorPalette.primaryText, marginBottom: '15px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  📋 {lang === 'EN' ? 'Quick Service Guides' : 'Mabilisang Serbisyo'}
-                </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                  {serviceGuidesConfig.map((service, idx) => (
-                    <button 
-                      key={idx}
-                      onClick={() => setSelectedService(service)}
-                      style={{ 
-                        background: isDarkMode ? '#1E293B' : '#FFFFFF', 
-                        border: `2px solid ${isDarkMode ? '#475569' : '#CBD5E1'}`, 
-                        borderRadius: '16px', 
-                        padding: '20px 12px', 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        alignItems: 'center', 
-                        gap: '12px', 
-                        cursor: 'pointer', 
-                        transition: 'all 0.2s', 
-                        boxShadow: '0 6px 15px rgba(0,0,0,0.05)' 
-                      }}
-                    >
-                      <span style={{ fontSize: '2.8rem' }}>{service.icon}</span>
-                      <span style={{ color: colorPalette.primaryText, fontWeight: 900, fontSize: '1.1rem', textAlign: 'center', lineHeight: '1.3' }}>
-                        {lang === 'EN' ? service.titleEn : service.titleTl}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* 2. DYNAMIC LIST: Search Results OR Popular Searches OR Floor Directory */}
             {routeStep === 'idle' && !selectedOfficeKey && (
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 
-                {searchQuery.trim() !== "" ? (
-                  /* SEARCH RESULTS FLOW */
-                  <>
-                    <div style={{ background: isDarkMode ? '#334155' : '#EEF2FF', padding: '15px 20px', borderRadius: '12px', color: '#4F46E5', marginBottom: '15px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      🔍 {lang === 'EN' ? 'Search Results' : 'Resulta ng Paghahanap'}
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '20px' }}>
-                      {filteredSearchOptions.length > 0 ? filteredSearchOptions.map((officeItem) => (
-                        <button key={`search-${officeItem.floor}-${officeItem.key}`} onClick={() => handleSearchSelect(officeItem.key, officeItem.floor)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '18px 20px', borderRadius: '14px', border: isDarkMode ? '1px solid #334155' : '1px solid #E2E8F0', background: isDarkMode ? '#1E293B' : '#FFFFFF', cursor: 'pointer', textAlign: 'left', width: '100%', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}>
-                          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#4F46E5', marginBottom: '6px', background: isDarkMode ? '#0F172A' : '#EEF2FF', padding: '4px 10px', borderRadius: '6px' }}>📍 {officeItem.badge}</span>
-                          <span style={{ fontSize: '1.25rem', fontWeight: 900, color: colorPalette.primaryText }}>{officeItem.title}</span>
-                        </button>
-                      )) : (
-                        <div style={{ textAlign: 'center', padding: '30px 10px', color: colorPalette.secondaryText, fontWeight: 800 }}>No offices found for "{searchQuery}"</div>
-                      )}
-                    </div>
-                  </>
-                ) : showKeyboard ? (
-                  /* FREQUENTLY SEARCHED FLOW */
-                  <>
-                    <div style={{ background: isDarkMode ? '#334155' : '#FFFBEB', padding: '15px 20px', borderRadius: '12px', color: isDarkMode ? '#FBBF24' : '#D97706', marginBottom: '15px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      🔥 {lang === 'EN' ? 'Frequently Searched' : 'Madalas Hanapin'}
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '20px' }}>
-                      {popularSearches.map((officeItem) => (
-                        <button key={`pop-${officeItem.floor}-${officeItem.key}`} onClick={() => handleSearchSelect(officeItem.key, officeItem.floor)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '18px 20px', borderRadius: '14px', border: isDarkMode ? '1px solid #334155' : '1px solid #E2E8F0', background: isDarkMode ? '#1E293B' : '#FFFFFF', cursor: 'pointer', textAlign: 'left', width: '100%', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}>
-                          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#4F46E5', marginBottom: '6px', background: isDarkMode ? '#0F172A' : '#EEF2FF', padding: '4px 10px', borderRadius: '6px' }}>📍 {officeItem.badge} • 🔍 {officeItem.searchCount || 0} {lang === 'EN' ? 'searches' : 'beses hinanap'}</span>
-                          <span style={{ fontSize: '1.25rem', fontWeight: 900, color: colorPalette.primaryText }}>{officeItem.title}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  /* NORMAL FLOOR DIRECTORY FLOW */
-                  <>
-                    <div style={{ background: isDarkMode ? 'linear-gradient(135deg, #1E1B4B, #4F46E5)' : 'linear-gradient(135deg, #4F46E5, #3730A3)', padding: '20px', borderRadius: '16px', color: 'white', marginBottom: '20px', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>
-                      <h2 style={{ fontSize: '1.6rem', margin: 0, fontWeight: 900 }}>Floor {currentFloor} Directory</h2>
-                    </div>
+                {/* 1. QUICK SERVICE GUIDES (Always visible in idle mode) */}
+                <div style={{ marginBottom: '30px' }}>
+                  <h3 style={{ fontSize: '1.25rem', color: colorPalette.primaryText, marginBottom: '15px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    📋 {lang === 'EN' ? 'Quick Service Guides' : 'Mabilisang Serbisyo'}
+                  </h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                    {serviceGuidesConfig.map((service, idx) => (
+                      <button 
+                        key={idx}
+                        onClick={() => setSelectedService(service)}
+                        style={{ 
+                          background: isDarkMode ? '#1E293B' : '#FFFFFF', 
+                          border: `2px solid ${isDarkMode ? '#475569' : '#CBD5E1'}`, 
+                          borderRadius: '16px', 
+                          padding: '20px 12px', 
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          alignItems: 'center', 
+                          gap: '12px', 
+                          cursor: 'pointer', 
+                          transition: 'all 0.2s', 
+                          boxShadow: '0 6px 15px rgba(0,0,0,0.05)' 
+                        }}
+                      >
+                        <span style={{ fontSize: '2.8rem' }}>{service.icon}</span>
+                        <span style={{ color: colorPalette.primaryText, fontWeight: 900, fontSize: '1.1rem', textAlign: 'center', lineHeight: '1.3' }}>
+                          {lang === 'EN' ? service.titleEn : service.titleTl}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '20px' }}>
-                      {liveOfficeDatabase[currentFloor] && Object.keys(liveOfficeDatabase[currentFloor]).length > 0 ? (
-                        Object.entries(liveOfficeDatabase[currentFloor]).map(([key, office]) => {
-                          if (key === 'elevator-up' || key === 'stairs-up') return null; 
-                          return (
-                          <button
-                            key={key}
-                            onClick={() => handleSelectOffice(key, currentFloor)}
-                            style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '16px 20px', borderRadius: '14px', border: isDarkMode ? '1px solid #334155' : '1px solid #E2E8F0', background: isDarkMode ? '#1E293B' : '#FFFFFF', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s', width: '100%', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}
-                          >
-                            <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#4F46E5', marginBottom: '6px', background: isDarkMode ? '#0F172A' : '#EEF2FF', padding: '4px 10px', borderRadius: '6px' }}>{office.badge || `F${currentFloor}`}</span>
-                            <span style={{ fontSize: '1.2rem', fontWeight: 800, color: colorPalette.primaryText }}>{office.title}</span>
-                          </button>
-                        )})
-                      ) : (
-                        <div style={{ textAlign: 'center', padding: '30px 10px', color: colorPalette.secondaryText }}>
-                          <span style={{ fontSize: '2rem' }}>🚧</span>
-                          <p style={{ fontWeight: 700, marginTop: '10px' }}>No offices mapped for this floor yet.</p>
-                        </div>
-                      )}
+                {/* 2. FLOOR DIRECTORY (Always visible below guides in idle mode) */}
+                <div style={{ background: isDarkMode ? 'linear-gradient(135deg, #1E1B4B, #4F46E5)' : 'linear-gradient(135deg, #4F46E5, #3730A3)', padding: '20px', borderRadius: '16px', color: 'white', marginBottom: '20px', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>
+                  <h2 style={{ fontSize: '1.6rem', margin: 0, fontWeight: 900 }}>Floor {currentFloor} Directory</h2>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '20px' }}>
+                  {liveOfficeDatabase[currentFloor] && Object.keys(liveOfficeDatabase[currentFloor]).length > 0 ? (
+                    Object.entries(liveOfficeDatabase[currentFloor]).map(([key, office]) => {
+                      if (key === 'elevator-up' || key === 'stairs-up') return null; 
+                      return (
+                      <button
+                        key={key}
+                        onClick={() => handleSelectOffice(key, currentFloor)}
+                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '16px 20px', borderRadius: '14px', border: isDarkMode ? '1px solid #334155' : '1px solid #E2E8F0', background: isDarkMode ? '#1E293B' : '#FFFFFF', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s', width: '100%', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}
+                      >
+                        <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#4F46E5', marginBottom: '6px', background: isDarkMode ? '#0F172A' : '#EEF2FF', padding: '4px 10px', borderRadius: '6px' }}>{office.badge || `F${currentFloor}`}</span>
+                        <span style={{ fontSize: '1.2rem', fontWeight: 800, color: colorPalette.primaryText }}>{office.title}</span>
+                      </button>
+                    )})
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '30px 10px', color: colorPalette.secondaryText }}>
+                      <span style={{ fontSize: '2rem' }}>🚧</span>
+                      <p style={{ fontWeight: 700, marginTop: '10px' }}>No offices mapped for this floor yet.</p>
                     </div>
-                  </>
-                )}
+                  )}
+                </div>
               </div>
             )}
 
@@ -870,6 +862,99 @@ export default function App() {
         </div>
       )}
 
+      {showAbout && (
+        <div 
+          style={{
+            position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.85)', 
+            backdropFilter: 'blur(8px)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'default'
+          }}
+          onClick={() => setShowAbout(false)} 
+        >
+          <div 
+            style={{ 
+              background: colorPalette.cardBg, padding: '40px', borderRadius: '24px', width: '90%', maxWidth: '650px', 
+              color: colorPalette.primaryText, cursor: 'default', boxShadow: '0 25px 50px rgba(0,0,0,0.5)', position: 'relative',
+              border: `4px solid #4F46E5`
+            }}
+            onClick={(e) => e.stopPropagation()} 
+          >
+            <button 
+              onClick={() => setShowAbout(false)}
+              style={{
+                position: 'absolute', top: '20px', right: '20px', background: isDarkMode ? '#334155' : '#E2E8F0', border: 'none', 
+                width: '45px', height: '45px', borderRadius: '50%', fontSize: '1.2rem', fontWeight: 'bold', 
+                cursor: 'pointer', color: colorPalette.primaryText, display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}
+            >
+              ✕
+            </button>
+            
+            <h2 style={{ fontSize: '2.4rem', fontWeight: '900', color: isDarkMode ? '#FFFFFF' : '#1E1B4B', margin: '0 0 15px 0', textAlign: 'center' }}>
+              About the Project
+            </h2>
+            
+            <p style={{ fontSize: '1.15rem', color: colorPalette.secondaryText, lineHeight: '1.6', textAlign: 'center', margin: '0 auto 30px auto', maxWidth: '550px', fontWeight: '600' }}>
+              This Interactive Directory Kiosk was developed by 4th-year Bachelor of Science in Information Technology (BSIT) students from the City College of Tagaytay. Our goal is to enhance public service by providing an accessible, easy-to-use digital mapping system that helps citizens seamlessly locate offices and navigate the City Hall.
+            </p>
+
+            <div style={{ background: isDarkMode ? '#0F172A' : '#F8FAFC', border: colorPalette.cardBorder, borderRadius: '16px', padding: '25px' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#4F46E5', margin: '0 0 20px 0', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '1.5px' }}>
+                The Development Team
+              </h3>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: colorPalette.cardBorder, paddingBottom: '12px' }}>
+                  <span style={{ fontSize: '1.3rem', fontWeight: '900', color: colorPalette.primaryText }}>Franz Jandrei Valderama</span>
+                  <span style={{ fontSize: '1.05rem', fontWeight: '800', color: '#4F46E5', background: isDarkMode ? 'rgba(79, 70, 229, 0.2)' : '#EEF2FF', padding: '6px 14px', borderRadius: '20px' }}>Full Stack Developer</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: colorPalette.cardBorder, paddingBottom: '12px' }}>
+                  <span style={{ fontSize: '1.3rem', fontWeight: '900', color: colorPalette.primaryText }}>Neftali Luya</span>
+                  <span style={{ fontSize: '1.05rem', fontWeight: '800', color: '#059669', background: isDarkMode ? 'rgba(5, 150, 105, 0.2)' : '#ECFDF5', padding: '6px 14px', borderRadius: '20px' }}>Front End Developer</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: colorPalette.cardBorder, paddingBottom: '12px' }}>
+                  <span style={{ fontSize: '1.3rem', fontWeight: '900', color: colorPalette.primaryText }}>Ricalyn Mereyes</span>
+                  <span style={{ fontSize: '1.05rem', fontWeight: '800', color: '#D97706', background: isDarkMode ? 'rgba(217, 119, 6, 0.2)' : '#FFFBEB', padding: '6px 14px', borderRadius: '20px' }}>Main Documentation</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '1.3rem', fontWeight: '900', color: colorPalette.primaryText }}>Marlon Panganiban</span>
+                  <span style={{ fontSize: '1.05rem', fontWeight: '800', color: '#D97706', background: isDarkMode ? 'rgba(217, 119, 6, 0.2)' : '#FFFBEB', padding: '6px 14px', borderRadius: '20px' }}>Documentation</span>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ textAlign: 'center', marginTop: '25px' }}>
+              <img src={tagaytaySeal} alt="City College of Tagaytay" style={{ width: '70px', height: '70px', borderRadius: '50%', objectFit: 'contain', background: 'white', padding: '2px' }} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAdminLogin && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#FFFFFF', padding: '30px', borderRadius: '16px', width: '400px', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)' }}>
+            <h2 style={{ margin: '0 0 15px 0', color: '#0F172A', fontSize: '1.8rem' }}>🔒 Admin Access</h2>
+            <p style={{ color: '#475569', marginBottom: '20px', fontSize: '1.1rem' }}>Please enter password to access admin panel.</p>
+            
+            <form onSubmit={handleAdminLogin}>
+              <input 
+                type="password" 
+                value={adminPasswordInput}
+                onChange={(e) => setAdminPasswordInput(e.target.value)}
+                placeholder="Enter password..."
+                style={{ width: '100%', padding: '15px', borderRadius: '8px', border: '2px solid #CBD5E1', fontSize: '1.2rem', marginBottom: '20px', textAlign: 'center', boxSizing: 'border-box', outline: 'none' }}
+                autoFocus
+              />
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button type="button" onClick={() => { setShowAdminLogin(false); setAdminPasswordInput(''); }} style={{ flex: 1, padding: '15px', background: '#E2E8F0', color: '#475569', border: 'none', borderRadius: '8px', fontWeight: 800, cursor: 'pointer', fontSize: '1.1rem' }}>Cancel</button>
+                <button type="submit" style={{ flex: 1, padding: '15px', background: '#4F46E5', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 800, cursor: 'pointer', fontSize: '1.1rem' }}>Enter</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showAdmin && <AdminPanel officeDatabase={liveOfficeDatabase} onClose={() => setShowAdmin(false)} onDataUpdate={() => { fetchKioskData(); }} />}
     </div>
   );
 }
