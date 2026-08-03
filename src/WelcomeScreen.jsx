@@ -53,7 +53,7 @@ export default function WelcomeScreen({ onStart }) {
         <img src={tagaytaySeal} alt="Tagaytay Seal" style={{ width: '160px', height: '160px', borderRadius: '50%', border: '5px solid white', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', backgroundColor: 'white', padding: '5px' }} />
         
         <h1 style={{ fontFamily: '"Playfair Display", serif', fontSize: '4.8rem', color: 'white', fontWeight: 900, margin: '20px 0 10px 0', textShadow: '0 10px 20px rgba(0,0,0,0.8)', textAlign: 'center', lineHeight: '1.1' }}>
-          Welcome to<br/><span style={{ color: '#FBBF24' }}>Tagaytay City Hall</span>
+          Welcome to<br/><span style={{ color: '#FBBF24' }}>City Government of Tagaytay</span>
         </h1>
         
         <p style={{ fontSize: '1.6rem', color: '#E2E8F0', fontWeight: 600, letterSpacing: '4px', textTransform: 'uppercase', margin: '0 0 35px 0' }}>
