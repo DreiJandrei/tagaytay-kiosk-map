@@ -93,9 +93,12 @@ export const getAllOffices = async () => {
 // ==============================================================
 // 3. UPDATE 2 TABLES SIMULTANEOUSLY
 // ==============================================================
+// ==============================================================
+// 3. UPDATE 2 TABLES SIMULTANEOUSLY (WITH UPSERT FIX)
+// ==============================================================
 export const updateOffice = async (officeKey, updates) => {
   try {
-    // 1. I-update ang pangunahing table (title, badge, css_class)
+    // 1. I-update ang pangunahing table
     const { error: err1 } = await supabase.from('offices').update({
       title: updates.title, 
       badge: updates.badge, 
@@ -103,13 +106,14 @@ export const updateOffice = async (officeKey, updates) => {
     }).eq('office_key', officeKey);
     if (err1) throw err1;
 
-    // 2. I-update ang hiwalay na table (head, hours, status, requirements)
-    const { error: err2 } = await supabase.from('office_details').update({
+    // 2. BAGO: Gagamit ng UPSERT para kung walang row sa office_details, automatic siyang gagawa!
+    const { error: err2 } = await supabase.from('office_details').upsert({
+      office_key: officeKey, // Kailangan itong isama kapag Upsert
       head: updates.head, 
       hours: updates.hours, 
       status: updates.status, 
       requirements: updates.requirements
-    }).eq('office_key', officeKey);
+    });
     if (err2) throw err2;
 
     return { success: true };
