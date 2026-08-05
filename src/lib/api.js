@@ -1,7 +1,34 @@
 import { supabase } from './supabase';
 
 // ==============================================================
-// 1. INITIALIZE 2 TABLES (OFFICES & OFFICE_DETAILS)
+// 1. SUPABASE AUTHENTICATION (BAGO!)
+// ==============================================================
+export const loginAdmin = async (email, password) => {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  return data;
+};
+
+export const resetPasswordEmail = async (email) => {
+  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin, // Ibabalik siya sa Kiosk website pag na-click ang email
+  });
+  if (error) throw error;
+  return data;
+};
+
+export const changeAdminPassword = async (newPassword) => {
+  const { data, error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) throw error;
+  return data;
+};
+
+export const logoutAdmin = async () => {
+  await supabase.auth.signOut();
+};
+
+// ==============================================================
+// 2. INITIALIZE 2 TABLES
 // ==============================================================
 export const initializeDatabase = async (seedData) => {
   try {
@@ -50,7 +77,7 @@ export const initializeDatabase = async (seedData) => {
 };
 
 // ==============================================================
-// 2. GET DATA USING RELATIONAL JOIN
+// 3. GET DATA USING RELATIONAL JOIN
 // ==============================================================
 export const getAllOffices = async () => {
   try {
@@ -64,13 +91,11 @@ export const getAllOffices = async () => {
       
       if (!structuredData[row.floor]) structuredData[row.floor] = {};
       
-      // BULLETPROOF REQUIREMENTS PARSER (Pangontra sa White Screen)
       let rawReqs = safeDetails?.requirements;
       let safeRequirements = [];
       
-      if (Array.isArray(rawReqs)) {
-        safeRequirements = rawReqs;
-      } else if (typeof rawReqs === 'string') {
+      if (Array.isArray(rawReqs)) { safeRequirements = rawReqs; } 
+      else if (typeof rawReqs === 'string') {
         try {
           const parsed = JSON.parse(rawReqs);
           safeRequirements = Array.isArray(parsed) ? parsed : [rawReqs];
@@ -80,14 +105,9 @@ export const getAllOffices = async () => {
       }
 
       structuredData[row.floor][row.office_key] = {
-        title: row.title, 
-        badge: row.badge, 
-        hours: safeDetails?.hours || '', 
-        head: safeDetails?.head || '',
-        requirements: safeRequirements, 
-        cssClass: row.css_class, 
-        status: safeDetails?.status || 'Available',
-        searchCount: row.search_count || 0
+        title: row.title, badge: row.badge, hours: safeDetails?.hours || '', 
+        head: safeDetails?.head || '', requirements: safeRequirements, 
+        cssClass: row.css_class, status: safeDetails?.status || 'Available', searchCount: row.search_count || 0
       };
     });
     return structuredData;
@@ -98,23 +118,18 @@ export const getAllOffices = async () => {
 };
 
 // ==============================================================
-// 3. UPDATE 2 TABLES SIMULTANEOUSLY (WITH UPSERT FIX)
+// 4. UPDATE 2 TABLES SIMULTANEOUSLY (WITH UPSERT FIX)
 // ==============================================================
 export const updateOffice = async (officeKey, updates) => {
   try {
     const { error: err1 } = await supabase.from('offices').update({
-      title: updates.title, 
-      badge: updates.badge, 
-      css_class: updates.cssClass
+      title: updates.title, badge: updates.badge, css_class: updates.cssClass
     }).eq('office_key', officeKey);
     if (err1) throw err1;
 
     const { error: err2 } = await supabase.from('office_details').upsert({
-      office_key: officeKey, 
-      head: updates.head, 
-      hours: updates.hours, 
-      status: updates.status, 
-      requirements: updates.requirements
+      office_key: officeKey, head: updates.head, hours: updates.hours, 
+      status: updates.status, requirements: updates.requirements
     });
     if (err2) throw err2;
 
@@ -126,7 +141,7 @@ export const updateOffice = async (officeKey, updates) => {
 };
 
 // ==============================================================
-// 4. INCREMENT SEARCH COUNT
+// 5. INCREMENT SEARCH COUNT
 // ==============================================================
 export const incrementSearchCount = async (officeKey) => {
   try {
@@ -137,37 +152,25 @@ export const incrementSearchCount = async (officeKey) => {
     const { error: updateError } = await supabase.from('offices').update({ search_count: newCount }).eq('office_key', officeKey);
     if (updateError) throw updateError;
     return true;
-  } catch (error) { 
-    console.error(`Error incrementing search count:`, error); 
-    return false; 
-  }
+  } catch (error) { return false; }
 };
 
 // ==============================================================
-// 5. ANNOUNCEMENT SETTINGS API
+// 6. ANNOUNCEMENT SETTINGS API
 // ==============================================================
 export const getAnnouncement = async () => {
   try {
     const { data, error } = await supabase.from('settings').select('announcement_text').eq('id', 1).single();
     if (error && error.code !== 'PGRST116') throw error; 
     return data ? data.announcement_text : "";
-  } catch (error) { 
-    console.error('Error fetching announcement:', error); 
-    return ""; 
-  }
+  } catch (error) { return ""; }
 };
 
 export const updateAnnouncement = async (text) => {
   try {
     const { data: existing } = await supabase.from('settings').select('id').eq('id', 1).single();
-    if (existing) {
-      await supabase.from('settings').update({ announcement_text: text }).eq('id', 1);
-    } else {
-      await supabase.from('settings').insert([{ id: 1, announcement_text: text }]);
-    }
+    if (existing) { await supabase.from('settings').update({ announcement_text: text }).eq('id', 1); } 
+    else { await supabase.from('settings').insert([{ id: 1, announcement_text: text }]); }
     return true;
-  } catch (error) { 
-    console.error('Error updating announcement:', error); 
-    return false; 
-  }
+  } catch (error) { return false; }
 };
