@@ -10,7 +10,7 @@ import './index.css';
 import { QRCodeSVG } from 'qrcode.react'; 
 import { useSearchParams } from 'react-router-dom';
 
-import { getAllOffices, initializeDatabase, incrementSearchCount } from './lib/api';
+import { getAllOffices, initializeDatabase, incrementSearchCount, loginAdmin, resetPasswordEmail, logoutAdmin } from './lib/api';
 import { coordinateMapping, mergeOfficeData } from './lib/coordinateMapping';
 import { defaultOfficeData } from './lib/defaultOfficeData';
 
@@ -71,6 +71,7 @@ export default function App() {
 
   const [liveOfficeDatabase, setLiveOfficeDatabase] = useState({});
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoggingIn, setIsLoggingIn] = useState(false); 
 
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isMobileSessionExpired, setIsMobileSessionExpired] = useState(false);
@@ -92,8 +93,11 @@ export default function App() {
   const [showAdmin, setShowAdmin] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false); 
   const [adminPasswordInput, setAdminPasswordInput] = useState(''); 
+  
+  // BAGO: Show Password Toggle State
+  const [showPassword, setShowPassword] = useState(false); 
+  
   const [secretClicks, setSecretClicks] = useState(0);
-
   const [showAbout, setShowAbout] = useState(false); 
 
   const [routeStep, setRouteStep] = useState('idle'); 
@@ -237,7 +241,9 @@ export default function App() {
         setShowAdmin(false);
         setShowAdminLogin(false);
         setAdminPasswordInput('');
+        setShowPassword(false);
         setShowAbout(false); 
+        logoutAdmin(); 
       }, 45000); 
     };
 
@@ -265,24 +271,30 @@ export default function App() {
     }
   };
 
-  const handleAdminLogin = (e) => {
+  const handleAdminLogin = async (e) => {
     e.preventDefault(); 
-    const currentPassword = localStorage.getItem('kiosk_admin_password') || 'admin123';
+    setIsLoggingIn(true);
     
-    if (adminPasswordInput === 'cctreset') {
-      localStorage.removeItem('kiosk_admin_password'); 
+    try {
+      await loginAdmin('tagaytaykiosk@gmail.com', adminPasswordInput);
       setShowAdminLogin(false);
       setAdminPasswordInput('');
+      setShowPassword(false);
       setShowAdmin(true); 
-      alert('🔄 Master Recovery Code used! Password has been reset back to default: admin123');
-    } 
-    else if (adminPasswordInput === currentPassword) {
-      setShowAdminLogin(false);
+    } catch (error) {
+      alert('❌ Access Denied: Incorrect Password or Network Error.');
       setAdminPasswordInput('');
-      setShowAdmin(true); 
-    } else {
-      alert('Incorrect Password! Access Denied.');
-      setAdminPasswordInput('');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    try {
+      await resetPasswordEmail('tagaytaykiosk@gmail.com');
+      alert('✅ Recovery link sent to tagaytaykiosk@gmail.com!\n\nPlease check the Gmail inbox to set a new password.');
+    } catch (error) {
+      alert('❌ Failed to send reset email. Make sure you have internet connection.');
     }
   };
 
@@ -355,7 +367,6 @@ export default function App() {
     return flatList;
   };
 
-  // BULLETPROOF FILTER: Ensures off.title is safe to prevent render crashes
   const filteredSearchOptions = searchQuery.trim() === "" ? [] : getFlatOffices().filter(off => 
     (off.title || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -371,7 +382,6 @@ export default function App() {
     
     await incrementSearchCount(key); 
     
-    // BULLETPROOF STATE UPDATE: Immutable cloning prevents "read-only" crashes
     setLiveOfficeDatabase(prev => {
       if (!prev[floor] || !prev[floor][key]) return prev;
       return {
@@ -394,11 +404,6 @@ export default function App() {
     else setSearchQuery(prev => prev + key);
   };
 
-  // ==============================================================
-  // BULLETPROOF REQUIREMENTS PARSER 
-  // Sinisiguro na kahit anong data from DB, gagawin niyang Array para
-  // hindi magka-crash ang .map() at hindi mag-white screen!
-  // ==============================================================
   const getSafeRequirements = (reqs) => {
     if (!reqs) return [];
     if (Array.isArray(reqs)) return reqs;
@@ -407,8 +412,6 @@ export default function App() {
   };
 
   const selectedOffice = selectedOfficeKey ? liveOfficeDatabase[currentFloor]?.[selectedOfficeKey] : null;
-  
-  // Apply the safe parser
   const safeDestReqs = getSafeRequirements(destinationData?.requirements);
   const safeSelReqs = getSafeRequirements(selectedOffice?.requirements);
 
@@ -950,25 +953,51 @@ export default function App() {
         </div>
       )}
 
+      {/* LOGIN MODAL (WITH FORGOT PASSWORD & SHOW PASSWORD BUTTON) */}
       {showAdminLogin && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#FFFFFF', padding: '30px', borderRadius: '16px', width: '400px', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)' }}>
+          <div style={{ background: '#FFFFFF', padding: '40px 30px', borderRadius: '16px', width: '400px', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)' }}>
             <h2 style={{ margin: '0 0 15px 0', color: '#0F172A', fontSize: '1.8rem' }}>🔒 Admin Access</h2>
-            <p style={{ color: '#475569', marginBottom: '20px', fontSize: '1.1rem' }}>Please enter password to access admin panel.</p>
+            <p style={{ color: '#475569', marginBottom: '20px', fontSize: '1.1rem' }}>Enter password for tagaytaykiosk@gmail.com</p>
             
             <form onSubmit={handleAdminLogin}>
-              <input 
-                type="password" 
-                value={adminPasswordInput}
-                onChange={(e) => setAdminPasswordInput(e.target.value)}
-                placeholder="Enter password..."
-                style={{ width: '100%', padding: '15px', borderRadius: '8px', border: '2px solid #CBD5E1', fontSize: '1.2rem', marginBottom: '20px', textAlign: 'center', boxSizing: 'border-box', outline: 'none' }}
-                autoFocus
-              />
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button type="button" onClick={() => { setShowAdminLogin(false); setAdminPasswordInput(''); }} style={{ flex: 1, padding: '15px', background: '#E2E8F0', color: '#475569', border: 'none', borderRadius: '8px', fontWeight: 800, cursor: 'pointer', fontSize: '1.1rem' }}>Cancel</button>
-                <button type="submit" style={{ flex: 1, padding: '15px', background: '#4F46E5', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 800, cursor: 'pointer', fontSize: '1.1rem' }}>Enter</button>
+              
+              {/* INPUT BOX NA MAY "SHOW PASSWORD" EYE ICON */}
+              <div style={{ position: 'relative', marginBottom: '20px' }}>
+                <input 
+                  type={showPassword ? "text" : "password"} 
+                  value={adminPasswordInput}
+                  onChange={(e) => setAdminPasswordInput(e.target.value)}
+                  placeholder="Enter password..."
+                  style={{ width: '100%', padding: '15px', paddingRight: '45px', borderRadius: '8px', border: '2px solid #CBD5E1', fontSize: '1.2rem', textAlign: 'center', boxSizing: 'border-box', outline: 'none' }}
+                  autoFocus
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setShowPassword(!showPassword)} 
+                  style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.5rem' }}
+                  title={showPassword ? "Hide Password" : "Show Password"}
+                >
+                  {showPassword ? '🙈' : '👁️'}
+                </button>
               </div>
+              
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                <button type="button" onClick={() => { setShowAdminLogin(false); setAdminPasswordInput(''); setShowPassword(false); }} style={{ flex: 1, padding: '15px', background: '#E2E8F0', color: '#475569', border: 'none', borderRadius: '8px', fontWeight: 800, cursor: 'pointer', fontSize: '1.1rem' }}>Cancel</button>
+                <button type="submit" disabled={isLoggingIn} style={{ flex: 1, padding: '15px', background: '#4F46E5', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 800, cursor: isLoggingIn ? 'wait' : 'pointer', fontSize: '1.1rem' }}>
+                  {isLoggingIn ? 'Checking...' : 'Login'}
+                </button>
+              </div>
+
+              {/* FORGOT PASSWORD BUTTON */}
+              <button 
+                type="button" 
+                onClick={handleForgotPassword}
+                style={{ background: 'transparent', border: 'none', color: '#3B82F6', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', textDecoration: 'underline' }}
+              >
+                Forgot Password? Send Reset Link
+              </button>
+
             </form>
           </div>
         </div>
