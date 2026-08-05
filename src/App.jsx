@@ -209,10 +209,22 @@ export default function App() {
     }
   }, [searchParams, liveOfficeDatabase]);
 
+  // 🔥 ITO YUNG MAGIC FIX PARA HINDI MAITAPON ANG DESCRIPTION!
   const fetchKioskData = async () => {
     try {
       const dbData = await getAllOffices();
       const completeData = mergeOfficeData(coordinateMapping, dbData);
+      
+      // I-force natin isingit pabalik yung description galing sa Supabase (dbData)
+      // dahil baka hindi pa 'to kilala nung mergeOfficeData function.
+      Object.keys(completeData).forEach(floor => {
+        Object.keys(completeData[floor]).forEach(key => {
+          if (dbData[floor] && dbData[floor][key]) {
+             completeData[floor][key].description = dbData[floor][key].description;
+          }
+        });
+      });
+
       setLiveOfficeDatabase(completeData);
     } catch (error) {
       throw error;
@@ -686,6 +698,13 @@ export default function App() {
                   <button onClick={() => { setRouteStep('idle'); setDestinationData(null); }} style={{ marginTop: '12px', background: 'transparent', border: 'none', color: '#EF4444', fontWeight: 800, cursor: 'pointer', width: '100%', padding: '10px' }}>Cancel Navigation</button>
                 </div>
 
+                {destinationData.description && (
+                  <div style={{ background: isDarkMode ? '#1E293B' : '#F8FAFC', padding: '15px', borderRadius: '12px', border: colorPalette.cardBorder, marginBottom: '20px', color: colorPalette.primaryText, fontSize: '1.05rem', lineHeight: '1.6' }}>
+                     <strong style={{ color: '#4F46E5', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '5px' }}>ℹ️ {lang === 'EN' ? 'About this Office' : 'Tungkol sa Opisina'}</strong>
+                     {destinationData.description}
+                  </div>
+                )}
+
                 {safeDestReqs.length > 0 && (
                   <div className="requirements-box" style={{ background: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : '#FFFBEB', border: `1px solid ${isDarkMode ? 'rgba(245, 158, 11, 0.3)' : '#FDE68A'}`, padding: '20px', borderRadius: '16px', color: colorPalette.primaryText }}>
                     <h3 style={{ fontSize: '1.2rem', marginBottom: '12px', color: isDarkMode ? '#F59E0B' : '#D97706', fontWeight: 800 }}>📋 Transaction Requirements:</h3>
@@ -770,6 +789,13 @@ export default function App() {
                     </>
                   )}
                 </div>
+
+                {selectedOffice.description && (
+                  <div style={{ background: isDarkMode ? '#1E293B' : '#F8FAFC', padding: '15px', borderRadius: '12px', border: colorPalette.cardBorder, marginBottom: '20px', color: colorPalette.primaryText, fontSize: '1.05rem', lineHeight: '1.6' }}>
+                     <strong style={{ color: '#4F46E5', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '5px' }}>ℹ️ {lang === 'EN' ? 'About this Office' : 'Tungkol sa Opisina'}</strong>
+                     {selectedOffice.description}
+                  </div>
+                )}
 
                 {safeSelReqs.length > 0 && (
                   <div className="requirements-box" style={{ background: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : '#FFFBEB', border: `1px solid ${isDarkMode ? 'rgba(245, 158, 11, 0.3)' : '#FDE68A'}`, padding: '20px', borderRadius: '16px', color: colorPalette.primaryText }}>
@@ -981,9 +1007,6 @@ export default function App() {
         </div>
       )}
 
-      {/* ========================================================= */}
-      {/* DEDICATED PASSWORD RECOVERY MODAL (MAY COMPLEXITY RULE NA) */}
-      {/* ========================================================= */}
       {showRecoveryModal && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: '#FFFFFF', padding: '40px 30px', borderRadius: '16px', width: '400px', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)' }}>
@@ -992,16 +1015,12 @@ export default function App() {
             
             <form onSubmit={async (e) => {
               e.preventDefault();
-              
-              // BAGO: PASSWORD COMPLEXITY CHECK (Regex para sa Uppercase, Lowercase, Number)
               const hasUpper = /[A-Z]/.test(recoveryPassword);
               const hasLower = /[a-z]/.test(recoveryPassword);
               const hasNumber = /\d/.test(recoveryPassword);
-              
               if (recoveryPassword.length < 6 || !hasUpper || !hasLower || !hasNumber) {
                 return alert('❌ Weak Password:\n\nPassword must be at least 6 characters long and include:\n- At least 1 Uppercase letter\n- At least 1 Lowercase letter\n- At least 1 Number');
               }
-
               try {
                 setIsLoggingIn(true);
                 await changeAdminPassword(recoveryPassword);
@@ -1045,7 +1064,6 @@ export default function App() {
         </div>
       )}
 
-      {/* NORMAL LOGIN MODAL */}
       {showAdminLogin && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: '#FFFFFF', padding: '40px 30px', borderRadius: '16px', width: '400px', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)' }}>
