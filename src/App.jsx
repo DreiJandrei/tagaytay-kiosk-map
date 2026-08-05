@@ -343,7 +343,6 @@ export default function App() {
     return () => clearTimeout(timeoutId);
   }, [routeStep, currentFloor, destinationData]);
 
-
   const getFlatOffices = () => {
     const flatList = [];
     Object.entries(liveOfficeDatabase).forEach(([floorNum, floorOffices]) => {
@@ -356,8 +355,9 @@ export default function App() {
     return flatList;
   };
 
+  // BULLETPROOF FILTER: Ensures off.title is safe to prevent render crashes
   const filteredSearchOptions = searchQuery.trim() === "" ? [] : getFlatOffices().filter(off => 
-    off.title.toLowerCase().includes(searchQuery.toLowerCase())
+    (off.title || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const popularSearches = getFlatOffices()
@@ -371,12 +371,19 @@ export default function App() {
     
     await incrementSearchCount(key); 
     
+    // BULLETPROOF STATE UPDATE: Immutable cloning prevents "read-only" crashes
     setLiveOfficeDatabase(prev => {
-      const newData = { ...prev };
-      if (newData[floor] && newData[floor][key]) {
-        newData[floor][key].searchCount = (newData[floor][key].searchCount || 0) + 1;
-      }
-      return newData;
+      if (!prev[floor] || !prev[floor][key]) return prev;
+      return {
+        ...prev,
+        [floor]: {
+          ...prev[floor],
+          [key]: {
+            ...prev[floor][key],
+            searchCount: (prev[floor][key].searchCount || 0) + 1
+          }
+        }
+      };
     });
   };
 
@@ -386,6 +393,24 @@ export default function App() {
     else if (key === 'CLEAR') setSearchQuery('');
     else setSearchQuery(prev => prev + key);
   };
+
+  // ==============================================================
+  // BULLETPROOF REQUIREMENTS PARSER 
+  // Sinisiguro na kahit anong data from DB, gagawin niyang Array para
+  // hindi magka-crash ang .map() at hindi mag-white screen!
+  // ==============================================================
+  const getSafeRequirements = (reqs) => {
+    if (!reqs) return [];
+    if (Array.isArray(reqs)) return reqs;
+    if (typeof reqs === 'string') return reqs.split('\n').map(s => s.trim()).filter(s => s);
+    return [];
+  };
+
+  const selectedOffice = selectedOfficeKey ? liveOfficeDatabase[currentFloor]?.[selectedOfficeKey] : null;
+  
+  // Apply the safe parser
+  const safeDestReqs = getSafeRequirements(destinationData?.requirements);
+  const safeSelReqs = getSafeRequirements(selectedOffice?.requirements);
 
   if (isMobileSessionExpired) {
     return (
@@ -470,7 +495,6 @@ export default function App() {
         
         <aside className="map-sidebar" style={{ width: '450px', flexShrink: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           
-          {/* SEARCH BAR INPUT (Fixed at the top of the sidebar, walang nakalutang dito) */}
           <div className="sidebar-search-container" style={{ margin: '20px 0 10px 0', position: 'relative', zIndex: 100 }}>
             <div style={{ display: 'flex', position: 'relative', alignItems: 'center' }}>
               <input type="text" placeholder={lang === 'EN' ? "🔍 Tap to Search Offices..." : "🔍 Pindutin para maghanap..."} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onClick={() => setShowKeyboard(true)} style={{ width: '100%', padding: '22px 24px', borderRadius: '16px', border: showKeyboard ? '4px solid #4F46E5' : (isDarkMode ? '2px solid #475569' : '2px solid #CBD5E1'), background: isDarkMode ? '#1E293B' : '#FFFFFF', color: colorPalette.primaryText, fontWeight: '800', fontSize: '1.4rem', boxShadow: '0 6px 12px rgba(0,0,0,0.1)', boxSizing: 'border-box', cursor: 'text' }} />
@@ -482,10 +506,8 @@ export default function App() {
 
           <hr className="divider" style={{ margin: '10px 0 20px 0', borderTop: isDarkMode ? '2px solid #334155' : '2px solid #E2E8F0', flexShrink: 0 }} />
 
-          {/* SCROLLABLE AREA: INLINE FLOW NA LAHAT (SEARCH RESULTS -> QUICK GUIDES -> DIRECTORY) */}
           <div style={{ flex: 1, overflowY: 'auto', paddingRight: '10px', position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column' }}>
             
-            {/* 1. INLINE SEARCH RESULTS */}
             {searchQuery.trim() !== "" && filteredSearchOptions.length > 0 && (
               <div style={{ backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF', border: '3px solid #4F46E5', borderRadius: '16px', marginBottom: '25px', flexShrink: 0, overflow: 'hidden', boxShadow: '0 6px 12px rgba(0,0,0,0.05)' }}>
                 <div style={{ background: isDarkMode ? '#334155' : '#EEF2FF', padding: '15px 20px', borderBottom: isDarkMode ? '2px solid #475569' : '2px solid #E2E8F0', color: '#4F46E5', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -502,7 +524,6 @@ export default function App() {
               </div>
             )}
 
-            {/* 2. INLINE FREQUENTLY SEARCHED */}
             {searchQuery.trim() === "" && showKeyboard && popularSearches.length > 0 && (
               <div style={{ backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF', border: '3px solid #F59E0B', borderRadius: '16px', marginBottom: '25px', flexShrink: 0, overflow: 'hidden', boxShadow: '0 6px 12px rgba(0,0,0,0.05)' }}>
                 <div style={{ padding: '15px 24px', background: isDarkMode ? '#334155' : '#FFFBEB', borderBottom: isDarkMode ? '2px solid #475569' : '2px solid #E2E8F0', fontWeight: '900', color: isDarkMode ? '#FBBF24' : '#D97706', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -519,11 +540,9 @@ export default function App() {
               </div>
             )}
 
-            {/* 3. QUICK SERVICE GUIDES & FLOOR DIRECTORY */}
             {routeStep === 'idle' && !selectedOfficeKey && (
               <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
                 
-                {/* QUICK SERVICE GUIDES */}
                 <div style={{ marginBottom: '30px' }}>
                   <h3 style={{ fontSize: '1.25rem', color: colorPalette.primaryText, marginBottom: '15px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}>
                     📋 {lang === 'EN' ? 'Quick Service Guides' : 'Mabilisang Serbisyo'}
@@ -556,12 +575,10 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* FLOOR DIRECTORY HEADER */}
                 <div style={{ background: isDarkMode ? 'linear-gradient(135deg, #1E1B4B, #4F46E5)' : 'linear-gradient(135deg, #4F46E5, #3730A3)', padding: '20px', borderRadius: '16px', color: 'white', marginBottom: '20px', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>
                   <h2 style={{ fontSize: '1.6rem', margin: 0, fontWeight: 900 }}>Floor {currentFloor} Directory</h2>
                 </div>
 
-                {/* FLOOR DIRECTORY BUTTONS */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '20px' }}>
                   {liveOfficeDatabase[currentFloor] && Object.keys(liveOfficeDatabase[currentFloor]).length > 0 ? (
                     Object.entries(liveOfficeDatabase[currentFloor]).map(([key, office]) => {
@@ -586,7 +603,6 @@ export default function App() {
               </div>
             )}
 
-            {/* ROUTING MENUS (Choose transport, traveling, etc.) */}
             {routeStep === 'choose-transport' && destinationData && (
               <div style={{ display: 'flex', flexDirection: 'column', paddingBottom: '20px' }}>
                 <div className="destination-card" style={{ marginBottom: '20px' }}>
@@ -639,11 +655,11 @@ export default function App() {
                   <button onClick={() => { setRouteStep('idle'); setDestinationData(null); }} style={{ marginTop: '12px', background: 'transparent', border: 'none', color: '#EF4444', fontWeight: 800, cursor: 'pointer', width: '100%', padding: '10px' }}>Cancel Navigation</button>
                 </div>
 
-                {destinationData.requirements && destinationData.requirements.length > 0 && (
+                {safeDestReqs.length > 0 && (
                   <div className="requirements-box" style={{ background: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : '#FFFBEB', border: `1px solid ${isDarkMode ? 'rgba(245, 158, 11, 0.3)' : '#FDE68A'}`, padding: '20px', borderRadius: '16px', color: colorPalette.primaryText }}>
                     <h3 style={{ fontSize: '1.2rem', marginBottom: '12px', color: isDarkMode ? '#F59E0B' : '#D97706', fontWeight: 800 }}>📋 Transaction Requirements:</h3>
                     <ul style={{ fontSize: '1.05rem', paddingLeft: '20px', marginBottom: '25px', lineHeight: '1.6' }}>
-                      {destinationData.requirements.map((req, i) => (
+                      {safeDestReqs.map((req, i) => (
                         <li key={i} style={{ marginBottom: '6px' }}>{req}</li>
                       ))}
                     </ul>
@@ -724,11 +740,11 @@ export default function App() {
                   )}
                 </div>
 
-                {selectedOffice.requirements && selectedOffice.requirements.length > 0 && (
+                {safeSelReqs.length > 0 && (
                   <div className="requirements-box" style={{ background: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : '#FFFBEB', border: `1px solid ${isDarkMode ? 'rgba(245, 158, 11, 0.3)' : '#FDE68A'}`, padding: '20px', borderRadius: '16px', color: colorPalette.primaryText }}>
                     <h3 style={{ fontSize: '1.2rem', marginBottom: '12px', color: isDarkMode ? '#F59E0B' : '#D97706', fontWeight: 800 }}>📋 Transaction Requirements:</h3>
                     <ul style={{ fontSize: '1.05rem', paddingLeft: '20px', marginBottom: '25px', lineHeight: '1.6' }}>
-                      {selectedOffice.requirements.map((req, i) => (
+                      {safeSelReqs.map((req, i) => (
                         <li key={i} style={{ marginBottom: '6px' }}>{req}</li>
                       ))}
                     </ul>
