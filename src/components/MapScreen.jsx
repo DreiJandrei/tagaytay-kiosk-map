@@ -88,7 +88,7 @@ export default function MapScreen({
   // ==============================================================
   // SMART ROUTER: AVOIDING WALLS FOR STAIRS & ELEVATORS & CUSTOM OVERRIDES
   // ==============================================================
-  let finalPathData = selectedOffice ? selectedOffice.pathData : "";
+  let finalPathData = (selectedOffice && selectedOffice.pathData) ? String(selectedOffice.pathData) : "";
 
   if (routeStep === 'climbing-stairs' && transportMethod === 'stairs') {
       const x = kioskStyle.left;
