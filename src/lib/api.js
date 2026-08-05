@@ -17,7 +17,6 @@ export const initializeDatabase = async (seedData) => {
       Object.keys(seedData[floorStr]).forEach(officeKey => {
         const item = seedData[floorStr][officeKey];
         
-        // Data para sa Table 1 (offices)
         officesToInsert.push({
           office_key: officeKey, 
           floor: floorNum, 
@@ -27,22 +26,19 @@ export const initializeDatabase = async (seedData) => {
           search_count: 0
         });
 
-        // Data para sa Table 2 (office_details)
         detailsToInsert.push({
           office_key: officeKey, 
           hours: item.hours || '', 
           head: item.head || '', 
-          requirements: item.requirements || [],
+          requirements: Array.isArray(item.requirements) ? item.requirements : [],
           status: item.status || 'Available'
         });
       });
     });
 
-    // Insert sa Table 1 muna (dahil ito ang may Primary Key)
     const { error: insertError1 } = await supabase.from('offices').insert(officesToInsert);
     if (insertError1) throw insertError1;
 
-    // Insert sa Table 2 (dahil nakadepende ito sa Foreign Key ng Table 1)
     const { error: insertError2 } = await supabase.from('office_details').insert(detailsToInsert);
     if (insertError2) throw insertError2;
 
@@ -58,26 +54,37 @@ export const initializeDatabase = async (seedData) => {
 // ==============================================================
 export const getAllOffices = async () => {
   try {
-    // Kinukuha ang data mula sa hiwalay na tables gamit ang join (*)
     const { data, error } = await supabase.from('offices').select('*, office_details(*)');
     if (error) throw error;
 
     const structuredData = {};
     data.forEach(row => {
-      // Kung sakaling walang details, fallback sa empty object
       const details = row.office_details || {};
-      // Kung nag-return ng array ang join, kunin ang unang item
       const safeDetails = Array.isArray(details) ? details[0] : details;
       
       if (!structuredData[row.floor]) structuredData[row.floor] = {};
       
-      // Pinagsasama sila pabalik para maging iisang object para sa frontend UI
+      // BULLETPROOF REQUIREMENTS PARSER (Pangontra sa White Screen)
+      let rawReqs = safeDetails?.requirements;
+      let safeRequirements = [];
+      
+      if (Array.isArray(rawReqs)) {
+        safeRequirements = rawReqs;
+      } else if (typeof rawReqs === 'string') {
+        try {
+          const parsed = JSON.parse(rawReqs);
+          safeRequirements = Array.isArray(parsed) ? parsed : [rawReqs];
+        } catch (e) {
+          safeRequirements = rawReqs.trim() !== "" ? [rawReqs] : [];
+        }
+      }
+
       structuredData[row.floor][row.office_key] = {
         title: row.title, 
         badge: row.badge, 
         hours: safeDetails?.hours || '', 
         head: safeDetails?.head || '',
-        requirements: safeDetails?.requirements || [], 
+        requirements: safeRequirements, 
         cssClass: row.css_class, 
         status: safeDetails?.status || 'Available',
         searchCount: row.search_count || 0
@@ -91,14 +98,10 @@ export const getAllOffices = async () => {
 };
 
 // ==============================================================
-// 3. UPDATE 2 TABLES SIMULTANEOUSLY
-// ==============================================================
-// ==============================================================
 // 3. UPDATE 2 TABLES SIMULTANEOUSLY (WITH UPSERT FIX)
 // ==============================================================
 export const updateOffice = async (officeKey, updates) => {
   try {
-    // 1. I-update ang pangunahing table
     const { error: err1 } = await supabase.from('offices').update({
       title: updates.title, 
       badge: updates.badge, 
@@ -106,9 +109,8 @@ export const updateOffice = async (officeKey, updates) => {
     }).eq('office_key', officeKey);
     if (err1) throw err1;
 
-    // 2. BAGO: Gagamit ng UPSERT para kung walang row sa office_details, automatic siyang gagawa!
     const { error: err2 } = await supabase.from('office_details').upsert({
-      office_key: officeKey, // Kailangan itong isama kapag Upsert
+      office_key: officeKey, 
       head: updates.head, 
       hours: updates.hours, 
       status: updates.status, 
