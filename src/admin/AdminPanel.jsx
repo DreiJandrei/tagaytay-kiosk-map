@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { updateOffice, getAnnouncement, updateAnnouncement } from '../lib/api';
+import { updateOffice, getAnnouncement, updateAnnouncement, changeAdminPassword, logoutAdmin } from '../lib/api';
 
 export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
   const [activeTab, setActiveTab] = useState('announcements');
   
-  // BAGO: Hinati natin sa dalawang state ang mga text
   const [advisoryText, setAdvisoryText] = useState('');
   const [announcementText, setAnnouncementText] = useState('');
 
@@ -18,6 +17,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
   const [formTitle, setFormTitle] = useState('');
   const [formHours, setFormHours] = useState('');
   const [formHead, setFormHead] = useState('');
+  const [formDescription, setFormDescription] = useState(''); // BAGO: Para sa Description
   const [formRequirements, setFormRequirements] = useState('');
   const [formCssClass, setFormCssClass] = useState('');
   const [formStatus, setFormStatus] = useState('Available'); 
@@ -30,7 +30,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
         setAdvisoryText(parsed.advisory || '');
         setAnnouncementText(parsed.announcement || '');
       } catch (e) {
-        setAdvisoryText(text); // Default fallback
+        setAdvisoryText(text); 
       }
     };
     fetchAdminData();
@@ -54,6 +54,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
       setFormTitle(currentOffice.title || '');
       setFormHours(currentOffice.hours || '');
       setFormHead(currentOffice.head || '');
+      setFormDescription(currentOffice.description || ''); // BAGO
       setFormCssClass(currentOffice.cssClass || '');
       setFormStatus(currentOffice.status || 'Available'); 
       if (Array.isArray(currentOffice.requirements)) {
@@ -76,9 +77,14 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
     try {
       const requirementsArray = formRequirements.split('\n').map(line => line.trim()).filter(line => line.length > 0);
       await updateOffice(selectedOfficeKey, {
-        title: formTitle, hours: formHours, head: formHead,
-        badge: currentOffice?.badge || '', requirements: requirementsArray,
-        cssClass: formCssClass, status: formStatus 
+        title: formTitle, 
+        hours: formHours, 
+        head: formHead,
+        description: formDescription, // BAGO: Ipapasok sa api.js
+        badge: currentOffice?.badge || '', 
+        requirements: requirementsArray,
+        cssClass: formCssClass, 
+        status: formStatus 
       });
       if (onDataUpdate) onDataUpdate();
       alert('Office updates successfully deployed!');
@@ -91,7 +97,6 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
     e.preventDefault();
     setIsSaving(true);
     try {
-      // BAGO: Pinagsasama natin sila bago i-save sa database para hindi na kailangan ng bagong table column!
       const combined = JSON.stringify({ advisory: advisoryText, announcement: announcementText });
       await updateAnnouncement(combined);
       alert('System Announcements & Advisories updated successfully!');
@@ -100,20 +105,29 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
     } finally { setIsSaving(false); }
   };
 
-  const handleSavePassword = (e) => {
+  const handleSavePassword = async (e) => {
     e.preventDefault();
-    if (!newPassword || newPassword.trim() === '') {
-      alert('Please enter a valid password.');
-      return;
+    if (!newPassword || newPassword.trim() === '') return alert('Please enter a valid password.');
+    if (newPassword !== confirmPassword) return alert('Passwords do not match! Please try again.');
+    
+    const hasUpper = /[A-Z]/.test(newPassword);
+    const hasLower = /[a-z]/.test(newPassword);
+    const hasNumber = /\d/.test(newPassword);
+    
+    if (newPassword.length < 6 || !hasUpper || !hasLower || !hasNumber) {
+      return alert('❌ Weak Password:\n\nPassword must be at least 6 characters long and include:\n- At least 1 Uppercase letter\n- At least 1 Lowercase letter\n- At least 1 Number');
     }
-    if (newPassword !== confirmPassword) {
-      alert('Passwords do not match! Please try again.');
-      return;
+
+    try {
+      await changeAdminPassword(newPassword);
+      setNewPassword('');
+      setConfirmPassword('');
+      alert('✅ Admin Password updated securely in the cloud!\n\nYou will now be logged out. Please login again using your new password.');
+      await logoutAdmin();
+      onClose(); 
+    } catch (error) {
+      alert('❌ Failed to update password. You must be logged in to do this.');
     }
-    localStorage.setItem('kiosk_admin_password', newPassword);
-    setNewPassword('');
-    setConfirmPassword('');
-    alert('✅ Admin Password changed successfully! Use your new password next time you login.');
   };
 
   return (
@@ -124,8 +138,13 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
           <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '10px' }}>
             🔧 Tagaytay City Hall Admin Panel
           </h2>
-          <button onClick={onClose} style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', color: '#FFFFFF', border: '1px solid rgba(255, 255, 255, 0.3)', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', transition: 'background 0.2s' }}>
-            ✕ Close
+          <button 
+            onClick={async () => {
+              await logoutAdmin(); 
+              onClose();
+            }} 
+            style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', color: '#FFFFFF', border: '1px solid rgba(255, 255, 255, 0.3)', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', transition: 'background 0.2s' }}>
+            ✕ Close & Logout
           </button>
         </div>
 
@@ -141,7 +160,6 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
           </button>
         </div>
 
-        {/* TAB 1: ANNOUNCEMENTS & ADVISORIES */}
         {activeTab === 'announcements' && (
           <div style={{ padding: '40px', display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#FFFFFF', overflowY: 'auto' }}>
             <h2 style={{ color: '#0F172A', marginBottom: '10px' }}>📢 Announcements & Advisories</h2>
@@ -176,7 +194,6 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
           </div>
         )}
 
-        {/* TAB 2: OFFICES */}
         {activeTab === 'offices' && (
           <div style={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
             <div style={{ width: '320px', borderRight: '1px solid #E2E8F0', padding: '24px', display: 'flex', flexDirection: 'column', backgroundColor: '#F8FAFC' }}>
@@ -200,7 +217,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                   <h3 style={{ margin: '0 0 8px 0', fontSize: '1.6rem', color: '#1E293B', fontWeight: '800' }}>Select an Office to Edit</h3>
                 </div>
               ) : (
-                <form onSubmit={handleSaveOffice} style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%' }}>
+                <form onSubmit={handleSaveOffice} style={{ display: 'flex', flexDirection: 'column', gap: '15px', height: '100%' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                     <div><label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem' }}>Title</label><input type="text" value={formTitle} onChange={(e) => setFormTitle(e.target.value)} required style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px', boxSizing: 'border-box' }} /></div>
                     <div><label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem' }}>Hours</label><input type="text" value={formHours} onChange={(e) => setFormHours(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px', boxSizing: 'border-box' }} /></div>
@@ -221,8 +238,19 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                     </div>
                   </div>
 
+                  {/* BAGO: TEXTAREA PARA SA DESCRIPTION */}
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem', marginBottom: '5px' }}>Office Description / Info</label>
+                    <textarea 
+                      value={formDescription} 
+                      onChange={(e) => setFormDescription(e.target.value)} 
+                      placeholder="Short information about what this office does..." 
+                      style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px', resize: 'vertical', minHeight: '70px', boxSizing: 'border-box' }} 
+                    />
+                  </div>
+
                   <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                    <label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem' }}>Requirements</label>
+                    <label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem', marginBottom: '5px' }}>Requirements (One per line)</label>
                     <textarea value={formRequirements} onChange={(e) => setFormRequirements(e.target.value)} style={{ width: '100%', flexGrow: 1, padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px', resize: 'none', boxSizing: 'border-box' }} />
                   </div>
                   <button type="submit" disabled={isSaving} style={{ padding: '15px', borderRadius: '8px', background: '#4F46E5', color: 'white', fontWeight: '800', fontSize: '1.1rem', border: 'none', cursor: 'pointer' }}>
@@ -234,27 +262,23 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
           </div>
         )}
 
-        {/* TAB 3: SECURITY / CHANGE PASSWORD */}
         {activeTab === 'security' && (
           <div style={{ padding: '40px', display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#FFFFFF' }}>
-            <h2 style={{ color: '#0F172A', marginBottom: '10px' }}>🔒 Security & Admin Access</h2>
+            <h2 style={{ color: '#0F172A', marginBottom: '10px' }}>🔒 Cloud Security & Authentication</h2>
             <p style={{ color: '#64748B', marginBottom: '30px', fontSize: '1.05rem', lineHeight: '1.6' }}>
-              Change the password required to open this Admin Panel. Make sure to remember your new password! 
-              <br />
-              <span style={{ color: '#E11D48', fontWeight: '700' }}>
-                Note: Default password is <strong>admin123</strong>. If you ever forget your custom password, type cctreset on password, and it will return to admin123
-              </span>
+              Change the master password for <strong>tagaytaykiosk@gmail.com</strong>. This will be updated directly in the Supabase Cloud.
             </p>
             
             <form onSubmit={handleSavePassword} style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '480px' }}>
               <div>
-                <label style={{ display: 'block', fontWeight: '800', color: '#475569', marginBottom: '8px' }}>New Admin Password:</label>
+                <label style={{ display: 'block', fontWeight: '800', color: '#475569', marginBottom: '8px' }}>New Admin Password (min 6 chars, 1 uppercase, 1 number):</label>
                 <input 
                   type="password" 
                   value={newPassword} 
                   onChange={(e) => setNewPassword(e.target.value)} 
                   placeholder="Enter new password..." 
                   required 
+                  minLength="6"
                   style={{ width: '100%', padding: '15px', border: '2px solid #CBD5E1', borderRadius: '10px', fontSize: '1.1rem', outline: 'none', boxSizing: 'border-box' }} 
                 />
               </div>
@@ -266,11 +290,12 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                   onChange={(e) => setConfirmPassword(e.target.value)} 
                   placeholder="Re-type new password..." 
                   required 
+                  minLength="6"
                   style={{ width: '100%', padding: '15px', border: '2px solid #CBD5E1', borderRadius: '10px', fontSize: '1.1rem', outline: 'none', boxSizing: 'border-box' }} 
                 />
               </div>
               <button type="submit" style={{ padding: '18px', borderRadius: '12px', border: 'none', backgroundColor: '#4F46E5', color: '#FFFFFF', fontWeight: '900', fontSize: '1.1rem', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', marginTop: '10px' }}>
-                💾 Update Admin Password
+                ☁️ Save Password to Cloud
               </button>
             </form>
           </div>
