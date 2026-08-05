@@ -1,7 +1,7 @@
 import { supabase } from './supabase';
 
 // ==============================================================
-// 1. SUPABASE AUTHENTICATION (BAGO!)
+// 1. SUPABASE AUTHENTICATION
 // ==============================================================
 export const loginAdmin = async (email, password) => {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -11,7 +11,8 @@ export const loginAdmin = async (email, password) => {
 
 export const resetPasswordEmail = async (email) => {
   const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin, // Ibabalik siya sa Kiosk website pag na-click ang email
+    // Naka-force na sa Vercel link niyo para iwas localhost error!
+    redirectTo: 'https://tagaytay-kiosk-map-one.vercel.app', 
   });
   if (error) throw error;
   return data;
@@ -27,8 +28,13 @@ export const logoutAdmin = async () => {
   await supabase.auth.signOut();
 };
 
+// 🔥 ITO YUNG HINAHANAP NG VERCEL (Ang Listener para sa Email Link)
+export const onAuthChange = (callback) => {
+  return supabase.auth.onAuthStateChange(callback);
+};
+
 // ==============================================================
-// 2. INITIALIZE 2 TABLES
+// 2. INITIALIZE 2 TABLES (OFFICES & OFFICE_DETAILS)
 // ==============================================================
 export const initializeDatabase = async (seedData) => {
   try {
@@ -94,8 +100,9 @@ export const getAllOffices = async () => {
       let rawReqs = safeDetails?.requirements;
       let safeRequirements = [];
       
-      if (Array.isArray(rawReqs)) { safeRequirements = rawReqs; } 
-      else if (typeof rawReqs === 'string') {
+      if (Array.isArray(rawReqs)) {
+        safeRequirements = rawReqs;
+      } else if (typeof rawReqs === 'string') {
         try {
           const parsed = JSON.parse(rawReqs);
           safeRequirements = Array.isArray(parsed) ? parsed : [rawReqs];
@@ -105,9 +112,14 @@ export const getAllOffices = async () => {
       }
 
       structuredData[row.floor][row.office_key] = {
-        title: row.title, badge: row.badge, hours: safeDetails?.hours || '', 
-        head: safeDetails?.head || '', requirements: safeRequirements, 
-        cssClass: row.css_class, status: safeDetails?.status || 'Available', searchCount: row.search_count || 0
+        title: row.title, 
+        badge: row.badge, 
+        hours: safeDetails?.hours || '', 
+        head: safeDetails?.head || '',
+        requirements: safeRequirements, 
+        cssClass: row.css_class, 
+        status: safeDetails?.status || 'Available',
+        searchCount: row.search_count || 0
       };
     });
     return structuredData;
@@ -123,13 +135,18 @@ export const getAllOffices = async () => {
 export const updateOffice = async (officeKey, updates) => {
   try {
     const { error: err1 } = await supabase.from('offices').update({
-      title: updates.title, badge: updates.badge, css_class: updates.cssClass
+      title: updates.title, 
+      badge: updates.badge, 
+      css_class: updates.cssClass
     }).eq('office_key', officeKey);
     if (err1) throw err1;
 
     const { error: err2 } = await supabase.from('office_details').upsert({
-      office_key: officeKey, head: updates.head, hours: updates.hours, 
-      status: updates.status, requirements: updates.requirements
+      office_key: officeKey, 
+      head: updates.head, 
+      hours: updates.hours, 
+      status: updates.status, 
+      requirements: updates.requirements
     });
     if (err2) throw err2;
 
@@ -152,7 +169,10 @@ export const incrementSearchCount = async (officeKey) => {
     const { error: updateError } = await supabase.from('offices').update({ search_count: newCount }).eq('office_key', officeKey);
     if (updateError) throw updateError;
     return true;
-  } catch (error) { return false; }
+  } catch (error) { 
+    console.error(`Error incrementing search count:`, error); 
+    return false; 
+  }
 };
 
 // ==============================================================
@@ -163,14 +183,23 @@ export const getAnnouncement = async () => {
     const { data, error } = await supabase.from('settings').select('announcement_text').eq('id', 1).single();
     if (error && error.code !== 'PGRST116') throw error; 
     return data ? data.announcement_text : "";
-  } catch (error) { return ""; }
+  } catch (error) { 
+    console.error('Error fetching announcement:', error); 
+    return ""; 
+  }
 };
 
 export const updateAnnouncement = async (text) => {
   try {
     const { data: existing } = await supabase.from('settings').select('id').eq('id', 1).single();
-    if (existing) { await supabase.from('settings').update({ announcement_text: text }).eq('id', 1); } 
-    else { await supabase.from('settings').insert([{ id: 1, announcement_text: text }]); }
+    if (existing) {
+      await supabase.from('settings').update({ announcement_text: text }).eq('id', 1);
+    } else {
+      await supabase.from('settings').insert([{ id: 1, announcement_text: text }]);
+    }
     return true;
-  } catch (error) { return false; }
+  } catch (error) { 
+    console.error('Error updating announcement:', error); 
+    return false; 
+  }
 };
