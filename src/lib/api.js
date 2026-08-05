@@ -11,7 +11,6 @@ export const loginAdmin = async (email, password) => {
 
 export const resetPasswordEmail = async (email) => {
   const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-    // Naka-force na sa Vercel link niyo para iwas localhost error!
     redirectTo: 'https://tagaytay-kiosk-map-one.vercel.app', 
   });
   if (error) throw error;
@@ -28,7 +27,6 @@ export const logoutAdmin = async () => {
   await supabase.auth.signOut();
 };
 
-// 🔥 ITO YUNG HINAHANAP NG VERCEL (Ang Listener para sa Email Link)
 export const onAuthChange = (callback) => {
   return supabase.auth.onAuthStateChange(callback);
 };
@@ -48,7 +46,7 @@ export const initializeDatabase = async (seedData) => {
     Object.keys(seedData).forEach(floorStr => {
       const floorNum = parseInt(floorStr);
       Object.keys(seedData[floorStr]).forEach(officeKey => {
-        const item = seedData[floorStr][officeKey];
+        const item = seedData[seedData][officeKey];
         
         officesToInsert.push({
           office_key: officeKey, 
@@ -63,6 +61,7 @@ export const initializeDatabase = async (seedData) => {
           office_key: officeKey, 
           hours: item.hours || '', 
           head: item.head || '', 
+          description: item.description || '', 
           requirements: Array.isArray(item.requirements) ? item.requirements : [],
           status: item.status || 'Available'
         });
@@ -116,6 +115,7 @@ export const getAllOffices = async () => {
         badge: row.badge, 
         hours: safeDetails?.hours || '', 
         head: safeDetails?.head || '',
+        description: safeDetails?.description || '', // 🔥 Kukunin from DB
         requirements: safeRequirements, 
         cssClass: row.css_class, 
         status: safeDetails?.status || 'Available',
@@ -130,7 +130,7 @@ export const getAllOffices = async () => {
 };
 
 // ==============================================================
-// 4. UPDATE 2 TABLES SIMULTANEOUSLY (WITH UPSERT FIX)
+// 4. BULLETPROOF UPDATE FUNCTION
 // ==============================================================
 export const updateOffice = async (officeKey, updates) => {
   try {
@@ -141,14 +141,31 @@ export const updateOffice = async (officeKey, updates) => {
     }).eq('office_key', officeKey);
     if (err1) throw err1;
 
-    const { error: err2 } = await supabase.from('office_details').upsert({
-      office_key: officeKey, 
-      head: updates.head, 
-      hours: updates.hours, 
-      status: updates.status, 
-      requirements: updates.requirements
-    });
-    if (err2) throw err2;
+    // 🔥 MAGIC FIX: Titingnan kung may record na, bago i-UPDATE (para walang Ghost Row!)
+    const { data: existingDetail } = await supabase.from('office_details').select('office_key').eq('office_key', officeKey).single();
+
+    if (existingDetail) {
+      // Kung may row na, i-overwrite natin:
+      const { error: err2 } = await supabase.from('office_details').update({
+        head: updates.head, 
+        hours: updates.hours, 
+        description: updates.description, // Sinisave ang bagong description
+        status: updates.status, 
+        requirements: updates.requirements
+      }).eq('office_key', officeKey);
+      if (err2) throw err2;
+    } else {
+      // Kung wala pang row sa office_details, i-insert natin:
+      const { error: err2 } = await supabase.from('office_details').insert({
+        office_key: officeKey, 
+        head: updates.head, 
+        hours: updates.hours, 
+        description: updates.description, // Sinisave ang bagong description
+        status: updates.status, 
+        requirements: updates.requirements
+      });
+      if (err2) throw err2;
+    }
 
     return { success: true };
   } catch (error) { 
@@ -164,15 +181,10 @@ export const incrementSearchCount = async (officeKey) => {
   try {
     const { data: currentData, error: fetchError } = await supabase.from('offices').select('search_count').eq('office_key', officeKey).single();
     if (fetchError) throw fetchError;
-    
     const newCount = (currentData.search_count || 0) + 1;
-    const { error: updateError } = await supabase.from('offices').update({ search_count: newCount }).eq('office_key', officeKey);
-    if (updateError) throw updateError;
+    await supabase.from('offices').update({ search_count: newCount }).eq('office_key', officeKey);
     return true;
-  } catch (error) { 
-    console.error(`Error incrementing search count:`, error); 
-    return false; 
-  }
+  } catch (error) { return false; }
 };
 
 // ==============================================================
@@ -183,10 +195,7 @@ export const getAnnouncement = async () => {
     const { data, error } = await supabase.from('settings').select('announcement_text').eq('id', 1).single();
     if (error && error.code !== 'PGRST116') throw error; 
     return data ? data.announcement_text : "";
-  } catch (error) { 
-    console.error('Error fetching announcement:', error); 
-    return ""; 
-  }
+  } catch (error) { return ""; }
 };
 
 export const updateAnnouncement = async (text) => {
@@ -198,8 +207,5 @@ export const updateAnnouncement = async (text) => {
       await supabase.from('settings').insert([{ id: 1, announcement_text: text }]);
     }
     return true;
-  } catch (error) { 
-    console.error('Error updating announcement:', error); 
-    return false; 
-  }
+  } catch (error) { return false; }
 };
