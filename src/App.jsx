@@ -109,7 +109,11 @@ export default function App() {
     const key = searchParams.get('key');
     const routeKey = searchParams.get('route'); 
     
-    if (authorized === 'true') {
+    // 🔥 BAGO: Tingnan kung ang link ay galing sa "Reset Password" email ni Supabase
+    const isRecovery = window.location.hash.includes('type=recovery');
+    
+    if (authorized === 'true' || isRecovery) {
+      if (isRecovery) localStorage.setItem('kiosk_authorized', 'true'); // I-save agad para hindi na ma-lock ulit
       setIsAuthorized(true);
     } else if (key === 'cct-bsit-kiosk') { 
       localStorage.setItem('kiosk_authorized', 'true');
