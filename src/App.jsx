@@ -10,7 +10,8 @@ import './index.css';
 import { QRCodeSVG } from 'qrcode.react'; 
 import { useSearchParams } from 'react-router-dom';
 
-import { getAllOffices, initializeDatabase, incrementSearchCount, loginAdmin, resetPasswordEmail, logoutAdmin } from './lib/api';
+// BAGO: Idinagdag ang changeAdminPassword para magamit sa bagong Recovery Modal
+import { getAllOffices, initializeDatabase, incrementSearchCount, loginAdmin, resetPasswordEmail, logoutAdmin, onAuthChange, changeAdminPassword } from './lib/api';
 import { coordinateMapping, mergeOfficeData } from './lib/coordinateMapping';
 import { defaultOfficeData } from './lib/defaultOfficeData';
 
@@ -93,10 +94,12 @@ export default function App() {
   const [showAdmin, setShowAdmin] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false); 
   const [adminPasswordInput, setAdminPasswordInput] = useState(''); 
-  
-  // BAGO: Show Password Toggle State
   const [showPassword, setShowPassword] = useState(false); 
   
+  // BAGO: State para sa Dedicated Recovery Modal
+  const [showRecoveryModal, setShowRecoveryModal] = useState(false);
+  const [recoveryPassword, setRecoveryPassword] = useState('');
+
   const [secretClicks, setSecretClicks] = useState(0);
   const [showAbout, setShowAbout] = useState(false); 
 
@@ -104,16 +107,42 @@ export default function App() {
   const [destinationData, setDestinationData] = useState(null);
   const [transportMethod, setTransportMethod] = useState(() => searchParams.get('transport') || 'elevator');
 
+  // =========================================================
+  // LISTENER PARA SA FORGOT PASSWORD LINK
+  // =========================================================
+  useEffect(() => {
+    const { data: authSubscription } = onAuthChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        // Imbes na Admin Panel, yung bagong Recovery Modal na ang bubuksan
+        setAppState('map'); 
+        setShowAdminLogin(false); 
+        setShowRecoveryModal(true); 
+      }
+    });
+    
+    // Fallback check kung sakaling hindi agad na-detect yung event
+    if (window.location.hash.includes('type=recovery')) {
+      setAppState('map'); 
+      setShowAdminLogin(false); 
+      setShowRecoveryModal(true);
+    }
+
+    return () => {
+      if (authSubscription?.subscription) {
+        authSubscription.subscription.unsubscribe();
+      }
+    };
+  }, []);
+
   useEffect(() => {
     const authorized = localStorage.getItem('kiosk_authorized');
     const key = searchParams.get('key');
     const routeKey = searchParams.get('route'); 
     
-    // 🔥 BAGO: Tingnan kung ang link ay galing sa "Reset Password" email ni Supabase
     const isRecovery = window.location.hash.includes('type=recovery');
     
     if (authorized === 'true' || isRecovery) {
-      if (isRecovery) localStorage.setItem('kiosk_authorized', 'true'); // I-save agad para hindi na ma-lock ulit
+      if (isRecovery) localStorage.setItem('kiosk_authorized', 'true');
       setIsAuthorized(true);
     } else if (key === 'cct-bsit-kiosk') { 
       localStorage.setItem('kiosk_authorized', 'true');
@@ -247,6 +276,8 @@ export default function App() {
         setAdminPasswordInput('');
         setShowPassword(false);
         setShowAbout(false); 
+        setShowRecoveryModal(false); // Siguraduhing magsasara ang recovery panel kapag nag-idle
+        setRecoveryPassword('');
         logoutAdmin(); 
       }, 45000); 
     };
@@ -957,7 +988,64 @@ export default function App() {
         </div>
       )}
 
-      {/* LOGIN MODAL (WITH FORGOT PASSWORD & SHOW PASSWORD BUTTON) */}
+      {/* ========================================================= */}
+      // BAGO: DEDICATED PASSWORD RECOVERY MODAL
+      // =========================================================
+      {showRecoveryModal && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#FFFFFF', padding: '40px 30px', borderRadius: '16px', width: '400px', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)' }}>
+            <h2 style={{ margin: '0 0 15px 0', color: '#0F172A', fontSize: '1.8rem' }}>🔑 Set New Password</h2>
+            <p style={{ color: '#475569', marginBottom: '20px', fontSize: '1.1rem' }}>Enter your new master password below.</p>
+            
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              if(recoveryPassword.length < 6) return alert('Password must be at least 6 characters.');
+              try {
+                setIsLoggingIn(true);
+                // I-save sa Supabase ang bagong password
+                await changeAdminPassword(recoveryPassword);
+                alert('✅ Password successfully changed! You can now login.');
+                setShowRecoveryModal(false);
+                setRecoveryPassword('');
+                await logoutAdmin(); // Force logout para malinis ang session
+                setShowAdminLogin(true); // Buksan ang normal login para ma-test niya agad
+              } catch (err) {
+                alert('❌ Failed to update password. Link might be expired.');
+              } finally {
+                setIsLoggingIn(false);
+              }
+            }}>
+              
+              <div style={{ position: 'relative', marginBottom: '20px' }}>
+                <input 
+                  type={showPassword ? "text" : "password"} 
+                  value={recoveryPassword}
+                  onChange={(e) => setRecoveryPassword(e.target.value)}
+                  placeholder="New password (min 6 chars)"
+                  style={{ width: '100%', padding: '15px', paddingRight: '45px', borderRadius: '8px', border: '2px solid #CBD5E1', fontSize: '1.2rem', textAlign: 'center', boxSizing: 'border-box', outline: 'none' }}
+                  autoFocus
+                  required
+                  minLength="6"
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setShowPassword(!showPassword)} 
+                  style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.5rem' }}
+                >
+                  {showPassword ? '🙈' : '👁️'}
+                </button>
+              </div>
+              
+              <button type="submit" disabled={isLoggingIn} style={{ width: '100%', padding: '15px', background: '#10B981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 800, cursor: isLoggingIn ? 'wait' : 'pointer', fontSize: '1.1rem' }}>
+                {isLoggingIn ? 'Saving...' : '💾 Save New Password'}
+              </button>
+
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* NORMAL LOGIN MODAL */}
       {showAdminLogin && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: '#FFFFFF', padding: '40px 30px', borderRadius: '16px', width: '400px', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)' }}>
@@ -966,7 +1054,6 @@ export default function App() {
             
             <form onSubmit={handleAdminLogin}>
               
-              {/* INPUT BOX NA MAY "SHOW PASSWORD" EYE ICON */}
               <div style={{ position: 'relative', marginBottom: '20px' }}>
                 <input 
                   type={showPassword ? "text" : "password"} 
@@ -993,7 +1080,6 @@ export default function App() {
                 </button>
               </div>
 
-              {/* FORGOT PASSWORD BUTTON */}
               <button 
                 type="button" 
                 onClick={handleForgotPassword}
