@@ -10,7 +10,6 @@ import './index.css';
 import { QRCodeSVG } from 'qrcode.react'; 
 import { useSearchParams } from 'react-router-dom';
 
-// BAGO: Idinagdag ang changeAdminPassword para magamit sa bagong Recovery Modal
 import { getAllOffices, initializeDatabase, incrementSearchCount, loginAdmin, resetPasswordEmail, logoutAdmin, onAuthChange, changeAdminPassword } from './lib/api';
 import { coordinateMapping, mergeOfficeData } from './lib/coordinateMapping';
 import { defaultOfficeData } from './lib/defaultOfficeData';
@@ -96,7 +95,6 @@ export default function App() {
   const [adminPasswordInput, setAdminPasswordInput] = useState(''); 
   const [showPassword, setShowPassword] = useState(false); 
   
-  // BAGO: State para sa Dedicated Recovery Modal
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
   const [recoveryPassword, setRecoveryPassword] = useState('');
 
@@ -107,20 +105,15 @@ export default function App() {
   const [destinationData, setDestinationData] = useState(null);
   const [transportMethod, setTransportMethod] = useState(() => searchParams.get('transport') || 'elevator');
 
-  // =========================================================
-  // LISTENER PARA SA FORGOT PASSWORD LINK
-  // =========================================================
   useEffect(() => {
     const { data: authSubscription } = onAuthChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
-        // Imbes na Admin Panel, yung bagong Recovery Modal na ang bubuksan
         setAppState('map'); 
         setShowAdminLogin(false); 
         setShowRecoveryModal(true); 
       }
     });
     
-    // Fallback check kung sakaling hindi agad na-detect yung event
     if (window.location.hash.includes('type=recovery')) {
       setAppState('map'); 
       setShowAdminLogin(false); 
@@ -276,7 +269,7 @@ export default function App() {
         setAdminPasswordInput('');
         setShowPassword(false);
         setShowAbout(false); 
-        setShowRecoveryModal(false); // Siguraduhing magsasara ang recovery panel kapag nag-idle
+        setShowRecoveryModal(false); 
         setRecoveryPassword('');
         logoutAdmin(); 
       }, 45000); 
@@ -989,8 +982,8 @@ export default function App() {
       )}
 
       {/* ========================================================= */}
-      // BAGO: DEDICATED PASSWORD RECOVERY MODAL
-      // =========================================================
+      {/* DEDICATED PASSWORD RECOVERY MODAL (MAY COMPLEXITY RULE NA) */}
+      {/* ========================================================= */}
       {showRecoveryModal && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: '#FFFFFF', padding: '40px 30px', borderRadius: '16px', width: '400px', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)' }}>
@@ -999,16 +992,24 @@ export default function App() {
             
             <form onSubmit={async (e) => {
               e.preventDefault();
-              if(recoveryPassword.length < 6) return alert('Password must be at least 6 characters.');
+              
+              // BAGO: PASSWORD COMPLEXITY CHECK (Regex para sa Uppercase, Lowercase, Number)
+              const hasUpper = /[A-Z]/.test(recoveryPassword);
+              const hasLower = /[a-z]/.test(recoveryPassword);
+              const hasNumber = /\d/.test(recoveryPassword);
+              
+              if (recoveryPassword.length < 6 || !hasUpper || !hasLower || !hasNumber) {
+                return alert('❌ Weak Password:\n\nPassword must be at least 6 characters long and include:\n- At least 1 Uppercase letter\n- At least 1 Lowercase letter\n- At least 1 Number');
+              }
+
               try {
                 setIsLoggingIn(true);
-                // I-save sa Supabase ang bagong password
                 await changeAdminPassword(recoveryPassword);
                 alert('✅ Password successfully changed! You can now login.');
                 setShowRecoveryModal(false);
                 setRecoveryPassword('');
-                await logoutAdmin(); // Force logout para malinis ang session
-                setShowAdminLogin(true); // Buksan ang normal login para ma-test niya agad
+                await logoutAdmin(); 
+                setShowAdminLogin(true); 
               } catch (err) {
                 alert('❌ Failed to update password. Link might be expired.');
               } finally {
@@ -1021,11 +1022,10 @@ export default function App() {
                   type={showPassword ? "text" : "password"} 
                   value={recoveryPassword}
                   onChange={(e) => setRecoveryPassword(e.target.value)}
-                  placeholder="New password (min 6 chars)"
-                  style={{ width: '100%', padding: '15px', paddingRight: '45px', borderRadius: '8px', border: '2px solid #CBD5E1', fontSize: '1.2rem', textAlign: 'center', boxSizing: 'border-box', outline: 'none' }}
+                  placeholder="Min 6 chars, 1 Uppercase, 1 Number"
+                  style={{ width: '100%', padding: '15px', paddingRight: '45px', borderRadius: '8px', border: '2px solid #CBD5E1', fontSize: '1.05rem', textAlign: 'center', boxSizing: 'border-box', outline: 'none' }}
                   autoFocus
                   required
-                  minLength="6"
                 />
                 <button 
                   type="button" 
