@@ -698,10 +698,11 @@ export default function App() {
                   <button onClick={() => { setRouteStep('idle'); setDestinationData(null); }} style={{ marginTop: '12px', background: 'transparent', border: 'none', color: '#EF4444', fontWeight: 800, cursor: 'pointer', width: '100%', padding: '10px' }}>Cancel Navigation</button>
                 </div>
 
+                {/* BAGO: DESCRIPTON BOX (DESTINATION) */}
                 {destinationData.description && (
                   <div style={{ background: isDarkMode ? '#1E293B' : '#F8FAFC', padding: '15px', borderRadius: '12px', border: colorPalette.cardBorder, marginBottom: '20px', color: colorPalette.primaryText, fontSize: '1.05rem', lineHeight: '1.6' }}>
-                     <strong style={{ color: '#4F46E5', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '5px' }}>ℹ️ {lang === 'EN' ? 'About this Office' : 'Tungkol sa Opisina'}</strong>
-                     {destinationData.description}
+                     <strong style={{ color: '#4F46E5', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>ℹ️ {lang === 'EN' ? 'About this Office' : 'Tungkol sa Opisina'}</strong>
+                     <div style={{ whiteSpace: 'pre-wrap' }}>{destinationData.description}</div>
                   </div>
                 )}
 
@@ -790,10 +791,11 @@ export default function App() {
                   )}
                 </div>
 
+                {/* BAGO: DESCRIPTON BOX (SELECTED OFFICE) */}
                 {selectedOffice.description && (
                   <div style={{ background: isDarkMode ? '#1E293B' : '#F8FAFC', padding: '15px', borderRadius: '12px', border: colorPalette.cardBorder, marginBottom: '20px', color: colorPalette.primaryText, fontSize: '1.05rem', lineHeight: '1.6' }}>
-                     <strong style={{ color: '#4F46E5', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '5px' }}>ℹ️ {lang === 'EN' ? 'About this Office' : 'Tungkol sa Opisina'}</strong>
-                     {selectedOffice.description}
+                     <strong style={{ color: '#4F46E5', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>ℹ️ {lang === 'EN' ? 'About this Office' : 'Tungkol sa Opisina'}</strong>
+                     <div style={{ whiteSpace: 'pre-wrap' }}>{selectedOffice.description}</div>
                   </div>
                 )}
 
