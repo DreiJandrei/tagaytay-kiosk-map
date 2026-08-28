@@ -745,3 +745,65 @@ div[style*="z-index: 99999"] > div {
   box-shadow: inset 0 2px 4px rgba(255,255,255,1), 0 4px 10px rgba(15, 23, 42, 0.05) !important;
   border: 1px solid rgba(15, 23, 42, 0.1) !important;
 }
+/* ========================================================
+   🗺️ SMART CITY COMMAND CENTER MAP UPGRADE 🗺️
+   (100% Safe: Walang gagalawing pwesto, pinto, o path!)
+   ======================================================== */
+
+/* 1. ILLUMINATED SMART WALLS (Imbes na boring na grey lines) */
+/* Gagawin nating glowing blue/indigo ang mga pader para mukhang digital blueprint */
+.mock-map-graphic > svg g {
+  stroke: #4F46E5 !important;
+  filter: drop-shadow(0 4px 10px rgba(79, 70, 229, 0.6)) drop-shadow(0 0 20px rgba(79, 70, 229, 0.4)) !important;
+  transition: all 0.3s ease;
+}
+.light-theme .mock-map-graphic > svg g {
+  stroke: #475569 !important; /* Clean corporate grey/slate para sa Light Mode */
+  filter: drop-shadow(0 4px 6px rgba(15, 23, 42, 0.15)) !important;
+}
+
+/* 2. COMMAND CENTER GRID BACKGROUND */
+/* Papalitan natin yung simpleng grid ng mala-radar na command center grid */
+.map-viewport {
+  background-color: var(--bg-map-area) !important;
+  background-image: 
+    radial-gradient(circle at 50% 50%, rgba(79, 70, 229, 0.08) 0%, transparent 70%),
+    linear-gradient(var(--grid-color-map) 2px, transparent 2px), 
+    linear-gradient(90deg, var(--grid-color-map) 2px, transparent 2px) !important;
+  background-size: 100% 100%, 60px 60px, 60px 60px !important;
+  background-position: center, -1px -1px, -1px -1px !important;
+  box-shadow: inset 0 0 120px rgba(0,0,0,0.6) !important;
+}
+.light-theme .map-viewport {
+  box-shadow: inset 0 0 80px rgba(15, 23, 42, 0.05) !important;
+}
+
+/* 3. PREMIUM MAP PLATFORM (Parang makapal na 3D table) */
+/* Bibigyan natin ng solid na lapag yung buong mapa para hindi mukhang lumulutang sa ere */
+.mock-map-graphic {
+  background: radial-gradient(ellipse at center, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.2) 80%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-radius: 40px !important;
+  box-shadow: 
+    0 40px 80px rgba(0,0,0,0.5), 
+    inset 0 2px 0 rgba(255,255,255,0.05) !important;
+}
+.light-theme .mock-map-graphic {
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 1) 0%, rgba(241, 245, 249, 0.6) 80%) !important;
+  border: 1px solid rgba(255, 255, 255, 1) !important;
+  box-shadow: 
+    0 40px 80px rgba(15, 23, 42, 0.08), 
+    inset 0 2px 0 rgba(255,255,255,1) !important;
+}
+
+/* 4. SUPERIOR RED LASER PATH (Para sa navigation line) */
+.marching-route-line {
+  stroke-width: 10 !important; /* Mas pinakapal nang konti */
+  filter: drop-shadow(0 0 6px #EF4444) drop-shadow(0 0 15px #FCA5A5) drop-shadow(0 0 25px #F87171) !important;
+}
+
+/* 5. GLOWING STRUCTURAL ELEMENTS (Stairs, Elevators, Gardens) */
+.structural-element {
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: inset 0 0 15px rgba(0,0,0,0.3), 0 5px 15px rgba(0,0,0,0.2) !important;
+}
