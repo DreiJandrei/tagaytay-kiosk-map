@@ -23,12 +23,7 @@ const serviceGuidesConfig = [
     isExternal: true, 
     locationTextEn: 'Please proceed to the BPLO at the Annex Building (Old City Hall). This is located outside the main building.',
     locationTextTl: 'Mangyaring pumunta sa BPLO sa Annex Building (Lumang City Hall). Ito ay nasa labas ng gusaling ito.',
-    requirements: [
-      '1. DTI / SEC / CDA Registration',
-      '2. Barangay Clearance for Business',
-      '3. Contract of Lease (if renting) or Land Title',
-      '4. Picture of Business Establishment'
-    ]
+    requirements: []
   },
   {
     id: 'building-permit',
@@ -40,12 +35,7 @@ const serviceGuidesConfig = [
     dbKey: 'building-official', 
     locationTextEn: 'Please proceed to the Office of the Building Official (OBO), 3rd Floor.',
     locationTextTl: 'Mangyaring pumunta sa Office of the Building Official (OBO), Ika-3 Palapag.',
-    requirements: [
-      '1. 5 Sets of Architectural/Engineering Plans',
-      '2. Barangay Clearance for Construction',
-      '3. Certified True Copy of Transfer Certificate of Title (TCT)',
-      '4. Tax Declaration and Latest Tax Receipt'
-    ]
+    requirements: []
   },
   {
     id: 'tax-dec',
@@ -57,12 +47,7 @@ const serviceGuidesConfig = [
     dbKey: 'treasure-office', 
     locationTextEn: 'Please proceed to the Assessor / City Treasurer Office, 3rd Floor.',
     locationTextTl: 'Mangyaring pumunta sa Assessor / City Treasurer Office, Ika-3 Palapag.',
-    requirements: [
-      '1. Valid Government ID of the property owner',
-      '2. Latest Real Property Tax Receipt',
-      '3. Notarized Authorization Letter (if representative)',
-      '4. Copy of Land Title (TCT)'
-    ]
+    requirements: []
   }
 ];
 
@@ -205,14 +190,11 @@ export default function App() {
     }
   }, [searchParams, liveOfficeDatabase]);
 
-  // 🔥 ITO YUNG MAGIC FIX PARA HINDI MAITAPON ANG DESCRIPTION!
   const fetchKioskData = async () => {
     try {
       const dbData = await getAllOffices();
       const completeData = mergeOfficeData(coordinateMapping, dbData);
       
-      // I-force natin isingit pabalik yung description galing sa Supabase (dbData)
-      // dahil baka hindi pa 'to kilala nung mergeOfficeData function.
       Object.keys(completeData).forEach(floor => {
         Object.keys(completeData[floor]).forEach(key => {
           if (dbData[floor] && dbData[floor][key]) {
@@ -440,16 +422,7 @@ export default function App() {
     else setSearchQuery(prev => prev + key);
   };
 
-  const getSafeRequirements = (reqs) => {
-    if (!reqs) return [];
-    if (Array.isArray(reqs)) return reqs;
-    if (typeof reqs === 'string') return reqs.split('\n').map(s => s.trim()).filter(s => s);
-    return [];
-  };
-
   const selectedOffice = selectedOfficeKey ? liveOfficeDatabase[currentFloor]?.[selectedOfficeKey] : null;
-  const safeDestReqs = getSafeRequirements(destinationData?.requirements);
-  const safeSelReqs = getSafeRequirements(selectedOffice?.requirements);
 
   if (isMobileSessionExpired) {
     return (
@@ -694,7 +667,6 @@ export default function App() {
                   <button onClick={() => { setRouteStep('idle'); setDestinationData(null); }} style={{ marginTop: '12px', background: 'transparent', border: 'none', color: '#EF4444', fontWeight: 800, cursor: 'pointer', width: '100%', padding: '10px' }}>Cancel Navigation</button>
                 </div>
 
-                {/* BAGO: DESCRIPTON BOX (DESTINATION) */}
                 {destinationData.description && (
                   <div style={{ background: isDarkMode ? '#1E293B' : '#F8FAFC', padding: '15px', borderRadius: '12px', border: colorPalette.cardBorder, marginBottom: '20px', color: colorPalette.primaryText, fontSize: '1.05rem', lineHeight: '1.6' }}>
                      <strong style={{ color: '#4F46E5', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>ℹ️ {lang === 'EN' ? 'About this Office' : 'Tungkol sa Opisina'}</strong>
@@ -702,24 +674,17 @@ export default function App() {
                   </div>
                 )}
 
-                {safeDestReqs.length > 0 && (
-                  <div className="requirements-box" style={{ background: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : '#FFFBEB', border: `1px solid ${isDarkMode ? 'rgba(245, 158, 11, 0.3)' : '#FDE68A'}`, padding: '20px', borderRadius: '16px', color: colorPalette.primaryText }}>
-                    <h3 style={{ fontSize: '1.2rem', marginBottom: '12px', color: isDarkMode ? '#F59E0B' : '#D97706', fontWeight: 800 }}>📋 Transaction Requirements:</h3>
-                    <ul style={{ fontSize: '1.05rem', paddingLeft: '20px', marginBottom: '25px', lineHeight: '1.6' }}>
-                      {safeDestReqs.map((req, i) => (
-                        <li key={i} style={{ marginBottom: '6px' }}>{req}</li>
-                      ))}
-                    </ul>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', background: isDarkMode ? '#1E293B' : '#FFFFFF', padding: '15px', borderRadius: '12px', border: `2px dashed ${isDarkMode ? '#475569' : '#CBD5E1'}`, boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-                      <span style={{ fontSize: '0.9rem', fontWeight: '800', textAlign: 'center' }}>
-                        📱 I-scan para makita ang<br/>direksyon sa phone
-                      </span>
-                      <div style={{ padding: '10px', backgroundColor: '#FFFFFF', borderRadius: '8px' }}>
-                        <QRCodeSVG value={`${window.location.origin}/?route=${destinationData.key}&transport=${transportMethod}`} size={120} bgColor={"#ffffff"} fgColor={"#0F172A"} />
-                      </div>
-                    </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', background: isDarkMode ? '#1E293B' : '#EEF2FF', padding: '20px', borderRadius: '16px', border: `2px dashed ${isDarkMode ? '#475569' : '#C7D2FE'}`, boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '10px' }}>
+                  <span style={{ fontSize: '1.1rem', fontWeight: '900', textAlign: 'center', color: isDarkMode ? '#FFFFFF' : '#4F46E5' }}>
+                    📱 I-scan para sa Live Mobile Map
+                  </span>
+                  <div style={{ padding: '15px', backgroundColor: '#FFFFFF', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.15)' }}>
+                    <QRCodeSVG value={`${window.location.origin}/?route=${destinationData.key}&transport=${transportMethod}`} size={130} bgColor={"#ffffff"} fgColor={"#0F172A"} />
                   </div>
-                )}
+                  <span style={{ fontSize: '0.85rem', color: isDarkMode ? '#94A3B8' : '#64748B', textAlign: 'center', fontWeight: '700' }}>
+                    Magpapatuloy ang direksyon sa iyong phone.
+                  </span>
+                </div>
               </div>
             )}
 
@@ -787,7 +752,6 @@ export default function App() {
                   )}
                 </div>
 
-                {/* BAGO: DESCRIPTON BOX (SELECTED OFFICE) */}
                 {selectedOffice.description && (
                   <div style={{ background: isDarkMode ? '#1E293B' : '#F8FAFC', padding: '15px', borderRadius: '12px', border: colorPalette.cardBorder, marginBottom: '20px', color: colorPalette.primaryText, fontSize: '1.05rem', lineHeight: '1.6' }}>
                      <strong style={{ color: '#4F46E5', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>ℹ️ {lang === 'EN' ? 'About this Office' : 'Tungkol sa Opisina'}</strong>
@@ -795,24 +759,17 @@ export default function App() {
                   </div>
                 )}
 
-                {safeSelReqs.length > 0 && (
-                  <div className="requirements-box" style={{ background: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : '#FFFBEB', border: `1px solid ${isDarkMode ? 'rgba(245, 158, 11, 0.3)' : '#FDE68A'}`, padding: '20px', borderRadius: '16px', color: colorPalette.primaryText }}>
-                    <h3 style={{ fontSize: '1.2rem', marginBottom: '12px', color: isDarkMode ? '#F59E0B' : '#D97706', fontWeight: 800 }}>📋 Transaction Requirements:</h3>
-                    <ul style={{ fontSize: '1.05rem', paddingLeft: '20px', marginBottom: '25px', lineHeight: '1.6' }}>
-                      {safeSelReqs.map((req, i) => (
-                        <li key={i} style={{ marginBottom: '6px' }}>{req}</li>
-                      ))}
-                    </ul>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', background: isDarkMode ? '#1E293B' : '#FFFFFF', padding: '15px', borderRadius: '12px', border: `2px dashed ${isDarkMode ? '#475569' : '#CBD5E1'}`, boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-                      <span style={{ fontSize: '0.9rem', fontWeight: '800', textAlign: 'center' }}>
-                        📱 I-scan para makita ang<br/>direksyon sa phone
-                      </span>
-                      <div style={{ padding: '10px', backgroundColor: '#FFFFFF', borderRadius: '8px' }}>
-                        <QRCodeSVG value={`${window.location.origin}/?route=${selectedOfficeKey}&transport=${transportMethod}`} size={120} bgColor={"#ffffff"} fgColor={"#0F172A"} />
-                      </div>
-                    </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', background: isDarkMode ? '#1E293B' : '#EEF2FF', padding: '20px', borderRadius: '16px', border: `2px dashed ${isDarkMode ? '#475569' : '#C7D2FE'}`, boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '10px' }}>
+                  <span style={{ fontSize: '1.1rem', fontWeight: '900', textAlign: 'center', color: isDarkMode ? '#FFFFFF' : '#4F46E5' }}>
+                    📱 I-scan para sa Live Mobile Map
+                  </span>
+                  <div style={{ padding: '15px', backgroundColor: '#FFFFFF', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.15)' }}>
+                    <QRCodeSVG value={`${window.location.origin}/?route=${selectedOfficeKey}&transport=${transportMethod}`} size={130} bgColor={"#ffffff"} fgColor={"#0F172A"} />
                   </div>
-                )}
+                  <span style={{ fontSize: '0.85rem', color: isDarkMode ? '#94A3B8' : '#64748B', textAlign: 'center', fontWeight: '700' }}>
+                    Magpapatuloy ang direksyon sa iyong phone.
+                  </span>
+                </div>
               </div>
             )}
           </div>
@@ -898,15 +855,6 @@ export default function App() {
               >
                 ✕
               </button>
-            </div>
-
-            <div style={{ background: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : '#FFFBEB', border: `2px solid ${isDarkMode ? 'rgba(245, 158, 11, 0.3)' : '#FDE68A'}`, padding: '25px', borderRadius: '16px' }}>
-              <h3 style={{ margin: '0 0 15px 0', color: isDarkMode ? '#F59E0B' : '#D97706', fontSize: '1.3rem', fontWeight: 900 }}>
-                📋 {lang === 'EN' ? 'Requirements Needed:' : 'Mga Kailangang Dalhin:'}
-              </h3>
-              <ul style={{ margin: 0, paddingLeft: '20px', color: colorPalette.primaryText, fontSize: '1.15rem', lineHeight: '1.8', fontWeight: 600 }}>
-                {selectedService.requirements.map((req, i) => <li key={i}>{req}</li>)}
-              </ul>
             </div>
 
             <div style={{ background: selectedService.isExternal ? '#FEF2F2' : '#EEF2FF', border: `2px solid ${selectedService.isExternal ? '#FECDD3' : '#C7D2FE'}`, padding: '20px', borderRadius: '16px', color: selectedService.isExternal ? '#9F1239' : '#3730A3', fontSize: '1.2rem', fontWeight: 800, display: 'flex', gap: '15px', alignItems: 'center', lineHeight: '1.5' }}>
