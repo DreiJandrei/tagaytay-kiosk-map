@@ -1,5 +1,5 @@
 import React from 'react';
-import { QRCodeSVG } from 'qrcode.react'; // BAGO: Added this para hindi mag-error ang QR
+import { QRCodeSVG } from 'qrcode.react'; 
 
 export default function DirectoryScreen({
   theme,
@@ -104,7 +104,7 @@ export default function DirectoryScreen({
               {lang === 'EN' ? 'Where would you like to go today?' : 'Saan mo gustong pumunta ngayon?'}
             </h1>
             <p style={{ margin: '0 auto', textAlign: 'center', opacity: 0.95, fontSize: isLarge ? '1.5rem' : '1.15rem', fontWeight: 700, maxWidth: '800px' }}>
-              {lang === 'EN' ? 'Explore our offices, view transaction requirements, and get interactive directions.' : 'Suriin ang aming mga opisina, alamin ang mga kailangan sa transaksyon, at kumuha ng direksyon.'}
+              {lang === 'EN' ? 'Explore our offices and get interactive directions.' : 'Suriin ang aming mga opisina at kumuha ng direksyon.'}
             </p>
           </div>
         </section>
@@ -143,7 +143,6 @@ export default function DirectoryScreen({
                   </div>
 
                   <div className="card-body" style={{ padding: 0, display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '25px' }}>
-                    {/* BAGO: Status Indicator Component */}
                     <p className="card-info" style={{ color: colorPalette.secondaryText, display: 'flex', alignItems: 'center', gap: '10px', margin: 0, fontSize: isLarge ? '1.35rem' : '1.05rem', fontWeight: 600 }}>
                       <span className="emoji-icon" style={{ fontSize: isLarge ? '1.6rem' : '1.2rem' }}>
                         {office.status === 'In a Meeting' ? '🔴' : office.status === 'Out of Office' ? '🟡' : office.status === 'Closed' ? '⚫' : '🟢'}
@@ -164,19 +163,6 @@ export default function DirectoryScreen({
                       <strong style={{ color: colorPalette.primaryText, fontWeight: 800 }}>{lang === 'EN' ? 'Hours:' : 'Oras:'}</strong> 
                       {office.hours || "N/A"}
                     </p>
-                    
-                    {office.requirements && office.requirements.length > 0 && (
-                      <div className="card-reqs" style={{ background: isDarkMode ? '#1E293B' : '#F8FAFC', padding: isLarge ? '24px' : '18px', borderRadius: '12px', marginTop: '15px', border: colorPalette.cardBorder }}>
-                        <h4 style={{ margin: '0 0 12px 0', fontSize: isLarge ? '1.25rem' : '1rem', color: colorPalette.primaryText, fontWeight: 800 }}>
-                          📋 {lang === 'EN' ? 'Requirements:' : 'Mga Kakailanganin:'}
-                        </h4>
-                        <ul style={{ margin: 0, paddingLeft: '24px', color: colorPalette.secondaryText, fontSize: isLarge ? '1.2rem' : '0.95rem', lineHeight: '1.6' }}>
-                          {office.requirements.map((req, i) => (
-                            <li key={i} style={{ marginBottom: '6px', fontWeight: 600 }}>{req}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
                   </div>
                 </div>
 

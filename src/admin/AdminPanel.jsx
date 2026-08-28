@@ -17,7 +17,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
   const [formTitle, setFormTitle] = useState('');
   const [formHours, setFormHours] = useState('');
   const [formHead, setFormHead] = useState('');
-  const [formDescription, setFormDescription] = useState(''); // BAGO: Para sa Description
+  const [formDescription, setFormDescription] = useState(''); 
   const [formRequirements, setFormRequirements] = useState('');
   const [formCssClass, setFormCssClass] = useState('');
   const [formStatus, setFormStatus] = useState('Available'); 
@@ -54,7 +54,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
       setFormTitle(currentOffice.title || '');
       setFormHours(currentOffice.hours || '');
       setFormHead(currentOffice.head || '');
-      setFormDescription(currentOffice.description || ''); // BAGO
+      setFormDescription(currentOffice.description || ''); 
       setFormCssClass(currentOffice.cssClass || '');
       setFormStatus(currentOffice.status || 'Available'); 
       if (Array.isArray(currentOffice.requirements)) {
@@ -80,7 +80,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
         title: formTitle, 
         hours: formHours, 
         head: formHead,
-        description: formDescription, // BAGO: Ipapasok sa api.js
+        description: formDescription, 
         badge: currentOffice?.badge || '', 
         requirements: requirementsArray,
         cssClass: formCssClass, 
@@ -238,21 +238,16 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                     </div>
                   </div>
 
-                  {/* BAGO: TEXTAREA PARA SA DESCRIPTION */}
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
                     <label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem', marginBottom: '5px' }}>Office Description / Info</label>
                     <textarea 
                       value={formDescription} 
                       onChange={(e) => setFormDescription(e.target.value)} 
                       placeholder="Short information about what this office does..." 
-                      style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px', resize: 'vertical', minHeight: '70px', boxSizing: 'border-box' }} 
+                      style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px', resize: 'none', flexGrow: 1, minHeight: '120px', boxSizing: 'border-box' }} 
                     />
                   </div>
 
-                  <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                    <label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem', marginBottom: '5px' }}>Requirements (One per line)</label>
-                    <textarea value={formRequirements} onChange={(e) => setFormRequirements(e.target.value)} style={{ width: '100%', flexGrow: 1, padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px', resize: 'none', boxSizing: 'border-box' }} />
-                  </div>
                   <button type="submit" disabled={isSaving} style={{ padding: '15px', borderRadius: '8px', background: '#4F46E5', color: 'white', fontWeight: '800', fontSize: '1.1rem', border: 'none', cursor: 'pointer' }}>
                     {isSaving ? 'Saving...' : '💾 Save Office Metadata'}
                   </button>
@@ -300,7 +295,6 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
             </form>
           </div>
         )}
-
       </div>
     </div>
   );

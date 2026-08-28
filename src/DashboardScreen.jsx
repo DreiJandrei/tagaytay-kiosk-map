@@ -10,56 +10,41 @@ const frequentOfficesConfig = [
   { name: "Health Office", nameTl: "Tanggapan ng Kalusugan", floor: 2, floorLabel: "2nd Floor", floorLabelTl: "Ika-2 na Palapag", dbKey: "library" },
 ];
 
-// BAGO: Service Guides Configuration (May "isExternal" checker na tayo)
+// Service Guides Configuration
 const serviceGuidesConfig = [
   {
     id: 'business-permit',
     icon: '💼',
     titleEn: 'Apply for Business Permit',
     titleTl: 'Kumuha ng Business Permit',
-    isExternal: true, // BAGO: Naka-true ito kasi nasa Annex, kaya hindi maghahanap ng mapa!
+    isExternal: true, 
     locationTextEn: 'Please proceed to the BPLO at the Annex Building (Old City Hall). This is located outside the main building.',
     locationTextTl: 'Mangyaring pumunta sa BPLO sa Annex Building (Lumang City Hall). Ito ay nasa labas ng gusaling ito.',
-    requirements: [
-      '1. DTI / SEC / CDA Registration',
-      '2. Barangay Clearance for Business',
-      '3. Contract of Lease (if renting) or Land Title',
-      '4. Picture of Business Establishment'
-    ]
+    requirements: []
   },
   {
     id: 'building-permit',
     icon: '🏗️',
     titleEn: 'Apply for Building Permit',
     titleTl: 'Kumuha ng Building Permit',
-    isExternal: false, // BAGO: Naka-false kasi nasa loob ng main building (3rd Floor)
+    isExternal: false, 
     floor: 3, 
     dbKey: 'building-official', 
     locationTextEn: 'Please proceed to the Office of the Building Official (OBO), 3rd Floor.',
     locationTextTl: 'Mangyaring pumunta sa Office of the Building Official (OBO), Ika-3 Palapag.',
-    requirements: [
-      '1. 5 Sets of Architectural/Engineering Plans',
-      '2. Barangay Clearance for Construction',
-      '3. Certified True Copy of Transfer Certificate of Title (TCT)',
-      '4. Tax Declaration and Latest Tax Receipt'
-    ]
+    requirements: []
   },
   {
     id: 'tax-dec',
     icon: '📄',
     titleEn: 'Request Tax Declaration',
     titleTl: 'Kumuha ng Tax Declaration',
-    isExternal: false, // Naka-false kasi nasa loob din ng main building
+    isExternal: false, 
     floor: 3, 
     dbKey: 'treasure-office', 
     locationTextEn: 'Please proceed to the Assessor / City Treasurer Office, 3rd Floor.',
     locationTextTl: 'Mangyaring pumunta sa Assessor / City Treasurer Office, Ika-3 Palapag.',
-    requirements: [
-      '1. Valid Government ID of the property owner',
-      '2. Latest Real Property Tax Receipt',
-      '3. Notarized Authorization Letter (if representative)',
-      '4. Copy of Land Title (TCT)'
-    ]
+    requirements: []
   }
 ];
 
@@ -123,7 +108,7 @@ export default function DashboardScreen({
     <div className="directory-container" style={{ backgroundColor: colorPalette.containerBg, color: colorPalette.primaryText, minHeight: '100vh', transition: 'background-color 0.2s ease' }}>
       
       {/* Sticky Universal Header Bar */}
-      <header className="dir-header" style={{ backgroundColor: colorPalette.headerBg, borderBottom: colorPalette.cardBorder, transition: 'all 0.2s ease', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 40px', minHeight: '110px' }}>
+      <header className="dir-header" style={{ backgroundColor: colorPalette.headerBg, borderBottom: colorPalette.cardBorder, transition: 'all 0.2s ease', display: 'flex', justify-content: 'space-between', alignItems: 'center', padding: '20px 40px', minHeight: '110px' }}>
         <div className="dir-header-left">
           <img src={tagaytaySeal} alt="Tagaytay Seal" style={{ width: '65px', height: '65px', borderRadius: '50%', objectFit: 'contain', backgroundColor: 'white', padding: '4px' }} />
           <div className="dir-titles" style={{ marginLeft: '10px' }}>
@@ -171,7 +156,7 @@ export default function DashboardScreen({
           
           {/* Core Feature Row */}
           <div style={{ display: 'flex', gap: '40px', flexWrap: 'wrap' }}>
-            <div className="dir-card" style={{ flex: 1, minWidth: '400px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', backgroundColor: colorPalette.cardBg, border: colorPalette.cardBorder, borderRadius: '24px', padding: '40px', boxShadow: '0 10px 25px rgba(0,0,0,0.02)', transition: 'all 0.2s ease' }}>
+            <div className="dir-card" style={{ flex: 1, minWidth: '400px', display: 'flex', flexDirection: 'column', justify-content: 'space-between', backgroundColor: colorPalette.cardBg, border: colorPalette.cardBorder, borderRadius: '24px', padding: '40px', boxShadow: '0 10px 25px rgba(0,0,0,0.02)', transition: 'all 0.2s ease' }}>
               <div>
                 <span className="card-badge" style={{ fontSize: isLarge ? '1.1rem' : '0.95rem', background: '#4F46E5', color: '#FFFFFF', padding: '8px 16px', borderRadius: '8px', fontWeight: 900 }}>
                   {lang === 'EN' ? 'DIRECTORY KIOSK' : 'DIREKTORYO NG KIOSK'}
@@ -183,7 +168,7 @@ export default function DashboardScreen({
                 </div>
                 <div className="card-body" style={{ padding: 0, marginBottom: '30px' }}>
                   <p style={{ color: colorPalette.secondaryText, fontSize: isLarge ? '1.35rem' : '1.15rem', lineHeight: '1.6', margin: 0, fontWeight: 600 }}>
-                    {lang === 'EN' ? 'Search through complete departments, check requirement listings, and look up public services.' : 'Maghanap sa mga departamento, tingnan ang mga kailangang dokumento, at alamin ang mga serbisyo publiko.'}
+                    {lang === 'EN' ? 'Search through complete departments and look up public services.' : 'Maghanap sa mga departamento at alamin ang mga serbisyo publiko.'}
                   </p>
                 </div>
               </div>
@@ -194,7 +179,7 @@ export default function DashboardScreen({
               </div>
             </div>
 
-            <div className="dir-card" style={{ flex: 1, minWidth: '400px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', backgroundColor: colorPalette.cardBg, border: colorPalette.cardBorder, borderRadius: '24px', padding: '40px', boxShadow: '0 10px 25px rgba(0,0,0,0.02)', transition: 'all 0.2s ease' }}>
+            <div className="dir-card" style={{ flex: 1, minWidth: '400px', display: 'flex', flexDirection: 'column', justify-content: 'space-between', backgroundColor: colorPalette.cardBg, border: colorPalette.cardBorder, borderRadius: '24px', padding: '40px', boxShadow: '0 10px 25px rgba(0,0,0,0.02)', transition: 'all 0.2s ease' }}>
               <div>
                 <span className="card-badge" style={{ fontSize: isLarge ? '1.1rem' : '0.95rem', background: '#4F46E5', color: '#FFFFFF', padding: '8px 16px', borderRadius: '8px', fontWeight: 900 }}>
                   {lang === 'EN' ? 'FLOOR PLANS' : 'PLANO NG PALAPAG'}
@@ -237,7 +222,7 @@ export default function DashboardScreen({
                         {lang === 'EN' ? service.titleEn : service.titleTl}
                       </h4>
                       <span style={{ display: 'inline-block', marginTop: '6px', color: '#4F46E5', fontSize: isLarge ? '1rem' : '0.9rem', fontWeight: 800 }}>
-                        {lang === 'EN' ? 'View Requirements' : 'Tingnan ang Kailangan'}
+                        {lang === 'EN' ? 'View Location' : 'Tingnan ang Lokasyon'}
                       </span>
                     </div>
                   </div>
@@ -314,27 +299,19 @@ export default function DashboardScreen({
               </div>
               <button 
                 onClick={() => setSelectedService(null)} 
-                style={{ background: '#E2E8F0', border: 'none', color: '#0F172A', width: '45px', height: '45px', borderRadius: '50%', fontSize: '1.2rem', fontWeight: 900, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                style={{ background: '#E2E8F0', border: 'none', color: '#0F172A', width: '45px', height: '45px', borderRadius: '50%', fontSize: '1.2rem', fontWeight: 900, cursor: 'pointer', display: 'flex', justify-content: 'center', alignItems: 'center' }}
               >
                 ✕
               </button>
             </div>
 
-            <div style={{ background: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : '#FFFBEB', border: `2px solid ${isDarkMode ? 'rgba(245, 158, 11, 0.3)' : '#FDE68A'}`, padding: '25px', borderRadius: '16px' }}>
-              <h3 style={{ margin: '0 0 15px 0', color: isDarkMode ? '#F59E0B' : '#D97706', fontSize: '1.3rem', fontWeight: 900 }}>
-                📋 {lang === 'EN' ? 'Requirements Needed:' : 'Mga Kailangang Dalhin:'}
-              </h3>
-              <ul style={{ margin: 0, paddingLeft: '20px', color: colorPalette.primaryText, fontSize: '1.15rem', lineHeight: '1.8', fontWeight: 600 }}>
-                {selectedService.requirements.map((req, i) => <li key={i}>{req}</li>)}
-              </ul>
-            </div>
-
+            {/* LOCATION BOX ONLY */}
             <div style={{ background: selectedService.isExternal ? '#FEF2F2' : '#EEF2FF', border: `2px solid ${selectedService.isExternal ? '#FECDD3' : '#C7D2FE'}`, padding: '20px', borderRadius: '16px', color: selectedService.isExternal ? '#9F1239' : '#3730A3', fontSize: '1.2rem', fontWeight: 800, display: 'flex', gap: '15px', alignItems: 'center', lineHeight: '1.5' }}>
               <span style={{ fontSize: '2rem' }}>{selectedService.isExternal ? '🏛️' : '📍'}</span>
               {lang === 'EN' ? selectedService.locationTextEn : selectedService.locationTextTl}
             </div>
 
-            {/* BAGO: SMART BUTTON LOGIC */}
+            {/* SMART BUTTON LOGIC */}
             {selectedService.isExternal ? (
               <button 
                 onClick={() => setSelectedService(null)}
