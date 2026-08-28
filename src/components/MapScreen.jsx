@@ -97,8 +97,9 @@ export default function MapScreen({
       finalPathData = `M ${x} ${y} L ${x} ${y - 20} L ${x + 20} ${y - 20} L ${x + 20} ${y - 40} L ${x + 40} ${y - 40}`;
   }
 
-  if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-to-transport') {
-      finalPathData = "M 1030 1000 L 1330 1000 L 1330 860 L 1250 860"; 
+ if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-to-transport') {
+      // FIX: Diretso akyat muna sa hallway (Y: 865) bago kumanan papasok sa Escalator (X: 1150)
+      finalPathData = "M 1030 1000 L 1030 865 L 1150 865"; 
   }
 
   if (currentFloor === 1 && selectedOfficeKey === 'canteen') {
