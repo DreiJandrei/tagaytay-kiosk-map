@@ -966,7 +966,7 @@ export default function App() {
             </button>
             
             <h2 style={{ fontSize: '2.4rem', fontWeight: '900', color: isDarkMode ? '#FFFFFF' : '#1E1B4B', margin: '0 0 15px 0', textAlign: 'center' }}>
-              About the Project
+              About the Kiosk
             </h2>
             
             <p style={{ fontSize: '1.15rem', color: colorPalette.secondaryText, lineHeight: '1.6', textAlign: 'center', margin: '0 auto 30px auto', maxWidth: '550px', fontWeight: '600' }}>
