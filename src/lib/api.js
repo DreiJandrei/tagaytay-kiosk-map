@@ -115,7 +115,7 @@ export const getAllOffices = async () => {
         badge: row.badge, 
         hours: safeDetails?.hours || '', 
         head: safeDetails?.head || '',
-        description: safeDetails?.description || '', // 🔥 Kukunin from DB
+        description: safeDetails?.description || '',
         requirements: safeRequirements, 
         cssClass: row.css_class, 
         status: safeDetails?.status || 'Available',
@@ -141,26 +141,25 @@ export const updateOffice = async (officeKey, updates) => {
     }).eq('office_key', officeKey);
     if (err1) throw err1;
 
-    // 🔥 MAGIC FIX: Titingnan kung may record na, bago i-UPDATE (para walang Ghost Row!)
-    const { data: existingDetail } = await supabase.from('office_details').select('office_key').eq('office_key', officeKey).single();
+    // 🔥 MAGIC FIX: Pinalitan ang .single() ng .maybeSingle() para iwas crash
+    const { data: existingDetail, error: checkErr } = await supabase.from('office_details').select('office_key').eq('office_key', officeKey).maybeSingle();
+    if (checkErr) throw checkErr;
 
     if (existingDetail) {
-      // Kung may row na, i-overwrite natin:
       const { error: err2 } = await supabase.from('office_details').update({
         head: updates.head, 
         hours: updates.hours, 
-        description: updates.description, // Sinisave ang bagong description
+        description: updates.description, 
         status: updates.status, 
         requirements: updates.requirements
       }).eq('office_key', officeKey);
       if (err2) throw err2;
     } else {
-      // Kung wala pang row sa office_details, i-insert natin:
       const { error: err2 } = await supabase.from('office_details').insert({
         office_key: officeKey, 
         head: updates.head, 
         hours: updates.hours, 
-        description: updates.description, // Sinisave ang bagong description
+        description: updates.description, 
         status: updates.status, 
         requirements: updates.requirements
       });
@@ -192,20 +191,27 @@ export const incrementSearchCount = async (officeKey) => {
 // ==============================================================
 export const getAnnouncement = async () => {
   try {
-    const { data, error } = await supabase.from('settings').select('announcement_text').eq('id', 1).single();
-    if (error && error.code !== 'PGRST116') throw error; 
+    // 🔥 MAGIC FIX: Pinalitan din ng .maybeSingle()
+    const { data, error } = await supabase.from('settings').select('announcement_text').eq('id', 1).maybeSingle();
+    if (error) throw error; 
     return data ? data.announcement_text : "";
   } catch (error) { return ""; }
 };
 
 export const updateAnnouncement = async (text) => {
   try {
-    const { data: existing } = await supabase.from('settings').select('id').eq('id', 1).single();
+    // 🔥 MAGIC FIX: Pinalitan ang .single() ng .maybeSingle() para pumasa ang Insert
+    const { data: existing, error: checkErr } = await supabase.from('settings').select('id').eq('id', 1).maybeSingle();
+    if (checkErr) throw checkErr;
+
     if (existing) {
       await supabase.from('settings').update({ announcement_text: text }).eq('id', 1);
     } else {
       await supabase.from('settings').insert([{ id: 1, announcement_text: text }]);
     }
     return true;
-  } catch (error) { return false; }
+  } catch (error) { 
+    console.error("Save Announcement Error:", error);
+    throw error; // Binabato na natin yung error para ma-detect ng AdminPanel kung nag-fail
+  }
 };
