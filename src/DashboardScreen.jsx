@@ -108,7 +108,7 @@ export default function DashboardScreen({
     <div className="directory-container" style={{ backgroundColor: colorPalette.containerBg, color: colorPalette.primaryText, minHeight: '100vh', transition: 'background-color 0.2s ease' }}>
       
       {/* Sticky Universal Header Bar */}
-      <header className="dir-header" style={{ backgroundColor: colorPalette.headerBg, borderBottom: colorPalette.cardBorder, transition: 'all 0.2s ease', display: 'flex', justify-content: 'space-between', alignItems: 'center', padding: '20px 40px', minHeight: '110px' }}>
+      <header className="dir-header" style={{ backgroundColor: colorPalette.headerBg, borderBottom: colorPalette.cardBorder, transition: 'all 0.2s ease', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 40px', minHeight: '110px' }}>
         <div className="dir-header-left">
           <img src={tagaytaySeal} alt="Tagaytay Seal" style={{ width: '65px', height: '65px', borderRadius: '50%', objectFit: 'contain', backgroundColor: 'white', padding: '4px' }} />
           <div className="dir-titles" style={{ marginLeft: '10px' }}>
@@ -156,7 +156,7 @@ export default function DashboardScreen({
           
           {/* Core Feature Row */}
           <div style={{ display: 'flex', gap: '40px', flexWrap: 'wrap' }}>
-            <div className="dir-card" style={{ flex: 1, minWidth: '400px', display: 'flex', flexDirection: 'column', justify-content: 'space-between', backgroundColor: colorPalette.cardBg, border: colorPalette.cardBorder, borderRadius: '24px', padding: '40px', boxShadow: '0 10px 25px rgba(0,0,0,0.02)', transition: 'all 0.2s ease' }}>
+            <div className="dir-card" style={{ flex: 1, minWidth: '400px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', backgroundColor: colorPalette.cardBg, border: colorPalette.cardBorder, borderRadius: '24px', padding: '40px', boxShadow: '0 10px 25px rgba(0,0,0,0.02)', transition: 'all 0.2s ease' }}>
               <div>
                 <span className="card-badge" style={{ fontSize: isLarge ? '1.1rem' : '0.95rem', background: '#4F46E5', color: '#FFFFFF', padding: '8px 16px', borderRadius: '8px', fontWeight: 900 }}>
                   {lang === 'EN' ? 'DIRECTORY KIOSK' : 'DIREKTORYO NG KIOSK'}
@@ -179,7 +179,7 @@ export default function DashboardScreen({
               </div>
             </div>
 
-            <div className="dir-card" style={{ flex: 1, minWidth: '400px', display: 'flex', flexDirection: 'column', justify-content: 'space-between', backgroundColor: colorPalette.cardBg, border: colorPalette.cardBorder, borderRadius: '24px', padding: '40px', boxShadow: '0 10px 25px rgba(0,0,0,0.02)', transition: 'all 0.2s ease' }}>
+            <div className="dir-card" style={{ flex: 1, minWidth: '400px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', backgroundColor: colorPalette.cardBg, border: colorPalette.cardBorder, borderRadius: '24px', padding: '40px', boxShadow: '0 10px 25px rgba(0,0,0,0.02)', transition: 'all 0.2s ease' }}>
               <div>
                 <span className="card-badge" style={{ fontSize: isLarge ? '1.1rem' : '0.95rem', background: '#4F46E5', color: '#FFFFFF', padding: '8px 16px', borderRadius: '8px', fontWeight: 900 }}>
                   {lang === 'EN' ? 'FLOOR PLANS' : 'PLANO NG PALAPAG'}
@@ -277,7 +277,7 @@ export default function DashboardScreen({
         </div>
       </div>
 
-      {/* POPUP MODAL FOR REQUIREMENTS & ROUTING */}
+      {/* POPUP MODAL FOR LOCATION & ROUTING */}
       {selectedService && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -299,7 +299,7 @@ export default function DashboardScreen({
               </div>
               <button 
                 onClick={() => setSelectedService(null)} 
-                style={{ background: '#E2E8F0', border: 'none', color: '#0F172A', width: '45px', height: '45px', borderRadius: '50%', fontSize: '1.2rem', fontWeight: 900, cursor: 'pointer', display: 'flex', justify-content: 'center', alignItems: 'center' }}
+                style={{ background: '#E2E8F0', border: 'none', color: '#0F172A', width: '45px', height: '45px', borderRadius: '50%', fontSize: '1.2rem', fontWeight: 900, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
               >
                 ✕
               </button>
