@@ -128,20 +128,16 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const authorized = localStorage.getItem('kiosk_authorized');
     const key = searchParams.get('key');
     const routeKey = searchParams.get('route'); 
-    
     const isRecovery = window.location.hash.includes('type=recovery');
     
-    if (authorized === 'true' || isRecovery) {
-      if (isRecovery) localStorage.setItem('kiosk_authorized', 'true');
+    // Papasukin kung mobile scan (routeKey), password recovery (isRecovery), o may tamang secret key
+    if (isRecovery || routeKey || key === 'cct-bsit-kiosk') {
       setIsAuthorized(true);
-    } else if (key === 'cct-bsit-kiosk') { 
-      localStorage.setItem('kiosk_authorized', 'true');
-      setIsAuthorized(true);
-    } else if (routeKey) {
-      setIsAuthorized(true);
+    } else {
+      // Kung wala yung tamang key sa link, i-lock palagi ang system!
+      setIsAuthorized(false);
     }
   }, [searchParams]);
 
