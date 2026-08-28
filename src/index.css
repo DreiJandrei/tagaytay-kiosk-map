@@ -646,3 +646,102 @@ div[style*="FIRE EXIT"] {
 /* 4. ELEVATOR & STAIRS (Solid Clean Colors) */
 .elevator-block { background: #334155 !important; border: 2px solid #64748B !important; box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important; }
 .stairs-block { background: #475569 !important; border: 2px solid #94A3B8 !important; box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important; }
+/* ========================================================
+   🌟 THE "ULTIMATE DEFENSE" PREMIUM UI UPGRADE 🌟
+   (Applies globally to Dashboard, Directory, and Map)
+   ======================================================== */
+
+/* 1. PREMIUM SCROLLBAR (Tinatago ang default scrollbar ng Chrome) */
+::-webkit-scrollbar { 
+  width: 8px; 
+}
+::-webkit-scrollbar-track { 
+  background: transparent; 
+}
+::-webkit-scrollbar-thumb { 
+  background: rgba(79, 70, 229, 0.4); 
+  border-radius: 10px; 
+}
+::-webkit-scrollbar-thumb:hover { 
+  background: rgba(79, 70, 229, 0.8); 
+}
+
+/* 2. DYNAMIC BACKGROUND ANIMATION (Subtle Breathing Effect) */
+@keyframes subtleBreathe {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.directory-container, .map-screen-container {
+  background-size: 200% 200% !important;
+  animation: subtleBreathe 18s ease infinite !important;
+}
+/* Dark Mode: Deep Space Gradient */
+.directory-container:not(.light-theme), .map-screen-container:not(.light-theme) {
+  background: linear-gradient(120deg, #0F172A, #1E1B4B, #0F172A) !important;
+}
+/* Light Mode: Clean Slate Gradient */
+.light-theme .directory-container, .light-theme .map-screen-container {
+  background: linear-gradient(120deg, #F8FAFC, #EEF2FF, #F8FAFC) !important;
+}
+
+/* 3. ULTRA-MODERN FLOATING CARDS (Soft Shadows & Smooth Lift) */
+.dir-card, button[style*="justify-content: space-between"] {
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 6px rgba(0,0,0,0.05) !important;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.light-theme .dir-card, .light-theme button[style*="justify-content: space-between"] {
+  box-shadow: 0 10px 30px rgba(79, 70, 229, 0.08), 0 4px 6px rgba(15, 23, 42, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+}
+/* Hover State: Aangat at iilaw nang kaunti ang cards */
+.dir-card:hover, button[style*="justify-content: space-between"]:hover {
+  transform: translateY(-6px) scale(1.01) !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), 0 8px 16px rgba(0,0,0,0.1) !important;
+  border-color: rgba(79, 70, 229, 0.4) !important;
+}
+
+/* 4. PREMIUM TOUCH BUTTONS (With tactile click effect) */
+button {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+button:active {
+  transform: scale(0.95) !important; /* Lilit pag pinindot para ramdam sa touchscreen */
+}
+.card-btn:hover {
+  box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4) !important;
+  border-color: #4F46E5 !important;
+}
+
+/* 5. GLASSMORPHIC STICKY HEADERS (Translucent Blur sa Itaas) */
+.dir-header {
+  background: rgba(15, 23, 42, 0.75) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+.light-theme .dir-header {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08) !important;
+}
+
+/* 6. MODAL POP-UP ANIMATION (Smooth Entrance) */
+div[style*="z-index: 99999"] > div {
+  animation: modalPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.1) forwards !important;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) !important;
+}
+@keyframes modalPop {
+  0% { transform: scale(0.9) translateY(30px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* 7. ENHANCED CLOCK & ACCESSIBILITY BUTTONS */
+.dir-clock, .theme-toggle-btn {
+  box-shadow: inset 0 2px 4px rgba(255,255,255,0.1), 0 4px 10px rgba(0,0,0,0.1) !important;
+  border: 1px solid rgba(255,255,255,0.05) !important;
+}
+.light-theme .dir-clock, .light-theme .theme-toggle-btn {
+  box-shadow: inset 0 2px 4px rgba(255,255,255,1), 0 4px 10px rgba(15, 23, 42, 0.05) !important;
+  border: 1px solid rgba(15, 23, 42, 0.1) !important;
+}
