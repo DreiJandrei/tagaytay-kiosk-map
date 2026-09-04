@@ -808,101 +808,137 @@ div[style*="z-index: 99999"] > div {
   box-shadow: inset 0 0 15px rgba(0,0,0,0.3), 0 5px 15px rgba(0,0,0,0.2) !important;
 }
 /* ========================================================
-   🌍 TRUE ISOMETRIC 3D VIEW (MAPBOX / SITUM STYLE) 🌍
-   (Forced 3D Perspective engine via CSS Transforms)
+   🏢 EXACT SM DIRECTORY 2.5D TOP-DOWN THEME 🏢
+   (Clean White Rooms, Thick Bevels, 3D Stairs & Escalators)
    ======================================================== */
 
-/* 1. FORCE THE CAMERA PERSPECTIVE ON THE VIEWPORT */
+/* 1. RESET ANY TILTS & SET THE SM PURPLE-GRAY FLOOR */
 .map-viewport {
-  perspective: 2500px !important;
-  perspective-origin: 50% 50% !important;
-  background-color: #E2E8F0 !important; /* Clean gray background */
+  perspective: none !important;
+  background-color: #F8FAFC !important; /* Outer background */
 }
-
-/* 2. TILT THE ENTIRE MAP FLOOR INTO 3D SPACE */
 .mock-map-graphic {
-  /* Itatagilid natin yung buong flat canvas para maging Isometric 3D */
-  transform: rotateX(55deg) rotateZ(-35deg) translateZ(0) !important;
-  transform-style: preserve-3d !important;
-  background: #F1F5F9 !important; /* Map floor color */
+  transform: none !important; /* Binabalik sa flat view */
+  background: #8E83A6 !important; /* Exact SM Purple-Gray Floor */
   border-radius: 12px !important;
-  border: 1px solid #CBD5E1 !important;
-  box-shadow: 
-    -2px 2px 0 #94A3B8,
-    -4px 4px 0 #94A3B8,
-    -6px 6px 0 #94A3B8,
-    -20px 20px 40px rgba(0, 0, 0, 0.25) !important;
+  border: 3px solid #6D6385 !important;
+  box-shadow: 10px 10px 30px rgba(0,0,0,0.3) !important;
 }
 
-/* 3. EXTRUDE ROOMS IN Z-AXIS (Pop-up 3D Blocks) */
+/* 2. THE SM WHITE STORE BLOCKS WITH THICK 3D BEVEL */
 .room-node:not(.active-room):not(.theme-const) {
-  background: #BFDBFE !important; /* Soft Mapbox Blue */
-  color: #0F172A !important;
-  border: 1px solid #93C5FD !important;
-  border-radius: 4px !important;
-  font-weight: 800 !important;
-  text-shadow: none !important;
-  transform-style: preserve-3d !important;
+  background: #FFFFFF !important;
+  color: #1E293B !important;
+  border: 1px solid #CBD5E1 !important;
+  border-radius: 2px !important;
+  font-weight: 900 !important;
+  font-size: 0.9rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: -0.5px !important;
   
-  /* Papaangatin ang kwarto sa hangin at lalagyan ng kapal sa tagiliran */
-  transform: translateZ(25px) !important;
+  /* Ang makapal na anino sa kanan at ibaba para maging 2.5D Block */
   box-shadow: 
-    -1px 1px 0 #94A3B8,
-    -2px 2px 0 #94A3B8,
-    -3px 3px 0 #94A3B8,
-    -4px 4px 0 #94A3B8,
-    -5px 5px 0 #64748B,
-    -10px 10px 15px rgba(0, 0, 0, 0.2) !important;
+    1px 1px 0 #64748B,
+    2px 2px 0 #64748B,
+    3px 3px 0 #64748B,
+    4px 4px 0 #475569,
+    5px 5px 0 #475569,
+    6px 6px 15px rgba(0, 0, 0, 0.25) !important;
+  transform: none !important;
+  transition: all 0.2s ease !important;
 }
 
-/* 4. ACTIVE TARGET ROOM (Standout Purple/Dark Blue) */
+.room-node:not(.active-room):not(.theme-const):hover {
+  background: #F1F5F9 !important;
+  transform: translate(2px, 2px) !important; /* Lulubog pag pinindot */
+  box-shadow: 
+    1px 1px 0 #64748B,
+    2px 2px 0 #475569,
+    3px 3px 10px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* 3. REALISTIC 3D STAIRS (TOP-DOWN VIEW) */
+.stairs-block {
+  /* Gagawa tayo ng optical illusion na mukhang mga baytang (steps) */
+  background: repeating-linear-gradient(
+    to bottom,
+    #FFFFFF 0px,
+    #FFFFFF 6px,
+    #94A3B8 6px,
+    #64748B 10px
+  ) !important; 
+  border: 2px solid #334155 !important;
+  border-radius: 2px !important;
+  box-shadow: 
+    1px 1px 0 #1E293B,
+    2px 2px 0 #1E293B,
+    3px 3px 0 #1E293B,
+    4px 4px 10px rgba(0,0,0,0.4) !important;
+}
+.stair-label {
+  background: rgba(15, 23, 42, 0.9) !important;
+  color: white !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+}
+
+/* 4. REALISTIC 3D ESCALATOR */
+.escalator-block {
+  /* Mukhang bakal na escalator steps (Black & Dark Gray) */
+  background: repeating-linear-gradient(
+    to right,
+    #475569 0px,
+    #475569 4px,
+    #1E293B 4px,
+    #1E293B 6px
+  ) !important; 
+  border: 2px solid #0F172A !important;
+  border-radius: 2px !important;
+  box-shadow: 
+    1px 1px 0 #000000,
+    2px 2px 0 #000000,
+    3px 3px 0 #000000,
+    4px 4px 10px rgba(0,0,0,0.4) !important;
+}
+.escalator-label {
+  background: #10B981 !important;
+  color: white !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+}
+
+/* 5. ELEVATORS */
+.elevator-block {
+  background: #334155 !important;
+  border: 2px solid #0F172A !important;
+  box-shadow: 
+    1px 1px 0 #000000,
+    2px 2px 0 #000000,
+    3px 3px 0 #000000,
+    4px 4px 10px rgba(0,0,0,0.4) !important;
+}
+.elevator-doors {
+  background: #94A3B8 !important;
+  border-top: 2px solid #CBD5E1 !important;
+}
+
+/* 6. HIGHLIGHTED / ACTIVE ROOM */
 .active-room {
-  background: #6366F1 !important; /* Standout Target Color */
+  background: #0284C7 !important;
   color: #FFFFFF !important;
-  border: 2px solid #818CF8 !important;
-  border-radius: 4px !important;
-  transform-style: preserve-3d !important;
-  z-index: 99 !important;
-  
-  /* Mas mataas ang lipad ng active room */
-  transform: translateZ(40px) scale(1.05) !important;
+  border: 1px solid #0369A1 !important;
   box-shadow: 
-    -1px 1px 0 #4338CA,
-    -2px 2px 0 #4338CA,
-    -3px 3px 0 #4338CA,
-    -4px 4px 0 #3730A3,
-    -5px 5px 0 #3730A3,
-    -15px 15px 25px rgba(67, 56, 202, 0.4) !important;
+    1px 1px 0 #075985,
+    2px 2px 0 #075985,
+    3px 3px 0 #075985,
+    4px 4px 0 #082F49,
+    5px 5px 0 #082F49,
+    6px 6px 15px rgba(2, 132, 199, 0.5) !important;
+  z-index: 99 !important;
 }
 
-/* 5. MAKE THE RED ROUTE LINE FLOAT */
-.path-overlay {
-  /* Para hindi bumaon yung pulang linya sa ilalim ng mga 3D na kwarto */
-  transform: translateZ(35px) !important;
-}
-.marching-route-line {
-  stroke: #EF4444 !important;
-  stroke-width: 8 !important;
-  filter: drop-shadow(-2px 2px 4px rgba(239, 68, 68, 0.4)) !important;
-}
-
-/* 6. COUNTER-ROTATE PINS TO FACE THE CAMERA */
-/* Ito yung sekreto: Ang mga "You are here" pins ay kailangang humarap sa user, hindi nakahiga sa sahig */
-.node {
-  /* Binabaligtad nito yung tilt ng mapa para nakatayo ang mga text badges */
-  transform: translate(-50%, -50%) translateZ(60px) rotateZ(35deg) rotateX(-55deg) !important;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.3) !important;
-}
-
-/* 7. UTILITY BLOCKS & WALLS */
-.elevator-block, .escalator-block, .stairs-block, .room-node.theme-gray {
-  background: #CBD5E1 !important;
-  color: #0F172A !important;
-  border-color: #94A3B8 !important;
-  transform: translateZ(15px) !important;
-  box-shadow: -1px 1px 0 #94A3B8, -2px 2px 0 #64748B, -5px 5px 10px rgba(0,0,0,0.2) !important;
-}
+/* 7. BLEND THE SVG WALLS INTO THE FLOOR */
 .mock-map-graphic > svg g {
-  stroke: #94A3B8 !important; /* Subtle gray line sa sahig */
-  stroke-width: 4px !important;
+  stroke: #6D6385 !important; /* Halos kasing-kulay ng sahig para malinis */
+  stroke-width: 5px !important;
 }
