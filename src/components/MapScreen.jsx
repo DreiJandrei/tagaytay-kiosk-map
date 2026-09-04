@@ -119,7 +119,8 @@ export default function MapScreen({
               if (finalPathData.includes("L 680 260")) {
                   finalPathData = finalPathData.replace("M 860 490 L 860 470 L 680 470 L 680 260", "M 575 670 L 575 470 L 680 470 L 680 260");
               } else if (finalPathData.includes("L 530 470")) {
-                  finalPathData = finalPathData.replace("M 860 490 L 860 470 L 530 470 L 530 560", "M 575 670 L 575 470 L 530 470 L 530 560");
+                  // FIX: Dumiretso pakaliwa sa aisle tapos pumasok sa Library imbes na umikot pataas
+                  finalPathData = finalPathData.replace("M 860 490 L 860 470 L 530 470 L 530 560", "M 575 670 L 450 670 L 450 560");
               }
           }
       } 
