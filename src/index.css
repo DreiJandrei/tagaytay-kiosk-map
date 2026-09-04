@@ -808,85 +808,126 @@ div[style*="z-index: 99999"] > div {
   box-shadow: inset 0 0 15px rgba(0,0,0,0.3), 0 5px 15px rgba(0,0,0,0.2) !important;
 }
 /* ========================================================
-   🌟 TAGAYTAY BLUE 2.5D PREMIUM THEME 🌟
-   (Transparent base, Blue 3D Extruded Rooms, 3D Stairs)
+   🏆 PREMIUM ACRYLIC DIORAMA 3D THEME 🏆
+   (High-end lighting, inner reflections, thick 3D extrusion)
    ======================================================== */
 
-/* 1. REMOVE THE AWKWARD BACKGROUND BOX (Para di nakalabas ang Canteen) */
+/* 1. THE FLOOR (Clean subtle grid with smooth vignette) */
+.map-viewport {
+  background: radial-gradient(circle at 50% 50%, #FFFFFF 0%, #E2E8F0 100%) !important;
+  background-image: 
+    linear-gradient(#F1F5F9 2px, transparent 2px),
+    linear-gradient(90deg, #F1F5F9 2px, transparent 2px) !important;
+  background-size: 40px 40px !important;
+  box-shadow: inset 0 0 80px rgba(0,0,0,0.05) !important;
+}
+
+/* Invisible Canvas para di makulong yung mga kwartong nakalabas */
 .mock-map-graphic {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
 }
 
-/* 2. BLUE 3D ROOMS (Tagaytay Theme + 3D Depth) */
+/* 2. PREMIUM 3D ACRYLIC ROOMS (White/Pearl with Depth) */
 .room-node:not(.active-room):not(.theme-const) {
-  background: linear-gradient(135deg, #1E40AF, #3B82F6) !important;
-  color: #FFFFFF !important;
-  border: 1px solid #93C5FD !important;
-  border-radius: 4px !important;
-  font-weight: 800 !important;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.5) !important;
+  /* Glossy surface gradient */
+  background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%) !important;
+  color: #1E293B !important;
+  border-radius: 10px !important;
+  border: 1px solid rgba(255,255,255,0.8) !important;
   
-  /* 3D Extrusion Shadows (Makapal na dark blue/gray sa ilalim) */
+  /* The Magic: Inner highlights for light reflection + Thick Extrusion */
   box-shadow: 
-    1px 1px 0 #1E3A8A,
-    2px 2px 0 #1E3A8A,
-    3px 3px 0 #1E3A8A,
-    4px 4px 0 #172554,
-    5px 5px 0 #172554,
-    6px 6px 15px rgba(0, 0, 0, 0.4) !important;
-  transform: none !important;
-  transition: all 0.2s ease !important;
+    inset 2px 2px 5px rgba(255,255,255,1),     /* Top-left highlight */
+    inset -2px -2px 5px rgba(0,0,0,0.03),      /* Bottom-right internal shadow */
+    1px 1px 0 #CBD5E1,                         /* 3D Layer 1 */
+    2px 2px 0 #94A3B8,                         /* 3D Layer 2 */
+    3px 3px 0 #94A3B8,                         /* 3D Layer 3 */
+    4px 4px 0 #64748B,                         /* 3D Layer 4 */
+    8px 8px 20px rgba(15, 23, 42, 0.15) !important; /* Soft Ground Shadow */
+    
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  letter-spacing: -0.2px !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-/* Hover effect: Lulubog pag pinindot */
+/* Hover State (Pressed Button Effect) */
 .room-node:not(.active-room):not(.theme-const):hover {
-  background: linear-gradient(135deg, #2563EB, #60A5FA) !important;
-  transform: translate(2px, 2px) !important; 
+  transform: translate(2px, 2px) !important;
   box-shadow: 
-    1px 1px 0 #1E3A8A,
-    2px 2px 0 #172554,
-    3px 3px 10px rgba(0, 0, 0, 0.3) !important;
+    inset 2px 2px 5px rgba(255,255,255,1),
+    inset -2px -2px 5px rgba(0,0,0,0.03),
+    1px 1px 0 #CBD5E1,
+    2px 2px 0 #94A3B8,
+    4px 4px 10px rgba(15, 23, 42, 0.1) !important;
 }
 
-/* 3. ACTIVE TARGET ROOM (Standout Red/Pink Highlight) */
+/* 3. GLOWING TARGET DESTINATION (Ruby Red Acrylic) */
 .active-room {
-  background: linear-gradient(135deg, #E11D48, #F43F5E) !important;
+  background: linear-gradient(135deg, #F43F5E 0%, #BE123C 100%) !important;
   color: #FFFFFF !important;
+  border-radius: 10px !important;
   border: 1px solid #FDA4AF !important;
   z-index: 99 !important;
   box-shadow: 
+    inset 2px 2px 5px rgba(255,255,255,0.4),
+    inset -2px -2px 5px rgba(0,0,0,0.2),
     1px 1px 0 #9F1239,
-    2px 2px 0 #9F1239,
-    3px 3px 0 #9F1239,
-    4px 4px 0 #881337,
-    5px 5px 0 #881337,
-    6px 6px 15px rgba(225, 29, 72, 0.5) !important;
+    2px 2px 0 #881337,
+    3px 3px 0 #881337,
+    4px 4px 0 #4C0519,
+    10px 10px 25px rgba(225, 29, 72, 0.4) !important;
 }
 
-/* 4. REALISTIC 3D STAIRS (TOP-DOWN VIEW) */
+/* 4. TACTILE STAIRS & ESCALATORS (Mukhang metal at kongkreto) */
+.stairs-block, .escalator-block {
+  border-radius: 6px !important;
+  border: 1px solid rgba(255,255,255,0.2) !important;
+  box-shadow: 
+    inset 2px 2px 4px rgba(255,255,255,0.3),
+    1px 1px 0 #334155, 
+    2px 2px 0 #1E293B, 
+    3px 3px 0 #1E293B, 
+    5px 5px 15px rgba(0,0,0,0.3) !important;
+}
 .stairs-block {
-  background: repeating-linear-gradient(to bottom, #FFFFFF 0px, #FFFFFF 6px, #94A3B8 6px, #64748B 10px) !important; 
-  border: 2px solid #334155 !important;
-  border-radius: 4px !important;
-  box-shadow: 1px 1px 0 #1E293B, 2px 2px 0 #1E293B, 3px 3px 0 #1E293B, 4px 4px 10px rgba(0,0,0,0.4) !important;
+  background: repeating-linear-gradient(to bottom, #F1F5F9 0px, #F1F5F9 6px, #94A3B8 6px, #64748B 10px) !important; 
 }
-.stair-label { background: rgba(15, 23, 42, 0.9) !important; color: white !important; border-radius: 4px !important; padding: 2px 6px !important; }
-
-/* 5. REALISTIC 3D ESCALATOR */
 .escalator-block {
-  background: repeating-linear-gradient(to right, #475569 0px, #475569 4px, #1E293B 4px, #1E293B 6px) !important; 
-  border: 2px solid #0F172A !important;
-  border-radius: 4px !important;
-  box-shadow: 1px 1px 0 #000000, 2px 2px 0 #000000, 3px 3px 0 #000000, 4px 4px 10px rgba(0,0,0,0.4) !important;
+  background: repeating-linear-gradient(to right, #64748B 0px, #64748B 4px, #1E293B 4px, #1E293B 6px) !important; 
 }
-.escalator-label { background: #10B981 !important; color: white !important; border-radius: 4px !important; padding: 2px 6px !important; }
+.stair-label, .escalator-label {
+  background: rgba(15, 23, 42, 0.95) !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5) !important;
+}
 
-/* 6. ELEVATORS & UTILITIES (Restrooms) */
+/* 5. ELEVATORS & RESTROOMS (Dark Matte Finish) */
 .elevator-block, div[style*="Restroom"], div[style*="Comfort Room"] {
-  background: #334155 !important;
-  border: 2px solid #0F172A !important;
-  color: white !important;
-  box-shadow: 1px 1px 0 #000, 2px 2px 0 #000, 3px 3px 0 #000, 4px 4px 10px rgba(0,0,0,0.4) !important;
+  background: linear-gradient(135deg, #475569 0%, #1E293B 100%) !important;
+  color: #F8FAFC !important;
+  border-radius: 8px !important;
+  border: 1px solid #64748B !important;
+  box-shadow: 
+    inset 1px 1px 3px rgba(255,255,255,0.15),
+    1px 1px 0 #0F172A, 
+    2px 2px 0 #000, 
+    3px 3px 0 #000, 
+    6px 6px 15px rgba(0,0,0,0.3) !important;
+}
+
+/* 6. HOLOGRAPHIC ROUTE LINE */
+.marching-route-line {
+  stroke: #EF4444 !important;
+  stroke-width: 7 !important;
+  stroke-linecap: round !important;
+  filter: drop-shadow(2px 4px 6px rgba(239, 68, 68, 0.5)) !important;
+}
+
+/* 7. WALL BORDERS BLENDED WITH FLOOR */
+.mock-map-graphic > svg g {
+  stroke: #CBD5E1 !important; 
+  stroke-width: 6px !important;
+  filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.05)) !important;
 }
