@@ -98,8 +98,8 @@ export default function MapScreen({
   }
 
  if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-to-transport') {
-      // FIX: Diretso akyat muna sa hallway (Y: 865) bago kumanan papasok sa Escalator (X: 1150)
-      finalPathData = "M 1030 1000 L 1030 865 L 1150 865"; 
+      // FIX 1: Luliko muna sa kanang pasilyo, aakyat, tapos papasok PAKALIWA sa escalator!
+      finalPathData = "M 1030 1000 L 1290 1000 L 1290 865 L 1150 865"; 
   }
 
   if (currentFloor === 1 && selectedOfficeKey === 'canteen') {
@@ -118,9 +118,9 @@ export default function MapScreen({
           else if (transportMethod === 'escalator') {
               if (finalPathData.includes("L 680 260")) {
                   finalPathData = finalPathData.replace("M 860 490 L 860 470 L 680 470 L 680 260", "M 575 670 L 575 470 L 680 470 L 680 260");
-              } else if (finalPathData.includes("L 530 470")) {
-                  // FIX: Dumiretso pakaliwa sa aisle tapos pumasok sa Library imbes na umikot pataas
-                  finalPathData = finalPathData.replace("M 860 490 L 860 470 L 530 470 L 530 560", "M 575 670 L 450 670 L 450 560");
+              } else if (selectedOfficeKey === 'library') {
+                  // FIX 2: Direktang ruta pakaliwa papuntang Small Library para walang zig-zag
+                  finalPathData = "M 575 670 L 250 670 L 250 600";
               }
           }
       } 
