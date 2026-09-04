@@ -808,137 +808,85 @@ div[style*="z-index: 99999"] > div {
   box-shadow: inset 0 0 15px rgba(0,0,0,0.3), 0 5px 15px rgba(0,0,0,0.2) !important;
 }
 /* ========================================================
-   🏢 EXACT SM DIRECTORY 2.5D TOP-DOWN THEME 🏢
-   (Clean White Rooms, Thick Bevels, 3D Stairs & Escalators)
+   🌟 TAGAYTAY BLUE 2.5D PREMIUM THEME 🌟
+   (Transparent base, Blue 3D Extruded Rooms, 3D Stairs)
    ======================================================== */
 
-/* 1. RESET ANY TILTS & SET THE SM PURPLE-GRAY FLOOR */
-.map-viewport {
-  perspective: none !important;
-  background-color: #F8FAFC !important; /* Outer background */
-}
+/* 1. REMOVE THE AWKWARD BACKGROUND BOX (Para di nakalabas ang Canteen) */
 .mock-map-graphic {
-  transform: none !important; /* Binabalik sa flat view */
-  background: #8E83A6 !important; /* Exact SM Purple-Gray Floor */
-  border-radius: 12px !important;
-  border: 3px solid #6D6385 !important;
-  box-shadow: 10px 10px 30px rgba(0,0,0,0.3) !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
-/* 2. THE SM WHITE STORE BLOCKS WITH THICK 3D BEVEL */
+/* 2. BLUE 3D ROOMS (Tagaytay Theme + 3D Depth) */
 .room-node:not(.active-room):not(.theme-const) {
-  background: #FFFFFF !important;
-  color: #1E293B !important;
-  border: 1px solid #CBD5E1 !important;
-  border-radius: 2px !important;
-  font-weight: 900 !important;
-  font-size: 0.9rem !important;
-  text-transform: uppercase !important;
-  letter-spacing: -0.5px !important;
+  background: linear-gradient(135deg, #1E40AF, #3B82F6) !important;
+  color: #FFFFFF !important;
+  border: 1px solid #93C5FD !important;
+  border-radius: 4px !important;
+  font-weight: 800 !important;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5) !important;
   
-  /* Ang makapal na anino sa kanan at ibaba para maging 2.5D Block */
+  /* 3D Extrusion Shadows (Makapal na dark blue/gray sa ilalim) */
   box-shadow: 
-    1px 1px 0 #64748B,
-    2px 2px 0 #64748B,
-    3px 3px 0 #64748B,
-    4px 4px 0 #475569,
-    5px 5px 0 #475569,
-    6px 6px 15px rgba(0, 0, 0, 0.25) !important;
+    1px 1px 0 #1E3A8A,
+    2px 2px 0 #1E3A8A,
+    3px 3px 0 #1E3A8A,
+    4px 4px 0 #172554,
+    5px 5px 0 #172554,
+    6px 6px 15px rgba(0, 0, 0, 0.4) !important;
   transform: none !important;
   transition: all 0.2s ease !important;
 }
 
+/* Hover effect: Lulubog pag pinindot */
 .room-node:not(.active-room):not(.theme-const):hover {
-  background: #F1F5F9 !important;
-  transform: translate(2px, 2px) !important; /* Lulubog pag pinindot */
+  background: linear-gradient(135deg, #2563EB, #60A5FA) !important;
+  transform: translate(2px, 2px) !important; 
   box-shadow: 
-    1px 1px 0 #64748B,
-    2px 2px 0 #475569,
-    3px 3px 10px rgba(0, 0, 0, 0.2) !important;
+    1px 1px 0 #1E3A8A,
+    2px 2px 0 #172554,
+    3px 3px 10px rgba(0, 0, 0, 0.3) !important;
 }
 
-/* 3. REALISTIC 3D STAIRS (TOP-DOWN VIEW) */
+/* 3. ACTIVE TARGET ROOM (Standout Red/Pink Highlight) */
+.active-room {
+  background: linear-gradient(135deg, #E11D48, #F43F5E) !important;
+  color: #FFFFFF !important;
+  border: 1px solid #FDA4AF !important;
+  z-index: 99 !important;
+  box-shadow: 
+    1px 1px 0 #9F1239,
+    2px 2px 0 #9F1239,
+    3px 3px 0 #9F1239,
+    4px 4px 0 #881337,
+    5px 5px 0 #881337,
+    6px 6px 15px rgba(225, 29, 72, 0.5) !important;
+}
+
+/* 4. REALISTIC 3D STAIRS (TOP-DOWN VIEW) */
 .stairs-block {
-  /* Gagawa tayo ng optical illusion na mukhang mga baytang (steps) */
-  background: repeating-linear-gradient(
-    to bottom,
-    #FFFFFF 0px,
-    #FFFFFF 6px,
-    #94A3B8 6px,
-    #64748B 10px
-  ) !important; 
+  background: repeating-linear-gradient(to bottom, #FFFFFF 0px, #FFFFFF 6px, #94A3B8 6px, #64748B 10px) !important; 
   border: 2px solid #334155 !important;
-  border-radius: 2px !important;
-  box-shadow: 
-    1px 1px 0 #1E293B,
-    2px 2px 0 #1E293B,
-    3px 3px 0 #1E293B,
-    4px 4px 10px rgba(0,0,0,0.4) !important;
-}
-.stair-label {
-  background: rgba(15, 23, 42, 0.9) !important;
-  color: white !important;
-  padding: 4px 8px !important;
   border-radius: 4px !important;
+  box-shadow: 1px 1px 0 #1E293B, 2px 2px 0 #1E293B, 3px 3px 0 #1E293B, 4px 4px 10px rgba(0,0,0,0.4) !important;
 }
+.stair-label { background: rgba(15, 23, 42, 0.9) !important; color: white !important; border-radius: 4px !important; padding: 2px 6px !important; }
 
-/* 4. REALISTIC 3D ESCALATOR */
+/* 5. REALISTIC 3D ESCALATOR */
 .escalator-block {
-  /* Mukhang bakal na escalator steps (Black & Dark Gray) */
-  background: repeating-linear-gradient(
-    to right,
-    #475569 0px,
-    #475569 4px,
-    #1E293B 4px,
-    #1E293B 6px
-  ) !important; 
+  background: repeating-linear-gradient(to right, #475569 0px, #475569 4px, #1E293B 4px, #1E293B 6px) !important; 
   border: 2px solid #0F172A !important;
-  border-radius: 2px !important;
-  box-shadow: 
-    1px 1px 0 #000000,
-    2px 2px 0 #000000,
-    3px 3px 0 #000000,
-    4px 4px 10px rgba(0,0,0,0.4) !important;
-}
-.escalator-label {
-  background: #10B981 !important;
-  color: white !important;
-  padding: 4px 8px !important;
   border-radius: 4px !important;
+  box-shadow: 1px 1px 0 #000000, 2px 2px 0 #000000, 3px 3px 0 #000000, 4px 4px 10px rgba(0,0,0,0.4) !important;
 }
+.escalator-label { background: #10B981 !important; color: white !important; border-radius: 4px !important; padding: 2px 6px !important; }
 
-/* 5. ELEVATORS */
-.elevator-block {
+/* 6. ELEVATORS & UTILITIES (Restrooms) */
+.elevator-block, div[style*="Restroom"], div[style*="Comfort Room"] {
   background: #334155 !important;
   border: 2px solid #0F172A !important;
-  box-shadow: 
-    1px 1px 0 #000000,
-    2px 2px 0 #000000,
-    3px 3px 0 #000000,
-    4px 4px 10px rgba(0,0,0,0.4) !important;
-}
-.elevator-doors {
-  background: #94A3B8 !important;
-  border-top: 2px solid #CBD5E1 !important;
-}
-
-/* 6. HIGHLIGHTED / ACTIVE ROOM */
-.active-room {
-  background: #0284C7 !important;
-  color: #FFFFFF !important;
-  border: 1px solid #0369A1 !important;
-  box-shadow: 
-    1px 1px 0 #075985,
-    2px 2px 0 #075985,
-    3px 3px 0 #075985,
-    4px 4px 0 #082F49,
-    5px 5px 0 #082F49,
-    6px 6px 15px rgba(2, 132, 199, 0.5) !important;
-  z-index: 99 !important;
-}
-
-/* 7. BLEND THE SVG WALLS INTO THE FLOOR */
-.mock-map-graphic > svg g {
-  stroke: #6D6385 !important; /* Halos kasing-kulay ng sahig para malinis */
-  stroke-width: 5px !important;
+  color: white !important;
+  box-shadow: 1px 1px 0 #000, 2px 2px 0 #000, 3px 3px 0 #000, 4px 4px 10px rgba(0,0,0,0.4) !important;
 }
