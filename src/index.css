@@ -900,3 +900,89 @@ div[style*="Comfort Room"] {
   box-shadow: 0 3px 0 #1E293B !important;
   font-weight: 800 !important;
 }
+/* ========================================================
+   🏢 SM / AYALA MALL ISOMETRIC DIRECTORY THEME (FORCED OVERRIDE) 🏢
+   (Tatalunin nito ang dating Blue Theme para maging White Mall Theme)
+   ======================================================== */
+
+/* 1. ARCHITECTURAL FLOOR SLAB (Makapal na 3D slab) */
+.mock-map-graphic {
+  background: #E2E8F0 !important; 
+  border-radius: 28px !important;
+  border: 4px solid #CBD5E1 !important;
+  box-shadow: 
+    0 10px 0 #94A3B8,
+    0 20px 0 #64748B,
+    0 35px 50px rgba(15, 23, 42, 0.35) !important;
+  overflow: visible !important;
+}
+
+/* 2. FORCE CRISP WHITE MALL STORE ROOMS (Eradicate the Blue Theme) */
+.room-node:not(.active-room):not(.theme-const) {
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+  border: 1.5px solid #CBD5E1 !important;
+  border-radius: 8px !important;
+  box-shadow: 
+    0 4px 0 #CBD5E1, 
+    0 6px 12px rgba(15, 23, 42, 0.08) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.2px !important;
+  text-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Hover effect: Aangat parang physical button */
+.room-node:not(.active-room):not(.theme-const):hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 
+    0 8px 0 #94A3B8, 
+    0 12px 20px rgba(15, 23, 42, 0.15) !important;
+  background: #F8FAFC !important;
+  border-color: #94A3B8 !important;
+}
+
+/* 3. MALL ACCENT FOR UTILITIES (Restrooms, Canteen, Utilities) */
+.room-node.theme-gray, 
+div[style*="Restroom"],
+div[style*="Comfort Room"] {
+  background: #334155 !important;
+  color: #FFFFFF !important;
+  border: 2px solid #1E293B !important;
+  box-shadow: 0 4px 0 #0F172A !important;
+}
+
+/* 4. ACTIVE SELECTED STORE (Mall Target Highlight - Cyan) */
+.active-room {
+  background: #0EA5E9 !important; 
+  color: #FFFFFF !important;
+  border: 2px solid #38BDF8 !important;
+  box-shadow: 
+    0 6px 0 #0284C7, 
+    0 12px 25px rgba(14, 165, 233, 0.45) !important;
+  animation: mallPulse 1.6s infinite alternate ease-in-out !important;
+  z-index: 99 !important;
+}
+@keyframes mallPulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.03) translateY(-3px); }
+}
+
+/* 5. MALL WALLS (Sleek Clean Boundary Outlines) */
+.mock-map-graphic > svg g {
+  stroke: #64748B !important;
+  stroke-width: 5px !important;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.15)) !important;
+}
+
+/* 6. ELEVATORS & ESCALATORS (Clean Mall Icons Look) */
+.elevator-block, .escalator-block, .stairs-block {
+  background: #475569 !important;
+  color: #FFFFFF !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 3px 0 #1E293B !important;
+  font-weight: 800 !important;
+}
