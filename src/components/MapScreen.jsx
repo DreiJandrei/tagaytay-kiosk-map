@@ -97,9 +97,9 @@ export default function MapScreen({
       finalPathData = `M ${x} ${y} L ${x} ${y - 20} L ${x + 20} ${y - 20} L ${x + 20} ${y - 40} L ${x + 40} ${y - 40}`;
   }
 
- if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-to-transport') {
-      // FIX 1: Luliko muna sa kanang pasilyo, aakyat, tapos papasok PAKALIWA sa escalator!
-      finalPathData = "M 1030 1000 L 1290 1000 L 1290 865 L 1150 865"; 
+if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-to-transport') {
+      // FIX: Pasok sa main door (Y:935), kanan sa pasilyo (X:1330), akyat sa hallway (Y:865), pasok pakaliwa!
+      finalPathData = "M 1030 1000 L 1030 935 L 1330 935 L 1330 865 L 1250 865"; 
   }
 
   if (currentFloor === 1 && selectedOfficeKey === 'canteen') {
