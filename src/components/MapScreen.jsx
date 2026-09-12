@@ -424,7 +424,18 @@ if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-t
           })}
 
           <svg className="path-overlay" width="100%" height="100%">
+            <path d={finalPathData} className="route-underlay" />
             <path ref={pathRef} d={finalPathData} className="marching-route-line" />
+            {finalPathData && (
+              <g key={`runner-${selectedOfficeKey}-${currentFloor}`} className="route-runner-group">
+                <circle className="route-runner-halo" r="16">
+                  <animateMotion dur="3s" repeatCount="indefinite" path={finalPathData} rotate="auto" />
+                </circle>
+                <circle className="route-runner" r="7">
+                  <animateMotion dur="3s" repeatCount="indefinite" path={finalPathData} rotate="auto" />
+                </circle>
+              </g>
+            )}
           </svg>
           
           <div className="node pin-kiosk" style={{ ...kioskStyle }}>
@@ -432,7 +443,7 @@ if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-t
           </div>
 
           {selectedOffice && selectedOffice.targetX && (
-            <div className="node pin-destination" style={{ display: 'block', left: selectedOffice.targetX, top: selectedOffice.targetY, zIndex: 100 }}>
+            <div className="node pin-destination" key={`dest-${selectedOfficeKey}`} style={{ display: 'block', left: selectedOffice.targetX, top: selectedOffice.targetY, zIndex: 100 }}>
               🎯 {selectedOffice.title}
             </div>
           )}
