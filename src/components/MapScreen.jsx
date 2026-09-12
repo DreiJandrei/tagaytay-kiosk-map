@@ -215,6 +215,7 @@ if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-t
             return (
               <button 
                 key={floor}
+                className={`floor-chip${isActive ? ' active' : ''}`}
                 onClick={() => { setCurrentFloor(floor); setSelectedOfficeKey(null); }}
                 style={{
                   minWidth: '130px', padding: '14px 20px', borderRadius: '16px',
@@ -319,7 +320,7 @@ if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-t
               <div className="grey-wall" style={{ width: '0px', height: '65px', left: '1010px', top: '615px' }}></div>
               <div className="grey-wall" style={{ width: '0px', height: '220px', left: '1010px', top: '740px' }}></div>
               
-              <div style={exitBadgeStyle(1245, 735)}>FIRE EXIT</div>
+              <div className="exit-badge" style={exitBadgeStyle(1245, 735)}>FIRE EXIT</div>
             </>
           )}
           
@@ -331,7 +332,7 @@ if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-t
               <div style={{ position: 'absolute', width: 40, height: 30, left: 800, top: 460, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
               <div style={{ position: 'absolute', width: 40, height: 30, left: 850, top: 460, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
               
-              <div style={exitBadgeStyle(910, 480)}>FIRE EXIT</div>
+              <div className="exit-badge" style={exitBadgeStyle(910, 480)}>FIRE EXIT</div>
             </>
           )}
           
@@ -345,7 +346,7 @@ if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-t
                   <div className="structural-element escalator-block" style={{ width: 120, height: 50, left: 560, top: 480, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="escalator-lines"></div><span className="escalator-label">Escalator ▼</span></div>
               )}
               
-              <div style={exitBadgeStyle(700, 445)}>FIRE EXIT</div>
+              <div className="exit-badge" style={exitBadgeStyle(700, 445)}>FIRE EXIT</div>
             </>
           )}
           
@@ -355,7 +356,7 @@ if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-t
               <div style={{ position: 'absolute', width: 50, height: 40, left: 680, top: 350, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
               <div className="structural-element stairs-block" style={{ width: 200, height: 60, left: 550, top: 550, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">Stairs ↙ ↗</span></div>
               
-              <div style={exitBadgeStyle(765, 435)}>FIRE EXIT</div>
+              <div className="exit-badge" style={exitBadgeStyle(765, 435)}>FIRE EXIT</div>
             </>
           )}
           
@@ -364,7 +365,7 @@ if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-t
               <div style={{ position: 'absolute', width: 60, height: 40, left: 550, top: 320, background: '#9CA3AF', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937', zIndex: 5 }}>ELEV</div>
               <div className="structural-element stairs-block" style={{ width: 100, height: 60, left: 550, top: 430, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">Stairs ↙</span></div>
               
-              <div style={exitBadgeStyle(655, 360)}>FIRE EXIT</div>
+              <div className="exit-badge" style={exitBadgeStyle(655, 360)}>FIRE EXIT</div>
             </>
           )}
 
