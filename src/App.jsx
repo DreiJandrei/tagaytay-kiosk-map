@@ -556,13 +556,14 @@ export default function App() {
               <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
                 
                 <div style={{ marginBottom: '30px' }}>
-                  <h3 style={{ fontSize: '1.25rem', color: colorPalette.primaryText, marginBottom: '15px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <h3 className="sidebar-heading" style={{ fontSize: '1.25rem', color: colorPalette.primaryText, marginBottom: '15px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}>
                     📋 {lang === 'EN' ? 'Quick Service Guides' : 'Mabilisang Serbisyo'}
                   </h3>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                  <div className="service-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                     {serviceGuidesConfig.map((service, idx) => (
                       <button 
                         key={idx}
+                        className="service-tile"
                         onClick={() => setSelectedService(service)}
                         style={{ 
                           background: isDarkMode ? '#1E293B' : '#FFFFFF', 
@@ -578,8 +579,8 @@ export default function App() {
                           boxShadow: '0 6px 15px rgba(0,0,0,0.05)' 
                         }}
                       >
-                        <span style={{ fontSize: '2.8rem' }}>{service.icon}</span>
-                        <span style={{ color: colorPalette.primaryText, fontWeight: 900, fontSize: '1.1rem', textAlign: 'center', lineHeight: '1.3' }}>
+                        <span className="service-icon" style={{ fontSize: '2.8rem' }}>{service.icon}</span>
+                        <span className="service-name" style={{ color: colorPalette.primaryText, fontWeight: 900, fontSize: '1.1rem', textAlign: 'center', lineHeight: '1.3' }}>
                           {lang === 'EN' ? service.titleEn : service.titleTl}
                         </span>
                       </button>
@@ -587,7 +588,7 @@ export default function App() {
                   </div>
                 </div>
 
-                <div style={{ background: isDarkMode ? 'linear-gradient(135deg, #1E1B4B, #4F46E5)' : 'linear-gradient(135deg, #4F46E5, #3730A3)', padding: '20px', borderRadius: '16px', color: 'white', marginBottom: '20px', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>
+                <div className="floor-banner" style={{ background: isDarkMode ? 'linear-gradient(135deg, #1E1B4B, #4F46E5)' : 'linear-gradient(135deg, #4F46E5, #3730A3)', padding: '20px', borderRadius: '16px', color: 'white', marginBottom: '20px', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>
                   <h2 style={{ fontSize: '1.6rem', margin: 0, fontWeight: 900 }}>Floor {currentFloor} Directory</h2>
                 </div>
 
@@ -598,11 +599,12 @@ export default function App() {
                       return (
                       <button
                         key={key}
+                        className="office-row"
                         onClick={() => handleSelectOffice(key, currentFloor)}
                         style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '16px 20px', borderRadius: '14px', border: isDarkMode ? '1px solid #334155' : '1px solid #E2E8F0', background: isDarkMode ? '#1E293B' : '#FFFFFF', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s', width: '100%', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}
                       >
-                        <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#4F46E5', marginBottom: '6px', background: isDarkMode ? '#0F172A' : '#EEF2FF', padding: '4px 10px', borderRadius: '6px' }}>{office.badge || `F${currentFloor}`}</span>
-                        <span style={{ fontSize: '1.2rem', fontWeight: 800, color: colorPalette.primaryText }}>{office.title}</span>
+                        <span className="office-row-badge" style={{ fontSize: '0.85rem', fontWeight: 800, color: '#4F46E5', marginBottom: '6px', background: isDarkMode ? '#0F172A' : '#EEF2FF', padding: '4px 10px', borderRadius: '6px' }}>{office.badge || `F${currentFloor}`}</span>
+                        <span className="office-row-title" style={{ fontSize: '1.2rem', fontWeight: 800, color: colorPalette.primaryText }}>{office.title}</span>
                       </button>
                     )})
                   ) : (
