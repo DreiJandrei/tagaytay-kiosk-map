@@ -639,7 +639,7 @@ export default function App() {
                   </div>
                 )}
 
-                <div style={{ background: isDarkMode ? '#1E293B' : '#FFFFFF', padding: '20px', borderRadius: '16px', border: colorPalette.cardBorder, marginBottom: '20px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+                <div className="transport-card" style={{ background: isDarkMode ? '#1E293B' : '#FFFFFF', padding: '20px', borderRadius: '16px', border: colorPalette.cardBorder, marginBottom: '20px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
                   <h3 style={{ margin: '0 0 15px 0', color: colorPalette.primaryText, fontSize: '1.1rem', textAlign: 'center' }}>
                     {destinationData.floor === 2 ? (lang === 'EN' ? 'Choose your transport:' : 'Piliin ang daan papunta:') : (lang === 'EN' ? 'Elevator or Stairs?' : 'Elevator o Hagdan?')}
                   </h3>
@@ -668,13 +668,13 @@ export default function App() {
                 </div>
 
                 {destinationData.description && (
-                  <div style={{ background: isDarkMode ? '#1E293B' : '#F8FAFC', padding: '15px', borderRadius: '12px', border: colorPalette.cardBorder, marginBottom: '20px', color: colorPalette.primaryText, fontSize: '1.05rem', lineHeight: '1.6' }}>
+                  <div className="office-about" style={{ background: isDarkMode ? '#1E293B' : '#F8FAFC', padding: '15px', borderRadius: '12px', border: colorPalette.cardBorder, marginBottom: '20px', color: colorPalette.primaryText, fontSize: '1.05rem', lineHeight: '1.6' }}>
                      <strong style={{ color: '#4F46E5', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>ℹ️ {lang === 'EN' ? 'About this Office' : 'Tungkol sa Opisina'}</strong>
                      <div style={{ whiteSpace: 'pre-wrap' }}>{destinationData.description}</div>
                   </div>
                 )}
 
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', background: isDarkMode ? '#1E293B' : '#EEF2FF', padding: '20px', borderRadius: '16px', border: `2px dashed ${isDarkMode ? '#475569' : '#C7D2FE'}`, boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '10px' }}>
+                <div className="qr-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', background: isDarkMode ? '#1E293B' : '#EEF2FF', padding: '20px', borderRadius: '16px', border: `2px dashed ${isDarkMode ? '#475569' : '#C7D2FE'}`, boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '10px' }}>
                   <span style={{ fontSize: '1.1rem', fontWeight: '900', textAlign: 'center', color: isDarkMode ? '#FFFFFF' : '#4F46E5' }}>
                     📱 I-scan para sa Live Mobile Map
                   </span>
@@ -719,6 +719,7 @@ export default function App() {
             {(routeStep === 'arrived' || (routeStep === 'idle' && selectedOfficeKey && selectedOfficeKey !== 'elevator-up' && selectedOfficeKey !== 'stairs-up')) && selectedOffice && (
               <div style={{ paddingBottom: '20px' }}>
                 <button 
+                  className="back-to-list-btn"
                   onClick={() => { setSelectedOfficeKey(null); setRouteStep('idle'); setDestinationData(null); }}
                   style={{ background: isDarkMode ? '#334155' : '#E2E8F0', color: colorPalette.primaryText, border: 'none', padding: '10px 18px', borderRadius: '50px', fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '20px' }}
                 >
@@ -736,7 +737,7 @@ export default function App() {
                     <p style={{ background: '#FEF2F2', color: '#E11D48', padding: '15px', borderRadius: '12px', border: '1px solid #FECDD3', fontWeight: 600 }}>🚶‍♂️ <strong>Wayfinding Path Generated:</strong> Please follow the blinking red path indicator.</p>
                   ) : (
                     <>
-                      <p style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <p className="meta-row status-row" style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ fontSize: '1.2rem' }}>
                           {selectedOffice.status === 'In a Meeting' ? '🔴' : selectedOffice.status === 'Out of Office' ? '🟡' : selectedOffice.status === 'Closed' ? '⚫' : '🟢'}
                         </span>
@@ -746,8 +747,8 @@ export default function App() {
                         </span>
                       </p>
                       
-                      <p style={{ marginBottom: '8px' }}>🕒 <strong style={{ color: colorPalette.primaryText }}>{lang === 'EN' ? 'Hours:' : 'Oras:'}</strong> {selectedOffice.hours}</p>
-                      <p>👤 <strong style={{ color: colorPalette.primaryText }}>{lang === 'EN' ? 'Head:' : 'Pinuno:'}</strong> {selectedOffice.head}</p>
+                      <p className="meta-row" style={{ marginBottom: '8px' }}>🕒 <strong style={{ color: colorPalette.primaryText }}>{lang === 'EN' ? 'Hours:' : 'Oras:'}</strong> {selectedOffice.hours}</p>
+                      <p className="meta-row">👤 <strong style={{ color: colorPalette.primaryText }}>{lang === 'EN' ? 'Head:' : 'Pinuno:'}</strong> {selectedOffice.head}</p>
                     </>
                   )}
                 </div>

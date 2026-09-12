@@ -1756,3 +1756,207 @@ button:active { transform: scale(.97); }
   border: 2px solid transparent; background-clip: content-box;
 }
 *::-webkit-scrollbar-thumb:hover { background: rgba(96,165,250,.75); background-clip: content-box; }
+
+/* ████████████████████████████████████████████████████████████
+   MAP PAGE UI — PAGPAPAGANDA NG SIDEBAR AT HEADER
+   Visual lang. Walang ginagalaw na lohika.
+   ████████████████████████████████████████████████████████████ */
+
+/* ═══ Sidebar: may lalim, hindi na patag na puti ═══ */
+.map-sidebar {
+  padding: 28px 26px !important;
+  gap: 0 !important;
+  position: relative;
+}
+.map-sidebar::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--k-400), var(--k-600), var(--k-900));
+}
+
+/* ═══ Search: mas malaki at may glow kapag aktibo ═══ */
+.sidebar-search-container input[type="text"] {
+  border-radius: 18px !important;
+  font-size: 1.25rem !important;
+  padding: 20px 22px !important;
+  box-shadow: 0 4px 14px rgba(37,99,235,.1) !important;
+}
+
+/* ═══ Back button: pill na may gumagalaw na arrow ═══ */
+.back-to-list-btn {
+  background: rgba(59,130,246,.12) !important;
+  color: var(--k-300) !important;
+  border: 1px solid rgba(96,165,250,.4) !important;
+  padding: 12px 22px !important;
+  font-size: 1rem !important;
+  transition: transform .18s ease, background .18s ease, gap .18s ease !important;
+}
+.back-to-list-btn:hover {
+  background: rgba(59,130,246,.24) !important;
+  transform: translateX(-4px) !important;
+}
+.light-theme .back-to-list-btn {
+  background: var(--k-50) !important;
+  color: var(--k-700) !important;
+  border-color: #BFDBFE !important;
+}
+
+/* ═══ Destination card: ang bida sa sidebar ═══ */
+.destination-card {
+  position: relative;
+  background: linear-gradient(160deg, rgba(30,58,138,.55) 0%, rgba(11,26,51,.6) 100%);
+  border: 1px solid rgba(96,165,250,.35);
+  border-radius: 20px;
+  padding: 26px 24px 24px !important;
+  overflow: hidden;
+  box-shadow: 0 12px 30px rgba(3,12,30,.35);
+}
+.destination-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 5px;
+  background: linear-gradient(180deg, var(--k-400), var(--k-700));
+}
+.destination-card::after {
+  content: '';
+  position: absolute;
+  right: -70px; top: -70px;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(96,165,250,.22) 0%, transparent 68%);
+  pointer-events: none;
+}
+.light-theme .destination-card {
+  background: linear-gradient(160deg, #FFFFFF 0%, #EFF6FF 100%);
+  border-color: #C7DCFA;
+  box-shadow: 0 12px 30px rgba(37,99,235,.12);
+}
+
+.destination-card .label {
+  color: var(--k-400) !important;
+  font-size: .82rem !important;
+  letter-spacing: 2.5px !important;
+  text-transform: uppercase;
+  margin: 0 0 8px 0 !important;
+}
+.light-theme .destination-card .label { color: var(--k-600) !important; }
+
+.destination-card .office-title {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 2.1rem !important;
+  line-height: 1.12 !important;
+  font-weight: 800 !important;
+  color: #FFFFFF !important;
+  margin: 0 0 14px 0 !important;
+  letter-spacing: -.3px;
+}
+.light-theme .destination-card .office-title { color: #0B2A5B !important; }
+
+.destination-card .floor-badge {
+  background: linear-gradient(135deg, var(--k-500), var(--k-700)) !important;
+  color: #FFFFFF !important;
+  border-radius: 999px !important;
+  padding: 8px 18px !important;
+  font-size: .95rem !important;
+  letter-spacing: .4px;
+  box-shadow: 0 6px 16px rgba(37,99,235,.4) !important;
+  margin-top: 0 !important;
+}
+
+/* ═══ Meta rows: bawat linya ay may sariling puwesto ═══ */
+.office-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 18px !important;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(96,165,250,.22);
+}
+.light-theme .office-meta { border-color: #DBEAFE; }
+
+.office-meta .meta-row {
+  margin: 0 !important;
+  padding: 14px 18px !important;
+  background: rgba(59,130,246,.08);
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.05rem;
+}
+.office-meta .meta-row + .meta-row { border-top: 1px solid rgba(96,165,250,.18); }
+.light-theme .office-meta .meta-row { background: #F7FAFF; }
+.light-theme .office-meta .meta-row + .meta-row { border-top-color: #E3EDFB; }
+.office-meta .meta-row strong { font-weight: 800 !important; }
+
+/* ═══ About box ═══ */
+.office-about {
+  background: rgba(59,130,246,.08) !important;
+  border: 1px solid rgba(96,165,250,.28) !important;
+  border-radius: 16px !important;
+  padding: 18px 20px !important;
+}
+.office-about strong { color: var(--k-400) !important; }
+.light-theme .office-about {
+  background: #F7FAFF !important;
+  border-color: #DBEAFE !important;
+}
+.light-theme .office-about strong { color: var(--k-700) !important; }
+
+/* ═══ QR card: solidong card, hindi na dashed ═══ */
+.qr-card {
+  background: linear-gradient(160deg, rgba(30,58,138,.5) 0%, rgba(11,26,51,.6) 100%) !important;
+  border: 1px solid rgba(96,165,250,.4) !important;
+  border-radius: 20px !important;
+  padding: 24px 20px !important;
+  box-shadow: 0 12px 28px rgba(3,12,30,.35) !important;
+}
+.light-theme .qr-card {
+  background: linear-gradient(160deg, #FFFFFF 0%, #EFF6FF 100%) !important;
+  border-color: #C7DCFA !important;
+  box-shadow: 0 12px 28px rgba(37,99,235,.12) !important;
+}
+.qr-card > span:first-child {
+  color: #BFDBFE !important;
+  letter-spacing: .3px;
+}
+.light-theme .qr-card > span:first-child { color: var(--k-700) !important; }
+.qr-card > div {
+  border-radius: 16px !important;
+  padding: 16px !important;
+  box-shadow: 0 10px 24px rgba(3,12,30,.45) !important;
+  border: 3px solid rgba(96,165,250,.5);
+}
+.light-theme .qr-card > div { border-color: #DBEAFE; }
+
+/* ═══ Transport chooser ═══ */
+.transport-card {
+  background: rgba(59,130,246,.1) !important;
+  border: 1px solid rgba(96,165,250,.35) !important;
+  border-radius: 18px !important;
+}
+.light-theme .transport-card {
+  background: #FFFFFF !important;
+  border-color: #C7DCFA !important;
+}
+.transport-card button {
+  border-radius: 14px !important;
+  padding: 18px 12px !important;
+  transition: transform .18s ease, box-shadow .18s ease !important;
+}
+.transport-card > div > button:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 10px 20px rgba(37,99,235,.3) !important;
+}
+
+/* ═══ Header: pantay na taas at espasyo ═══ */
+.dir-header { padding: 18px 36px !important; }
+.dir-header > div:last-child { gap: 14px !important; }
+.dir-header button { border-radius: 14px !important; }
+.dir-header .dir-title { letter-spacing: -.5px; }
+
+/* ═══ Divider ═══ */
+.divider { margin: 18px 0 22px 0 !important; }
