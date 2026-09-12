@@ -171,7 +171,7 @@ if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-t
   }
 
   const mapTransformStyle = {
-    transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom}) rotateX(${is3DActive ? 55 : 0}deg) rotateZ(0deg)`,
+    transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom}) rotateX(${is3DActive ? 58 : 0}deg) rotateZ(0deg)`,
     transition: isDragging.current ? 'none' : 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
   };
 
