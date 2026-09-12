@@ -48,6 +48,25 @@ export default function MapScreen({
 
   const handleDragEnd = () => { isDragging.current = false; };
 
+  const defaultZoom = isMobile ? 0.28 : (is3DActive ? 0.8 : 0.65);
+  const defaultPan = isMobile ? { x: -450, y: -230 } : { x: 20, y: -120 };
+
+  const toggleView = () => {
+    setIs3DActive(prev => {
+      const next = !prev;
+      setZoom(z => {
+        const scaled = next ? z * 1.2 : z / 1.2;
+        return Math.min(1.8, Math.max(0.35, scaled));
+      });
+      return next;
+    });
+  };
+
+  const resetView = () => {
+    setZoom(defaultZoom);
+    setPan(defaultPan);
+  };
+
   const selectedOffice = selectedOfficeKey ? offices?.[selectedOfficeKey] : null;
   
   // ==============================================================
@@ -152,8 +171,8 @@ if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-t
   }
 
   const mapTransformStyle = {
-    transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom}) rotateX(0deg) rotateZ(0deg)`,
-    transition: isDragging.current ? 'none' : 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
+    transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom}) rotateX(${is3DActive ? 55 : 0}deg) rotateZ(0deg)`,
+    transition: isDragging.current ? 'none' : 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
   };
 
   const exitBadgeStyle = (leftPos, topPos) => ({
@@ -179,7 +198,7 @@ if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-t
 
   return (
     <main 
-      className="map-viewport"
+      className={`map-viewport${is3DActive ? ' is-3d-active' : ''}`}
       style={{ flexGrow: 1, position: 'relative', overflow: 'hidden', cursor: isDragging.current ? 'grabbing' : 'grab' }}
       onMouseDown={(e) => {
         if(!e.target.closest('.room-node') && !e.target.closest('.floor-selector') && !e.target.closest('.map-legend') && !e.target.closest('.bottom-floor-bar')) {
@@ -199,8 +218,17 @@ if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-t
     >
 
       <div className="floor-selector" style={{ position: 'absolute', top: 30, right: 30, zIndex: 10, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <button
+          className={`ui-action-btn view-mode-btn${is3DActive ? ' active' : ''}`}
+          style={{ height: '45px', fontSize: '0.85rem' }}
+          onClick={toggleView}
+          title={is3DActive ? 'Switch to flat floor plan' : 'Switch to 3D building view'}
+        >
+          {is3DActive ? '⬛ 2D' : '🧊 3D'}
+        </button>
         <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => setZoom(z => Math.min(1.8, z + 0.12))}>➕</button>
         <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => setZoom(z => Math.max(0.35, z - 0.12))}>➖</button>
+        <button className="ui-action-btn reset-view-btn" style={{ height: '45px', fontSize: '1rem' }} onClick={resetView} title="Recenter map">⟲</button>
       </div>
 
       {!isMobile && (

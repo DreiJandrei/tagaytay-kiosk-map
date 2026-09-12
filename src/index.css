@@ -317,7 +317,7 @@ img { max-width: 100%; }
 }
 
 /* =========================================
-   ðŸ“± MOBILE RESPONSIVENESS (PHONES & TABLETS)
+   📱 MOBILE RESPONSIVENESS (PHONES & TABLETS)
    ========================================= */
 @media (max-width: 1024px) {
     /* BAGO: FULL MAP COMPANION APP MODE PARA SA PHONE */
@@ -452,7 +452,7 @@ img { max-width: 100%; }
   border: 1px solid #93c5fd !important;
 }
 /* ========================================================
-   ðŸ”¥ PREMIUM KIOSK INTERACTIVITY & ANIMATIONS ðŸ”¥
+   🔥 PREMIUM KIOSK INTERACTIVITY & ANIMATIONS 🔥
    ======================================================== */
 
 /* 1. SPRING POP-IN EFFECT PARA SA MGA OPISINA */
@@ -515,7 +515,7 @@ img { max-width: 100%; }
   background: rgba(255, 255, 255, 1);
 }
 /* ========================================================
-   ðŸ—ºï¸ PREMIUM MAP VISUALS (SAFE CSS ONLY - NO STRUCTURAL CHANGES)
+   🗺️ PREMIUM MAP VISUALS (SAFE CSS ONLY - NO STRUCTURAL CHANGES)
    ======================================================== */
 
 /* 1. WALL DEPTH & SHADOWS (Pampa-3D ng mga linya ng pader) */
@@ -580,7 +580,7 @@ div[style*="FIRE EXIT"] {
   cursor: grab;
 }
 /* ========================================================
-   ðŸ¬ PREMIUM MALL KIOSK (CLEAN & SOLID DESIGN) ðŸ¬
+   🏬 PREMIUM MALL KIOSK (CLEAN & SOLID DESIGN) 🏬
    (Pampalit sa Glassmorphism - Mas Malinis at Professional)
    ======================================================== */
 
@@ -647,7 +647,7 @@ div[style*="FIRE EXIT"] {
 .elevator-block { background: #334155 !important; border: 2px solid #64748B !important; box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important; }
 .stairs-block { background: #475569 !important; border: 2px solid #94A3B8 !important; box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important; }
 /* ========================================================
-   ðŸŒŸ THE "ULTIMATE DEFENSE" PREMIUM UI UPGRADE ðŸŒŸ
+   🌟 THE "ULTIMATE DEFENSE" PREMIUM UI UPGRADE 🌟
    (Applies globally to Dashboard, Directory, and Map)
    ======================================================== */
 
@@ -746,7 +746,7 @@ div[style*="z-index: 99999"] > div {
   border: 1px solid rgba(15, 23, 42, 0.1) !important;
 }
 /* ========================================================
-   ðŸ—ºï¸ SMART CITY COMMAND CENTER MAP UPGRADE ðŸ—ºï¸
+   🗺️ SMART CITY COMMAND CENTER MAP UPGRADE 🗺️
    (100% Safe: Walang gagalawing pwesto, pinto, o path!)
    ======================================================== */
 
@@ -808,7 +808,7 @@ div[style*="z-index: 99999"] > div {
   box-shadow: inset 0 0 15px rgba(0,0,0,0.3), 0 5px 15px rgba(0,0,0,0.2) !important;
 }
 /* ========================================================
-   ðŸŒŸ TAGAYTAY BLUE 3D DIORAMA THEME ðŸŒŸ
+   🌟 TAGAYTAY BLUE 3D DIORAMA THEME 🌟
    (Client's Blue Theme + Premium Acrylic 3D Depth)
    ======================================================== */
 
@@ -926,10 +926,10 @@ div[style*="z-index: 99999"] > div {
 }
 
 /* ============================================================
-   CIVIC BLUEPRINT â€” MAP THEME (final pass)
+   CIVIC BLUEPRINT — MAP THEME (final pass)
    A single, coherent navy-and-brass finish for the wayfinding
    map, replacing the stacked "neon HUD" experiments above.
-   Nothing here touches position, routing, or click handlers â€”
+   Nothing here touches position, routing, or click handlers —
    presentation only. Selectors deliberately repeat ones already
    used above so this pass wins the cascade tie-break.
    ============================================================ */
@@ -1219,3 +1219,91 @@ div[style*="z-index: 99999"] > div {
 @media (max-width: 1024px) {
   .exit-badge { transform: scale(0.85); }
 }
+
+/* ============================================================
+   CIVIC BLUEPRINT — 3D DIORAMA MODE
+   Activates the isometric "SM directory" building view.
+   Wires up transform-style/perspective machinery that already
+   existed in this file but was never triggered. Pure visuals —
+   toggled by a local view-mode button, no selection logic here.
+   ============================================================ */
+
+/* Give the map some room to breathe when tilted back */
+.map-viewport.is-3d-active {
+  perspective: 2400px !important;
+}
+
+/* Elevate rooms off the floor plate; taller lift + bigger
+   "contact shadow" reads as real height once the plate is tilted */
+.is-3d-active .room-node {
+  transform: translateZ(34px) !important;
+  box-shadow:
+    0 46px 34px -24px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+.is-3d-active .room-node:hover {
+  transform: translateZ(54px) translateY(-4px) !important;
+  box-shadow:
+    0 60px 40px -22px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+.is-3d-active .active-room {
+  transform: translateZ(64px) !important;
+}
+.is-3d-active .active-room:hover {
+  transform: translateZ(74px) translateY(-4px) !important;
+}
+.light-theme .is-3d-active .room-node {
+  box-shadow:
+    0 40px 30px -22px rgba(15, 23, 42, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Structural blocks sit lower than rooms, closer to the plate */
+.is-3d-active .structural-element {
+  transform: translateZ(14px) !important;
+  box-shadow: 0 26px 20px -16px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Pins read as flags planted above the model */
+.is-3d-active .node {
+  transform: translate(-50%, -50%) translateZ(96px) !important;
+}
+.is-3d-active .path-overlay {
+  transform: translateZ(40px) !important;
+}
+
+/* The building plate itself: a bit of thickness so it reads
+   as a physical model rather than a flat tilted photo */
+.is-3d-active .mock-map-graphic {
+  box-shadow:
+    0 60px 40px -20px rgba(0, 0, 0, 0.5),
+    0 0 0 6px rgba(197, 164, 108, 0.12) !important;
+}
+.light-theme .is-3d-active .mock-map-graphic {
+  box-shadow:
+    0 60px 40px -20px rgba(15, 23, 42, 0.18),
+    0 0 0 6px rgba(180, 83, 9, 0.12) !important;
+}
+
+/* ---------- View-mode & recenter controls ---------- */
+.view-mode-btn, .reset-view-btn {
+  background: transparent !important;
+  border: 1px solid rgba(197, 164, 108, 0.4) !important;
+  color: #E8C468 !important;
+  border-radius: 10px !important;
+  font-weight: 800 !important;
+}
+.view-mode-btn:hover, .reset-view-btn:hover {
+  background: rgba(197, 164, 108, 0.12) !important;
+}
+.view-mode-btn.active {
+  background: linear-gradient(160deg, #E8C468, #B8862A) !important;
+  color: #1B1200 !important;
+  border-color: #F5DFA0 !important;
+}
+.light-theme .view-mode-btn, .light-theme .reset-view-btn {
+  color: #92400E !important;
+  border-color: rgba(180, 83, 9, 0.3) !important;
+}
+.light-theme .view-mode-btn.active { color: #1B1200 !important; }
