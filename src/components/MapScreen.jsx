@@ -198,8 +198,8 @@ if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-t
       if (pts) {
           const kx = kioskStyle.left, ky = kioskStyle.top;
           if (Math.abs(pts.first.x - kx) > 2 || Math.abs(pts.first.y - ky) > 2) {
-              // Patayong tawid muna, saka pahalang — sumusunod sa pasilyo.
-              finalPathData = `M ${kx} ${ky} L ${kx} ${pts.first.y} ` + finalPathData.replace(/^\s*M/, 'L');
+              // Pahalang muna, saka patayo — sumusunod sa pasilyo.
+              finalPathData = `M ${kx} ${ky} L ${pts.first.x} ${ky} ` + finalPathData.replace(/^\s*M/, 'L');
           }
       }
   }
@@ -212,6 +212,37 @@ if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-t
           if (Math.abs(pts.last.x - tx) > 2 || Math.abs(pts.last.y - ty) > 2) {
               finalPathData += ` L ${tx} ${pts.last.y} L ${tx} ${ty}`;
           }
+      }
+  }
+
+  // PANUNTUNAN 3 — Alisin ang paglampas-at-balik.
+  // Maraming pathData ang may waypoint na para lang sa elevator (hal.
+  // "L 680 260" sa 2nd Floor). Kapag galing sa hagdan, napipilitang
+  // lumampas sa kanan bago bumalik pakaliwa — kaya mukhang paikot-ikot.
+  // Kapag tatlong magkasunod na punto ay nasa IISANG guhit (pareho ang
+  // x o pareho ang y), tinatanggal ang nasa gitna. Ligtas ito: ang
+  // natitirang segment ay nasa loob pa rin ng dinaanan ng orihinal,
+  // kaya walang bagong pader na matatawid.
+  if (finalPathData !== "") {
+      const nums = String(finalPathData).match(/-?\d+(\.\d+)?/g);
+      if (nums && nums.length >= 6) {
+          let pts = [];
+          for (let i = 0; i + 1 < nums.length; i += 2) pts.push({ x: +nums[i], y: +nums[i + 1] });
+
+          let changed = true;
+          while (changed && pts.length > 2) {
+              changed = false;
+              for (let i = 1; i < pts.length - 1; i++) {
+                  const a = pts[i - 1], b = pts[i], c = pts[i + 1];
+                  const sameRow = a.y === b.y && b.y === c.y;
+                  const sameCol = a.x === b.x && b.x === c.x;
+                  if (sameRow || sameCol) { pts.splice(i, 1); changed = true; break; }
+              }
+          }
+
+          finalPathData = pts
+            .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)
+            .join(' ');
       }
   }
 
