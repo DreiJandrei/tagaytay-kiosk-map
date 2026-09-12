@@ -51,6 +51,24 @@ const serviceGuidesConfig = [
   }
 ];
 
+// Isang pinagmumulan ng estado ng opisina: kulay, salin, at hugis ng pill.
+const statusPresets = {
+  'In a Meeting':  { mod: 'meeting', tl: 'May Pulong' },
+  'Out of Office': { mod: 'out',     tl: 'Wala sa Opisina' },
+  'Closed':        { mod: 'closed',  tl: 'Sarado' },
+  'Available':     { mod: 'ok',      tl: 'Maaaring Kausapin' }
+};
+
+function StatusPill({ status, lang }) {
+  const key = statusPresets[status] ? status : 'Available';
+  const preset = statusPresets[key];
+  return (
+    <span className={`status-pill status-pill--${preset.mod}`}>
+      {lang === 'TL' ? preset.tl : key}
+    </span>
+  );
+}
+
 export default function App() {
   const [searchParams] = useSearchParams();
 
@@ -424,48 +442,58 @@ export default function App() {
 
   const selectedOffice = selectedOfficeKey ? liveOfficeDatabase[currentFloor]?.[selectedOfficeKey] : null;
 
+  // Mga opisinang ipinapakita sa listahan ng kasalukuyang palapag
+  const floorOfficeList = Object.entries(liveOfficeDatabase[currentFloor] || {})
+    .filter(([key]) => key !== 'elevator-up' && key !== 'stairs-up');
+
   if (isMobileSessionExpired) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#FFFFFF', color: '#0F172A', textAlign: 'center', padding: '30px' }}>
-        <span style={{ fontSize: '5rem', marginBottom: '20px' }}>⏱️</span>
-        <h2 style={{ fontSize: '2.5rem', fontWeight: 900, color: '#E11D48', margin: '0 0 15px 0' }}>Session Expired</h2>
-        <p style={{ fontSize: '1.1rem', color: '#475569', maxWidth: '400px', fontWeight: 600, lineHeight: '1.6', margin: 0 }}>
-          For security purposes, this mobile map link has self-destructed because you minimized the app or turned off your screen.
-          <br/><br/>
+      <div className="sys sys--alert">
+        <span className="sys-icon">⏱️</span>
+        <h2 className="sys-title">Session Expired</h2>
+        <p className="sys-text">
+          For security purposes, this mobile map link has self-destructed because the app was
+          minimized or the screen was turned off.
+        </p>
+        <p className="sys-text">
           Please return to the Tagaytay City Hall Directory Kiosk and scan the QR code again.
         </p>
+        <span className="sys-note">Secure mobile session</span>
       </div>
     );
   }
 
   if (!isAuthorized) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#0F172A', color: 'white', textAlign: 'center', padding: '20px' }}>
-        <h1 style={{ fontSize: '5rem', margin: 0 }}>🔒</h1>
-        <h2 style={{ fontSize: '2.5rem', marginTop: '20px' }}>System Locked</h2>
-        <p style={{ color: '#94A3B8', fontSize: '1.2rem', maxWidth: '500px', lineHeight: '1.6' }}>
-          This system is restricted and can only be accessed from the physical Tagaytay City Hall Kiosk Terminal.
+      <div className="sys">
+        <span className="sys-icon">🔒</span>
+        <h2 className="sys-title">System Locked</h2>
+        <p className="sys-text">
+          This system is restricted and can only be accessed from the physical
+          Tagaytay City Hall Kiosk Terminal.
         </p>
+        <span className="sys-note">Tagaytay City Hall · Directory Kiosk</span>
       </div>
     );
   }
 
-  if (isLoading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#F8FAFC', color: '#0F172A', fontSize: '2rem', fontWeight: 'bold' }}>Initializing Kiosk Systems...</div>;
-  
+  if (isLoading) {
+    return (
+      <div className="sys">
+        <img src={tagaytaySeal} alt="Tagaytay City Seal" className="k-modal-seal" style={{ width: '96px', height: '96px', margin: '0 0 24px 0' }} />
+        <h2 className="sys-title">Tagaytay City Hall</h2>
+        <p className="sys-text">Initializing kiosk systems…</p>
+        <span className="sys-loader" />
+      </div>
+    );
+  }
+
   if (appState === 'welcome') return <WelcomeScreen onStart={() => setAppState('map')} />;
 
   const isDarkMode = theme === 'dark';
   const isLarge = textSize === 'large';
 
-  const colorPalette = {
-    headerBg: isDarkMode ? '#1E1B4B' : '#FFFFFF',
-    primaryText: isDarkMode ? '#FFFFFF' : '#0F172A',
-    secondaryText: isDarkMode ? '#94A3B8' : '#64748B',
-    cardBorder: isDarkMode ? '2px solid #475569' : '2px solid #E2E8F0',
-    buttonAccentBg: isDarkMode ? '#334155' : '#EEF2FF',
-    accentText: isDarkMode ? '#F59E0B' : '#B45309',
-    cardBg: isDarkMode ? '#1E293B' : '#FFFFFF'
-  };
+  const dateLabel = new Date().toLocaleDateString('en-PH', { weekday: 'short', month: 'short', day: 'numeric' });
 
   const keyboardRows = [
     ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
@@ -476,111 +504,129 @@ export default function App() {
   ];
 
   return (
-    <div className={`map-screen-container ${theme}-theme`} style={{ backgroundColor: isDarkMode ? '#0F172A' : '#F8FAFC', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      
-      <header className="dir-header" style={{ backgroundColor: colorPalette.headerBg, borderBottom: colorPalette.cardBorder, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 40px', minHeight: '110px', boxSizing: 'border-box', width: '100%' }}>
-        <div className="dir-header-left" onClick={handleLogoTap} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-          <img src={tagaytaySeal} alt="Tagaytay Seal" style={{ width: '65px', height: '65px', borderRadius: '50%', objectFit: 'contain', backgroundColor: 'white', padding: '4px' }} />
-          <div className="dir-titles" style={{ marginLeft: '10px' }}>
-            <span className="dir-subtitle" style={{ color: colorPalette.accentText, fontSize: isLarge ? '1.1rem' : '0.9rem', fontWeight: 900, letterSpacing: '1px' }}>{lang === 'EN' ? 'REPUBLIC OF THE PHILIPPINES' : 'REPUBLIKA NG PILIPINAS'}</span>
-            <h2 className="dir-title" style={{ color: colorPalette.primaryText, fontSize: isLarge ? '2rem' : '1.7rem', fontWeight: 900, margin: 0 }}>Tagaytay City Hall</h2>
-          </div>
+    <div className={`map-screen-container ${theme}-theme`} style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+
+      <header className="dir-header">
+        <div className="brand" onClick={handleLogoTap}>
+          <span className="brand-seal">
+            <img src={tagaytaySeal} alt="Tagaytay City Seal" />
+          </span>
+          <span className="brand-text">
+            <span className="dir-subtitle">{lang === 'EN' ? 'Republic of the Philippines' : 'Republika ng Pilipinas'}</span>
+            <h2 className="dir-title">Tagaytay City Hall</h2>
+            <span className="brand-tagline">{lang === 'EN' ? 'Interactive Directory Kiosk' : 'Interaktibong Gabay sa Opisina'}</span>
+          </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <button 
-            onClick={() => setShowAbout(true)} 
-            style={{ background: colorPalette.buttonAccentBg, color: '#4F46E5', border: '2px solid #4F46E5', width: '60px', height: '60px', borderRadius: '50%', fontWeight: 900, fontSize: '1.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+        <div className="hdr-tools">
+          <button
+            className="hdr-btn hdr-btn--icon"
+            onClick={() => setShowAbout(true)}
+            title={lang === 'EN' ? 'About this kiosk' : 'Tungkol sa kiosk'}
           >
             ℹ️
           </button>
 
-          <button onClick={() => setTextSize(textSize === 'normal' ? 'large' : 'normal')} style={{ background: isLarge ? '#4F46E5' : colorPalette.buttonAccentBg, color: isLarge ? 'white' : '#4F46E5', border: isLarge ? 'none' : '2px solid #4F46E5', width: '60px', height: '60px', borderRadius: '50%', fontWeight: 900, fontSize: '1.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>{isLarge ? 'A+' : 'A'}</button>
-          <button onClick={() => setLang(lang === 'EN' ? 'TL' : 'EN')} style={{ background: colorPalette.buttonAccentBg, color: '#4F46E5', border: '2px solid #4F46E5', padding: '0 24px', height: '60px', borderRadius: '50px', fontWeight: 900, fontSize: isLarge ? '1.2rem' : '1.05rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>🌐 {lang === 'EN' ? 'English' : 'Tagalog'}</button>
-          <button className="ui-action-btn theme-toggle-btn" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} style={{ height: '60px', background: colorPalette.buttonAccentBg, color: '#4F46E5', border: '2px solid #4F46E5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: isLarge ? '1.2rem' : '1.05rem', borderRadius: '14px', padding: '0 25px', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>{isDarkMode ? "☀️ Light" : "🌙 Dark"}</button>
-          <div style={{ width: '2px', height: '40px', background: isDarkMode ? '#475569' : '#CBD5E1', margin: '0 5px' }} />
-          <div style={{ color: colorPalette.primaryText, background: isDarkMode ? '#1E293B' : '#F1F5F9', padding: '10px 24px', borderRadius: '24px', fontWeight: 800, fontSize: isLarge ? '1.4rem' : '1.2rem', border: colorPalette.cardBorder, display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '130px' }}>{time}</div>
+          <button
+            className={`hdr-btn${isLarge ? ' is-on' : ''}`}
+            onClick={() => setTextSize(textSize === 'normal' ? 'large' : 'normal')}
+            title={lang === 'EN' ? 'Larger text' : 'Mas malaking teksto'}
+          >
+            <span className="hdr-btn-glyph">🔠</span>
+            <span className="hdr-btn-label">{isLarge ? 'A+' : 'A'}</span>
+          </button>
+
+          <button className="hdr-btn" onClick={() => setLang(lang === 'EN' ? 'TL' : 'EN')}>
+            <span className="hdr-btn-glyph">🌐</span>
+            <span className="hdr-btn-label">{lang === 'EN' ? 'English' : 'Tagalog'}</span>
+          </button>
+
+          <button
+            className={`hdr-btn${isDarkMode ? ' is-on' : ''}`}
+            onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
+          >
+            <span className="hdr-btn-glyph">{isDarkMode ? '☀️' : '🌙'}</span>
+            <span className="hdr-btn-label">{isDarkMode ? 'Light' : 'Dark'}</span>
+          </button>
+
+          <span className="hdr-sep" />
+
+          <div className="hdr-clock">
+            <span className="hdr-clock-time">{time}</span>
+            <span className="hdr-clock-date">{dateLabel}</span>
+          </div>
         </div>
       </header>
 
       <div className="map-workspace" style={{ position: 'relative', display: 'flex', flexGrow: 1 }}>
         
-        <aside className="map-sidebar" style={{ width: '450px', flexShrink: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          
-          <div className="sidebar-search-container" style={{ margin: '20px 0 10px 0', position: 'relative', zIndex: 100 }}>
-            <div style={{ display: 'flex', position: 'relative', alignItems: 'center' }}>
-              <input type="text" placeholder={lang === 'EN' ? "🔍 Tap to Search Offices..." : "🔍 Pindutin para maghanap..."} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onClick={() => setShowKeyboard(true)} style={{ width: '100%', padding: '22px 24px', borderRadius: '16px', border: showKeyboard ? '4px solid #4F46E5' : (isDarkMode ? '2px solid #475569' : '2px solid #CBD5E1'), background: isDarkMode ? '#1E293B' : '#FFFFFF', color: colorPalette.primaryText, fontWeight: '800', fontSize: '1.4rem', boxShadow: '0 6px 12px rgba(0,0,0,0.1)', boxSizing: 'border-box', cursor: 'text' }} />
-              {searchQuery && (
-                <button onClick={(e) => { e.stopPropagation(); setSearchQuery(""); }} style={{ position: 'absolute', right: '20px', background: '#E2E8F0', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: '#1E293B', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900' }}>✕</button>
-              )}
-            </div>
+        <aside className="map-sidebar" style={{ flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
+
+          <div className={`sb-search${showKeyboard ? ' is-active' : ''}`}>
+            <span className="sb-search-icon">🔍</span>
+            <input
+              type="text"
+              className="sb-search-input"
+              placeholder={lang === 'EN' ? 'Tap to search offices…' : 'Pindutin para maghanap…'}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onClick={() => setShowKeyboard(true)}
+            />
+            {searchQuery && (
+              <button className="sb-search-clear" onClick={(e) => { e.stopPropagation(); setSearchQuery(""); }}>✕</button>
+            )}
           </div>
 
-          <hr className="divider" style={{ margin: '10px 0 20px 0', borderTop: isDarkMode ? '2px solid #334155' : '2px solid #E2E8F0', flexShrink: 0 }} />
+          <div className="sb-scroll">
 
-          <div style={{ flex: 1, overflowY: 'auto', paddingRight: '10px', position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column' }}>
-            
             {searchQuery.trim() !== "" && filteredSearchOptions.length > 0 && (
-              <div style={{ backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF', border: '3px solid #4F46E5', borderRadius: '16px', marginBottom: '25px', flexShrink: 0, overflow: 'hidden', boxShadow: '0 6px 12px rgba(0,0,0,0.05)' }}>
-                <div style={{ background: isDarkMode ? '#334155' : '#EEF2FF', padding: '15px 20px', borderBottom: isDarkMode ? '2px solid #475569' : '2px solid #E2E8F0', color: '#4F46E5', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <section className="sb-panel">
+                <header className="sb-panel-head">
                   🔍 {lang === 'EN' ? 'Search Results' : 'Resulta ng Paghahanap'}
-                </div>
-                <div>
-                  {filteredSearchOptions.map((officeItem) => (
-                    <div key={`search-${officeItem.floor}-${officeItem.key}`} onClick={() => handleSearchSelect(officeItem.key, officeItem.floor)} style={{ padding: '18px 20px', borderBottom: isDarkMode ? '1px solid #334155' : '1px solid #E2E8F0', cursor: 'pointer', display: 'flex', flexDirection: 'column' }} className="search-result-row-kiosk">
-                      <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#4F46E5', marginBottom: '6px', background: isDarkMode ? '#0F172A' : '#EEF2FF', padding: '4px 10px', borderRadius: '6px', width: 'fit-content' }}>📍 {officeItem.badge}</span>
-                      <span style={{ fontWeight: '900', color: colorPalette.primaryText, fontSize: '1.25rem' }}>{officeItem.title}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+                </header>
+                {filteredSearchOptions.map((officeItem) => (
+                  <div
+                    key={`search-${officeItem.floor}-${officeItem.key}`}
+                    className="result-row"
+                    onClick={() => handleSearchSelect(officeItem.key, officeItem.floor)}
+                  >
+                    <span className="result-badge">📍 {officeItem.badge}</span>
+                    <span className="result-title">{officeItem.title}</span>
+                  </div>
+                ))}
+              </section>
             )}
 
             {searchQuery.trim() === "" && showKeyboard && popularSearches.length > 0 && (
-              <div style={{ backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF', border: '3px solid #F59E0B', borderRadius: '16px', marginBottom: '25px', flexShrink: 0, overflow: 'hidden', boxShadow: '0 6px 12px rgba(0,0,0,0.05)' }}>
-                <div style={{ padding: '15px 24px', background: isDarkMode ? '#334155' : '#FFFBEB', borderBottom: isDarkMode ? '2px solid #475569' : '2px solid #E2E8F0', fontWeight: '900', color: isDarkMode ? '#FBBF24' : '#D97706', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <section className="sb-panel sb-panel--gold">
+                <header className="sb-panel-head">
                   🔥 {lang === 'EN' ? 'Frequently Searched' : 'Madalas Hanapin'}
-                </div>
-                <div>
-                  {popularSearches.map((officeItem) => (
-                    <div key={`pop-${officeItem.floor}-${officeItem.key}`} onClick={() => handleSearchSelect(officeItem.key, officeItem.floor)} style={{ padding: '18px 20px', borderBottom: isDarkMode ? '1px solid #334155' : '1px solid #E2E8F0', cursor: 'pointer', display: 'flex', flexDirection: 'column' }} className="search-result-row-kiosk">
-                      <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#F59E0B', marginBottom: '6px', background: isDarkMode ? '#0F172A' : '#FEF3C7', padding: '4px 10px', borderRadius: '6px', width: 'fit-content' }}>📍 {officeItem.badge} • 🔍 {officeItem.searchCount || 0}</span>
-                      <span style={{ fontWeight: '900', color: colorPalette.primaryText, fontSize: '1.25rem' }}>{officeItem.title}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+                </header>
+                {popularSearches.map((officeItem) => (
+                  <div
+                    key={`pop-${officeItem.floor}-${officeItem.key}`}
+                    className="result-row"
+                    onClick={() => handleSearchSelect(officeItem.key, officeItem.floor)}
+                  >
+                    <span className="result-badge">📍 {officeItem.badge} • 🔍 {officeItem.searchCount || 0}</span>
+                    <span className="result-title">{officeItem.title}</span>
+                  </div>
+                ))}
+              </section>
             )}
 
             {routeStep === 'idle' && !selectedOfficeKey && (
               <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-                
-                <div style={{ marginBottom: '30px' }}>
-                  <h3 className="sidebar-heading" style={{ fontSize: '1.25rem', color: colorPalette.primaryText, marginBottom: '15px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}>
+
+                <div className="sb-section">
+                  <h3 className="sidebar-heading">
                     📋 {lang === 'EN' ? 'Quick Service Guides' : 'Mabilisang Serbisyo'}
                   </h3>
-                  <div className="service-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                  <div className="service-grid">
                     {serviceGuidesConfig.map((service, idx) => (
-                      <button 
-                        key={idx}
-                        className="service-tile"
-                        onClick={() => setSelectedService(service)}
-                        style={{ 
-                          background: isDarkMode ? '#1E293B' : '#FFFFFF', 
-                          border: `2px solid ${isDarkMode ? '#475569' : '#CBD5E1'}`, 
-                          borderRadius: '16px', 
-                          padding: '20px 12px', 
-                          display: 'flex', 
-                          flexDirection: 'column', 
-                          alignItems: 'center', 
-                          gap: '12px', 
-                          cursor: 'pointer', 
-                          transition: 'all 0.2s', 
-                          boxShadow: '0 6px 15px rgba(0,0,0,0.05)' 
-                        }}
-                      >
-                        <span className="service-icon" style={{ fontSize: '2.8rem' }}>{service.icon}</span>
-                        <span className="service-name" style={{ color: colorPalette.primaryText, fontWeight: 900, fontSize: '1.1rem', textAlign: 'center', lineHeight: '1.3' }}>
+                      <button key={idx} className="service-tile" onClick={() => setSelectedService(service)}>
+                        <span className="service-icon">{service.icon}</span>
+                        <span className="service-name">
                           {lang === 'EN' ? service.titleEn : service.titleTl}
                         </span>
                       </button>
@@ -588,29 +634,34 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="floor-banner" style={{ background: isDarkMode ? 'linear-gradient(135deg, #1E1B4B, #4F46E5)' : 'linear-gradient(135deg, #4F46E5, #3730A3)', padding: '20px', borderRadius: '16px', color: 'white', marginBottom: '20px', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>
-                  <h2 style={{ fontSize: '1.6rem', margin: 0, fontWeight: 900 }}>Floor {currentFloor} Directory</h2>
+                <div className="floor-banner">
+                  <div className="floor-banner-row">
+                    <div>
+                      <h2>{lang === 'EN' ? `Floor ${currentFloor} Directory` : `Direktoryo ng Palapag ${currentFloor}`}</h2>
+                      <span className="floor-banner-sub">
+                        {lang === 'EN' ? 'Tap an office to see the way' : 'Pindutin ang opisina para sa daan'}
+                      </span>
+                    </div>
+                    <span className="floor-banner-count">{floorOfficeList.length}</span>
+                  </div>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '20px' }}>
-                  {liveOfficeDatabase[currentFloor] && Object.keys(liveOfficeDatabase[currentFloor]).length > 0 ? (
-                    Object.entries(liveOfficeDatabase[currentFloor]).map(([key, office]) => {
-                      if (key === 'elevator-up' || key === 'stairs-up') return null; 
-                      return (
+                <div className="office-list">
+                  {floorOfficeList.length > 0 ? (
+                    floorOfficeList.map(([key, office]) => (
                       <button
                         key={key}
                         className="office-row"
                         onClick={() => handleSelectOffice(key, currentFloor)}
-                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '16px 20px', borderRadius: '14px', border: isDarkMode ? '1px solid #334155' : '1px solid #E2E8F0', background: isDarkMode ? '#1E293B' : '#FFFFFF', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s', width: '100%', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}
                       >
-                        <span className="office-row-badge" style={{ fontSize: '0.85rem', fontWeight: 800, color: '#4F46E5', marginBottom: '6px', background: isDarkMode ? '#0F172A' : '#EEF2FF', padding: '4px 10px', borderRadius: '6px' }}>{office.badge || `F${currentFloor}`}</span>
-                        <span className="office-row-title" style={{ fontSize: '1.2rem', fontWeight: 800, color: colorPalette.primaryText }}>{office.title}</span>
+                        <span className="office-row-badge">{office.badge || `F${currentFloor}`}</span>
+                        <span className="office-row-title">{office.title}</span>
                       </button>
-                    )})
+                    ))
                   ) : (
-                    <div style={{ textAlign: 'center', padding: '30px 10px', color: colorPalette.secondaryText }}>
-                      <span style={{ fontSize: '2rem' }}>🚧</span>
-                      <p style={{ fontWeight: 700, marginTop: '10px' }}>No offices mapped for this floor yet.</p>
+                    <div className="sb-empty">
+                      <span>🚧</span>
+                      <p>{lang === 'EN' ? 'No offices mapped for this floor yet.' : 'Wala pang nakatalang opisina sa palapag na ito.'}</p>
                     </div>
                   )}
                 </div>
@@ -618,160 +669,153 @@ export default function App() {
             )}
 
             {routeStep === 'choose-transport' && destinationData && (
-              <div style={{ display: 'flex', flexDirection: 'column', paddingBottom: '20px' }}>
-                <div className="destination-card" style={{ marginBottom: '20px' }}>
-                  <p className="label" style={{ color: colorPalette.secondaryText, fontSize: '0.9rem', fontWeight: 800, letterSpacing: '1px' }}>DESTINATION / PAROROOAN</p>
-                  <h1 className="office-title" style={{ fontSize: '1.8rem', color: colorPalette.primaryText, margin: '5px 0' }}>{destinationData.title}</h1>
-                  <span className="floor-badge" style={{ fontSize: '1.1rem', padding: '6px 14px', display: 'inline-block', marginTop: '10px', background: '#4F46E5', color: 'white', borderRadius: '8px', fontWeight: 800 }}>{destinationData.badge || `Floor ${destinationData.floor}`}</span>
+              <div className="sb-detail">
+                <div className="destination-card">
+                  <p className="label">{lang === 'EN' ? 'Destination' : 'Paroroonan'}</p>
+                  <h1 className="office-title">{destinationData.title}</h1>
+                  <span className="floor-badge">{destinationData.badge || `Floor ${destinationData.floor}`}</span>
                 </div>
 
                 {!destinationData.isDirectionOnly && (
-                  <div className="office-meta" style={{ fontSize: '1.1rem', color: colorPalette.secondaryText, marginBottom: '20px' }}>
-                    <p style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '1.2rem' }}>
-                        {destinationData.status === 'In a Meeting' ? '🔴' : destinationData.status === 'Out of Office' ? '🟡' : destinationData.status === 'Closed' ? '⚫' : '🟢'}
-                      </span>
-                      <strong style={{ color: colorPalette.primaryText }}>{lang === 'EN' ? 'Status:' : 'Estado:'}</strong>
-                      <span style={{ color: destinationData.status === 'In a Meeting' ? '#EF4444' : destinationData.status === 'Out of Office' ? '#F59E0B' : destinationData.status === 'Closed' ? '#64748B' : '#10B981', fontWeight: 900 }}>
-                        {destinationData.status === 'In a Meeting' && lang === 'TL' ? 'May Pulong' : destinationData.status === 'Out of Office' && lang === 'TL' ? 'Wala sa Opisina' : destinationData.status === 'Closed' && lang === 'TL' ? 'Sarado' : destinationData.status === 'Available' && lang === 'TL' ? 'Maaaring Kausapin' : destinationData.status || 'Available'}
-                      </span>
+                  <div className="office-meta">
+                    <p className="meta-row">
+                      <strong>{lang === 'EN' ? 'Status' : 'Estado'}</strong>
+                      <StatusPill status={destinationData.status} lang={lang} />
                     </p>
-                    <p style={{ marginBottom: '8px' }}>🕒 <strong style={{ color: colorPalette.primaryText }}>{lang === 'EN' ? 'Hours:' : 'Oras:'}</strong> {destinationData.hours}</p>
-                    <p>👤 <strong style={{ color: colorPalette.primaryText }}>{lang === 'EN' ? 'Head:' : 'Pinuno:'}</strong> {destinationData.head}</p>
+                    <p className="meta-row">🕒 <strong>{lang === 'EN' ? 'Hours' : 'Oras'}</strong> {destinationData.hours}</p>
+                    <p className="meta-row">👤 <strong>{lang === 'EN' ? 'Head' : 'Pinuno'}</strong> {destinationData.head}</p>
                   </div>
                 )}
 
-                <div className="transport-card" style={{ background: isDarkMode ? '#1E293B' : '#FFFFFF', padding: '20px', borderRadius: '16px', border: colorPalette.cardBorder, marginBottom: '20px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-                  <h3 style={{ margin: '0 0 15px 0', color: colorPalette.primaryText, fontSize: '1.1rem', textAlign: 'center' }}>
-                    {destinationData.floor === 2 ? (lang === 'EN' ? 'Choose your transport:' : 'Piliin ang daan papunta:') : (lang === 'EN' ? 'Elevator or Stairs?' : 'Elevator o Hagdan?')}
+                <div className="transport-card">
+                  <h3>
+                    {destinationData.floor === 2
+                      ? (lang === 'EN' ? 'Choose your route' : 'Piliin ang daan papunta')
+                      : (lang === 'EN' ? 'Elevator or stairs?' : 'Elevator o hagdan?')}
                   </h3>
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <button 
+                  <div className="transport-grid">
+                    <button
+                      className="transport-btn"
                       onClick={() => { setSelectedOfficeKey('elevator-up'); setTransportMethod('elevator'); setRouteStep('go-to-transport'); }}
-                      style={{ flex: 1, padding: '15px', fontSize: '0.9rem', fontWeight: 800, background: '#EEF2FF', color: '#4F46E5', border: 'none', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                      🛗 Elevator
+                    >
+                      <span>🛗</span><span>Elevator</span>
                     </button>
-                    
+
                     {destinationData.floor === 2 && (
-                      <button 
+                      <button
+                        className="transport-btn"
                         onClick={() => { setSelectedOfficeKey('elevator-up'); setTransportMethod('escalator'); setRouteStep('go-to-transport'); }}
-                        style={{ flex: 1, padding: '15px', fontSize: '0.9rem', fontWeight: 800, background: '#ECFEFF', color: '#0891B2', border: 'none', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                        🪜 Escalator
+                      >
+                        <span>🪜</span><span>Escalator</span>
                       </button>
                     )}
 
-                    <button 
+                    <button
+                      className="transport-btn"
                       onClick={() => { setSelectedOfficeKey('stairs-up'); setTransportMethod('stairs'); setRouteStep('go-to-transport'); }}
-                      style={{ flex: 1, padding: '15px', fontSize: '0.9rem', fontWeight: 800, background: '#F1F5F9', color: '#475569', border: 'none', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                      🚶‍♂️ Stairs
+                    >
+                      <span>🚶</span><span>Stairs</span>
                     </button>
                   </div>
-                  <button onClick={() => { setRouteStep('idle'); setDestinationData(null); }} style={{ marginTop: '12px', background: 'transparent', border: 'none', color: '#EF4444', fontWeight: 800, cursor: 'pointer', width: '100%', padding: '10px' }}>Cancel Navigation</button>
+                  <button className="transport-cancel" onClick={() => { setRouteStep('idle'); setDestinationData(null); }}>
+                    {lang === 'EN' ? 'Cancel navigation' : 'Kanselahin ang direksyon'}
+                  </button>
                 </div>
 
                 {destinationData.description && (
-                  <div className="office-about" style={{ background: isDarkMode ? '#1E293B' : '#F8FAFC', padding: '15px', borderRadius: '12px', border: colorPalette.cardBorder, marginBottom: '20px', color: colorPalette.primaryText, fontSize: '1.05rem', lineHeight: '1.6' }}>
-                     <strong style={{ color: '#4F46E5', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>ℹ️ {lang === 'EN' ? 'About this Office' : 'Tungkol sa Opisina'}</strong>
-                     <div style={{ whiteSpace: 'pre-wrap' }}>{destinationData.description}</div>
+                  <div className="office-about">
+                    <strong>ℹ️ {lang === 'EN' ? 'About this Office' : 'Tungkol sa Opisina'}</strong>
+                    <div className="office-about-body">{destinationData.description}</div>
                   </div>
                 )}
 
-                <div className="qr-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', background: isDarkMode ? '#1E293B' : '#EEF2FF', padding: '20px', borderRadius: '16px', border: `2px dashed ${isDarkMode ? '#475569' : '#C7D2FE'}`, boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '10px' }}>
-                  <span style={{ fontSize: '1.1rem', fontWeight: '900', textAlign: 'center', color: isDarkMode ? '#FFFFFF' : '#4F46E5' }}>
-                    📱 I-scan para sa Live Mobile Map
-                  </span>
-                  <div style={{ padding: '15px', backgroundColor: '#FFFFFF', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.15)' }}>
+                <div className="qr-card">
+                  <span className="qr-title">📱 {lang === 'EN' ? 'Scan for live mobile map' : 'I-scan para sa live mobile map'}</span>
+                  <div className="qr-frame">
                     <QRCodeSVG value={`${window.location.origin}/?route=${destinationData.key}&transport=${transportMethod}`} size={130} bgColor={"#ffffff"} fgColor={"#0F172A"} />
                   </div>
-                  <span style={{ fontSize: '0.85rem', color: isDarkMode ? '#94A3B8' : '#64748B', textAlign: 'center', fontWeight: '700' }}>
-                    Magpapatuloy ang direksyon sa iyong phone.
-                  </span>
+                  <span className="qr-note">Magpapatuloy ang direksyon sa iyong phone.</span>
                 </div>
               </div>
             )}
 
             {routeStep === 'go-to-transport' && destinationData && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div style={{ background: '#FEF2F2', border: '2px solid #FECDD3', padding: '25px', borderRadius: '16px', textAlign: 'center' }}>
-                  <span style={{ fontSize: '3rem', display: 'inline-block' }}>📍</span>
-                  <h2 style={{ color: '#E11D48', margin: '10px 0', fontSize: '1.3rem' }}>Showing route on Ground Floor...</h2>
-                  <p style={{ color: '#9F1239', fontWeight: 600 }}>Please proceed to the {transportMethod === 'elevator' ? 'Elevator' : transportMethod === 'escalator' ? 'Escalator' : 'Stairs'}.</p>
+              <div>
+                <div className="route-status">
+                  <span className="route-status-icon">📍</span>
+                  <h2>{lang === 'EN' ? 'Showing route on the Ground Floor' : 'Ipinapakita ang ruta sa Ground Floor'}</h2>
+                  <p>
+                    {lang === 'EN' ? 'Please proceed to the ' : 'Pumunta po sa '}
+                    {transportMethod === 'elevator' ? 'Elevator' : transportMethod === 'escalator' ? 'Escalator' : 'Stairs'}.
+                  </p>
                 </div>
-
-                <div style={{ background: '#1E293B', color: 'white', padding: '18px', borderRadius: '12px', textAlign: 'center', fontWeight: 800, border: '2px solid #334155', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>
-                  ⏳ {transportMethod === 'elevator' ? `Going up to Floor ${destinationData.floor}...` : transportMethod === 'escalator' ? `Taking the escalator to Floor 2...` : 'Walking to the stairs...'}
+                <div className="route-status-step">
+                  ⏳ {transportMethod === 'elevator'
+                        ? `Going up to Floor ${destinationData.floor}…`
+                        : transportMethod === 'escalator'
+                          ? 'Taking the escalator to Floor 2…'
+                          : 'Walking to the stairs…'}
                 </div>
               </div>
             )}
 
             {routeStep === 'climbing-stairs' && destinationData && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div style={{ background: '#FFFBEB', border: '2px solid #FDE68A', padding: '25px', borderRadius: '16px', textAlign: 'center' }}>
-                  <span style={{ fontSize: '4rem', display: 'inline-block' }}>🚶‍♂️</span>
-                  <h2 style={{ color: '#D97706', margin: '10px 0', fontSize: '1.5rem' }}>Climbing Stairs...</h2>
-                  <p style={{ color: '#B45309', fontWeight: 900, fontSize: '1.3rem' }}>Currently passing Floor {currentFloor}</p>
+              <div>
+                <div className="route-status route-status--gold">
+                  <span className="route-status-icon">🚶</span>
+                  <h2>{lang === 'EN' ? 'Climbing stairs…' : 'Umaakyat sa hagdan…'}</h2>
+                  <p>{lang === 'EN' ? `Currently passing Floor ${currentFloor}` : `Kasalukuyang nasa Palapag ${currentFloor}`}</p>
                 </div>
-                
-                <div style={{ background: '#1E293B', color: 'white', padding: '18px', borderRadius: '12px', textAlign: 'center', fontWeight: 800, border: '2px solid #334155', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>
-                  🎯 Target: Floor {destinationData.floor}
-                </div>
+                <div className="route-status-step">🎯 Target: Floor {destinationData.floor}</div>
               </div>
             )}
 
             {(routeStep === 'arrived' || (routeStep === 'idle' && selectedOfficeKey && selectedOfficeKey !== 'elevator-up' && selectedOfficeKey !== 'stairs-up')) && selectedOffice && (
-              <div style={{ paddingBottom: '20px' }}>
-                <button 
+              <div className="sb-detail">
+                <button
                   className="back-to-list-btn"
                   onClick={() => { setSelectedOfficeKey(null); setRouteStep('idle'); setDestinationData(null); }}
-                  style={{ background: isDarkMode ? '#334155' : '#E2E8F0', color: colorPalette.primaryText, border: 'none', padding: '10px 18px', borderRadius: '50px', fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '20px' }}
                 >
-                  ⬅️ Back to Floor {currentFloor} List
+                  ⬅️ {lang === 'EN' ? `Back to Floor ${currentFloor} list` : `Balik sa listahan ng Palapag ${currentFloor}`}
                 </button>
 
-                <div className="destination-card" style={{ marginBottom: '20px' }}>
-                  <p className="label" style={{ color: colorPalette.secondaryText, fontSize: '0.9rem', fontWeight: 800, letterSpacing: '1px' }}>DESTINATION / PAROROOAN</p>
-                  <h1 className="office-title" style={{ fontSize: '1.8rem', color: colorPalette.primaryText, margin: '5px 0' }}>{selectedOffice.title}</h1>
-                  <span className="floor-badge" style={{ fontSize: '1.1rem', padding: '6px 14px', display: 'inline-block', marginTop: '10px', background: '#4F46E5', color: 'white', borderRadius: '8px', fontWeight: 800 }}>{selectedOffice.badge}</span>
+                <div className="destination-card">
+                  <p className="label">{lang === 'EN' ? 'Destination' : 'Paroroonan'}</p>
+                  <h1 className="office-title">{selectedOffice.title}</h1>
+                  <span className="floor-badge">{selectedOffice.badge}</span>
                 </div>
 
-                <div className="office-meta" style={{ fontSize: '1.1rem', color: colorPalette.secondaryText, marginBottom: '20px' }}>
-                  {selectedOffice.isDirectionOnly ? (
-                    <p style={{ background: '#FEF2F2', color: '#E11D48', padding: '15px', borderRadius: '12px', border: '1px solid #FECDD3', fontWeight: 600 }}>🚶‍♂️ <strong>Wayfinding Path Generated:</strong> Please follow the blinking red path indicator.</p>
-                  ) : (
-                    <>
-                      <p className="meta-row status-row" style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '1.2rem' }}>
-                          {selectedOffice.status === 'In a Meeting' ? '🔴' : selectedOffice.status === 'Out of Office' ? '🟡' : selectedOffice.status === 'Closed' ? '⚫' : '🟢'}
-                        </span>
-                        <strong style={{ color: colorPalette.primaryText }}>{lang === 'EN' ? 'Status:' : 'Estado:'}</strong>
-                        <span style={{ color: selectedOffice.status === 'In a Meeting' ? '#EF4444' : selectedOffice.status === 'Out of Office' ? '#F59E0B' : selectedOffice.status === 'Closed' ? '#64748B' : '#10B981', fontWeight: 900 }}>
-                          {selectedOffice.status === 'In a Meeting' && lang === 'TL' ? 'May Pulong' : selectedOffice.status === 'Out of Office' && lang === 'TL' ? 'Wala sa Opisina' : selectedOffice.status === 'Closed' && lang === 'TL' ? 'Sarado' : selectedOffice.status === 'Available' && lang === 'TL' ? 'Maaaring Kausapin' : selectedOffice.status || 'Available'}
-                        </span>
-                      </p>
-                      
-                      <p className="meta-row" style={{ marginBottom: '8px' }}>🕒 <strong style={{ color: colorPalette.primaryText }}>{lang === 'EN' ? 'Hours:' : 'Oras:'}</strong> {selectedOffice.hours}</p>
-                      <p className="meta-row">👤 <strong style={{ color: colorPalette.primaryText }}>{lang === 'EN' ? 'Head:' : 'Pinuno:'}</strong> {selectedOffice.head}</p>
-                    </>
-                  )}
-                </div>
-
-                {selectedOffice.description && (
-                  <div style={{ background: isDarkMode ? '#1E293B' : '#F8FAFC', padding: '15px', borderRadius: '12px', border: colorPalette.cardBorder, marginBottom: '20px', color: colorPalette.primaryText, fontSize: '1.05rem', lineHeight: '1.6' }}>
-                     <strong style={{ color: '#4F46E5', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>ℹ️ {lang === 'EN' ? 'About this Office' : 'Tungkol sa Opisina'}</strong>
-                     <div style={{ whiteSpace: 'pre-wrap' }}>{selectedOffice.description}</div>
+                {selectedOffice.isDirectionOnly ? (
+                  <div className="wayfinding-note">
+                    🚶 <strong>{lang === 'EN' ? 'Wayfinding path generated.' : 'Nakahanda na ang daan.'}</strong>{' '}
+                    {lang === 'EN'
+                      ? 'Please follow the highlighted path on the map.'
+                      : 'Sundan po ang linyang nakahighlight sa mapa.'}
+                  </div>
+                ) : (
+                  <div className="office-meta">
+                    <p className="meta-row">
+                      <strong>{lang === 'EN' ? 'Status' : 'Estado'}</strong>
+                      <StatusPill status={selectedOffice.status} lang={lang} />
+                    </p>
+                    <p className="meta-row">🕒 <strong>{lang === 'EN' ? 'Hours' : 'Oras'}</strong> {selectedOffice.hours}</p>
+                    <p className="meta-row">👤 <strong>{lang === 'EN' ? 'Head' : 'Pinuno'}</strong> {selectedOffice.head}</p>
                   </div>
                 )}
 
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', background: isDarkMode ? '#1E293B' : '#EEF2FF', padding: '20px', borderRadius: '16px', border: `2px dashed ${isDarkMode ? '#475569' : '#C7D2FE'}`, boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '10px' }}>
-                  <span style={{ fontSize: '1.1rem', fontWeight: '900', textAlign: 'center', color: isDarkMode ? '#FFFFFF' : '#4F46E5' }}>
-                    📱 I-scan para sa Live Mobile Map
-                  </span>
-                  <div style={{ padding: '15px', backgroundColor: '#FFFFFF', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.15)' }}>
+                {selectedOffice.description && (
+                  <div className="office-about">
+                    <strong>ℹ️ {lang === 'EN' ? 'About this Office' : 'Tungkol sa Opisina'}</strong>
+                    <div className="office-about-body">{selectedOffice.description}</div>
+                  </div>
+                )}
+
+                <div className="qr-card">
+                  <span className="qr-title">📱 {lang === 'EN' ? 'Scan for live mobile map' : 'I-scan para sa live mobile map'}</span>
+                  <div className="qr-frame">
                     <QRCodeSVG value={`${window.location.origin}/?route=${selectedOfficeKey}&transport=${transportMethod}`} size={130} bgColor={"#ffffff"} fgColor={"#0F172A"} />
                   </div>
-                  <span style={{ fontSize: '0.85rem', color: isDarkMode ? '#94A3B8' : '#64748B', textAlign: 'center', fontWeight: '700' }}>
-                    Magpapatuloy ang direksyon sa iyong phone.
-                  </span>
+                  <span className="qr-note">Magpapatuloy ang direksyon sa iyong phone.</span>
                 </div>
               </div>
             )}
@@ -792,37 +836,29 @@ export default function App() {
         />
 
         {searchParams.get('route') && (
-          <div style={{
-            position: 'absolute', bottom: '100px', top: 'auto', left: '50%', transform: 'translateX(-50%)',
-            background: 'rgba(254, 243, 199, 0.95)', backdropFilter: 'blur(4px)', color: '#92400E',
-            padding: '10px 15px', borderRadius: '12px', border: '2px solid #F59E0B', zIndex: 99999,
-            width: '90%', maxWidth: '350px', textAlign: 'center', boxShadow: '0 8px 20px rgba(0,0,0,0.15)'
-          }}>
-            <span style={{ display: 'block', fontSize: '1rem', fontWeight: '900', marginBottom: '2px' }}>
-              📸 Take a Screenshot!
-            </span>
-            <span style={{ fontSize: '0.8rem', fontWeight: '700', lineHeight: '1.2' }}>
-              Session expires when screen is locked or idle.
-            </span>
+          <div className="screenshot-hint">
+            <strong>📸 Take a screenshot</strong>
+            <span>Session expires when the screen is locked or idle.</span>
           </div>
         )}
 
         {showKeyboard && (
-          <div className="kiosk-virtual-keyboard" style={{ position: 'absolute', bottom: '20px', left: '480px', right: '30px', backgroundColor: isDarkMode ? '#1E293B' : '#F1F5F9', border: '4px solid #4F46E5', borderRadius: '24px', padding: '25px', zIndex: 1000, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
-              <span style={{ fontWeight: '900', color: isDarkMode ? '#94A3B8' : '#475569', fontSize: '1.2rem', textTransform: 'uppercase' }}>⌨️ Kiosk Touchscreen Keyboard</span>
-              <button onClick={() => setShowKeyboard(false)} style={{ background: '#EF4444', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '12px', fontWeight: '900', cursor: 'pointer' }}>Hide Keyboard ✕</button>
+          <div className="kiosk-virtual-keyboard">
+            <div className="kb-head">
+              <span className="kb-title">⌨️ {lang === 'EN' ? 'Kiosk touchscreen keyboard' : 'Keyboard ng kiosk'}</span>
+              <button className="kb-hide" onClick={() => setShowKeyboard(false)}>
+                {lang === 'EN' ? 'Hide keyboard' : 'Itago'} ✕
+              </button>
             </div>
             {keyboardRows.map((row, rowIndex) => (
-              <div key={rowIndex} style={{ display: 'flex', justifyContent: 'center', gap: '10px', width: '100%' }}>
+              <div className="kb-row" key={rowIndex}>
                 {row.map((key) => {
-                  let buttonWidth = '75px'; let bgBtnColor = isDarkMode ? '#334155' : '#FFFFFF'; let fontBtnColor = colorPalette.primaryText;
-                  if (key === 'SPACE') { buttonWidth = '500px'; bgBtnColor = '#4F46E5'; fontBtnColor = 'white'; }
-                  if (key === 'BACKSPACE') { buttonWidth = '160px'; bgBtnColor = '#F59E0B'; fontBtnColor = 'black'; }
-                  if (key === 'CLEAR') { buttonWidth = '120px'; bgBtnColor = '#64748B'; fontBtnColor = 'white'; }
+                  const modifier = key === 'SPACE' ? ' kb-key--space'
+                    : key === 'BACKSPACE' ? ' kb-key--back'
+                    : key === 'CLEAR' ? ' kb-key--clear' : '';
                   return (
-                    <button key={key} onClick={() => handleVirtualKeyPress(key)} style={{ width: buttonWidth, height: '70px', borderRadius: '14px', border: isDarkMode ? '1px solid #475569' : '1px solid #CBD5E1', backgroundColor: bgBtnColor, color: fontBtnColor, fontSize: '1.4rem', fontWeight: '900', cursor: 'pointer' }}>
-                      {key === 'BACKSPACE' ? '⌫ Delete' : (key === 'SPACE' ? 'Space Bar' : key)}
+                    <button key={key} className={`kb-key${modifier}`} onClick={() => handleVirtualKeyPress(key)}>
+                      {key === 'BACKSPACE' ? '⌫ Delete' : (key === 'SPACE' ? 'Space' : key)}
                     </button>
                   );
                 })}
@@ -834,134 +870,99 @@ export default function App() {
       </div>
 
       {selectedService && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(8px)',
-          display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 99999
-        }}>
-          <div style={{
-            backgroundColor: colorPalette.cardBg, borderRadius: '24px', padding: '40px',
-            maxWidth: '650px', width: '90%', border: colorPalette.cardBorder,
-            boxShadow: '0 25px 50px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', gap: '25px'
-          }}>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div className="k-overlay" onClick={() => setSelectedService(null)}>
+          <div className="k-modal" onClick={(e) => e.stopPropagation()}>
+
+            <div className="k-modal-head">
               <div>
-                <span style={{ fontSize: '3rem', display: 'block', marginBottom: '10px' }}>{selectedService.icon}</span>
-                <h2 style={{ margin: 0, color: colorPalette.primaryText, fontSize: '2.2rem', fontWeight: 900 }}>
+                <span className="k-modal-icon">{selectedService.icon}</span>
+                <span className="k-modal-eyebrow">{lang === 'EN' ? 'Service guide' : 'Gabay sa serbisyo'}</span>
+                <h2 className="k-modal-title">
                   {lang === 'EN' ? selectedService.titleEn : selectedService.titleTl}
                 </h2>
               </div>
-              <button 
-                onClick={() => setSelectedService(null)} 
-                style={{ background: '#E2E8F0', border: 'none', color: '#0F172A', width: '45px', height: '45px', borderRadius: '50%', fontSize: '1.2rem', fontWeight: 900, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-              >
-                ✕
-              </button>
+              <button className="k-close" onClick={() => setSelectedService(null)}>✕</button>
             </div>
 
-            <div style={{ background: selectedService.isExternal ? '#FEF2F2' : '#EEF2FF', border: `2px solid ${selectedService.isExternal ? '#FECDD3' : '#C7D2FE'}`, padding: '20px', borderRadius: '16px', color: selectedService.isExternal ? '#9F1239' : '#3730A3', fontSize: '1.2rem', fontWeight: 800, display: 'flex', gap: '15px', alignItems: 'center', lineHeight: '1.5' }}>
-              <span style={{ fontSize: '2rem' }}>{selectedService.isExternal ? '🏛️' : '📍'}</span>
+            <div className={`k-callout${selectedService.isExternal ? ' k-callout--alert' : ''}`}>
+              <span className="k-callout-glyph">{selectedService.isExternal ? '🏛️' : '📍'}</span>
               {lang === 'EN' ? selectedService.locationTextEn : selectedService.locationTextTl}
             </div>
 
-            {selectedService.isExternal ? (
-              <button 
-                onClick={() => setSelectedService(null)}
-                style={{ width: '100%', padding: '20px', borderRadius: '16px', background: '#10B981', color: 'white', border: 'none', fontSize: '1.3rem', fontWeight: 900, cursor: 'pointer', marginTop: '10px', boxShadow: '0 10px 20px rgba(16, 185, 129, 0.3)' }}
-              >
-                👍 {lang === 'EN' ? 'Got it, thank you!' : 'Sige po, salamat!'}
-              </button>
-            ) : (
-              <button 
-                onClick={() => {
-                  handleSelectOffice(selectedService.dbKey, selectedService.floor);
-                  setSelectedService(null);
-                }}
-                style={{ width: '100%', padding: '20px', borderRadius: '16px', background: '#4F46E5', color: 'white', border: 'none', fontSize: '1.3rem', fontWeight: 900, cursor: 'pointer', marginTop: '10px', boxShadow: '0 10px 20px rgba(79, 70, 229, 0.3)' }}
-              >
-                🗺️ {lang === 'EN' ? 'Show me the way' : 'Ituro ang daan sa mapa'}
-              </button>
-            )}
+            <div style={{ marginTop: '22px' }}>
+              {selectedService.isExternal ? (
+                <button className="k-btn k-btn--ok" onClick={() => setSelectedService(null)}>
+                  👍 {lang === 'EN' ? 'Got it, thank you!' : 'Sige po, salamat!'}
+                </button>
+              ) : (
+                <button
+                  className="k-btn k-btn--primary"
+                  onClick={() => {
+                    handleSelectOffice(selectedService.dbKey, selectedService.floor);
+                    setSelectedService(null);
+                  }}
+                >
+                  🗺️ {lang === 'EN' ? 'Show me the way' : 'Ituro ang daan sa mapa'}
+                </button>
+              )}
+            </div>
 
           </div>
         </div>
       )}
 
       {showAbout && (
-        <div 
-          style={{
-            position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.85)', 
-            backdropFilter: 'blur(8px)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'default'
-          }}
-          onClick={() => setShowAbout(false)} 
-        >
-          <div 
-            style={{ 
-              background: colorPalette.cardBg, padding: '40px', borderRadius: '24px', width: '90%', maxWidth: '650px', 
-              color: colorPalette.primaryText, cursor: 'default', boxShadow: '0 25px 50px rgba(0,0,0,0.5)', position: 'relative',
-              border: `4px solid #4F46E5`
-            }}
-            onClick={(e) => e.stopPropagation()} 
-          >
-            <button 
-              onClick={() => setShowAbout(false)}
-              style={{
-                position: 'absolute', top: '20px', right: '20px', background: isDarkMode ? '#334155' : '#E2E8F0', border: 'none', 
-                width: '45px', height: '45px', borderRadius: '50%', fontSize: '1.2rem', fontWeight: 'bold', 
-                cursor: 'pointer', color: colorPalette.primaryText, display: 'flex', alignItems: 'center', justifyContent: 'center'
-              }}
-            >
-              ✕
-            </button>
-            
-            <h2 style={{ fontSize: '2.4rem', fontWeight: '900', color: isDarkMode ? '#FFFFFF' : '#1E1B4B', margin: '0 0 15px 0', textAlign: 'center' }}>
-              About the Kiosk
-            </h2>
-            
-            <p style={{ fontSize: '1.15rem', color: colorPalette.secondaryText, lineHeight: '1.6', textAlign: 'center', margin: '0 auto 30px auto', maxWidth: '550px', fontWeight: '600' }}>
-              This Interactive Directory Kiosk was developed by 4th-year Bachelor of Science in Information Technology (BSIT) students from the City College of Tagaytay. Our goal is to enhance public service by providing an accessible, easy-to-use digital mapping system that helps citizens seamlessly locate offices and navigate the City Hall.
+        <div className="k-overlay" onClick={() => setShowAbout(false)}>
+          <div className="k-modal" onClick={(e) => e.stopPropagation()}>
+
+            <div className="k-modal-head">
+              <div>
+                <span className="k-modal-eyebrow">Tagaytay City Hall</span>
+                <h2 className="k-modal-title">About the Kiosk</h2>
+              </div>
+              <button className="k-close" onClick={() => setShowAbout(false)}>✕</button>
+            </div>
+
+            <p className="k-modal-text">
+              This Interactive Directory Kiosk was developed by 4th-year Bachelor of Science in
+              Information Technology (BSIT) students from the City College of Tagaytay. Our goal is
+              to enhance public service by providing an accessible, easy-to-use digital mapping
+              system that helps citizens seamlessly locate offices and navigate the City Hall.
             </p>
 
-            <div style={{ background: isDarkMode ? '#0F172A' : '#F8FAFC', border: colorPalette.cardBorder, borderRadius: '16px', padding: '25px' }}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#4F46E5', margin: '0 0 20px 0', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '1.5px' }}>
-                The Development Team
-              </h3>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: colorPalette.cardBorder, paddingBottom: '12px' }}>
-                  <span style={{ fontSize: '1.3rem', fontWeight: '900', color: colorPalette.primaryText }}>Franz Jandrei Valderama</span>
-                  <span style={{ fontSize: '1.05rem', fontWeight: '800', color: '#4F46E5', background: isDarkMode ? 'rgba(79, 70, 229, 0.2)' : '#EEF2FF', padding: '6px 14px', borderRadius: '20px' }}>Full Stack Developer</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: colorPalette.cardBorder, paddingBottom: '12px' }}>
-                  <span style={{ fontSize: '1.3rem', fontWeight: '900', color: colorPalette.primaryText }}>Neftali Luya</span>
-                  <span style={{ fontSize: '1.05rem', fontWeight: '800', color: '#059669', background: isDarkMode ? 'rgba(5, 150, 105, 0.2)' : '#ECFDF5', padding: '6px 14px', borderRadius: '20px' }}>Front End Developer</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: colorPalette.cardBorder, paddingBottom: '12px' }}>
-                  <span style={{ fontSize: '1.3rem', fontWeight: '900', color: colorPalette.primaryText }}>Ricalyn Mereyes</span>
-                  <span style={{ fontSize: '1.05rem', fontWeight: '800', color: '#D97706', background: isDarkMode ? 'rgba(217, 119, 6, 0.2)' : '#FFFBEB', padding: '6px 14px', borderRadius: '20px' }}>Main Documentation</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '1.3rem', fontWeight: '900', color: colorPalette.primaryText }}>Marlon Panganiban</span>
-                  <span style={{ fontSize: '1.05rem', fontWeight: '800', color: '#D97706', background: isDarkMode ? 'rgba(217, 119, 6, 0.2)' : '#FFFBEB', padding: '6px 14px', borderRadius: '20px' }}>Documentation</span>
-                </div>
+            <div className="k-roster">
+              <h3 className="k-roster-title">The Development Team</h3>
+
+              <div className="k-roster-row">
+                <span className="k-roster-name">Franz Jandrei Valderama</span>
+                <span className="k-roster-role">Full Stack Developer</span>
+              </div>
+              <div className="k-roster-row">
+                <span className="k-roster-name">Neftali Luya</span>
+                <span className="k-roster-role">Front End Developer</span>
+              </div>
+              <div className="k-roster-row">
+                <span className="k-roster-name">Ricalyn Mereyes</span>
+                <span className="k-roster-role k-roster-role--alt">Main Documentation</span>
+              </div>
+              <div className="k-roster-row">
+                <span className="k-roster-name">Marlon Panganiban</span>
+                <span className="k-roster-role k-roster-role--alt">Documentation</span>
               </div>
             </div>
 
-            <div style={{ textAlign: 'center', marginTop: '25px' }}>
-              <img src={tagaytaySeal} alt="City College of Tagaytay" style={{ width: '70px', height: '70px', borderRadius: '50%', objectFit: 'contain', background: 'white', padding: '2px' }} />
-            </div>
+            <img src={tagaytaySeal} alt="City College of Tagaytay" className="k-modal-seal" />
           </div>
         </div>
       )}
 
       {showRecoveryModal && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#FFFFFF', padding: '40px 30px', borderRadius: '16px', width: '400px', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)' }}>
-            <h2 style={{ margin: '0 0 15px 0', color: '#0F172A', fontSize: '1.8rem' }}>🔑 Set New Password</h2>
-            <p style={{ color: '#475569', marginBottom: '20px', fontSize: '1.1rem' }}>Enter your new master password below.</p>
-            
+        <div className="k-overlay">
+          <div className="k-modal k-modal--sm" style={{ textAlign: 'center' }}>
+            <span className="k-modal-icon" style={{ margin: '0 auto 16px' }}>🔑</span>
+            <h2 className="k-modal-title" style={{ marginBottom: '10px' }}>Set New Password</h2>
+            <p className="k-modal-text k-modal-text--center">Enter your new master password below.</p>
+
             <form onSubmit={async (e) => {
               e.preventDefault();
               const hasUpper = /[A-Z]/.test(recoveryPassword);
@@ -985,27 +986,23 @@ export default function App() {
               }
             }}>
               
-              <div style={{ position: 'relative', marginBottom: '20px' }}>
-                <input 
-                  type={showPassword ? "text" : "password"} 
+              <div className="k-field k-input-wrap">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="k-input"
                   value={recoveryPassword}
                   onChange={(e) => setRecoveryPassword(e.target.value)}
-                  placeholder="Min 6 chars, 1 Uppercase, 1 Number"
-                  style={{ width: '100%', padding: '15px', paddingRight: '45px', borderRadius: '8px', border: '2px solid #CBD5E1', fontSize: '1.05rem', textAlign: 'center', boxSizing: 'border-box', outline: 'none' }}
+                  placeholder="Min 6 chars, 1 uppercase, 1 number"
                   autoFocus
                   required
                 />
-                <button 
-                  type="button" 
-                  onClick={() => setShowPassword(!showPassword)} 
-                  style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.5rem' }}
-                >
+                <button type="button" className="k-eye" onClick={() => setShowPassword(!showPassword)}>
                   {showPassword ? '🙈' : '👁️'}
                 </button>
               </div>
-              
-              <button type="submit" disabled={isLoggingIn} style={{ width: '100%', padding: '15px', background: '#10B981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 800, cursor: isLoggingIn ? 'wait' : 'pointer', fontSize: '1.1rem' }}>
-                {isLoggingIn ? 'Saving...' : '💾 Save New Password'}
+
+              <button type="submit" className="k-btn k-btn--ok" disabled={isLoggingIn}>
+                {isLoggingIn ? 'Saving…' : '💾 Save New Password'}
               </button>
 
             </form>
@@ -1014,45 +1011,48 @@ export default function App() {
       )}
 
       {showAdminLogin && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#FFFFFF', padding: '40px 30px', borderRadius: '16px', width: '400px', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)' }}>
-            <h2 style={{ margin: '0 0 15px 0', color: '#0F172A', fontSize: '1.8rem' }}>🔒 Admin Access</h2>
-            <p style={{ color: '#475569', marginBottom: '20px', fontSize: '1.1rem' }}>Enter password for tagaytaykiosk@gmail.com</p>
-            
+        <div className="k-overlay">
+          <div className="k-modal k-modal--sm" style={{ textAlign: 'center' }}>
+            <span className="k-modal-icon" style={{ margin: '0 auto 16px' }}>🔒</span>
+            <h2 className="k-modal-title" style={{ marginBottom: '10px' }}>Admin Access</h2>
+            <p className="k-modal-text k-modal-text--center">Enter the password for tagaytaykiosk@gmail.com</p>
+
             <form onSubmit={handleAdminLogin}>
-              
-              <div style={{ position: 'relative', marginBottom: '20px' }}>
-                <input 
-                  type={showPassword ? "text" : "password"} 
+
+              <div className="k-field k-input-wrap">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="k-input"
                   value={adminPasswordInput}
                   onChange={(e) => setAdminPasswordInput(e.target.value)}
-                  placeholder="Enter password..."
-                  style={{ width: '100%', padding: '15px', paddingRight: '45px', borderRadius: '8px', border: '2px solid #CBD5E1', fontSize: '1.2rem', textAlign: 'center', boxSizing: 'border-box', outline: 'none' }}
+                  placeholder="Enter password…"
                   autoFocus
                 />
-                <button 
-                  type="button" 
-                  onClick={() => setShowPassword(!showPassword)} 
-                  style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.5rem' }}
-                  title={showPassword ? "Hide Password" : "Show Password"}
+                <button
+                  type="button"
+                  className="k-eye"
+                  onClick={() => setShowPassword(!showPassword)}
+                  title={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? '🙈' : '👁️'}
                 </button>
               </div>
-              
-              <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-                <button type="button" onClick={() => { setShowAdminLogin(false); setAdminPasswordInput(''); setShowPassword(false); }} style={{ flex: 1, padding: '15px', background: '#E2E8F0', color: '#475569', border: 'none', borderRadius: '8px', fontWeight: 800, cursor: 'pointer', fontSize: '1.1rem' }}>Cancel</button>
-                <button type="submit" disabled={isLoggingIn} style={{ flex: 1, padding: '15px', background: '#4F46E5', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 800, cursor: isLoggingIn ? 'wait' : 'pointer', fontSize: '1.1rem' }}>
-                  {isLoggingIn ? 'Checking...' : 'Login'}
+
+              <div className="k-btn-row" style={{ marginBottom: '14px' }}>
+                <button
+                  type="button"
+                  className="k-btn k-btn--ghost"
+                  onClick={() => { setShowAdminLogin(false); setAdminPasswordInput(''); setShowPassword(false); }}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="k-btn k-btn--primary" disabled={isLoggingIn}>
+                  {isLoggingIn ? 'Checking…' : 'Login'}
                 </button>
               </div>
 
-              <button 
-                type="button" 
-                onClick={handleForgotPassword}
-                style={{ background: 'transparent', border: 'none', color: '#3B82F6', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', textDecoration: 'underline' }}
-              >
-                Forgot Password? Send Reset Link
+              <button type="button" className="k-btn k-btn--link" onClick={handleForgotPassword}>
+                Forgot password? Send reset link
               </button>
 
             </form>

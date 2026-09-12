@@ -131,106 +131,124 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
   };
 
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
-      <div style={{ backgroundColor: '#FFFFFF', width: '90%', maxWidth: '1100px', height: '750px', borderRadius: '20px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        
-        <div style={{ backgroundColor: '#4F46E5', padding: '20px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#FFFFFF' }}>
-          <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            🔧 Tagaytay City Hall Admin Panel
+    <div className="k-overlay">
+      <div className="adm">
+
+        <div className="adm-top">
+          <h2>
+            🔧
+            <span>
+              Admin Panel
+              <span className="adm-top-sub">Tagaytay City Hall Kiosk</span>
+            </span>
           </h2>
-          <button 
+          <button
+            className="adm-exit"
             onClick={async () => {
-              await logoutAdmin(); 
+              await logoutAdmin();
               onClose();
-            }} 
-            style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', color: '#FFFFFF', border: '1px solid rgba(255, 255, 255, 0.3)', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', transition: 'background 0.2s' }}>
-            ✕ Close & Logout
+            }}
+          >
+            ✕ Close &amp; Logout
           </button>
         </div>
 
-        <div style={{ display: 'flex', background: '#F8FAFC', borderBottom: '2px solid #E2E8F0' }}>
-          <button onClick={() => setActiveTab('announcements')} style={{ flex: 1, padding: '15px', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer', border: 'none', background: activeTab === 'announcements' ? '#FFFFFF' : 'transparent', color: activeTab === 'announcements' ? '#4F46E5' : '#64748B', borderBottom: activeTab === 'announcements' ? '4px solid #4F46E5' : '4px solid transparent' }}>
-            📢 Announcements & Advisories
+        <div className="adm-tabs">
+          <button className={`adm-tab${activeTab === 'announcements' ? ' active' : ''}`} onClick={() => setActiveTab('announcements')}>
+            📢 Announcements
           </button>
-          <button onClick={() => setActiveTab('offices')} style={{ flex: 1, padding: '15px', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer', border: 'none', background: activeTab === 'offices' ? '#FFFFFF' : 'transparent', color: activeTab === 'offices' ? '#4F46E5' : '#64748B', borderBottom: activeTab === 'offices' ? '4px solid #4F46E5' : '4px solid transparent' }}>
-            🏢 Office Directory Management
+          <button className={`adm-tab${activeTab === 'offices' ? ' active' : ''}`} onClick={() => setActiveTab('offices')}>
+            🏢 Office Directory
           </button>
-          <button onClick={() => setActiveTab('security')} style={{ flex: 1, padding: '15px', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer', border: 'none', background: activeTab === 'security' ? '#FFFFFF' : 'transparent', color: activeTab === 'security' ? '#4F46E5' : '#64748B', borderBottom: activeTab === 'security' ? '4px solid #4F46E5' : '4px solid transparent' }}>
-            🔒 Change Admin Password
+          <button className={`adm-tab${activeTab === 'security' ? ' active' : ''}`} onClick={() => setActiveTab('security')}>
+            🔒 Admin Password
           </button>
         </div>
 
         {activeTab === 'announcements' && (
-          <div style={{ padding: '40px', display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#FFFFFF', overflowY: 'auto' }}>
-            <h2 style={{ color: '#0F172A', marginBottom: '10px' }}>📢 Announcements & Advisories</h2>
-            <p style={{ color: '#64748B', marginBottom: '20px' }}>Manage the idle screen displays. Leave a field blank to hide it.</p>
-            
-            <form onSubmit={handleSaveAnnouncement} style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, gap: '20px' }}>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-                <label style={{ fontWeight: 800, color: '#1E40AF', marginBottom: '8px' }}>1. Official Announcement (Board)</label>
-                <textarea 
-                  value={announcementText} 
-                  onChange={(e) => setAnnouncementText(e.target.value)} 
-                  placeholder="e.g. Walang pasok bukas dahil sa bagyo... (Appears in a large card below the title)"
-                  style={{ width: '100%', flexGrow: 1, padding: '20px', border: '2px solid #CBD5E1', borderRadius: '12px', fontSize: '1.2rem', outline: 'none', fontFamily: 'inherit', resize: 'none', background: '#F8FAFC', boxSizing: 'border-box' }} 
+          <div className="adm-pane">
+            <h3>📢 Announcements &amp; Advisories</h3>
+            <p className="adm-hint">Manage what appears on the idle screen. Leave a field blank to hide it.</p>
+
+            <form className="adm-form" onSubmit={handleSaveAnnouncement}>
+
+              <div className="adm-grow">
+                <label className="k-label">1 · Official Announcement (Board)</label>
+                <textarea
+                  className="k-textarea"
+                  value={announcementText}
+                  onChange={(e) => setAnnouncementText(e.target.value)}
+                  placeholder="e.g. Walang pasok bukas dahil sa bagyo… (Appears in a large card below the title)"
                 />
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-                <label style={{ fontWeight: 800, color: '#E11D48', marginBottom: '8px' }}>2. Scrolling Advisory (Marquee)</label>
-                <textarea 
-                  value={advisoryText} 
-                  onChange={(e) => setAdvisoryText(e.target.value)} 
-                  placeholder="e.g. Please secure your belongings... (Scrolling ticker at the absolute bottom)"
-                  style={{ width: '100%', flexGrow: 1, padding: '20px', border: '2px solid #CBD5E1', borderRadius: '12px', fontSize: '1.2rem', outline: 'none', fontFamily: 'inherit', resize: 'none', background: '#FEF2F2', boxSizing: 'border-box' }} 
+              <div className="adm-grow">
+                <label className="k-label">2 · Scrolling Advisory (Marquee)</label>
+                <textarea
+                  className="k-textarea"
+                  value={advisoryText}
+                  onChange={(e) => setAdvisoryText(e.target.value)}
+                  placeholder="e.g. Please secure your belongings… (Scrolling ticker at the very bottom)"
                 />
               </div>
 
-              <button type="submit" disabled={isSaving} style={{ padding: '20px', borderRadius: '12px', border: 'none', backgroundColor: '#3B82F6', color: '#FFFFFF', fontWeight: '900', fontSize: '1.2rem', cursor: isSaving ? 'not-allowed' : 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', marginTop: '10px' }}>
-                {isSaving ? 'Deploying to Kiosks...' : '📢 Publish Updates'}
+              <button type="submit" className="k-btn k-btn--primary" disabled={isSaving}>
+                {isSaving ? 'Deploying to kiosks…' : '📢 Publish Updates'}
               </button>
             </form>
           </div>
         )}
 
         {activeTab === 'offices' && (
-          <div style={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
-            <div style={{ width: '320px', borderRight: '1px solid #E2E8F0', padding: '24px', display: 'flex', flexDirection: 'column', backgroundColor: '#F8FAFC' }}>
-              <label style={{ display: 'block', color: '#475569', fontWeight: '800', fontSize: '0.9rem', marginBottom: '8px', textTransform: 'uppercase' }}>Select Floor:</label>
-              <select value={selectedFloor} onChange={handleFloorChange} style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: '2px solid #CBD5E1', fontSize: '1.05rem', fontWeight: '700', color: '#1E293B', outline: 'none', cursor: 'pointer' }}>
-                {[1, 2, 3, 4, 5, 6, 7].map(f => (<option key={f} value={f}>Floor {f}</option>))}
-              </select>
-              <div style={{ flexGrow: 1, overflowY: 'auto', marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
+          <div className="adm-split">
+            <div className="adm-list">
+              <div>
+                <label className="k-label">Select Floor</label>
+                <select className="k-select" value={selectedFloor} onChange={handleFloorChange}>
+                  {[1, 2, 3, 4, 5, 6, 7].map(f => (<option key={f} value={f}>Floor {f}</option>))}
+                </select>
+              </div>
+              <div className="adm-list-scroll">
                 {visibleOffices.map((office) => (
-                  <button key={office.key} onClick={() => setSelectedOfficeKey(office.key)} style={{ width: '100%', padding: '14px 16px', textAlign: 'left', borderRadius: '10px', border: selectedOfficeKey === office.key ? '2px solid #4F46E5' : '1px solid #E2E8F0', backgroundColor: selectedOfficeKey === office.key ? '#EEF2FF' : '#FFFFFF', color: selectedOfficeKey === office.key ? '#4F46E5' : '#334155', fontWeight: '700', fontSize: '0.95rem', cursor: 'pointer' }}>
+                  <button
+                    key={office.key}
+                    className={`adm-office${selectedOfficeKey === office.key ? ' active' : ''}`}
+                    onClick={() => setSelectedOfficeKey(office.key)}
+                  >
                     {office.title}
                   </button>
                 ))}
               </div>
             </div>
 
-            <div style={{ flexGrow: 1, padding: '35px', overflowY: 'auto', backgroundColor: '#FFFFFF' }}>
+            <div className="adm-pane">
               {!selectedOfficeKey ? (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#64748B' }}>
-                  <div style={{ fontSize: '4.5rem', marginBottom: '15px' }}>📝</div>
-                  <h3 style={{ margin: '0 0 8px 0', fontSize: '1.6rem', color: '#1E293B', fontWeight: '800' }}>Select an Office to Edit</h3>
+                <div className="adm-empty">
+                  <span>📝</span>
+                  <h3>Select an office to edit</h3>
+                  <p className="adm-hint">Pick a floor, then choose an office from the list.</p>
                 </div>
               ) : (
-                <form onSubmit={handleSaveOffice} style={{ display: 'flex', flexDirection: 'column', gap: '15px', height: '100%' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                    <div><label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem' }}>Title</label><input type="text" value={formTitle} onChange={(e) => setFormTitle(e.target.value)} required style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px', boxSizing: 'border-box' }} /></div>
-                    <div><label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem' }}>Hours</label><input type="text" value={formHours} onChange={(e) => setFormHours(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px', boxSizing: 'border-box' }} /></div>
-                  </div>
-                  
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <form className="adm-form" onSubmit={handleSaveOffice}>
+                  <div className="adm-form--split">
                     <div>
-                      <label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem' }}>Head</label>
-                      <input type="text" value={formHead} onChange={(e) => setFormHead(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px', boxSizing: 'border-box' }} />
+                      <label className="k-label">Title</label>
+                      <input type="text" className="k-input" value={formTitle} onChange={(e) => setFormTitle(e.target.value)} required />
                     </div>
                     <div>
-                      <label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem' }}>Status</label>
-                      <select value={formStatus} onChange={(e) => setFormStatus(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px', boxSizing: 'border-box' }}>
+                      <label className="k-label">Hours</label>
+                      <input type="text" className="k-input" value={formHours} onChange={(e) => setFormHours(e.target.value)} />
+                    </div>
+                  </div>
+
+                  <div className="adm-form--split">
+                    <div>
+                      <label className="k-label">Head</label>
+                      <input type="text" className="k-input" value={formHead} onChange={(e) => setFormHead(e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="k-label">Status</label>
+                      <select className="k-select" value={formStatus} onChange={(e) => setFormStatus(e.target.value)}>
                         <option value="Available">🟢 Available</option>
                         <option value="In a Meeting">🔴 In a Meeting</option>
                         <option value="Out of Office">🟡 Out of Office</option>
@@ -238,18 +256,18 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-                    <label style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem', marginBottom: '5px' }}>Office Description / Info</label>
-                    <textarea 
-                      value={formDescription} 
-                      onChange={(e) => setFormDescription(e.target.value)} 
-                      placeholder="Short information about what this office does..." 
-                      style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px', resize: 'none', flexGrow: 1, minHeight: '120px', boxSizing: 'border-box' }} 
+                  <div className="adm-grow">
+                    <label className="k-label">Office Description / Info</label>
+                    <textarea
+                      className="k-textarea"
+                      value={formDescription}
+                      onChange={(e) => setFormDescription(e.target.value)}
+                      placeholder="Short information about what this office does…"
                     />
                   </div>
 
-                  <button type="submit" disabled={isSaving} style={{ padding: '15px', borderRadius: '8px', background: '#4F46E5', color: 'white', fontWeight: '800', fontSize: '1.1rem', border: 'none', cursor: 'pointer' }}>
-                    {isSaving ? 'Saving...' : '💾 Save Office Metadata'}
+                  <button type="submit" className="k-btn k-btn--primary" disabled={isSaving}>
+                    {isSaving ? 'Saving…' : '💾 Save Office Metadata'}
                   </button>
                 </form>
               )}
@@ -258,38 +276,39 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
         )}
 
         {activeTab === 'security' && (
-          <div style={{ padding: '40px', display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#FFFFFF' }}>
-            <h2 style={{ color: '#0F172A', marginBottom: '10px' }}>🔒 Cloud Security & Authentication</h2>
-            <p style={{ color: '#64748B', marginBottom: '30px', fontSize: '1.05rem', lineHeight: '1.6' }}>
-              Change the master password for <strong>tagaytaykiosk@gmail.com</strong>. This will be updated directly in the Supabase Cloud.
+          <div className="adm-pane">
+            <h3>🔒 Cloud Security &amp; Authentication</h3>
+            <p className="adm-hint">
+              Change the master password for <strong>tagaytaykiosk@gmail.com</strong>. This is updated
+              directly in the Supabase Cloud.
             </p>
-            
-            <form onSubmit={handleSavePassword} style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '480px' }}>
+
+            <form className="adm-form" onSubmit={handleSavePassword} style={{ maxWidth: '480px', flex: 'none' }}>
               <div>
-                <label style={{ display: 'block', fontWeight: '800', color: '#475569', marginBottom: '8px' }}>New Admin Password (min 6 chars, 1 uppercase, 1 number):</label>
-                <input 
-                  type="password" 
-                  value={newPassword} 
-                  onChange={(e) => setNewPassword(e.target.value)} 
-                  placeholder="Enter new password..." 
-                  required 
+                <label className="k-label">New admin password (min 6 chars, 1 uppercase, 1 number)</label>
+                <input
+                  type="password"
+                  className="k-input"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new password…"
+                  required
                   minLength="6"
-                  style={{ width: '100%', padding: '15px', border: '2px solid #CBD5E1', borderRadius: '10px', fontSize: '1.1rem', outline: 'none', boxSizing: 'border-box' }} 
                 />
               </div>
               <div>
-                <label style={{ display: 'block', fontWeight: '800', color: '#475569', marginBottom: '8px' }}>Confirm New Password:</label>
-                <input 
-                  type="password" 
-                  value={confirmPassword} 
-                  onChange={(e) => setConfirmPassword(e.target.value)} 
-                  placeholder="Re-type new password..." 
-                  required 
+                <label className="k-label">Confirm new password</label>
+                <input
+                  type="password"
+                  className="k-input"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Re-type new password…"
+                  required
                   minLength="6"
-                  style={{ width: '100%', padding: '15px', border: '2px solid #CBD5E1', borderRadius: '10px', fontSize: '1.1rem', outline: 'none', boxSizing: 'border-box' }} 
                 />
               </div>
-              <button type="submit" style={{ padding: '18px', borderRadius: '12px', border: 'none', backgroundColor: '#4F46E5', color: '#FFFFFF', fontWeight: '900', fontSize: '1.1rem', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', marginTop: '10px' }}>
+              <button type="submit" className="k-btn k-btn--primary">
                 ☁️ Save Password to Cloud
               </button>
             </form>
