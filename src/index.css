@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap');
+]@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap');
 
 * {
     margin: 0; padding: 0; box-sizing: border-box;
@@ -2336,3 +2336,144 @@ button:active { transform: scale(0.97); }
 
 /* Titik na mas madaling basahin sa malayo (kiosk) */
 .dir-title, .welcome-title { text-rendering: optimizeLegibility; }
+
+/* ============================================================
+   AYOS: ALISIN ANG NAKALUTANG NA KAHON + BAGONG ITSURA NG KWARTO
+   Ang .mock-map-graphic ay fixed na 1400x1300 canvas, hindi ang
+   hugis ng gusali. Kaya ang border/slab dito ay laging mukhang
+   offset. Tinanggal na — ang gusali na mismo ang magbibigay ng
+   hugis sa pamamagitan ng SVG outline at ng mga kwarto.
+   ============================================================ */
+
+.mock-map-graphic,
+.light-theme .mock-map-graphic,
+.is-3d-active .mock-map-graphic,
+.light-theme .is-3d-active .mock-map-graphic {
+  background: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.mock-map-graphic::before,
+.mock-map-graphic::after { content: none !important; }
+
+/* Mas tahimik na grid — hindi na nakakalito sa likod ng mapa */
+.light-theme .map-viewport {
+  background-color: #EEF4FC !important;
+  background-image:
+    linear-gradient(rgba(37, 99, 235, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(37, 99, 235, 0.035) 1px, transparent 1px),
+    linear-gradient(rgba(37, 99, 235, 0.075) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(37, 99, 235, 0.075) 1px, transparent 1px) !important;
+}
+
+/* ---------- BAGONG ITSURA NG KWARTO ----------
+   Malinaw na "plate" na may makapal na asul na guhit sa itaas,
+   parang label sa totoong direktoryo ng gusali. Pantay-pantay
+   ang lahat kaya malinis tingnan.                                */
+
+.room-node:not(.active-room):not(.theme-const) {
+  border-radius: 8px !important;
+  border: 1.5px solid #2E62B8 !important;
+  border-top: 5px solid #1D4ED8 !important;
+  background: linear-gradient(180deg, #16336B 0%, #0D2350 100%) !important;
+  color: #EAF4FF !important;
+  box-shadow: 0 6px 16px rgba(3, 12, 30, 0.45) !important;
+}
+.room-node:not(.active-room):not(.theme-const):hover {
+  border-color: #60A5FA !important;
+  border-top-color: #60A5FA !important;
+  background: linear-gradient(180deg, #1E4488 0%, #122D62 100%) !important;
+  box-shadow: 0 12px 26px rgba(3, 12, 30, 0.6) !important;
+}
+
+/* LIGHT THEME: puting plate na may malinaw na asul na balangkas */
+.light-theme .room-node:not(.active-room):not(.theme-const) {
+  background: #FFFFFF !important;
+  border: 1.5px solid #7FA9E0 !important;
+  border-top: 5px solid #2563EB !important;
+  color: #0B2A5B !important;
+  box-shadow: 0 3px 0 rgba(127, 169, 224, 0.35), 0 8px 18px rgba(37, 99, 235, 0.14) !important;
+}
+.light-theme .room-node:not(.active-room):not(.theme-const):hover {
+  border-color: #2563EB !important;
+  background: #F5F9FF !important;
+  box-shadow: 0 3px 0 rgba(37, 99, 235, 0.45), 0 14px 28px rgba(37, 99, 235, 0.22) !important;
+}
+
+/* Alisin ang puting sheen sa light theme — ito ang nagpapakupas */
+.light-theme .room-node:not(.active-room)::after { content: none !important; }
+
+/* ---------- KULAY-KODA NG ZONE (nasa itaas na guhit) ----------
+   Iisa ang hugis ng lahat, ang guhit lang sa itaas ang nagsasabi
+   kung anong uri ng espasyo — malinis at pantay pa rin tingnan.  */
+
+.theme-amber:not(.active-room)  { border-top-color: #3B82F6 !important; }  /* malalaking hall */
+.theme-cyan:not(.active-room)   { border-top-color: #0891B2 !important; }  /* kultura / pampubliko */
+.theme-blue:not(.active-room)   { border-top-color: #2563EB !important; }  /* serbisyo */
+.theme-purple:not(.active-room) { border-top-color: #4F46E5 !important; }  /* impormasyon */
+.theme-teal:not(.active-room)   { border-top-color: #0E7490 !important; }  /* turismo / barangay */
+.theme-gray:not(.active-room)   { border-top-color: #64748B !important; }  /* CR / utilities */
+
+/* Pantay na fill sa lahat — kulay ng guhit lang ang nagkakaiba */
+.theme-amber:not(.active-room),
+.theme-cyan:not(.active-room),
+.theme-blue:not(.active-room),
+.theme-purple:not(.active-room),
+.theme-teal:not(.active-room),
+.theme-gray:not(.active-room) {
+  background: linear-gradient(180deg, #16336B 0%, #0D2350 100%) !important;
+}
+.light-theme .theme-amber:not(.active-room),
+.light-theme .theme-cyan:not(.active-room),
+.light-theme .theme-blue:not(.active-room),
+.light-theme .theme-purple:not(.active-room),
+.light-theme .theme-teal:not(.active-room),
+.light-theme .theme-gray:not(.active-room) {
+  background: #FFFFFF !important;
+}
+
+/* Napiling opisina: solidong asul, kitang-kita agad */
+.active-room {
+  border-radius: 8px !important;
+  border: 2px solid #BFDBFE !important;
+  border-top: 5px solid #93C5FD !important;
+}
+
+/* Balangkas ng gusali: mas malinaw kaysa sa dating malabong linya */
+.mock-map-graphic > svg g { stroke: #4A7CC4 !important; stroke-width: 6px !important; }
+.light-theme .mock-map-graphic > svg g { stroke: #7FA9E0 !important; stroke-width: 6px !important; }
+
+/* Hagdan / elevator: kapareho ng sistema para magkaisa ang hitsura */
+.stairs-block, .escalator-block, .elevator-block {
+  border-radius: 6px !important;
+  border: 1.5px solid #2E62B8 !important;
+  background: #0F2A5C !important;
+}
+.light-theme .stairs-block,
+.light-theme .escalator-block,
+.light-theme .elevator-block {
+  border: 1.5px solid #9DBCE8 !important;
+  background: #F4F8FF !important;
+}
+.garden-area {
+  border-radius: 8px !important;
+  border: 2px dashed #2E62B8 !important;
+  background: rgba(30, 58, 138, 0.25) !important;
+}
+.light-theme .garden-area {
+  border: 2px dashed #9DBCE8 !important;
+  background: #F0F6FF !important;
+}
+
+/* 3D: ipantay ang pader sa bagong kulay ng plate */
+.is-3d-active .room-node::before {
+  background: linear-gradient(180deg, #0F2A5C 0%, #071A3A 100%) !important;
+  border: none !important;
+}
+.light-theme .is-3d-active .room-node::before {
+  background: linear-gradient(180deg, #D6E4F8 0%, #A9C4E8 100%) !important;
+}
+.is-3d-active .active-room::before {
+  background: linear-gradient(180deg, #1D4ED8 0%, #0E2E70 100%) !important;
+}
