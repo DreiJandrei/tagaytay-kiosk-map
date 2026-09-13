@@ -335,7 +335,26 @@ export default function App() {
       await resetPasswordEmail('tagaytaykiosk@gmail.com');
       alert('✅ Recovery link sent to tagaytaykiosk@gmail.com!\n\nPlease check the Gmail inbox to set a new password.');
     } catch (error) {
-      alert('❌ Failed to send reset email. Make sure you have internet connection.');
+      // Dati ay laging "internet connection" ang sinasabi nito kahit ano pa
+      // ang tunay na dahilan — kaya mahirap i-debug. Ipakita ang totoo.
+      const code = error?.code || error?.error_code || '';
+      const isRateLimited = code === 'over_email_send_rate_limit' || error?.status === 429;
+
+      if (isRateLimited) {
+        alert(
+          '⏳ Too many reset requests.\n\n' +
+          'May limitasyon ang Supabase sa dami ng email na maipapadala kada oras, ' +
+          'at naabot na ito. Maghintay ng mga isang oras bago subukan ulit.\n\n' +
+          '(Supabase: email rate limit exceeded)'
+        );
+        return;
+      }
+
+      alert(
+        '❌ Failed to send reset email.\n\n' +
+        `Dahilan: ${error?.message || 'Hindi matukoy'}` +
+        (error?.status ? ` (HTTP ${error.status})` : '')
+      );
     }
   };
 
