@@ -135,11 +135,12 @@ export default function MapScreen({
   }
 
 if (currentFloor === 1 && transportMethod === 'escalator') {
-      // Mula sa kiosk: pakanan sa pasilyo (X:1105), pababa sa tapat ng
-      // escalator, tapos pasok sa sakayan nito mula sa kaliwang dulo.
+      // Nasa KANANG dulo ang sakayan paakyat ng escalator. Kaya pahalang
+      // muna sa pasilyo (y 822, nasa pagitan ng elevator at escalator),
+      // hanggang x 1225, tapos pababa papasok sa kanang dulo.
       // Inililipat din ang tunguhin sa escalator (hindi elevator).
-      finalPathData = "M 1045 822 L 1105 822 L 1105 885 L 1180 885";
-      destX = 1180;
+      finalPathData = "M 1045 822 L 1225 822 L 1225 885";
+      destX = 1225;
       destY = 885;
       destTitle = "Escalator to Upper Floors";
   }
