@@ -1,3 +1,7 @@
+// DAPAT NAUUNA ITO SA LAHAT: sinasalo ang recovery hash bago pa mabuo
+// ang Supabase client, dahil buburahin nito ang hash sa URL.
+import './lib/recoveryFlag.js';
+
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';

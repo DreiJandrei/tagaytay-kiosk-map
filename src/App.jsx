@@ -13,6 +13,7 @@ import { useSearchParams } from 'react-router-dom';
 import { getAllOffices, initializeDatabase, incrementSearchCount, loginAdmin, resetPasswordEmail, logoutAdmin, onAuthChange, changeAdminPassword } from './lib/api';
 import { coordinateMapping, mergeOfficeData } from './lib/coordinateMapping';
 import { defaultOfficeData } from './lib/defaultOfficeData';
+import { isRecoveryLink } from './lib/recoveryFlag';
 
 const serviceGuidesConfig = [
   {
@@ -117,9 +118,13 @@ export default function App() {
       }
     });
     
-    if (window.location.hash.includes('type=recovery')) {
-      setAppState('map'); 
-      setShowAdminLogin(false); 
+    // Ginagamit ang nasalong flag, hindi ang buhay na window.location.hash —
+    // baka nabura na ito ng Supabase bago pa tumakbo ang effect na ito.
+    // Sinasaklaw din nito ang pagkakataong nakaligtaan ang PASSWORD_RECOVERY
+    // event (maaaring nailabas bago pa naka-subscribe sa itaas).
+    if (isRecoveryLink) {
+      setAppState('map');
+      setShowAdminLogin(false);
       setShowRecoveryModal(true);
     }
 
@@ -132,9 +137,9 @@ export default function App() {
 
   useEffect(() => {
     const key = searchParams.get('key');
-    const routeKey = searchParams.get('route'); 
-    const isRecovery = window.location.hash.includes('type=recovery');
-    
+    const routeKey = searchParams.get('route');
+    const isRecovery = isRecoveryLink;
+
     // Papasukin kung mobile scan (routeKey), password recovery (isRecovery), o may tamang secret key
     if (isRecovery || routeKey || key === 'cct-bsit-kiosk') {
       setIsAuthorized(true);

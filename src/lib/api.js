@@ -10,9 +10,14 @@ export const loginAdmin = async (email, password) => {
 };
 
 export const resetPasswordEmail = async (email) => {
-  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: 'https://tagaytay-kiosk-map-one.vercel.app', 
-  });
+  // Ibalik sa ORIHINAL na pinanggalingan, hindi sa naka-hardcode na Vercel URL.
+  // Kapag naka-hardcode, ang admin na humihiling mula sa localhost ay
+  // itatapon sa production (o babagsak sa Site URL ng Supabase kapag hindi
+  // naka-allowlist ang redirectTo) — kaya "hindi gumagana" ang reset link.
+  // Idinadagdag ang kiosk key para hindi mag-"System Locked" pagbalik.
+  const redirectTo = `${window.location.origin}/?key=cct-bsit-kiosk`;
+
+  const { data, error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
   if (error) throw error;
   return data;
 };
@@ -46,8 +51,10 @@ export const initializeDatabase = async (seedData) => {
     Object.keys(seedData).forEach(floorStr => {
       const floorNum = parseInt(floorStr);
       Object.keys(seedData[floorStr]).forEach(officeKey => {
-        const item = seedData[seedData][officeKey];
-        
+        // Dating `seedData[seedData]` — naging "[object Object]" ang index,
+        // kaya laging undefined at sumasabog sa `.title` sa bagong database.
+        const item = seedData[floorStr][officeKey];
+
         officesToInsert.push({
           office_key: officeKey, 
           floor: floorNum, 
