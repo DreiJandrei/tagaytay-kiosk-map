@@ -20,8 +20,10 @@ export const coordinateMapping = {
 
       // ======== MULTI-FLOOR TRANSPORT ROUTES ========
       "elevator-up": {
-          targetX: 1180, targetY: 745,
-          pathData: "M 1045 822 L 1045 745 L 1180 745",
+          // Nasa ILALIM ng elevator block ang pinto (x 1153-1213), kaya
+          // pahalang muna sa pasilyo (y 822) bago pumasok paakyat sa pinto.
+          targetX: 1183, targetY: 745,
+          pathData: "M 1045 822 L 1183 822 L 1183 790",
           style: { display: 'none' },
           isDirectionOnly: true,
           title: "Elevator to Upper Floors",
@@ -83,14 +85,14 @@ export const coordinateMapping = {
       "info-desk": {
           // Kaliwa mismo ng bukana, nakadikit sa gitnang pader.
           targetX: 1045, targetY: 910, pathData: "M 1045 822 L 1045 910",
-          style: { width: 80, height: 90, left: 1010, top: 865, padding: '6px', fontSize: '0.75rem' },
+          style: { width: 75, height: 75, left: 1010, top: 880, padding: '6px', fontSize: '0.75rem' },
           cssClass: "theme-blue"
       },
       "guard": {
           // Kanan ng bukana, katabi ng pinto papasok.
-          targetX: 1282, targetY: 935,
-          pathData: "M 1045 822 L 1100 822 L 1100 935 L 1282 935",
-          style: { width: 75, height: 55, left: 1245, top: 905, padding: '6px', fontSize: '0.75rem' },
+          targetX: 1287, targetY: 945,
+          pathData: "M 1045 822 L 1105 822 L 1105 945 L 1287 945",
+          style: { width: 75, height: 58, left: 1250, top: 900, padding: '6px', fontSize: '0.75rem' },
           cssClass: "theme-indigo"
       }
   },

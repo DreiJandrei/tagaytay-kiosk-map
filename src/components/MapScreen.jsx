@@ -68,7 +68,18 @@ export default function MapScreen({
   };
 
   const selectedOffice = selectedOfficeKey ? offices?.[selectedOfficeKey] : null;
-  
+
+  // ==============================================================
+  // TUNGUHIN NG RUTA (puwedeng palitan ng transport override)
+  // Ang "elevator-up" ang ginagamit na key kahit escalator ang pinili,
+  // kaya kailangang ilipat ang tunguhin sa mismong escalator — kung
+  // hindi, hihilahin ito ng PANUNTUNAN 2 pabalik sa elevator at
+  // magsasapawan ang linya sa ibabaw ng escalator.
+  // ==============================================================
+  let destX = selectedOffice ? selectedOffice.targetX : null;
+  let destY = selectedOffice ? selectedOffice.targetY : null;
+  let destTitle = selectedOffice ? selectedOffice.title : "";
+
   // ==============================================================
   // DYNAMIC KIOSK PIN PLACEMENT
   // ==============================================================
@@ -123,10 +134,14 @@ export default function MapScreen({
       finalPathData = `M ${x} ${y} L ${x} ${y - 20} L ${x + 20} ${y - 20} L ${x + 20} ${y - 40} L ${x + 40} ${y - 40}`;
   }
 
-if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-to-transport') {
-      // Mula sa kiosk: pababa sa pasilyo ng bukana (Y:935), pakanan sa ilalim
-      // ng escalator, tapos pasok sa sakayan nito.
-      finalPathData = "M 1045 822 L 1100 822 L 1100 935 L 1235 935 L 1235 870";
+if (currentFloor === 1 && transportMethod === 'escalator') {
+      // Mula sa kiosk: pakanan sa pasilyo (X:1105), pababa sa tapat ng
+      // escalator, tapos pasok sa sakayan nito mula sa kaliwang dulo.
+      // Inililipat din ang tunguhin sa escalator (hindi elevator).
+      finalPathData = "M 1045 822 L 1105 822 L 1105 885 L 1180 885";
+      destX = 1180;
+      destY = 885;
+      destTitle = "Escalator to Upper Floors";
   }
 
   if (selectedOffice && currentFloor !== 1 && finalPathData !== "") {
@@ -204,10 +219,10 @@ if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-t
   }
 
   // PANUNTUNAN 2 — Dapat matapos ang linya mismo sa destination pin.
-  if (finalPathData !== "" && selectedOffice && selectedOffice.targetX != null && selectedOffice.targetY != null) {
+  if (finalPathData !== "" && destX != null && destY != null) {
       const pts = readPoints(finalPathData);
       if (pts) {
-          const tx = selectedOffice.targetX, ty = selectedOffice.targetY;
+          const tx = destX, ty = destY;
           if (Math.abs(pts.last.x - tx) > 2 || Math.abs(pts.last.y - ty) > 2) {
               finalPathData += ` L ${tx} ${pts.last.y} L ${tx} ${ty}`;
           }
@@ -418,10 +433,12 @@ if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-t
               <div className="structural-element stairs-block" style={{ width: '255px', height: '100px', left: '370px', top: '585px' }}>
                 <div className="stair-lines"></div><span className="stair-label">Stairs ▶</span>
               </div>
-              <div className="structural-element elevator-block" style={{ width: '145px', height: '110px', left: '1110px', top: '690px' }}>
+              {/* Elevator: nasa ibaba ang pinto. May 60px na pasilyo (y 790-850)
+                  sa pagitan nito at ng escalator para may daanan ang ruta. */}
+              <div className="structural-element elevator-block" style={{ width: '145px', height: '100px', left: '1110px', top: '690px' }}>
                 Elevator<div className="elevator-doors" style={{ left: '43px' }}></div>
               </div>
-              <div className="structural-element escalator-block" style={{ width: '160px', height: '80px', left: '1150px', top: '820px' }}>
+              <div className="structural-element escalator-block" style={{ width: '120px', height: '80px', left: '1120px', top: '845px' }}>
                 <div className="stair-lines"></div><span className="escalator-label">Escalator ◀</span>
               </div>
 
@@ -540,9 +557,9 @@ if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-t
             <span className="pulse-ring"></span>{kioskText}
           </div>
 
-          {selectedOffice && selectedOffice.targetX && (
-            <div className="node pin-destination" key={`dest-${selectedOfficeKey}`} style={{ display: 'block', left: selectedOffice.targetX, top: selectedOffice.targetY, zIndex: 100 }}>
-              🎯 {selectedOffice.title}
+          {selectedOffice && destX != null && (
+            <div className="node pin-destination" key={`dest-${selectedOfficeKey}-${destX}`} style={{ display: 'block', left: destX, top: destY, zIndex: 100 }}>
+              🎯 {destTitle}
             </div>
           )}
 
