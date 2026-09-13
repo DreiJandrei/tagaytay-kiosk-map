@@ -200,7 +200,10 @@ img { max-width: 100%; }
 .theme-teal { background: linear-gradient(135deg, #14B8A6, #0F766E); color: white; }
 .theme-gray { background: linear-gradient(135deg, #64748B, #334155); color: white; }
 .theme-indigo { background: linear-gradient(135deg, #6366F1, #4338CA); color: white; }
-.vertical-text .room-label { writing-mode: vertical-rl; transform: rotate(180deg); }
+/* Ang .vertical-text ay nasa LOOB ng .room-label (tingnan ang MapScreen),
+   kaya `.vertical-text .room-label` ay walang tinatamaan — kaya umaapaw
+   dati ang mahabang pangalan ng makikitid na kwarto tulad ng PIO. */
+.room-label .vertical-text { writing-mode: vertical-rl; transform: rotate(180deg); }
 
 .is-3d-active .room-node { transform: translateZ(30px); }
 .active-room { background: linear-gradient(135deg, #F43F5E, #BE123C) !important; color: white !important; border: 2px solid #FDA4AF !important; animation: pulse 1.5s infinite alternate !important; z-index: 20; box-shadow: 0 0 40px rgba(244, 63, 94, 0.5) !important;}
@@ -571,12 +574,16 @@ img { max-width: 100%; }
 }
 
 /* Kulay-koda ng zone — nasa guhit sa itaas lamang */
-.theme-amber:not(.active-room)  { border-top-color: #3B82F6 !important; }
-.theme-cyan:not(.active-room)   { border-top-color: #0891B2 !important; }
-.theme-blue:not(.active-room)   { border-top-color: #2563EB !important; }
-.theme-purple:not(.active-room) { border-top-color: #4F46E5 !important; }
-.theme-teal:not(.active-room)   { border-top-color: #0E7490 !important; }
-.theme-gray:not(.active-room)   { border-top-color: #64748B !important; }
+/* Magkakaibang accent kada zone para tumugma sa map legend. Dati ay
+   halos pare-parehong asul (#3B82F6 vs #2563EB), kaya walang naibibigay
+   na impormasyon ang guhit sa itaas. */
+.theme-amber:not(.active-room)  { border-top-color: #F59E0B !important; }
+.theme-cyan:not(.active-room)   { border-top-color: #06B6D4 !important; }
+.theme-blue:not(.active-room)   { border-top-color: #3B82F6 !important; }
+.theme-purple:not(.active-room) { border-top-color: #8B5CF6 !important; }
+.theme-teal:not(.active-room)   { border-top-color: #14B8A6 !important; }
+.theme-indigo:not(.active-room) { border-top-color: #6366F1 !important; }
+.theme-gray:not(.active-room)   { border-top-color: #94A3B8 !important; }
 
 /* Under construction */
 .theme-const {
@@ -593,7 +600,15 @@ img { max-width: 100%; }
   font-weight: 800 !important;
   line-height: 1.25 !important;
   letter-spacing: .3px !important;
+  /* Hindi na lalampas sa kahon ang mahabang pangalan. */
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  text-wrap: balance;
 }
+/* Mas maliit na titik para sa masisikip na kwarto (info desk, guard, CR). */
+.room-node[style*="0.75rem"] .room-label,
+.room-node[style*="0.8rem"] .room-label { font-size: inherit !important; }
 
 /* --- Istruktura: hagdan, escalator, elevator, garden --- */
 .structural-element { border-radius: 6px !important; box-shadow: none !important; }

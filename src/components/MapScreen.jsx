@@ -1,5 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react';
 
+// Zone color-coding — tugma sa `border-top-color` ng bawat theme sa index.css.
+// Ang legend sa ibaba ay binubuo mula sa mga zone na TALAGANG nasa kasalukuyang
+// palapag, kaya hindi ito naluluma kapag may dinagdag/inalis na opisina.
+const ZONE_LEGEND = {
+  'theme-amber':  { label: 'Halls & Venues',     color: '#F59E0B' },
+  'theme-cyan':   { label: 'Public Rooms',       color: '#06B6D4' },
+  'theme-teal':   { label: 'City Offices',       color: '#14B8A6' },
+  'theme-purple': { label: 'Public Information', color: '#8B5CF6' },
+  'theme-blue':   { label: 'Services',           color: '#3B82F6' },
+  'theme-indigo': { label: 'Security',           color: '#6366F1' },
+  'theme-gray':   { label: 'Utilities',          color: '#94A3B8' },
+};
+
 export default function MapScreen({ 
   offices, 
   selectedOfficeKey, 
@@ -68,6 +81,14 @@ export default function MapScreen({
   };
 
   const selectedOffice = selectedOfficeKey ? offices?.[selectedOfficeKey] : null;
+
+  // Mga zone na aktuwal na nasa palapag na ito (para sa map legend).
+  const zonesOnFloor = [...new Set(
+    Object.values(offices || {})
+      .filter((o) => o.style?.display !== 'none')
+      .flatMap((o) => String(o.cssClass || '').split(' '))
+      .filter((c) => ZONE_LEGEND[c])
+  )];
 
   // ==============================================================
   // TUNGUHIN NG RUTA (puwedeng palitan ng transport override)
@@ -307,6 +328,22 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
       onTouchMove={(e) => handleDragMove(e.touches[0].clientX, e.touches[0].clientY)}
       onTouchEnd={handleDragEnd}
     >
+
+      {!isMobile && zonesOnFloor.length > 0 && (
+        <div className="map-legend">
+          <div className="legend-title">MAP LEGEND</div>
+          {zonesOnFloor.map((zone) => (
+            <div className="legend-item" key={zone}>
+              <span className="legend-color" style={{ background: ZONE_LEGEND[zone].color }}></span>
+              {ZONE_LEGEND[zone].label}
+            </div>
+          ))}
+          <div className="legend-item">
+            <span className="legend-color" style={{ background: '#EF4444' }}></span>
+            You Are Here
+          </div>
+        </div>
+      )}
 
       <div className="floor-selector" style={{ position: 'absolute', top: 30, right: 30, zIndex: 10, display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <button
