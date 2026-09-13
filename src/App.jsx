@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import tagaytaySeal from './assets/tagaytay-seal.jpg';
 import WelcomeScreen from './WelcomeScreen';
 import DashboardScreen from './DashboardScreen';
 import DirectoryScreen from './DirectoryScreen';
 import MapScreen from './components/MapScreen';
 import AdminPanel from './admin/AdminPanel';
+import VirtualKeyboard from './components/VirtualKeyboard';
 import './index.css';
 
 import { QRCodeSVG } from 'qrcode.react'; 
@@ -70,6 +71,15 @@ function StatusPill({ status, lang }) {
   );
 }
 
+// Keyboard para sa mga auth modal. Hiwalay na component para ang pag-unmount
+// nito (pagsara ng modal) ang mag-reset ng "hidden" — kaya hindi na kailangan
+// ng useEffect na nagse-setState, na nagdudulot ng cascading renders.
+function AuthKeyboard({ scopeRef }) {
+  const [hidden, setHidden] = useState(false);
+  if (hidden) return null;
+  return <VirtualKeyboard scopeRef={scopeRef} onClose={() => setHidden(true)} />;
+}
+
 export default function App() {
   const [searchParams] = useSearchParams();
 
@@ -100,6 +110,10 @@ export default function App() {
   const [showPassword, setShowPassword] = useState(false); 
   
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
+
+  // Kiosk touchscreen keyboard para sa mga auth modal. Walang pisikal na
+  // keyboard ang terminal — kung wala ito, hindi makakapasok ang admin.
+  const authModalRef = useRef(null);
   const [recoveryPassword, setRecoveryPassword] = useState('');
 
   const [secretClicks, setSecretClicks] = useState(0);
@@ -982,7 +996,7 @@ export default function App() {
 
       {showRecoveryModal && (
         <div className="k-overlay">
-          <div className="k-modal k-modal--sm" style={{ textAlign: 'center' }}>
+          <div className="k-modal k-modal--sm" ref={authModalRef} style={{ textAlign: 'center' }}>
             <span className="k-modal-icon" style={{ margin: '0 auto 16px' }}>🔑</span>
             <h2 className="k-modal-title" style={{ marginBottom: '10px' }}>Set New Password</h2>
             <p className="k-modal-text k-modal-text--center">Enter your new master password below.</p>
@@ -1036,7 +1050,7 @@ export default function App() {
 
       {showAdminLogin && (
         <div className="k-overlay">
-          <div className="k-modal k-modal--sm" style={{ textAlign: 'center' }}>
+          <div className="k-modal k-modal--sm" ref={authModalRef} style={{ textAlign: 'center' }}>
             <span className="k-modal-icon" style={{ margin: '0 auto 16px' }}>🔒</span>
             <h2 className="k-modal-title" style={{ marginBottom: '10px' }}>Admin Access</h2>
             <p className="k-modal-text k-modal-text--center">Enter the password for tagaytaykiosk@gmail.com</p>
@@ -1085,6 +1099,12 @@ export default function App() {
       )}
 
       {showAdmin && <AdminPanel officeDatabase={liveOfficeDatabase} onClose={() => setShowAdmin(false)} onDataUpdate={() => { fetchKioskData(); }} />}
+
+      {/* Nasa TOP LEVEL, hindi sa loob ng .k-modal. Ang .vkb ay position:fixed —
+          kung may ninuno itong may transform/filter, ang ninuno ang magiging
+          containing block at malilihis (o maiipit sa overflow) ang keyboard.
+          Dito, ang viewport lagi ang sukatan. */}
+      {(showAdminLogin || showRecoveryModal) && <AuthKeyboard scopeRef={authModalRef} />}
     </div>
   );
 }
