@@ -2885,3 +2885,110 @@ button:active { transform: scale(.97); }
   .pin-kiosk::after { animation: none !important; }
   .brand .dir-title { -webkit-text-fill-color: var(--ui-ink); color: var(--ui-ink) !important; }
 }
+
+
+/* ═══════════ FLOATING TOUCHSCREEN KEYBOARD (admin) ═══════════
+   Nakalutang at nahihila. Nasa itaas ng .k-overlay (z-index 99999)
+   dahil nakapatong ito sa admin panel. */
+.vkb {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 100010;
+  width: min(940px, calc(100vw - 32px));
+  padding: 12px;
+  border-radius: var(--ui-r-lg);
+  border: 1px solid var(--ui-line-2);
+  background: var(--ui-panel);
+  box-shadow: var(--ui-sh-3);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  touch-action: none;   /* para hindi mag-scroll ang pahina habang hinihila */
+}
+.vkb-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 2px;
+}
+.vkb-grip {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 12px;
+  border-radius: var(--ui-r-sm);
+  border: 1px solid var(--ui-line);
+  background: var(--ui-raise);
+  color: var(--ui-ink-2);
+  font-weight: 800; font-size: .78rem; letter-spacing: .6px;
+  cursor: grab;
+}
+.vkb-grip:active { cursor: grabbing; }
+.vkb-title { text-transform: uppercase; }
+.vkb-close {
+  padding: 7px 14px;
+  border-radius: var(--ui-r-sm);
+  border: 1px solid var(--ui-line-2);
+  background: transparent;
+  color: var(--ui-ink-2);
+  font-weight: 800; font-size: .78rem;
+  cursor: pointer;
+}
+.vkb-close:hover { background: var(--ui-raise-2); color: var(--ui-ink); }
+
+.vkb-row { display: flex; gap: 7px; }
+.vkb-key {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 54px;
+  border-radius: var(--ui-r-sm);
+  border: 1px solid var(--ui-line);
+  background: linear-gradient(180deg, var(--ui-panel-2), var(--ui-panel));
+  color: var(--ui-ink);
+  font-size: 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform .08s var(--ui-ease), background .15s ease, border-color .15s ease;
+}
+.vkb-key:hover { background: var(--ui-raise-2); border-color: var(--ui-line-2); }
+.vkb-key:active { transform: translateY(2px) scale(.97); background: var(--ui-accent-sf); }
+.vkb-key:disabled { opacity: .38; cursor: not-allowed; }
+
+.vkb-key--wide  { flex: 1.6 1 0; }
+.vkb-key--space { flex: 4 1 0; }
+.vkb-key--mod   { flex: 1.5 1 0; font-size: .85rem; letter-spacing: .4px; }
+.vkb-key--clear { flex: 1.3 1 0; font-size: .85rem; color: var(--ui-danger); }
+.vkb-key--mod.is-on {
+  background: linear-gradient(180deg, var(--ui-accent), var(--ui-accent-2));
+  border-color: var(--ui-accent);
+  color: var(--ui-accent-on);
+}
+
+/* Sa maliliit na screen: mas maiksing key para kasya pa rin. */
+@media (max-width: 720px) {
+  .vkb { padding: 8px; gap: 6px; }
+  .vkb-row { gap: 5px; }
+  .vkb-key { height: 44px; font-size: .95rem; }
+  .vkb-key--mod, .vkb-key--clear { font-size: .72rem; }
+  .vkb-title { display: none; }
+}
+
+/* Buton na pambukas sa header ng admin */
+.adm-top-actions { display: flex; align-items: center; gap: 10px; }
+.adm-kb-toggle {
+  padding: 10px 16px;
+  border-radius: var(--ui-r-sm);
+  border: 1px solid var(--ui-line-2);
+  background: var(--ui-raise);
+  color: var(--ui-ink-2);
+  font-weight: 800; font-size: .82rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.adm-kb-toggle:hover { background: var(--ui-raise-2); color: var(--ui-ink); }
+.adm-kb-toggle.is-on {
+  background: linear-gradient(180deg, var(--ui-accent), var(--ui-accent-2));
+  border-color: var(--ui-accent);
+  color: var(--ui-accent-on);
+}

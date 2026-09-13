@@ -1,8 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import VirtualKeyboard from '../components/VirtualKeyboard';
 import { updateOffice, getAnnouncement, updateAnnouncement, changeAdminPassword, logoutAdmin } from '../lib/api';
 
 export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
   const [activeTab, setActiveTab] = useState('announcements');
+
+  // Kiosk touchscreen keyboard — walang pisikal na keyboard sa terminal.
+  const [showKeyboard, setShowKeyboard] = useState(false);
+  const admRef = useRef(null);
+
+  // Awtomatikong lumalabas sa unang pagpindot ng kahit anong field, para
+  // hindi na kailangang hanapin pa ng staff ang buton.
+  useEffect(() => {
+    const root = admRef.current;
+    if (!root) return;
+    const open = (e) => {
+      const el = e.target;
+      const typable =
+        (el.tagName === 'INPUT' && !['checkbox', 'radio', 'submit', 'button', 'file'].includes(el.type)) ||
+        el.tagName === 'TEXTAREA';
+      if (typable) setShowKeyboard(true);
+    };
+    root.addEventListener('focusin', open);
+    return () => root.removeEventListener('focusin', open);
+  }, []);
   
   const [advisoryText, setAdvisoryText] = useState('');
   const [announcementText, setAnnouncementText] = useState('');
@@ -132,7 +153,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
 
   return (
     <div className="k-overlay">
-      <div className="adm">
+      <div className="adm" ref={admRef}>
 
         <div className="adm-top">
           <h2>
@@ -142,15 +163,25 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
               <span className="adm-top-sub">Tagaytay City Hall Kiosk</span>
             </span>
           </h2>
-          <button
-            className="adm-exit"
-            onClick={async () => {
-              await logoutAdmin();
-              onClose();
-            }}
-          >
-            ✕ Close &amp; Logout
-          </button>
+          <div className="adm-top-actions">
+            <button
+              type="button"
+              className={`adm-kb-toggle${showKeyboard ? ' is-on' : ''}`}
+              onClick={() => setShowKeyboard((v) => !v)}
+              title="Para sa kiosk na walang pisikal na keyboard"
+            >
+              ⌨️ {showKeyboard ? 'Hide Keyboard' : 'Keyboard'}
+            </button>
+            <button
+              className="adm-exit"
+              onClick={async () => {
+                await logoutAdmin();
+                onClose();
+              }}
+            >
+              ✕ Close &amp; Logout
+            </button>
+          </div>
         </div>
 
         <div className="adm-tabs">
@@ -315,6 +346,10 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
           </div>
         )}
       </div>
+
+      {showKeyboard && (
+        <VirtualKeyboard scopeRef={admRef} onClose={() => setShowKeyboard(false)} />
+      )}
     </div>
   );
 }
