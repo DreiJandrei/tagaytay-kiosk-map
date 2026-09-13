@@ -211,7 +211,7 @@ export default function App() {
   const fetchKioskData = async () => {
     try {
       const dbData = await getAllOffices();
-      const completeData = mergeOfficeData(coordinateMapping, dbData);
+      const completeData = mergeOfficeData(coordinateMapping, dbData, defaultOfficeData);
       
       Object.keys(completeData).forEach(floor => {
         Object.keys(completeData[floor]).forEach(key => {

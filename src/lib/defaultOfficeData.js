@@ -73,6 +73,20 @@ export const defaultOfficeData = {
       hours: "Open 24/7",
       head: "Public Utilities Unit",
       requirements: []
+    },
+    "info-desk": {
+      title: "Info Desk",
+      badge: "1st Floor - Main Lobby (Left of Entrance)",
+      hours: "8:00 AM - 5:00 PM (Mon-Fri)",
+      head: "Public Assistance & Complaints Desk",
+      requirements: ["Valid ID for Visitor Logbook"]
+    },
+    "guard": {
+      title: "Guard Post",
+      badge: "1st Floor - Main Entrance (Right Side)",
+      hours: "Open 24/7",
+      head: "Civil Security Unit",
+      requirements: ["Valid ID", "Visitor Pass Registration"]
     }
   },
   2: {

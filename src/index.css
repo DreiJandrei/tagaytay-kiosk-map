@@ -214,6 +214,17 @@ img { max-width: 100%; }
 .elevator-block { background: rgba(255,255,255,0.15); color: white; border: 1px dashed rgba(255,255,255,0.3); font-weight: 800; }
 .elevator-doors { position: absolute; bottom: 0; width: 60px; height: 8px; background: rgba(255,255,255,0.4); border-radius: 4px 4px 0 0; }
 .entrance-door { background: #10B981; color: white; font-size: 10px; font-weight: 800; border-radius: 4px; }
+
+/* GROUND FLOOR — pulang "Map" block (ang pisikal na kiosk). */
+.kiosk-block { background: linear-gradient(135deg, #EF4444, #B91C1C); border: 2px solid #FCA5A5; box-shadow: 0 0 18px rgba(239,68,68,0.45); }
+.kiosk-block-label { writing-mode: vertical-rl; transform: rotate(180deg); color: white; font-weight: 900; font-size: 0.7rem; letter-spacing: 2px; }
+
+/* Hagdan papasok galing sa labas ng gusali. */
+.entrance-steps { background: repeating-linear-gradient(90deg, #D6C3A5, #D6C3A5 14px, #B9A484 14px, #B9A484 18px); border: 1px solid #A08E70; border-radius: 4px; }
+
+/* Parking area — nasa labas ng gusali. */
+.parking-area { background: rgba(255,255,255,0.04); border: 2px dashed rgba(255,255,255,0.25); color: white; }
+
 .is-3d-active .structural-element { transform: translateZ(10px); }
 
 .light-theme .structural-element { border-color: #E2E8F0; }
@@ -223,6 +234,7 @@ img { max-width: 100%; }
 .light-theme .stair-label, .light-theme .escalator-label { color: #0F172A; background: rgba(255,255,255,0.9); }
 .light-theme .elevator-block { background: #E2E8F0; color: #0F172A; border-color: #94A3B8; }
 .light-theme .elevator-doors { background: #94A3B8; }
+.light-theme .parking-area { background: #F1F5F9; border-color: #CBD5E1; color: #0F172A; }
 
 .path-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 25; pointer-events: none; transform-style: preserve-3d; }
 .is-3d-active .path-overlay { transform: translateZ(25px); }
@@ -639,6 +651,34 @@ img { max-width: 100%; }
 .grey-wall { border-color: rgba(96,165,250,.45) !important; }
 .light-theme .grey-wall { border-color: var(--k-line) !important; }
 
+/* --- Ground floor: Map kiosk, hagdan sa bukana, parking --- */
+.kiosk-block {
+  background: linear-gradient(135deg, #EF4444, #B91C1C) !important;
+  border: 2px solid #FCA5A5 !important;
+  box-shadow: 0 0 18px rgba(239,68,68,.45) !important;
+}
+.entrance-steps {
+  background: repeating-linear-gradient(90deg, #1B3A6B, #1B3A6B 14px,
+    #2E62B8 14px, #2E62B8 18px) !important;
+  border: 1.5px solid #2E62B8 !important;
+}
+.light-theme .entrance-steps {
+  background: repeating-linear-gradient(90deg, #E8F0FC, #E8F0FC 14px,
+    #BFDBFE 14px, #BFDBFE 18px) !important;
+  border: 1.5px solid #9DBCE8 !important;
+}
+.parking-area {
+  border-radius: 8px !important;
+  border: 2px dashed #2E62B8 !important;
+  background: rgba(30,58,138,.18) !important;
+  color: #E3EEFC !important;
+}
+.light-theme .parking-area {
+  border: 2px dashed #9DBCE8 !important;
+  background: #F0F6FF !important;
+  color: #0B2A5B !important;
+}
+
 /* --- Fire exit (berde pa rin — pamantayan sa kaligtasan) --- */
 .exit-badge {
   background: #0F6B4A !important;
@@ -650,6 +690,14 @@ img { max-width: 100%; }
 @keyframes exitPulse {
   0%,100% { box-shadow: 0 2px 8px rgba(15,107,74,.4); }
   50%     { box-shadow: 0 2px 14px rgba(15,107,74,.75); }
+}
+
+/* --- Entrance (asul, para hindi malito sa exit) --- */
+.entrance-badge {
+  background: #1D4ED8 !important;
+  border: 1px solid #1E3A8A !important;
+  animation: none !important;
+  box-shadow: 0 2px 8px rgba(29,78,216,.45) !important;
 }
 
 /* --- Pin --- */

@@ -76,8 +76,10 @@ export default function MapScreen({
   let kioskStyle = { display: 'none' }; 
 
   if (currentFloor === 1) {
-      kioskText = "🔴 YOU ARE HERE (Main Entrance)";
-      kioskStyle = { left: 1030, top: 1000, display: 'block' }; 
+      // Katapat ng pulang "Map" block sa floor plan — sa loob ng lobby,
+      // kaliwa ng escalator. Dito nagsisimula lahat ng ruta sa 1st floor.
+      kioskText = "🔴 YOU ARE HERE (Map Kiosk)";
+      kioskStyle = { left: 1045, top: 822, display: 'block' };
   } else if (selectedOfficeKey || routeStep !== 'idle') {
       kioskStyle = { display: 'block' };
       const isClimbing = routeStep === 'climbing-stairs';
@@ -122,12 +124,9 @@ export default function MapScreen({
   }
 
 if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-to-transport') {
-      // FIX: Pasok sa main door (Y:935), kanan sa pasilyo (X:1330), akyat sa hallway (Y:865), pasok pakaliwa!
-      finalPathData = "M 1030 1000 L 1030 935 L 1330 935 L 1330 865 L 1250 865"; 
-  }
-
-  if (currentFloor === 1 && selectedOfficeKey === 'canteen') {
-      finalPathData = "M 1030 1000 L 1030 710 L 640 710 L 640 565 L 330 565 L 330 710 L 190 710 L 190 530";
+      // Mula sa kiosk: pababa sa pasilyo ng bukana (Y:935), pakanan sa ilalim
+      // ng escalator, tapos pasok sa sakayan nito.
+      finalPathData = "M 1045 822 L 1100 822 L 1100 935 L 1235 935 L 1235 870";
   }
 
   if (selectedOffice && currentFloor !== 1 && finalPathData !== "") {
@@ -342,9 +341,13 @@ if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-t
           {currentFloor === 1 && (
             <svg width="1400" height="1300" style={{ position: 'absolute', top: 0, left: 0, zIndex: 1, pointerEvents: 'none' }}>
               <g stroke="#9CA3AF" strokeWidth="8" fill="transparent" strokeLinecap="round">
-                <path d="M 1010 960 L 330 960 L 330 560 M 330 480 L 330 75 L 1350 75 L 1350 960 L 1100 960" />
+                {/* Panlabas na pader. Puwang sa baba (1100-1230) = bukana/entrance,
+                    puwang sa kaliwa (y 480-560) = pinto papuntang canteen. */}
+                <path d="M 1100 960 L 330 960 L 330 560 M 330 480 L 330 75 L 1350 75 L 1350 960 L 1230 960" />
+                {/* Pader sa ilalim ng Tolentino Hall, may pintuan sa 1000-1060. */}
                 <path d="M 330 310 L 1000 310 M 1060 310 L 1350 310" />
                 <path d="M 720 575 L 980 575" />
+                {/* Fire exit sa kanang pader. */}
                 <path d="M 1310 740 L 1350 740" />
               </g>
             </svg>
@@ -406,7 +409,7 @@ if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-t
 
           {currentFloor === 1 && (
             <>
-              <div className="structural-element garden-area" style={{ width: '480px', height: '180px', left: '370px', top: '740px' }}>
+              <div className="structural-element garden-area" style={{ width: '400px', height: '220px', left: '350px', top: '730px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
                   <div style={{ fontSize: '2.2rem', display: 'flex', gap: '15px', justifyContent: 'center' }}>🌿 🪴 🌴</div>
                   <div style={{ textAlign: 'center', fontWeight: '800', marginTop: '10px' }}>Atrium Garden</div>
@@ -415,16 +418,37 @@ if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-t
               <div className="structural-element stairs-block" style={{ width: '255px', height: '100px', left: '370px', top: '585px' }}>
                 <div className="stair-lines"></div><span className="stair-label">Stairs ▶</span>
               </div>
-              <div className="structural-element elevator-block" style={{ width: '270px', height: '110px', left: '1040px', top: '690px' }}>
-                Elevator<div className="elevator-doors" style={{ left: '105px' }}></div>
+              <div className="structural-element elevator-block" style={{ width: '145px', height: '110px', left: '1110px', top: '690px' }}>
+                Elevator<div className="elevator-doors" style={{ left: '43px' }}></div>
               </div>
-              <div className="structural-element escalator-block" style={{ width: '270px', height: '90px', left: '1040px', top: '820px' }}>
+              <div className="structural-element escalator-block" style={{ width: '160px', height: '80px', left: '1150px', top: '820px' }}>
                 <div className="stair-lines"></div><span className="escalator-label">Escalator ◀</span>
               </div>
+
+              {/* Pulang "Map" block — ito ang pisikal na kiosk kung saan
+                  nakatayo ang bumibisita. Dito nagsisimula ang lahat ng ruta. */}
+              <div className="structural-element kiosk-block" style={{ width: '40px', height: '85px', left: '1025px', top: '780px' }}>
+                <span className="kiosk-block-label">MAP</span>
+              </div>
+
+              {/* Hagdan papasok galing sa labas (harap ng bukana). */}
+              <div className="structural-element entrance-steps" style={{ width: '180px', height: '40px', left: '1080px', top: '1005px' }}></div>
+
+              {/* Parking area — nasa labas ng gusali, kaliwang bahagi. */}
+              <div className="structural-element parking-area" style={{ width: '240px', height: '150px', left: '20px', top: '730px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                  <div style={{ fontSize: '2rem' }}>🅿️ 🚗</div>
+                  <div style={{ textAlign: 'center', fontWeight: '800', marginTop: '8px' }}>Parking Area</div>
+                </div>
+              </div>
+
+              {/* Gitnang pader na naghahati sa kanluran at silangang bahagi. */}
               <div className="grey-wall" style={{ width: '0px', height: '65px', left: '1010px', top: '615px' }}></div>
               <div className="grey-wall" style={{ width: '0px', height: '220px', left: '1010px', top: '740px' }}></div>
-              
-              <div className="exit-badge" style={exitBadgeStyle(1245, 735)}>FIRE EXIT</div>
+
+              <div className="exit-badge" style={exitBadgeStyle(1262, 730)}>FIRE EXIT</div>
+              <div className="exit-badge" style={exitBadgeStyle(1080, 968)}>EXIT</div>
+              <div className="exit-badge entrance-badge" style={exitBadgeStyle(1150, 968)}>ENTRANCE</div>
             </>
           )}
           
@@ -483,13 +507,11 @@ if (currentFloor === 1 && transportMethod === 'escalator' && routeStep === 'go-t
               zIndex: 20
             } : { transition: 'all 0.3s ease' };
 
-            const canteenOffset = key === 'canteen' ? { left: -50 } : {};
-
             return (
               <div 
                 key={key}
                 className={`room-node ${office.cssClass || ''} ${selectedOfficeKey === key ? 'active-room' : ''}`}
-                style={{...office.style, ...canteenOffset, ...activeStyle}}
+                style={{...office.style, ...activeStyle}}
                 onClick={() => onSelectOffice(key)}
               >
                 <span className="room-label">

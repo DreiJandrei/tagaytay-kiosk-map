@@ -7,18 +7,29 @@
 
 export const coordinateMapping = {
  1: {
+      // ==========================================================
+      // GROUND FLOOR — nakaayon sa opisyal na 1st Floor floor plan.
+      // Ang kiosk ("YOU ARE HERE") ay nasa loob ng lobby, katapat ng
+      // pulang "Map" block sa plano: (1045, 822).
+      // Mga pangunahing daanan (para hindi tumagos sa pader):
+      //   x = 1045  -> pasilyo ng lobby paakyat (hilaga)
+      //   x = 1100  -> pasilyo ng lobby pababa (timog)
+      //   y = 710   -> pagtawid pakanluran, sa bukana ng gitnang pader
+      //   y = 935   -> pasilyo sa may bukana/entrance
+      // ==========================================================
+
       // ======== MULTI-FLOOR TRANSPORT ROUTES ========
       "elevator-up": {
-          targetX: 1175, targetY: 795, 
-          pathData: "M 1030 1000 L 1030 810 L 1175 810 L 1175 795",
-          style: { display: 'none' }, 
+          targetX: 1180, targetY: 745,
+          pathData: "M 1045 822 L 1045 745 L 1180 745",
+          style: { display: 'none' },
           isDirectionOnly: true,
           title: "Elevator to Upper Floors",
           badge: "Vertical Transport"
       },
       "stairs-up": {
-          targetX: 450, targetY: 630, 
-          pathData: "M 1030 1000 L 1030 710 L 500 710 L 500 630 L 450 630",
+          targetX: 450, targetY: 630,
+          pathData: "M 1045 822 L 1045 710 L 500 710 L 500 630 L 450 630",
           style: { display: 'none' },
           isDirectionOnly: true,
           title: "Stairs to Upper Floors",
@@ -26,45 +37,61 @@ export const coordinateMapping = {
       },
 
       "tolentino-hall": {
-          targetX: 1030, targetY: 260, pathData: "M 1030 1000 L 1030 300",
+          targetX: 1045, targetY: 260, pathData: "M 1045 822 L 1045 260",
           style: { width: 940, height: 180, left: 370, top: 120 }, cssClass: "theme-amber"
       },
       "cultural-hall": {
-          targetX: 500, targetY: 540, pathData: "M 1030 1000 L 1030 710 L 625 710 L 625 585 L 500 585 L 500 540",
+          targetX: 500, targetY: 540, pathData: "M 1045 822 L 1045 710 L 625 710 L 625 585 L 500 585 L 500 540",
           style: { width: 260, height: 240, left: 370, top: 320 }, cssClass: "theme-cyan"
       },
       "canteen": {
-          targetX: 190, targetY: 530, pathData: "M 1030 1000 L 1030 710 L 190 710 L 190 650",
-          style: { width: 280, height: 250, left: 50, top: 400 }, cssClass: "theme-blue"
+          // Labas ng gusali sa kaliwa — dumadaan sa pintuan ng kanlurang pader (y 480-560).
+          targetX: 190, targetY: 520,
+          pathData: "M 1045 822 L 1045 710 L 645 710 L 645 572 L 345 572 L 345 520 L 190 520",
+          style: { width: 280, height: 250, left: 0, top: 400 }, cssClass: "theme-blue"
       },
       "pio-1": {
-          targetX: 695, targetY: 495, pathData: "M 1030 1000 L 1030 710 L 695 710 L 695 660",
+          targetX: 695, targetY: 495, pathData: "M 1045 822 L 1045 710 L 695 710 L 695 660",
           style: { width: 90, height: 340, left: 650, top: 320 }, cssClass: "theme-purple vertical-text-wrapper"
       },
       "pio-2": {
-          targetX: 785, targetY: 495, pathData: "M 1030 1000 L 1030 710 L 785 710 L 785 660",
+          targetX: 785, targetY: 495, pathData: "M 1045 822 L 1045 710 L 785 710 L 785 660",
           style: { width: 90, height: 340, left: 740, top: 320 }, cssClass: "theme-purple vertical-text-wrapper"
       },
       "csu-office": {
-          targetX: 990, targetY: 370, pathData: "M 1030 1000 L 1030 370 L 1010 370",
+          targetX: 990, targetY: 370, pathData: "M 1045 822 L 1045 370 L 1010 370",
           style: { width: 180, height: 100, left: 830, top: 320 }, cssClass: "theme-teal"
       },
       "barangay-affairs": {
-          targetX: 990, targetY: 490, pathData: "M 1030 1000 L 1030 490 L 1010 490",
+          targetX: 990, targetY: 490, pathData: "M 1045 822 L 1045 490 L 1010 490",
           style: { width: 180, height: 100, left: 830, top: 440 }, cssClass: "theme-teal"
       },
       "tourism-office": {
-          targetX: 990, targetY: 615, pathData: "M 1030 1000 L 1030 615 L 1010 615",
+          targetX: 990, targetY: 615, pathData: "M 1045 822 L 1045 615 L 1010 615",
           style: { width: 180, height: 110, left: 830, top: 560 }, cssClass: "theme-teal"
       },
       "breastfeeding-room": {
-          targetX: 1060, targetY: 450, pathData: "M 1030 1000 L 1030 450 L 1040 450",
-          style: { width: 270, height: 260, left: 1040, top: 320 }, cssClass: "theme-cyan"
+          targetX: 1130, targetY: 445, pathData: "M 1045 822 L 1045 445 L 1130 445",
+          style: { width: 200, height: 250, left: 1110, top: 320 }, cssClass: "theme-cyan"
       },
       "restroom-cr": {
-          targetX: 1060, targetY: 635, pathData: "M 1030 1000 L 1030 635 L 1040 635",
-          style: { width: 270, height: 70, left: 1040, top: 600 }, cssClass: "theme-gray",
+          targetX: 1180, targetY: 630, pathData: "M 1045 822 L 1045 630 L 1180 630",
+          style: { width: 140, height: 70, left: 1160, top: 595, padding: '8px', fontSize: '0.8rem' },
+          cssClass: "theme-gray",
           isDirectionOnly: true
+      },
+      "info-desk": {
+          // Kaliwa mismo ng bukana, nakadikit sa gitnang pader.
+          targetX: 1045, targetY: 910, pathData: "M 1045 822 L 1045 910",
+          style: { width: 80, height: 90, left: 1010, top: 865, padding: '6px', fontSize: '0.75rem' },
+          cssClass: "theme-blue"
+      },
+      "guard": {
+          // Kanan ng bukana, katabi ng pinto papasok.
+          targetX: 1282, targetY: 935,
+          pathData: "M 1045 822 L 1100 822 L 1100 935 L 1282 935",
+          style: { width: 75, height: 55, left: 1245, top: 905, padding: '6px', fontSize: '0.75rem' },
+          cssClass: "theme-indigo"
       }
   },
   2: {
@@ -212,27 +239,36 @@ export const coordinateMapping = {
 // Function to merge coordinate data with database data
 // Function to merge coordinate data with database data
 // Function to merge coordinate data with database data
-export const mergeOfficeData = (coords, dbData) => {
+// Ang `fallback` ay ang defaultOfficeData. Kailangan ito dahil ang
+// initializeDatabase() ay tumatalon agad kapag may laman na ang `offices`
+// table — kaya ang bagong opisina (hal. info-desk, guard) ay wala pa roon
+// at mawawalan ng title/badge kung DB lang ang pagkukunan.
+export const mergeOfficeData = (coords, dbData, fallback = {}) => {
   const merged = {};
-  
-  Object.keys(coords).forEach((floor) => { 
+
+  Object.keys(coords).forEach((floor) => {
     merged[floor] = {};
     Object.keys(coords[floor]).forEach((officeKey) => {
-      
+
+      const defaultInfo = (fallback[floor] && fallback[floor][officeKey])
+        ? fallback[floor][officeKey]
+        : {};
+
       // Hahanapin natin yung text data sa loob ng tamang floor group.
       // Kung sakaling walang mahanap, gagamit tayo ng {} para hindi mag-crash.
-      const dbOfficeInfo = (dbData && dbData[floor] && dbData[floor][officeKey]) 
-        ? dbData[floor][officeKey] 
+      const dbOfficeInfo = (dbData && dbData[floor] && dbData[floor][officeKey])
+        ? dbData[floor][officeKey]
         : {};
 
       // Pagsasamahin na ang coordinates (mapa) at dbOfficeInfo (text/details)
-      merged[floor][officeKey] = { 
-        ...coords[floor][officeKey], 
-        ...dbOfficeInfo 
+      merged[floor][officeKey] = {
+        ...coords[floor][officeKey],
+        ...defaultInfo,
+        ...dbOfficeInfo
       };
-      
+
     });
   });
-  
+
   return merged;
 };
