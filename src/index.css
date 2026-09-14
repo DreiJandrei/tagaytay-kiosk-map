@@ -2753,12 +2753,48 @@ button:active { transform: scale(.97); }
   background: var(--ui-accent-sf);
   color: var(--ui-accent);
 }
+/* Magkasama ang announcement at video sa iisang pane, kaya hindi na
+   pwedeng maglaki ang form — nakasalansan na lang ang lahat. */
+.adm-form--stack { flex: none; min-height: 0; }
+.adm-form--stack .k-textarea { min-height: 104px; resize: vertical; }
+
+.adm-divider {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--ui-line);
+}
+
 /* Listahan ng video: pangalan, katayuan, at pagkakasunod sa isang tingin */
-.adm-vid-row { display: flex; align-items: center; gap: 10px; }
-.adm-vid-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-vid-list { display: flex; flex-direction: column; gap: 10px; }
+.adm-vid-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border: 1px solid var(--ui-line);
+  border-radius: var(--ui-r-sm);
+  background: var(--ui-raise);
+}
+.adm-vid-item .k-btn { flex-shrink: 0; padding: 9px 16px; font-size: .85rem; }
+.adm-vid-idx {
+  flex-shrink: 0;
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: var(--ui-raise-2);
+  color: var(--ui-ink-3);
+  font-size: .85rem; font-weight: 900;
+}
+.adm-vid-body { flex: 1; min-width: 0; }
+.adm-vid-name {
+  display: block;
+  color: var(--ui-ink);
+  font-size: .98rem; font-weight: 800;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .adm-vid-pill {
   flex-shrink: 0;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 999px;
   background: var(--ui-raise-2);
   color: var(--ui-ink-3);
@@ -2769,12 +2805,19 @@ button:active { transform: scale(.97); }
 .adm-vid-pill.is-on { background: var(--ui-accent-sf); color: var(--ui-accent); }
 .adm-vid-meta {
   display: block;
-  margin-top: 4px;
+  margin-top: 3px;
   color: var(--ui-ink-3);
   font-size: .78rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .5px;
+}
+/* Nakakahon ang editor para malinaw na iisang video ang inaayos */
+.adm-vid-editor {
+  padding: 20px;
+  border: 1px solid var(--ui-accent);
+  border-radius: var(--ui-r-sm);
+  background: var(--ui-raise);
 }
 .adm-check {
   display: flex;
