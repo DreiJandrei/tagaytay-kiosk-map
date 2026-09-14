@@ -141,12 +141,12 @@ function facebookEmbedUrl(url) {
   return `https://www.facebook.com/plugins/video.php?${params.toString()}`;
 }
 
-function youtubeEmbedUrl(url, { loop }) {
+function youtubeEmbedUrl(url, { loop, sound }) {
   const id = getYouTubeId(url);
   if (!id) return '';
   const params = new URLSearchParams({
     autoplay: '1',
-    mute: '1',
+    mute: sound ? '0' : '1',
     controls: '0',
     rel: '0',
     modestbranding: '1',
@@ -162,10 +162,10 @@ function youtubeEmbedUrl(url, { loop }) {
 
 // Ibinabalik ang handang-ipasok na src para sa <iframe>. Blangko kung
 // hindi mabasa ang link — hindi na ipapakita ng player ang video na iyon.
-export function buildEmbedUrl(video, { loop = false } = {}) {
+export function buildEmbedUrl(video, { loop = false, sound = false } = {}) {
   if (!video) return '';
   const type = video.video_type || detectVideoType(video.source_url);
-  if (type === 'youtube') return youtubeEmbedUrl(video.source_url, { loop });
+  if (type === 'youtube') return youtubeEmbedUrl(video.source_url, { loop, sound });
   if (type === 'facebook') return facebookEmbedUrl(video.source_url);
   return '';
 }

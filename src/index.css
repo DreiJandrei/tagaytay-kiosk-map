@@ -1189,6 +1189,11 @@ img { max-width: 100%; }
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .welcome-video-icon { font-size: 1.7rem; }
+.welcome-video-sound {
+  flex-shrink: 0; font-size: 1.2rem;
+  opacity: .45; transition: opacity .3s ease;
+}
+.welcome-video-sound.is-on { opacity: 1; }
 .welcome-video-count {
   flex-shrink: 0;
   padding: 4px 12px; border-radius: 999px;

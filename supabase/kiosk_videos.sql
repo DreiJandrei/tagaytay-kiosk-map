@@ -19,6 +19,9 @@ create table if not exists public.kiosk_videos (
   -- Patayo ang Reels at TikTok-style na video (9:16). Kung 16:9 ang
   -- kahon, puro itim na gilid ang lalabas sa kiosk.
   orientation      text        not null default 'landscape',
+  -- Gusto bang may tunog. Tahimik pa rin hangga't walang unang pindot
+  -- sa screen — patakaran ito ng browser, hindi kaya nitong laktawan.
+  has_sound        boolean     not null default false,
   created_at       timestamptz not null default now(),
 
   constraint kiosk_videos_type_check
@@ -29,9 +32,15 @@ create table if not exists public.kiosk_videos (
     check (orientation in ('landscape', 'portrait'))
 );
 
--- Para sa table na nagawa na bago naidagdag ang orientation.
+-- Para sa table na nagawa na bago naidagdag ang mga column na ito.
 alter table public.kiosk_videos
   add column if not exists orientation text not null default 'landscape';
+
+-- Hinaharangan ng browser ang tunog hangga't walang pumipindot sa screen,
+-- kaya laging nagsisimulang tahimik ang video. Senyas lang ito ng gusto
+-- ng admin — hindi garantiya na may tunog agad.
+alter table public.kiosk_videos
+  add column if not exists has_sound boolean not null default false;
 
 do $$
 begin

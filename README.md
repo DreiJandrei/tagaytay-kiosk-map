@@ -1,3 +1,33 @@
+# Tagaytay City Hall Kiosk
+
+## Tunog sa welcome screen video
+
+Hinaharangan ng lahat ng browser ang tunog hangga't walang pumipindot sa
+screen. Kaya kahit naka-ON ang "🔊 Buksan ang tunog" sa Admin Panel,
+tahimik pa rin ang unang video pagkatapos ng restart — bubukas lang ang
+tunog pagkatapos ng unang pindot ng kahit sino.
+
+Para may tunog agad kahit walang pumipindot, buksan ang Chrome sa kiosk
+gamit ang flag na ito:
+
+```bash
+# macOS
+open -a "Google Chrome" --args --autoplay-policy=no-user-gesture-required --kiosk "https://tagaytay-kiosk-map-one.vercel.app/?key=cct-bsit-kiosk"
+
+# Windows
+chrome.exe --autoplay-policy=no-user-gesture-required --kiosk "https://tagaytay-kiosk-map-one.vercel.app/?key=cct-bsit-kiosk"
+```
+
+Ilagay ito sa startup shortcut ng kiosk para tuwing bubukas ang makina,
+handa na agad. Wala itong epekto sa ibang website — para lang sa
+window na binuksan ng utos na ito.
+
+Tandaan: hindi kayang buksan ang tunog ng Facebook embed kahit anong
+gawin. Kung kailangan talaga ng tunog, i-download ang video at i-upload
+sa Admin Panel bilang .mp4.
+
+---
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

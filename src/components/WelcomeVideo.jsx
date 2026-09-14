@@ -10,13 +10,32 @@ const DEFAULT_DURATION = 45;
 // Ikinukumpara ang laman — hindi ang object identity — para hindi
 // masira ang kasalukuyang pinapanood tuwing nagre-refresh.
 const signatureOf = (list) =>
-  list.map((v) => [v.id, v.source_url, v.video_type, v.title, v.caption, v.duration_seconds, v.orientation].join('~')).join('|');
+  list.map((v) => [
+    v.id, v.source_url, v.video_type, v.title, v.caption,
+    v.duration_seconds, v.orientation, v.has_sound,
+  ].join('~')).join('|');
 
 export default function WelcomeVideo() {
   const [videos, setVideos] = useState([]);
   const [index, setIndex] = useState(0);
   const [cycle, setCycle] = useState(0);
+  // Hinaharangan ng browser ang tunog hangga't walang unang pakikipag-
+  // ugnayan ng tao sa pahina. Pagkatapos ng unang pindot kahit saan,
+  // bukas na ang tunog hanggang sa susunod na reload.
+  const [audioUnlocked, setAudioUnlocked] = useState(false);
   const fileRef = useRef(null);
+
+  useEffect(() => {
+    if (audioUnlocked) return;
+    const unlock = () => setAudioUnlocked(true);
+    const opts = { once: true, passive: true };
+    window.addEventListener('pointerdown', unlock, opts);
+    window.addEventListener('keydown', unlock, opts);
+    return () => {
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+  }, [audioUnlocked]);
 
   useEffect(() => {
     let alive = true;
@@ -58,18 +77,32 @@ export default function WelcomeVideo() {
     return () => clearTimeout(timer);
   }, [usesTimer, current, cycle, advance]);
 
+  const wantsSound = !!current?.has_sound;
+  const soundOn = wantsSound && audioUnlocked;
+
   // Ang mga autoplay na hadlang ng browser ay minsang tahimik na tumatanggi;
   // ito ang pangalawang tulak para tuloy pa rin ang attract loop.
   useEffect(() => {
     const el = fileRef.current;
     if (!el) return;
+
+    el.muted = !soundOn;
     const play = el.play();
-    if (play && typeof play.catch === 'function') play.catch(() => {});
-  }, [current, cycle]);
+    if (play && typeof play.catch === 'function') {
+      play.catch(() => {
+        // Tinanggihan ang pagtugtog na may tunog. Mas mahalaga ang
+        // gumagalaw na video kaysa sa tunog, kaya bumabalik sa tahimik
+        // imbes na manatiling naka-freeze ang attract loop.
+        el.muted = true;
+        const retry = el.play();
+        if (retry && typeof retry.catch === 'function') retry.catch(() => {});
+      });
+    }
+  }, [current, cycle, soundOn]);
 
   if (!current) return null;
 
-  const embedUrl = type === 'file' ? '' : buildEmbedUrl(current, { loop: selfLoops });
+  const embedUrl = type === 'file' ? '' : buildEmbedUrl(current, { loop: selfLoops, sound: soundOn });
   const heading = (current.title || '').trim() || 'City Updates';
   const caption = (current.caption || '').trim();
   // Umaangkop ang kahon sa hugis ng video — kung hindi, puro itim na
@@ -81,6 +114,14 @@ export default function WelcomeVideo() {
       <div className="welcome-video-head">
         <span className="welcome-video-icon">🎬</span>
         <h2>{heading}</h2>
+        {wantsSound && (
+          <span
+            className={`welcome-video-sound${soundOn ? ' is-on' : ''}`}
+            title={soundOn ? 'May tunog' : 'Bubukas ang tunog pagkatapos ng unang pindot'}
+          >
+            {soundOn ? '🔊' : '🔇'}
+          </span>
+        )}
         {videos.length > 1 && (
           <span className="welcome-video-count">{position + 1}/{videos.length}</span>
         )}

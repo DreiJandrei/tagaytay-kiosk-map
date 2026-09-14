@@ -14,7 +14,7 @@ import {
 const BLANK_VIDEO = {
   id: null, title: '', caption: '', source_url: '',
   video_type: 'facebook', duration_seconds: 45, sort_order: 0, is_active: true,
-  orientation: 'landscape',
+  orientation: 'landscape', has_sound: false,
 };
 
 export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
@@ -558,6 +558,26 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                   />
                   <span>Ipakita sa welcome screen</span>
                 </label>
+
+                <div>
+                  <label className="adm-check">
+                    <input
+                      type="checkbox"
+                      checked={videoForm.has_sound === true}
+                      onChange={(e) => setVideoField('has_sound', e.target.checked)}
+                      disabled={videoForm.video_type === 'facebook'}
+                    />
+                    <span>🔊 Buksan ang tunog</span>
+                  </label>
+                  <p className="adm-hint">
+                    {videoForm.video_type === 'facebook'
+                      ? 'Hindi kayang buksan ang tunog ng Facebook embed — laging tahimik ito. '
+                        + 'Kung kailangan talaga ng tunog, i-download ang video at i-upload dito.'
+                      : 'Hinaharangan ng browser ang tunog hangga’t walang unang pindot sa screen. '
+                        + 'Kaya tahimik muna ang unang video pagkatapos mag-restart, at may tunog na '
+                        + 'sa mga sumunod. Para may tunog agad, tingnan ang README (Chrome kiosk flag).'}
+                  </p>
+                </div>
 
                 <div className="k-btn-row">
                   <button type="submit" className="k-btn k-btn--primary" disabled={isSaving}>
