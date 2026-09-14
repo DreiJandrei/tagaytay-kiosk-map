@@ -24,6 +24,42 @@ export function detectVideoType(url) {
   return 'file';
 }
 
+// Hindi lahat ng kinokopyang link ay kayang basahin ng FB video plugin.
+// Tatlong anyo ang madalas na na-paste ng staff:
+//   1. buong <iframe> na galing sa "Embed" ng Facebook
+//   2. ang plugins/video.php URL na nasa loob niyon
+//   3. facebook.com/reel/<id> — pino-provide bilang /watch/?v=<id>
+// Ibinabalik nito ang anyong talagang tinatanggap ng plugin.
+export function normalizeFacebookUrl(raw) {
+  const input = (raw || '').trim();
+  if (!input) return input;
+
+  // 1. <iframe src="…"> → kunin ang src
+  const iframeSrc = input.match(/<iframe[^>]*\ssrc=["']([^"']+)["']/i);
+  const candidate = iframeSrc ? iframeSrc[1].replace(/&amp;/g, '&') : input;
+
+  // 2. plugins/video.php?href=… → kunin ang totoong permalink. Kung
+  //    hindi tatanggalin ang balot na ito, maiipit ang isang plugin URL
+  //    sa loob ng isa pa at babagsak ang embed.
+  const pluginQuery = candidate.match(/plugins\/video\.php\?(.+)$/i);
+  if (pluginQuery) {
+    const href = new URLSearchParams(pluginQuery[1]).get('href');
+    if (href) return href;
+  }
+
+  // 3. /reel/<id> → /watch/?v=<id>, ang anyong nauunawaan ng plugin
+  const reel = candidate.match(/facebook\.com\/reel\/(\d+)/i);
+  if (reel) return `https://www.facebook.com/watch/?v=${reel[1]}`;
+
+  return candidate;
+}
+
+// Ang /share/ ay redirect stub lang — hindi ito kayang sundan ng plugin,
+// at hindi rin natin mare-resolve sa browser dahil sa CORS.
+export function isFacebookShareLink(url) {
+  return /facebook\.com\/share\//i.test((url || '').trim());
+}
+
 export function getYouTubeId(url) {
   const link = (url || '').trim();
   if (!link) return '';
@@ -92,6 +128,21 @@ export function buildEmbedUrl(video, { loop = false } = {}) {
 export function validateVideoUrl(url, type) {
   const link = (url || '').trim();
   if (!link) return 'Kailangan ng video link.';
+
+  // Ang "Copy link" ng FB app ay nagbibigay ng /share/ na stub. Mukhang
+  // tama ito at bumubukas sa browser, pero "Video Unavailable" sa kiosk.
+  if (isFacebookShareLink(link)) {
+    return 'Share link ito (facebook.com/share/…) — hindi ito kayang buksan ng kiosk.\n\n'
+      + 'Ganito ang tamang kunin:\n'
+      + '1. Buksan ang post sa DESKTOP browser (hindi sa FB app)\n'
+      + '2. I-click ang petsa/oras ng post, o ang video mismo\n'
+      + '3. Kopyahin ang link sa address bar\n\n'
+      + 'Dapat ganito ang hitsura:\n'
+      + 'facebook.com/TagaytayCity/videos/1234567890\n\n'
+      + 'Mas sigurado: 3 dots (…) sa post → Embed → kopyahin ang buong '
+      + '<iframe> code at i-paste dito nang buo.';
+  }
+
   if (!/^https?:\/\//i.test(link)) return 'Dapat magsimula ang link sa http:// o https://';
   if (type === 'youtube' && !getYouTubeId(link)) return 'Hindi mabasa ang YouTube video ID sa link na ito.';
   if (type === 'facebook' && !/(facebook\.com|fb\.watch|fb\.com)/i.test(link)) {

@@ -4,7 +4,7 @@ import {
   updateOffice, getAnnouncement, updateAnnouncement, changeAdminPassword, logoutAdmin,
   getKioskVideos, saveKioskVideo, deleteKioskVideo,
 } from '../lib/api';
-import { VIDEO_TYPES, detectVideoType, validateVideoUrl } from '../lib/videoUtils';
+import { VIDEO_TYPES, detectVideoType, validateVideoUrl, normalizeFacebookUrl } from '../lib/videoUtils';
 
 const BLANK_VIDEO = {
   id: null, title: '', caption: '', source_url: '',
@@ -94,10 +94,13 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
   const setVideoField = (field, value) => setVideoForm((f) => ({ ...f, [field]: value }));
 
   const handleVideoUrlChange = (url) => {
+    // Nili-linis agad ang na-paste — kahit buong <iframe> embed code ang
+    // ibigay ng staff, permalink ang makikita nilang natira sa field.
+    const cleaned = normalizeFacebookUrl(url);
     setVideoForm((f) => ({
       ...f,
-      source_url: url,
-      video_type: videoTypeTouched ? f.video_type : detectVideoType(url),
+      source_url: cleaned,
+      video_type: videoTypeTouched ? f.video_type : detectVideoType(cleaned),
     }));
   };
 
@@ -345,8 +348,11 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
               <form className="adm-form adm-form--stack adm-vid-editor" onSubmit={handleSaveVideo}>
                 <div>
                   <label className="k-label">Video link (URL)</label>
+                  {/* Teksto, hindi url — para tanggapin din ang buong <iframe>
+                      embed code at ang sarili nating mensahe ang lumabas
+                      imbes na ang generic na babala ng browser. */}
                   <input
-                    type="url"
+                    type="text"
                     className="k-input"
                     value={videoForm.source_url}
                     onChange={(e) => handleVideoUrlChange(e.target.value)}
@@ -354,8 +360,11 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                     required
                   />
                   <p className="adm-hint">
-                    Kopyahin ang link ng mismong post mula sa FB Page. Kailangang
-                    naka-<strong>Public</strong> ang post para lumabas ito sa kiosk.
+                    Kailangang naka-<strong>Public</strong> ang post. Huwag gamitin ang
+                    “Copy link” ng FB app — <strong>share link</strong> ang ibinibigay niyon
+                    at hindi ito bubukas sa kiosk. Sa desktop browser, i-click ang petsa ng
+                    post at kopyahin ang address bar. Pinakasigurado: 3 dots (…) →
+                    <strong> Embed</strong> → i-paste dito ang buong <code>&lt;iframe&gt;</code> code.
                   </p>
                 </div>
 
