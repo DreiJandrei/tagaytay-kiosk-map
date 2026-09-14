@@ -573,9 +573,11 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                     {videoForm.video_type === 'facebook'
                       ? 'Hindi kayang buksan ang tunog ng Facebook embed — laging tahimik ito. '
                         + 'Kung kailangan talaga ng tunog, i-download ang video at i-upload dito.'
-                      : 'Hinaharangan ng browser ang tunog hangga’t walang unang pindot sa screen. '
-                        + 'Kaya tahimik muna ang unang video pagkatapos mag-restart, at may tunog na '
-                        + 'sa mga sumunod. Para may tunog agad, tingnan ang README (Chrome kiosk flag).'}
+                      : 'Lalabas ang bilog na 🔊 na buton sa ibabaw ng video sa welcome screen. '
+                        + 'Doon kayang buksan o patayin ng bisita ang tunog nang hindi nagsisimula '
+                        + 'ang kiosk. Kung haharangin ng browser ang tunog sa umpisa, isang pindot '
+                        + 'lang sa buton na iyon ay sapat na. Para bukas agad kahit walang pumipindot, '
+                        + 'tingnan ang README (Chrome kiosk flag).'}
                   </p>
                 </div>
 

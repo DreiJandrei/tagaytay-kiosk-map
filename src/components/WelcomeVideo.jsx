@@ -19,23 +19,13 @@ export default function WelcomeVideo() {
   const [videos, setVideos] = useState([]);
   const [index, setIndex] = useState(0);
   const [cycle, setCycle] = useState(0);
-  // Hinaharangan ng browser ang tunog hangga't walang unang pakikipag-
-  // ugnayan ng tao sa pahina. Pagkatapos ng unang pindot kahit saan,
-  // bukas na ang tunog hanggang sa susunod na reload.
-  const [audioUnlocked, setAudioUnlocked] = useState(false);
+  // Pagpili ng bisita mula sa buton. Habang null, ang nakatakda ng admin
+  // ang sinusunod; kapag may pinindot na, iyon na ang masusunod hanggang
+  // sa susunod na reload.
+  const [soundChoice, setSoundChoice] = useState(null);
+  // Totoong tinanggihan ng browser ang tunog — hindi lang "ayaw namin".
+  const [soundBlocked, setSoundBlocked] = useState(false);
   const fileRef = useRef(null);
-
-  useEffect(() => {
-    if (audioUnlocked) return;
-    const unlock = () => setAudioUnlocked(true);
-    const opts = { once: true, passive: true };
-    window.addEventListener('pointerdown', unlock, opts);
-    window.addEventListener('keydown', unlock, opts);
-    return () => {
-      window.removeEventListener('pointerdown', unlock);
-      window.removeEventListener('keydown', unlock);
-    };
-  }, [audioUnlocked]);
 
   useEffect(() => {
     let alive = true;
@@ -77,8 +67,20 @@ export default function WelcomeVideo() {
     return () => clearTimeout(timer);
   }, [usesTimer, current, cycle, advance]);
 
-  const wantsSound = !!current?.has_sound;
-  const soundOn = wantsSound && audioUnlocked;
+  // May tunog bang maaaring buksan — ito ang nagpapakita ng buton.
+  const soundAvailable = !!current?.has_sound && type !== 'facebook';
+  const wantsSound = soundChoice !== null ? soundChoice : !!current?.has_sound;
+  const soundOn = soundAvailable && wantsSound && !soundBlocked;
+
+  // Ang pagpindot mismo sa buton ay siyang pahintulot na hinihingi ng
+  // browser, kaya sinusubukan ulit ang tunog tuwing may bagong pili.
+  const toggleSound = (e) => {
+    // Nakabalot ang buong welcome screen sa isang onClick na nagsisimula
+    // ng kiosk. Dito huminto ang pindot — tunog lang ang inaayos nito.
+    e.stopPropagation();
+    setSoundBlocked(false);
+    setSoundChoice(!wantsSound);
+  };
 
   // Ang mga autoplay na hadlang ng browser ay minsang tahimik na tumatanggi;
   // ito ang pangalawang tulak para tuloy pa rin ang attract loop.
@@ -94,6 +96,7 @@ export default function WelcomeVideo() {
         // gumagalaw na video kaysa sa tunog, kaya bumabalik sa tahimik
         // imbes na manatiling naka-freeze ang attract loop.
         el.muted = true;
+        setSoundBlocked(true);
         const retry = el.play();
         if (retry && typeof retry.catch === 'function') retry.catch(() => {});
       });
@@ -114,13 +117,15 @@ export default function WelcomeVideo() {
       <div className="welcome-video-head">
         <span className="welcome-video-icon">🎬</span>
         <h2>{heading}</h2>
-        {wantsSound && (
-          <span
+        {soundAvailable && (
+          <button
+            type="button"
             className={`welcome-video-sound${soundOn ? ' is-on' : ''}`}
-            title={soundOn ? 'May tunog' : 'Bubukas ang tunog pagkatapos ng unang pindot'}
+            onClick={toggleSound}
+            aria-label={soundOn ? 'Patayin ang tunog' : 'Buksan ang tunog'}
           >
-            {soundOn ? '🔊' : '🔇'}
-          </span>
+            <span aria-hidden="true">{soundOn ? '🔊' : '🔇'}</span>
+          </button>
         )}
         {videos.length > 1 && (
           <span className="welcome-video-count">{position + 1}/{videos.length}</span>

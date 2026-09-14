@@ -4,8 +4,12 @@
 
 Hinaharangan ng lahat ng browser ang tunog hangga't walang pumipindot sa
 screen. Kaya kahit naka-ON ang "🔊 Buksan ang tunog" sa Admin Panel,
-tahimik pa rin ang unang video pagkatapos ng restart — bubukas lang ang
-tunog pagkatapos ng unang pindot ng kahit sino.
+maaaring tahimik pa rin ang unang video pagkatapos ng restart.
+
+May bilog na 🔊 na buton sa ibabaw ng video sa welcome screen. Doon
+kayang buksan o patayin ng bisita ang tunog — at hindi nagsisimula ang
+kiosk kapag iyon ang pinindot (ang pindot sa kahit saang iba ay
+nagsisimula pa rin gaya ng dati).
 
 Para may tunog agad kahit walang pumipindot, buksan ang Chrome sa kiosk
 gamit ang flag na ito:

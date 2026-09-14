@@ -1189,11 +1189,25 @@ img { max-width: 100%; }
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .welcome-video-icon { font-size: 1.7rem; }
+/* Tunay na pindutan — sapat ang laki para sa daliri sa touchscreen, at
+   hindi nito pinapadaan ang pindot sa welcome screen na magsisimula
+   sana ng kiosk. */
 .welcome-video-sound {
-  flex-shrink: 0; font-size: 1.2rem;
-  opacity: .45; transition: opacity .3s ease;
+  flex-shrink: 0;
+  width: 52px; height: 52px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  border: 2px solid rgba(147,197,253,.5);
+  background: rgba(7,18,35,.6);
+  color: #FFF; font-size: 1.4rem;
+  cursor: pointer;
+  transition: background .2s ease, border-color .2s ease, transform .2s ease;
 }
-.welcome-video-sound.is-on { opacity: 1; }
+.welcome-video-sound:active { transform: scale(.92); }
+.welcome-video-sound.is-on {
+  background: rgba(37,99,235,.55);
+  border-color: rgba(191,219,254,.9);
+}
 .welcome-video-count {
   flex-shrink: 0;
   padding: 4px 12px; border-radius: 999px;
