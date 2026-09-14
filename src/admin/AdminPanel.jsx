@@ -147,13 +147,19 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
       setVideoTypeTouched(true);
     } catch (error) {
       const detail = error.message || String(error);
-      // Ang pinakamadalas na dahilan: hindi pa napapatakbo ang SQL na
-      // gumagawa ng bucket. Walang katuturan ang "Bucket not found" sa
-      // staff, kaya sinasabi na agad kung ano ang gagawin.
-      const hint = /bucket not found/i.test(detail)
-        ? '\n\n👉 Hindi pa nagagawa ang storage bucket. Patakbuhin muna sa Supabase '
-          + '→ SQL Editor ang laman ng file na supabase/kiosk_videos_storage.sql'
-        : '';
+      // Dalawang magkaibang sanhi na pareho ang hitsura sa staff: walang
+      // bucket, o may bucket pero walang pahintulot mag-upload. Malayo
+      // ang pinagkaiba ng solusyon, kaya hiwalay ang bawat paliwanag.
+      let hint = '';
+      if (/bucket not found/i.test(detail)) {
+        hint = '\n\n👉 WALA PANG BUCKET.\n'
+          + 'Supabase → Storage → New bucket → pangalan: kiosk-videos → i-ON ang Public bucket.';
+      } else if (/row-level security|policy|unauthorized|403/i.test(detail)) {
+        hint = '\n\n👉 MAY BUCKET NA, PERO BAWAL MAG-UPLOAD.\n'
+          + 'Kulang ang permission. Supabase → Storage → Policies → hanapin ang '
+          + 'kiosk-videos → New policy → payagan ang INSERT at DELETE para sa '
+          + '“authenticated” na role.';
+      }
       alert(`❌ Hindi na-upload ang video.\n\n${detail}${hint}`);
     } finally { setIsUploading(false); }
   };

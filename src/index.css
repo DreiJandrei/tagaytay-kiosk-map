@@ -978,8 +978,27 @@ img { max-width: 100%; }
 
 .welcome-content {
   position: relative; z-index: 5; width: 100%;
+  height: 100%; /* nakakulong sa screen — hindi na umaapaw pababa */
   display: flex; flex-direction: column; align-items: center;
-  padding: 34px 40px 40px; box-sizing: border-box;
+  padding: 28px 40px 32px; box-sizing: border-box;
+  overflow: hidden;
+}
+/* Nakapatong ang marquee sa ibaba, kaya iniiwasan ang lugar nito. */
+.welcome-content.has-advisory { padding-bottom: 92px; }
+
+.welcome-main {
+  flex: 1; min-height: 0;
+  width: 100%; max-width: 1500px;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 22px;
+}
+/* Kapag may kard sa board slot, magkatabi — hindi patung-patong.
+   Doon sa gilid nakatago ang espasyong kailangan. */
+.welcome-main:has(.welcome-board-slot > *) {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 46px;
 }
 .welcome-topbar {
   width: 100%; max-width: 1400px;
@@ -992,18 +1011,43 @@ img { max-width: 100%; }
 }
 .welcome-time { color: #FFF; font-size: 1.5rem; font-weight: 900; letter-spacing: 2px; }
 
+/* Iisang lugar lang ang kumokontrol sa laki ng hero. Kapag sumikip,
+   ang mga variable na ito lang ang pinapalitan — hindi na kailangang
+   ulitin ang bawat panuntunan sa ibaba. */
 .welcome-hero {
-  flex: 1; display: flex; flex-direction: column;
+  --h-seal: 190px;
+  --h-seal-img: 160px;
+  --h-republic: 1.15rem;
+  --h-title: 3.4rem;
+  --h-accent: 5.6rem;
+  --h-tagline: 1.35rem;
+  --h-tagline-gap: 42px;
+  --h-prompt: 1.7rem;
+  --h-prompt-pad: 22px 62px;
+
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  text-align: center; padding: 26px 0;
+  text-align: center; padding: 20px 0;
+}
+.welcome-main:has(.welcome-board-slot > *) .welcome-hero {
+  --h-seal: 128px;
+  --h-seal-img: 108px;
+  --h-republic: .9rem;
+  --h-title: 2.2rem;
+  --h-accent: 3.4rem;
+  --h-tagline: 1rem;
+  --h-tagline-gap: 24px;
+  --h-prompt: 1.25rem;
+  --h-prompt-pad: 15px 36px;
 }
 .welcome-seal-wrap {
-  position: relative; width: 190px; height: 190px;
+  position: relative; width: var(--h-seal); height: var(--h-seal);
   display: flex; align-items: center; justify-content: center;
   animation: rise 1s cubic-bezier(.16,1,.3,1) both;
 }
 .welcome-seal {
-  width: 160px; height: 160px; border-radius: 50%;
+  width: var(--h-seal-img); height: var(--h-seal-img); border-radius: 50%;
   object-fit: contain; background: #FFF; padding: 6px;
   border: 4px solid rgba(191,219,254,.9);
   box-shadow: 0 18px 45px rgba(3,12,30,.7);
@@ -1020,20 +1064,20 @@ img { max-width: 100%; }
   100% { transform: scale(1.45); opacity:0; }
 }
 .welcome-republic {
-  margin: 26px 0 6px; color: var(--k-300);
-  font-size: 1.15rem; font-weight: 800; letter-spacing: 6px;
+  margin: 18px 0 6px; color: var(--k-300);
+  font-size: var(--h-republic); font-weight: 800; letter-spacing: 6px;
   text-transform: uppercase;
   animation: rise 1s .1s cubic-bezier(.16,1,.3,1) both;
 }
 .welcome-title {
   font-family: "Playfair Display", Georgia, serif;
-  margin: 0; color: #FFF; font-size: 3.4rem; font-weight: 800;
+  margin: 0; color: #FFF; font-size: var(--h-title); font-weight: 800;
   line-height: 1.05; letter-spacing: -.5px;
   text-shadow: 0 14px 34px rgba(2,10,26,.85);
   animation: rise 1s .18s cubic-bezier(.16,1,.3,1) both;
 }
 .welcome-title-accent {
-  display: block; font-size: 5.6rem; line-height: 1; margin-top: 4px;
+  display: block; font-size: var(--h-accent); line-height: 1; margin-top: 4px;
   background: linear-gradient(180deg, #FFFFFF 0%, #93C5FD 100%);
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent; color: #93C5FD;
@@ -1051,17 +1095,17 @@ img { max-width: 100%; }
 }
 .welcome-rule em { color: var(--k-400); font-style: normal; font-size: 1.1rem; }
 .welcome-tagline {
-  margin: 0 0 42px; color: var(--k-100);
-  font-size: 1.35rem; font-weight: 700; letter-spacing: 7px;
+  margin: 0 0 var(--h-tagline-gap); color: var(--k-100);
+  font-size: var(--h-tagline); font-weight: 700; letter-spacing: 7px;
   text-transform: uppercase;
   animation: fadeIn 1.2s .36s ease both;
 }
 .welcome-prompt {
   position: relative; display: inline-flex; align-items: center; gap: 20px;
-  padding: 22px 62px; border-radius: 999px;
+  padding: var(--h-prompt-pad); border-radius: 999px;
   background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 60%, #1E3A8A 100%);
   border: 2px solid rgba(147,197,253,.85);
-  color: #FFF; font-size: 1.7rem; font-weight: 900;
+  color: #FFF; font-size: var(--h-prompt); font-weight: 900;
   letter-spacing: 1.5px; text-transform: uppercase;
   box-shadow: 0 20px 45px rgba(29,78,216,.55);
   animation: rise 1s .45s cubic-bezier(.16,1,.3,1) both,
@@ -1080,13 +1124,19 @@ img { max-width: 100%; }
   font-size: 1.1rem; font-weight: 600; letter-spacing: 2px;
   animation: fadeIn 1.2s .6s ease both;
 }
+/* Blangko itong slot kapag walang anunsyo o video — nasa gitna lang
+   ang hero, gaya ng dati. Nagiging kanang hanay kapag may laman. */
 .welcome-board-slot {
-  width: 100%; max-width: 1400px;
-  display: flex; flex-wrap: wrap; align-items: stretch;
-  justify-content: center; gap: 26px;
+  display: flex; flex-direction: column;
+  align-items: stretch; justify-content: center;
+  gap: 18px;
+  flex: 0 1 620px; min-width: 0;
+  max-height: 100%; min-height: 0;
 }
+.welcome-board-slot:empty { display: none; }
+
 .welcome-board {
-  flex: 1 1 440px; max-width: 1100px;
+  min-height: 0; overflow: hidden;
   background: rgba(13,38,76,.55);
   backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
   border: 1px solid rgba(96,165,250,.45);
@@ -1105,13 +1155,18 @@ img { max-width: 100%; }
 }
 .welcome-board-icon { font-size: 1.9rem; }
 .welcome-board-body {
-  color: #EAF4FF; font-size: 1.3rem; line-height: 1.65;
+  color: #EAF4FF; font-size: 1.15rem; line-height: 1.6;
   font-weight: 500; white-space: pre-line;
+  min-height: 0; overflow: hidden;
+  /* Pinuputol ang sobrang mahabang anunsyo imbes na itulak palabas ng
+     screen ang video sa ilalim nito. */
+  display: -webkit-box; -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6; line-clamp: 6;
 }
 /* ── Video panel: mga event na naka-post sa FB Page ng lungsod ── */
 .welcome-video-card {
-  flex: 1 1 560px; max-width: 720px;
-  display: flex; flex-direction: column; gap: 14px;
+  min-height: 0; /* pinapayagang lumiit kapag masikip ang hanay */
+  display: flex; flex-direction: column; gap: 12px;
   background: rgba(13,38,76,.55);
   backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
   border: 1px solid rgba(96,165,250,.45);
@@ -1146,15 +1201,21 @@ img { max-width: 100%; }
      kontrol na maaabot ng daliri, attract loop lang ito. */
   pointer-events: none;
 }
-/* Patayong video (Reels): pinapaliit ang buong card at kinakapkap ang
-   taas sa screen, para hindi ito umabot sa labas ng kiosk. */
-.welcome-video-card.is-portrait { flex: 0 1 400px; max-width: 440px; }
+/* Patayong video (Reels): ang taas ang hangganan, at doon kinukuha ang
+   lapad — kung hindi, aabot ito sa labas ng kiosk. Umuurong pa kapag
+   may kasamang anunsyo sa iisang hanay. */
+/* Umaangkop ang kard sa makitid na video — walang malawak na blangko. */
+.welcome-video-card.is-portrait { align-self: center; width: min(100%, 420px); }
 .welcome-video-frame.is-portrait {
   aspect-ratio: 9 / 16;
-  height: min(52vh, 500px);
+  height: min(46vh, 430px);
   width: auto;
   align-self: center;
   margin: 0 auto;
+  flex-shrink: 0;
+}
+.welcome-board-slot:has(.welcome-board) .welcome-video-frame.is-portrait {
+  height: min(34vh, 320px);
 }
 .welcome-video-frame iframe,
 .welcome-video-frame video {
@@ -1170,8 +1231,11 @@ img { max-width: 100%; }
 .welcome-video-fallback span { font-size: 2.4rem; }
 .welcome-video-fallback p { margin: 0; font-size: 1rem; font-weight: 700; }
 .welcome-video-caption {
-  margin: 0; color: #EAF4FF; font-size: 1.05rem; line-height: 1.55;
+  margin: 0; color: #EAF4FF; font-size: 1rem; line-height: 1.5;
   font-weight: 500; white-space: pre-line;
+  min-height: 0; overflow: hidden;
+  display: -webkit-box; -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2; line-clamp: 2;
 }
 .welcome-video-dots { display: flex; justify-content: center; gap: 9px; }
 .welcome-video-dots span {

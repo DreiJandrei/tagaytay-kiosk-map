@@ -59,8 +59,9 @@ export default function WelcomeScreen({ onStart }) {
       <div className="welcome-vignette" aria-hidden="true" />
       <div className="welcome-glow" aria-hidden="true" />
 
-      {/* Layer 2: nilalaman */}
-      <div className="welcome-content">
+      {/* Layer 2: nilalaman. Nagbabago ang taas ng kahon kapag may
+          gumagalaw na advisory sa ilalim, para walang natatakpan. */}
+      <div className={`welcome-content${hasAdvisory ? ' has-advisory' : ''}`}>
 
         {/* Itaas: petsa at oras */}
         <div className="welcome-topbar">
@@ -68,7 +69,12 @@ export default function WelcomeScreen({ onStart }) {
           <span className="welcome-time">{timeText}</span>
         </div>
 
-        {/* Gitna: seal, pamagat, at prompt */}
+        {/* Gitna. Nagiging magkatabi ang hero at ang mga kard kapag may
+            laman ang board slot — doon kasi may sobrang espasyo, at ang
+            pagpapatong-patong pababa ang dahilan ng pag-apaw. */}
+        <div className="welcome-main">
+
+        {/* Seal, pamagat, at prompt */}
         <div className="welcome-hero">
           <div className="welcome-seal-wrap">
             <span className="welcome-seal-ring" aria-hidden="true" />
@@ -110,6 +116,8 @@ export default function WelcomeScreen({ onStart }) {
             </div>
           )}
           <WelcomeVideo />
+        </div>
+
         </div>
       </div>
 
