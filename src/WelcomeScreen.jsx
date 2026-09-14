@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import tagaytaySeal from './assets/tagaytay-seal.jpg';
 import cityhallBg from './assets/cityhall.jpg';
+import WelcomeVideo from './components/WelcomeVideo';
 import { getAnnouncement } from './lib/api';
 
 export default function WelcomeScreen({ onStart }) {
@@ -97,7 +98,7 @@ export default function WelcomeScreen({ onStart }) {
           <p className="welcome-subprompt">Pindutin ang screen upang magsimula</p>
         </div>
 
-        {/* Ibaba: opisyal na anunsyo */}
+        {/* Ibaba: opisyal na anunsyo katabi ng mga video ng lungsod */}
         <div className="welcome-board-slot">
           {hasAnnouncement && (
             <div className="welcome-board">
@@ -108,6 +109,7 @@ export default function WelcomeScreen({ onStart }) {
               <div className="welcome-board-body">{announcement}</div>
             </div>
           )}
+          <WelcomeVideo />
         </div>
       </div>
 

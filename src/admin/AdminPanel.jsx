@@ -1,6 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import VirtualKeyboard from '../components/VirtualKeyboard';
-import { updateOffice, getAnnouncement, updateAnnouncement, changeAdminPassword, logoutAdmin } from '../lib/api';
+import {
+  updateOffice, getAnnouncement, updateAnnouncement, changeAdminPassword, logoutAdmin,
+  getKioskVideos, saveKioskVideo, deleteKioskVideo,
+} from '../lib/api';
+import { VIDEO_TYPES, detectVideoType, validateVideoUrl } from '../lib/videoUtils';
+
+const BLANK_VIDEO = {
+  id: null, title: '', caption: '', source_url: '',
+  video_type: 'facebook', duration_seconds: 45, sort_order: 0, is_active: true,
+};
 
 export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
   const [activeTab, setActiveTab] = useState('announcements');
@@ -35,6 +44,12 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
   const [selectedOfficeKey, setSelectedOfficeKey] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  const [videos, setVideos] = useState([]);
+  const [videoForm, setVideoForm] = useState(null);
+  // Tumitigil ang awtomatikong paghula ng uri kapag ang staff mismo ang
+  // pumili sa dropdown — baka may kakaibang link na alam nilang tama.
+  const [videoTypeTouched, setVideoTypeTouched] = useState(false);
+
   const [formTitle, setFormTitle] = useState('');
   const [formHours, setFormHours] = useState('');
   const [formHead, setFormHead] = useState('');
@@ -56,6 +71,64 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
     };
     fetchAdminData();
   }, []);
+
+  const loadVideos = async () => {
+    const list = await getKioskVideos();
+    setVideos(list);
+    return list;
+  };
+
+  useEffect(() => { loadVideos(); }, []);
+
+  const pickVideo = (video) => {
+    setVideoForm(video ? { ...video } : { ...BLANK_VIDEO, sort_order: videos.length });
+    setVideoTypeTouched(!!video);
+  };
+
+  const setVideoField = (field, value) => setVideoForm((f) => ({ ...f, [field]: value }));
+
+  const handleVideoUrlChange = (url) => {
+    setVideoForm((f) => ({
+      ...f,
+      source_url: url,
+      video_type: videoTypeTouched ? f.video_type : detectVideoType(url),
+    }));
+  };
+
+  const handleSaveVideo = async (e) => {
+    e.preventDefault();
+    if (!videoForm) return;
+
+    const problem = validateVideoUrl(videoForm.source_url, videoForm.video_type);
+    if (problem) return alert(`❌ ${problem}`);
+
+    setIsSaving(true);
+    try {
+      const saved = await saveKioskVideo(videoForm);
+      const list = await loadVideos();
+      // Pinapanatiling bukas ang katatapos lang i-save para makita agad
+      // ng staff ang naitalang halaga.
+      setVideoForm(list.find((v) => v.id === saved.id) || { ...saved });
+      setVideoTypeTouched(true);
+      alert('🎬 Video saved! Lalabas na ito sa welcome screen sa loob ng isang minuto.');
+    } catch (error) {
+      alert(`❌ Failed to save video.\n\n${error.message || error}`);
+    } finally { setIsSaving(false); }
+  };
+
+  const handleDeleteVideo = async () => {
+    if (!videoForm?.id) return;
+    if (!window.confirm(`Burahin ang video na "${videoForm.title || videoForm.source_url}"?`)) return;
+
+    setIsSaving(true);
+    try {
+      await deleteKioskVideo(videoForm.id);
+      await loadVideos();
+      setVideoForm(null);
+    } catch (error) {
+      alert(`❌ Failed to delete video.\n\n${error.message || error}`);
+    } finally { setIsSaving(false); }
+  };
 
   const getOfficesForSelectedFloor = () => {
     if (!officeDatabase) return [];
@@ -188,6 +261,9 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
           <button className={`adm-tab${activeTab === 'announcements' ? ' active' : ''}`} onClick={() => setActiveTab('announcements')}>
             📢 Announcements
           </button>
+          <button className={`adm-tab${activeTab === 'videos' ? ' active' : ''}`} onClick={() => setActiveTab('videos')}>
+            🎬 Videos
+          </button>
           <button className={`adm-tab${activeTab === 'offices' ? ' active' : ''}`} onClick={() => setActiveTab('offices')}>
             🏢 Office Directory
           </button>
@@ -227,6 +303,148 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                 {isSaving ? 'Deploying to kiosks…' : '📢 Publish Updates'}
               </button>
             </form>
+          </div>
+        )}
+
+        {activeTab === 'videos' && (
+          <div className="adm-split">
+            <div className="adm-list">
+              <button className="k-btn k-btn--primary" onClick={() => pickVideo(null)}>
+                ＋ Add Video
+              </button>
+              <div className="adm-list-scroll">
+                {videos.length === 0 && (
+                  <p className="adm-hint">Wala pang video. Pindutin ang “Add Video” para magdagdag.</p>
+                )}
+                {videos.map((video, i) => (
+                  <button
+                    key={video.id}
+                    className={`adm-office${videoForm?.id === video.id ? ' active' : ''}`}
+                    onClick={() => pickVideo(video)}
+                  >
+                    <span className="adm-vid-row">
+                      <span className="adm-vid-name">{video.title || video.source_url}</span>
+                      <span className={`adm-vid-pill${video.is_active ? ' is-on' : ''}`}>
+                        {video.is_active ? 'LIVE' : 'OFF'}
+                      </span>
+                    </span>
+                    <span className="adm-vid-meta">#{i + 1} · {video.video_type}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="adm-pane">
+              {!videoForm ? (
+                <div className="adm-empty">
+                  <span>🎬</span>
+                  <h3>Welcome screen videos</h3>
+                  <p className="adm-hint">
+                    I-paste ang link ng isang <strong>public</strong> na Facebook post, YouTube video,
+                    o direktang .mp4 file. Salitan itong ipapalabas sa idle screen ng kiosk.
+                  </p>
+                </div>
+              ) : (
+                <form className="adm-form" onSubmit={handleSaveVideo}>
+                  <div>
+                    <label className="k-label">Video link (URL)</label>
+                    <input
+                      type="url"
+                      className="k-input"
+                      value={videoForm.source_url}
+                      onChange={(e) => handleVideoUrlChange(e.target.value)}
+                      placeholder="https://www.facebook.com/TagaytayCity/videos/1234567890"
+                      required
+                    />
+                    <p className="adm-hint">
+                      Kopyahin ang link ng mismong post mula sa FB Page. Kailangang
+                      naka-<strong>Public</strong> ang post para lumabas ito sa kiosk.
+                    </p>
+                  </div>
+
+                  <div className="adm-form--split">
+                    <div>
+                      <label className="k-label">Title (header sa kiosk)</label>
+                      <input
+                        type="text"
+                        className="k-input"
+                        value={videoForm.title}
+                        onChange={(e) => setVideoField('title', e.target.value)}
+                        placeholder="e.g. Tagaytay Flower Festival 2026"
+                      />
+                    </div>
+                    <div>
+                      <label className="k-label">Source type</label>
+                      <select
+                        className="k-select"
+                        value={videoForm.video_type}
+                        onChange={(e) => { setVideoTypeTouched(true); setVideoField('video_type', e.target.value); }}
+                      >
+                        {VIDEO_TYPES.map((t) => (
+                          <option key={t.value} value={t.value}>{t.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="adm-form--split">
+                    <div>
+                      <label className="k-label">Display seconds (bago lumipat sa susunod)</label>
+                      <input
+                        type="number"
+                        className="k-input"
+                        min="5"
+                        max="600"
+                        value={videoForm.duration_seconds}
+                        onChange={(e) => setVideoField('duration_seconds', e.target.value)}
+                      />
+                      <p className="adm-hint">
+                        Hindi ito ginagamit sa .mp4 — hinihintay doon ang tunay na dulo ng video.
+                      </p>
+                    </div>
+                    <div>
+                      <label className="k-label">Order (mas mababa, mas nauna)</label>
+                      <input
+                        type="number"
+                        className="k-input"
+                        value={videoForm.sort_order}
+                        onChange={(e) => setVideoField('sort_order', e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="adm-grow">
+                    <label className="k-label">Caption (opsyonal)</label>
+                    <textarea
+                      className="k-textarea"
+                      value={videoForm.caption}
+                      onChange={(e) => setVideoField('caption', e.target.value)}
+                      placeholder="Maikling paliwanag na lalabas sa ilalim ng video…"
+                    />
+                  </div>
+
+                  <label className="adm-check">
+                    <input
+                      type="checkbox"
+                      checked={videoForm.is_active !== false}
+                      onChange={(e) => setVideoField('is_active', e.target.checked)}
+                    />
+                    <span>Ipakita sa welcome screen</span>
+                  </label>
+
+                  <div className="k-btn-row">
+                    <button type="submit" className="k-btn k-btn--primary" disabled={isSaving}>
+                      {isSaving ? 'Deploying to kiosks…' : '🎬 Save Video'}
+                    </button>
+                    {videoForm.id && (
+                      <button type="button" className="k-btn k-btn--ghost" onClick={handleDeleteVideo} disabled={isSaving}>
+                        🗑️ Delete
+                      </button>
+                    )}
+                  </div>
+                </form>
+              )}
+            </div>
           </div>
         )}
 

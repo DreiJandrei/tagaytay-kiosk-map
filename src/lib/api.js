@@ -214,8 +214,74 @@ export const updateAnnouncement = async (text) => {
       await supabase.from('kiosks_announcements').insert([{ id: 1, announcement_text: text }]);
     }
     return true;
-  } catch (error) { 
+  } catch (error) {
     console.error("Save Announcement Error:", error);
+    throw error;
+  }
+};
+
+// ==============================================================
+// 7. WELCOME SCREEN VIDEOS API
+// ==============================================================
+
+// Hindi nagtatapon ng error ang reader: kapag hindi pa nagagawa ang table
+// o walang internet ang kiosk, blangkong listahan ang ibabalik at basta
+// itatago na lang ang video panel sa welcome screen.
+export const getKioskVideos = async ({ activeOnly = false } = {}) => {
+  try {
+    let query = supabase
+      .from('kiosk_videos')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .order('id', { ascending: true });
+
+    if (activeOnly) query = query.eq('is_active', true);
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching kiosk videos:', error);
+    return [];
+  }
+};
+
+export const saveKioskVideo = async (video) => {
+  try {
+    const payload = {
+      title: video.title || '',
+      caption: video.caption || '',
+      source_url: (video.source_url || '').trim(),
+      video_type: video.video_type || 'facebook',
+      duration_seconds: Number(video.duration_seconds) || 45,
+      sort_order: Number(video.sort_order) || 0,
+      is_active: video.is_active !== false,
+    };
+
+    if (video.id) {
+      const { data, error } = await supabase
+        .from('kiosk_videos').update(payload).eq('id', video.id).select().single();
+      if (error) throw error;
+      return data;
+    }
+
+    const { data, error } = await supabase
+      .from('kiosk_videos').insert([payload]).select().single();
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Save Kiosk Video Error:', error);
+    throw error;
+  }
+};
+
+export const deleteKioskVideo = async (id) => {
+  try {
+    const { error } = await supabase.from('kiosk_videos').delete().eq('id', id);
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Delete Kiosk Video Error:', error);
     throw error;
   }
 };
