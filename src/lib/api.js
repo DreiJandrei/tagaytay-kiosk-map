@@ -276,6 +276,52 @@ export const saveKioskVideo = async (video) => {
   }
 };
 
+// ==============================================================
+// 8. VIDEO FILE UPLOAD (SUPABASE STORAGE)
+// ==============================================================
+const VIDEO_BUCKET = 'kiosk-videos';
+const PUBLIC_MARKER = `/object/public/${VIDEO_BUCKET}/`;
+
+export const uploadKioskVideoFile = async (file) => {
+  try {
+    const ext = (file.name.match(/\.[a-z0-9]+$/i)?.[0] || '.mp4').toLowerCase();
+    const base = file.name
+      .replace(/\.[^.]+$/, '')
+      .replace(/[^a-z0-9]+/gi, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 60) || 'video';
+    // Kakaiba ang pangalan bawat upload, kaya ligtas ang mahabang cache
+    // at hindi nagkakapatungan ang magkaparehong file name.
+    const path = `${Date.now()}-${base}${ext}`;
+
+    const { error } = await supabase.storage.from(VIDEO_BUCKET).upload(path, file, {
+      cacheControl: '31536000',
+      contentType: file.type || 'video/mp4',
+      upsert: false,
+    });
+    if (error) throw error;
+
+    const { data } = supabase.storage.from(VIDEO_BUCKET).getPublicUrl(path);
+    return data.publicUrl;
+  } catch (error) {
+    console.error('Upload Kiosk Video Error:', error);
+    throw error;
+  }
+};
+
+// Ang landas ay nakabaon na sa public URL, kaya hindi na kailangan ng
+// karagdagang column para matandaan kung aling file ang buburahin.
+export const deleteKioskVideoFile = async (publicUrl) => {
+  const url = publicUrl || '';
+  const at = url.indexOf(PUBLIC_MARKER);
+  if (at === -1) return false; // panlabas na link — walang buburahin
+
+  const path = decodeURIComponent(url.slice(at + PUBLIC_MARKER.length).split('?')[0]);
+  const { error } = await supabase.storage.from(VIDEO_BUCKET).remove([path]);
+  if (error) throw error;
+  return true;
+};
+
 export const deleteKioskVideo = async (id) => {
   try {
     const { error } = await supabase.from('kiosk_videos').delete().eq('id', id);

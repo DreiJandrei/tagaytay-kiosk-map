@@ -2822,6 +2822,55 @@ button:active { transform: scale(.97); }
   text-transform: uppercase;
   letter-spacing: .5px;
 }
+/* "o kaya" — paghahati ng link at upload na paraan */
+.adm-or {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--ui-ink-3);
+  font-size: .8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.adm-or::before, .adm-or::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--ui-line);
+}
+
+.adm-upload {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  border: 2px dashed var(--ui-line-2);
+  border-radius: var(--ui-r-sm);
+  background: var(--ui-raise);
+  cursor: pointer;
+  transition: border-color .18s ease, background .18s ease;
+}
+.adm-upload:hover { border-color: var(--ui-accent); background: var(--ui-accent-sf); }
+.adm-upload input[type="file"] { display: none; }
+.adm-upload.is-busy { cursor: wait; opacity: .7; border-style: solid; }
+.adm-upload-icon { font-size: 1.8rem; flex-shrink: 0; }
+.adm-upload-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  color: var(--ui-ink);
+  font-size: .98rem;
+  font-weight: 800;
+}
+.adm-upload-text small {
+  color: var(--ui-ink-3);
+  font-size: .8rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
 /* Nakakahon ang editor para malinaw na iisang video ang inaayos */
 .adm-vid-editor {
   padding: 20px;

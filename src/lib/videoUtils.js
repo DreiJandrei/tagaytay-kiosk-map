@@ -61,6 +61,35 @@ export function isFacebookShareLink(url) {
   return /facebook\.com\/share\//i.test((url || '').trim());
 }
 
+// 50MB ang karaniwang hangganan ng Supabase Storage sa libreng plano.
+export const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
+
+export const formatBytes = (bytes) => `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+
+// Binabasa ang file sa browser bago i-upload, para awtomatikong matukoy
+// kung patayo ba ito at gaano katagal — hindi na kailangang hulaan pa
+// ng staff ang dalawang field na iyon.
+export function readVideoMeta(file) {
+  return new Promise((resolve) => {
+    const objectUrl = URL.createObjectURL(file);
+    const probe = document.createElement('video');
+    probe.preload = 'metadata';
+
+    const done = (result) => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(result);
+    };
+
+    probe.onloadedmetadata = () => done({
+      width: probe.videoWidth,
+      height: probe.videoHeight,
+      duration: probe.duration,
+    });
+    probe.onerror = () => done(null);
+    probe.src = objectUrl;
+  });
+}
+
 export const ORIENTATIONS = [
   { value: 'landscape', label: '▭ Landscape (16:9) — karaniwang video' },
   { value: 'portrait', label: '▯ Portrait (9:16) — Reels / patayo' },

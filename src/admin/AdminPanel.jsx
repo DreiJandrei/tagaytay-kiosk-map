@@ -3,10 +3,12 @@ import VirtualKeyboard from '../components/VirtualKeyboard';
 import {
   updateOffice, getAnnouncement, updateAnnouncement, changeAdminPassword, logoutAdmin,
   getKioskVideos, saveKioskVideo, deleteKioskVideo,
+  uploadKioskVideoFile, deleteKioskVideoFile,
 } from '../lib/api';
 import {
   VIDEO_TYPES, ORIENTATIONS, detectVideoType, validateVideoUrl,
-  normalizeFacebookUrl, looksLikeReel,
+  normalizeFacebookUrl, looksLikeReel, readVideoMeta,
+  MAX_VIDEO_BYTES, formatBytes,
 } from '../lib/videoUtils';
 
 const BLANK_VIDEO = {
@@ -53,6 +55,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
   // Tumitigil ang awtomatikong paghula ng uri kapag ang staff mismo ang
   // pumili sa dropdown — baka may kakaibang link na alam nilang tama.
   const [videoTypeTouched, setVideoTypeTouched] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const [formTitle, setFormTitle] = useState('');
   const [formHours, setFormHours] = useState('');
@@ -111,6 +114,42 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
     }));
   };
 
+  const handleVideoFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // para mapili ulit ang parehong file kung kailangan
+    if (!file) return;
+
+    if (file.size > MAX_VIDEO_BYTES) {
+      return alert(
+        `❌ Masyadong malaki ang file (${formatBytes(file.size)}).\n\n`
+        + `Ang hangganan ay ${formatBytes(MAX_VIDEO_BYTES)}. I-compress muna ang video, `
+        + `o gupitin ang mas maiikling bahagi.`
+      );
+    }
+
+    setIsUploading(true);
+    try {
+      // Binabasa muna ang hugis at haba bago i-upload — kung mabibigo ang
+      // upload, wala namang nasayang kundi ilang segundo.
+      const meta = await readVideoMeta(file);
+      const publicUrl = await uploadKioskVideoFile(file);
+
+      setVideoForm((f) => ({
+        ...f,
+        source_url: publicUrl,
+        video_type: 'file',
+        orientation: meta && meta.height > meta.width ? 'portrait' : f.orientation,
+        duration_seconds: meta?.duration
+          ? Math.min(600, Math.max(5, Math.round(meta.duration)))
+          : f.duration_seconds,
+        title: f.title || file.name.replace(/\.[^.]+$/, ''),
+      }));
+      setVideoTypeTouched(true);
+    } catch (error) {
+      alert(`❌ Hindi na-upload ang video.\n\n${error.message || error}`);
+    } finally { setIsUploading(false); }
+  };
+
   const handleSaveVideo = async (e) => {
     e.preventDefault();
     if (!videoForm) return;
@@ -138,6 +177,13 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
     setIsSaving(true);
     try {
       await deleteKioskVideo(videoForm.id);
+      // Best-effort: hindi dapat mabigo ang buong pagbura dahil lang sa
+      // naiwang file sa storage. Panlabas na link — walang gagawin.
+      try {
+        await deleteKioskVideoFile(videoForm.source_url);
+      } catch (fileError) {
+        console.error('Naiwan ang file sa storage:', fileError);
+      }
       await loadVideos();
       setVideoForm(null);
     } catch (error) {
@@ -375,6 +421,33 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                     at hindi ito bubukas sa kiosk. Sa desktop browser, i-click ang petsa ng
                     post at kopyahin ang address bar. Pinakasigurado: 3 dots (…) →
                     <strong> Embed</strong> → i-paste dito ang buong <code>&lt;iframe&gt;</code> code.
+                  </p>
+                </div>
+
+                <div className="adm-or"><span>o kaya</span></div>
+
+                <div>
+                  <label className="k-label">Mag-upload ng video file</label>
+                  <label className={`adm-upload${isUploading ? ' is-busy' : ''}`}>
+                    <input
+                      type="file"
+                      accept="video/mp4,video/webm,video/ogg,video/quicktime"
+                      onChange={handleVideoFileUpload}
+                      disabled={isUploading}
+                    />
+                    <span className="adm-upload-icon">{isUploading ? '⏳' : '⬆️'}</span>
+                    <span className="adm-upload-text">
+                      {isUploading ? 'Ina-upload… huwag isara ang window' : 'Pumili ng video mula sa computer'}
+                      <small>
+                        MP4, WebM, o MOV · hanggang {formatBytes(MAX_VIDEO_BYTES)} ·
+                        kusang nababasa ang hugis at haba
+                      </small>
+                    </span>
+                  </label>
+                  <p className="adm-hint">
+                    Ito ang pinaka-maaasahan para sa kiosk — hindi na kailangan ng Facebook,
+                    at gumagana kahit mabagal ang internet. Mainam para sa Reels na
+                    ayaw mag-embed: i-download mo, tapos i-upload dito.
                   </p>
                 </div>
 
