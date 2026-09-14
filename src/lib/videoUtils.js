@@ -30,9 +30,9 @@ export function detectVideoType(url) {
 //   2. ang plugins/video.php URL na nasa loob niyon
 //   3. facebook.com/reel/<id> — pino-provide bilang /watch/?v=<id>
 // Ibinabalik nito ang anyong talagang tinatanggap ng plugin.
-export function normalizeFacebookUrl(raw) {
+export function normalizeFacebookUrl(raw, depth = 0) {
   const input = (raw || '').trim();
-  if (!input) return input;
+  if (!input || depth > 3) return input;
 
   // 1. <iframe src="…"> → kunin ang src
   const iframeSrc = input.match(/<iframe[^>]*\ssrc=["']([^"']+)["']/i);
@@ -40,11 +40,12 @@ export function normalizeFacebookUrl(raw) {
 
   // 2. plugins/video.php?href=… → kunin ang totoong permalink. Kung
   //    hindi tatanggalin ang balot na ito, maiipit ang isang plugin URL
-  //    sa loob ng isa pa at babagsak ang embed.
+  //    sa loob ng isa pa at babagsak ang embed. Inuulit ang paglilinis
+  //    dahil madalas na reel ang nakabalot sa loob.
   const pluginQuery = candidate.match(/plugins\/video\.php\?(.+)$/i);
   if (pluginQuery) {
     const href = new URLSearchParams(pluginQuery[1]).get('href');
-    if (href) return href;
+    if (href) return normalizeFacebookUrl(href, depth + 1);
   }
 
   // 3. /reel/<id> → /watch/?v=<id>, ang anyong nauunawaan ng plugin
@@ -58,6 +59,23 @@ export function normalizeFacebookUrl(raw) {
 // at hindi rin natin mare-resolve sa browser dahil sa CORS.
 export function isFacebookShareLink(url) {
   return /facebook\.com\/share\//i.test((url || '').trim());
+}
+
+export const ORIENTATIONS = [
+  { value: 'landscape', label: '▭ Landscape (16:9) — karaniwang video' },
+  { value: 'portrait', label: '▯ Portrait (9:16) — Reels / patayo' },
+];
+
+// Sinusuri ang ORIHINAL na na-paste, bago pa ito i-normalize — nawawala
+// kasi ang senyas na "reel" kapag naging /watch/?v= na ito.
+// Ang /share/r/ ay reel din; ang r ay para sa reel.
+export function looksLikeReel(raw) {
+  let input = (raw || '').trim();
+  // Naka-percent-encode ang /reel/ sa loob ng embed code (%2Freel%2F),
+  // kaya kailangang i-decode muna bago hanapin.
+  try { input = decodeURIComponent(input); } catch { /* iwanan kung sira */ }
+  return /facebook\.com\/(reel|share\/r)\//i.test(input)
+    || /youtube\.com\/shorts\//i.test(input);
 }
 
 export function getYouTubeId(url) {

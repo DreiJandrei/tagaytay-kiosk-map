@@ -4,11 +4,15 @@ import {
   updateOffice, getAnnouncement, updateAnnouncement, changeAdminPassword, logoutAdmin,
   getKioskVideos, saveKioskVideo, deleteKioskVideo,
 } from '../lib/api';
-import { VIDEO_TYPES, detectVideoType, validateVideoUrl, normalizeFacebookUrl } from '../lib/videoUtils';
+import {
+  VIDEO_TYPES, ORIENTATIONS, detectVideoType, validateVideoUrl,
+  normalizeFacebookUrl, looksLikeReel,
+} from '../lib/videoUtils';
 
 const BLANK_VIDEO = {
   id: null, title: '', caption: '', source_url: '',
   video_type: 'facebook', duration_seconds: 45, sort_order: 0, is_active: true,
+  orientation: 'landscape',
 };
 
 export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
@@ -101,6 +105,9 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
       ...f,
       source_url: cleaned,
       video_type: videoTypeTouched ? f.video_type : detectVideoType(cleaned),
+      // Sinusuri ang orihinal na `url`, hindi ang `cleaned` — nabubura
+      // ng normalize ang /reel/ kaya doon lang makikita ang senyas.
+      orientation: looksLikeReel(url) ? 'portrait' : f.orientation,
     }));
   };
 
@@ -328,7 +335,10 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                       <span className="adm-vid-idx">{i + 1}</span>
                       <span className="adm-vid-body">
                         <span className="adm-vid-name">{video.title || video.source_url}</span>
-                        <span className="adm-vid-meta">{video.video_type} · {video.duration_seconds}s</span>
+                        <span className="adm-vid-meta">
+                          {video.video_type} · {video.duration_seconds}s ·{' '}
+                          {video.orientation === 'portrait' ? '▯ portrait' : '▭ landscape'}
+                        </span>
                       </span>
                       <span className={`adm-vid-pill${video.is_active ? ' is-on' : ''}`}>
                         {video.is_active ? 'LIVE' : 'OFF'}
@@ -417,6 +427,23 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                       onChange={(e) => setVideoField('sort_order', e.target.value)}
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="k-label">Hugis ng video</label>
+                  <select
+                    className="k-select"
+                    value={videoForm.orientation || 'landscape'}
+                    onChange={(e) => setVideoField('orientation', e.target.value)}
+                  >
+                    {ORIENTATIONS.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                  <p className="adm-hint">
+                    Awtomatikong napipili ang Portrait kapag Reels ang na-paste. Kung mali,
+                    palitan mo dito — kung hindi, magkakaroon ng itim na gilid sa kiosk.
+                  </p>
                 </div>
 
                 <div>

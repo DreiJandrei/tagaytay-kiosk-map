@@ -1146,6 +1146,16 @@ img { max-width: 100%; }
      kontrol na maaabot ng daliri, attract loop lang ito. */
   pointer-events: none;
 }
+/* Patayong video (Reels): pinapaliit ang buong card at kinakapkap ang
+   taas sa screen, para hindi ito umabot sa labas ng kiosk. */
+.welcome-video-card.is-portrait { flex: 0 1 400px; max-width: 440px; }
+.welcome-video-frame.is-portrait {
+  aspect-ratio: 9 / 16;
+  height: min(52vh, 500px);
+  width: auto;
+  align-self: center;
+  margin: 0 auto;
+}
 .welcome-video-frame iframe,
 .welcome-video-frame video {
   position: absolute; inset: 0;

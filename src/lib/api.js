@@ -256,6 +256,7 @@ export const saveKioskVideo = async (video) => {
       duration_seconds: Number(video.duration_seconds) || 45,
       sort_order: Number(video.sort_order) || 0,
       is_active: video.is_active !== false,
+      orientation: video.orientation === 'portrait' ? 'portrait' : 'landscape',
     };
 
     if (video.id) {

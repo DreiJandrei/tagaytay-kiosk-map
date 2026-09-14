@@ -10,7 +10,7 @@ const DEFAULT_DURATION = 45;
 // Ikinukumpara ang laman — hindi ang object identity — para hindi
 // masira ang kasalukuyang pinapanood tuwing nagre-refresh.
 const signatureOf = (list) =>
-  list.map((v) => [v.id, v.source_url, v.video_type, v.title, v.caption, v.duration_seconds].join('~')).join('|');
+  list.map((v) => [v.id, v.source_url, v.video_type, v.title, v.caption, v.duration_seconds, v.orientation].join('~')).join('|');
 
 export default function WelcomeVideo() {
   const [videos, setVideos] = useState([]);
@@ -72,9 +72,12 @@ export default function WelcomeVideo() {
   const embedUrl = type === 'file' ? '' : buildEmbedUrl(current, { loop: selfLoops });
   const heading = (current.title || '').trim() || 'City Updates';
   const caption = (current.caption || '').trim();
+  // Umaangkop ang kahon sa hugis ng video — kung hindi, puro itim na
+  // gilid ang makikita sa Reels.
+  const portrait = current.orientation === 'portrait';
 
   return (
-    <div className="welcome-video-card">
+    <div className={`welcome-video-card${portrait ? ' is-portrait' : ''}`}>
       <div className="welcome-video-head">
         <span className="welcome-video-icon">🎬</span>
         <h2>{heading}</h2>
@@ -83,7 +86,7 @@ export default function WelcomeVideo() {
         )}
       </div>
 
-      <div className="welcome-video-frame">
+      <div className={`welcome-video-frame${portrait ? ' is-portrait' : ''}`}>
         {type === 'file' ? (
           <video
             key={`${current.id}-${cycle}`}

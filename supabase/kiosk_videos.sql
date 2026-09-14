@@ -16,13 +16,31 @@ create table if not exists public.kiosk_videos (
   duration_seconds integer     not null default 45,
   sort_order       integer     not null default 0,
   is_active        boolean     not null default true,
+  -- Patayo ang Reels at TikTok-style na video (9:16). Kung 16:9 ang
+  -- kahon, puro itim na gilid ang lalabas sa kiosk.
+  orientation      text        not null default 'landscape',
   created_at       timestamptz not null default now(),
 
   constraint kiosk_videos_type_check
     check (video_type in ('facebook', 'youtube', 'file')),
   constraint kiosk_videos_duration_check
-    check (duration_seconds between 5 and 600)
+    check (duration_seconds between 5 and 600),
+  constraint kiosk_videos_orientation_check
+    check (orientation in ('landscape', 'portrait'))
 );
+
+-- Para sa table na nagawa na bago naidagdag ang orientation.
+alter table public.kiosk_videos
+  add column if not exists orientation text not null default 'landscape';
+
+do $$
+begin
+  alter table public.kiosk_videos
+    add constraint kiosk_videos_orientation_check
+    check (orientation in ('landscape', 'portrait'));
+exception
+  when duplicate_object then null;
+end $$;
 
 -- Ito ang eksaktong pagkakasunod-sunod na hinihingi ng welcome screen.
 create index if not exists kiosk_videos_order_idx
