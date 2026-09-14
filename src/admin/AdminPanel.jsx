@@ -3,7 +3,7 @@ import VirtualKeyboard from '../components/VirtualKeyboard';
 import {
   updateOffice, getAnnouncement, updateAnnouncement, changeAdminPassword, logoutAdmin,
   getKioskVideos, saveKioskVideo, deleteKioskVideo,
-  uploadKioskVideoFile, deleteKioskVideoFile,
+  uploadKioskVideoFile, deleteKioskVideoFile, isUploadedFile,
 } from '../lib/api';
 import {
   VIDEO_TYPES, ORIENTATIONS, detectVideoType, validateVideoUrl,
@@ -146,7 +146,15 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
       }));
       setVideoTypeTouched(true);
     } catch (error) {
-      alert(`❌ Hindi na-upload ang video.\n\n${error.message || error}`);
+      const detail = error.message || String(error);
+      // Ang pinakamadalas na dahilan: hindi pa napapatakbo ang SQL na
+      // gumagawa ng bucket. Walang katuturan ang "Bucket not found" sa
+      // staff, kaya sinasabi na agad kung ano ang gagawin.
+      const hint = /bucket not found/i.test(detail)
+        ? '\n\n👉 Hindi pa nagagawa ang storage bucket. Patakbuhin muna sa Supabase '
+          + '→ SQL Editor ang laman ng file na supabase/kiosk_videos_storage.sql'
+        : '';
+      alert(`❌ Hindi na-upload ang video.\n\n${detail}${hint}`);
     } finally { setIsUploading(false); }
   };
 
@@ -404,16 +412,16 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
               <form className="adm-form adm-form--stack adm-vid-editor" onSubmit={handleSaveVideo}>
                 <div>
                   <label className="k-label">Video link (URL)</label>
-                  {/* Teksto, hindi url — para tanggapin din ang buong <iframe>
-                      embed code at ang sarili nating mensahe ang lumabas
-                      imbes na ang generic na babala ng browser. */}
+                  {/* Teksto at HINDI required: may pangalawang paraan sa ibaba
+                      (upload), kaya walang saysay ang "Please fill out this
+                      field" ng browser. Ang sarili nating validation na may
+                      malinaw na paliwanag ang bahala kapag blangko. */}
                   <input
                     type="text"
                     className="k-input"
                     value={videoForm.source_url}
                     onChange={(e) => handleVideoUrlChange(e.target.value)}
                     placeholder="https://www.facebook.com/TagaytayCity/videos/1234567890"
-                    required
                   />
                   <p className="adm-hint">
                     Kailangang naka-<strong>Public</strong> ang post. Huwag gamitin ang
@@ -444,6 +452,13 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                       </small>
                     </span>
                   </label>
+                  {isUploadedFile(videoForm.source_url) && (
+                    <p className="adm-ok">
+                      ✅ Na-upload na ang video. Pindutin ang <strong>Save Video</strong> sa ibaba
+                      para mailagay ito sa kiosk.
+                    </p>
+                  )}
+
                   <p className="adm-hint">
                     Ito ang pinaka-maaasahan para sa kiosk — hindi na kailangan ng Facebook,
                     at gumagana kahit mabagal ang internet. Mainam para sa Reels na

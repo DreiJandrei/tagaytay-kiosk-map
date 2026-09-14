@@ -174,7 +174,11 @@ export function buildEmbedUrl(video, { loop = false } = {}) {
 // mali ang na-paste na link.
 export function validateVideoUrl(url, type) {
   const link = (url || '').trim();
-  if (!link) return 'Kailangan ng video link.';
+  if (!link) {
+    return 'Wala pang video.\n\nDalawang paraan:\n'
+      + '• I-paste ang link ng public na FB post o YouTube video sa itaas, O\n'
+      + '• Pumili ng video file sa “Mag-upload ng video file” at hintaying matapos';
+  }
 
   // Ang "Copy link" ng FB app ay nagbibigay ng /share/ na stub. Mukhang
   // tama ito at bumubukas sa browser, pero "Video Unavailable" sa kiosk.

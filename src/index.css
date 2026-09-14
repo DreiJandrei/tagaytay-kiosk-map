@@ -2871,6 +2871,18 @@ button:active { transform: scale(.97); }
   letter-spacing: 0;
 }
 
+.adm-ok {
+  margin: 0;
+  padding: 11px 14px;
+  border: 1px solid var(--ui-accent);
+  border-radius: var(--ui-r-sm);
+  background: var(--ui-accent-sf);
+  color: var(--ui-accent);
+  font-size: .92rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
 /* Nakakahon ang editor para malinaw na iisang video ang inaayos */
 .adm-vid-editor {
   padding: 20px;

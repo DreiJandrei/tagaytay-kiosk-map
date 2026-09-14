@@ -309,6 +309,10 @@ export const uploadKioskVideoFile = async (file) => {
   }
 };
 
+// Nakikilala kung galing ba sa sarili nating storage ang link — ginagamit
+// para sa kumpirmasyon sa admin at para malaman kung may buburahing file.
+export const isUploadedFile = (url) => (url || '').includes(PUBLIC_MARKER);
+
 // Ang landas ay nakabaon na sa public URL, kaya hindi na kailangan ng
 // karagdagang column para matandaan kung aling file ang buburahin.
 export const deleteKioskVideoFile = async (publicUrl) => {
