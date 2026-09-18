@@ -2064,8 +2064,58 @@ img { max-width: 100%; }
 }
 .guide-open-btn:hover { background: var(--ui-accent); color: var(--ui-accent-on); transform: translateY(-2px); }
 
+/* ── Mga lumulutang na panel sa gilid ng mapa ──────────────
+   Katabi ng zoom, sa ibabaw ng mapa. Dito nakalagay ang mga
+   pagpipiliang tungkol sa mismong ruta — doon nakatingin ang bisita
+   kapag pumipili, hindi sa sidebar sa kabilang dulo ng screen.
+
+   Ang 158px ay: 30px na tabi ng zoom + ~112px na lapad nito + luwag. */
+.map-float-panels {
+  position: absolute;
+  top: 30px;
+  right: 158px;
+  z-index: 120;
+  width: min(320px, calc(100% - 520px));
+  max-height: calc(100% - 140px); /* may puwang ang hanay ng palapag sa ilalim */
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  /* Dumadaan ang pindot sa blangkong bahagi, para mahila pa rin ang
+     mapa sa likod nito. Ang mga kard lang ang sumasalo. */
+  pointer-events: none;
+}
+.map-float-panels > * { pointer-events: auto; }
+.map-float-panels:empty { display: none; }
+
+.map-float {
+  flex-shrink: 0;
+  border-radius: 18px;
+  border: 1px solid var(--ui-line-2);
+  background: var(--ui-panel);
+  box-shadow: var(--ui-sh-3);
+  animation: modalPop .32s cubic-bezier(.175,.885,.32,1.1) both;
+}
+.map-float.transport-card { margin-bottom: 0; }
+
+/* Mas masikip dito kaysa sa sidebar, kaya patong-patong ang tatlong
+   pagpipilian imbes na magkatabi — mas malaki ang mapipindot. */
+.map-float .transport-grid { flex-direction: column; }
+
+/* Sa napakakitid na screen, walang matitirang mapa sa tabi. Doon ay
+   sumasalampak na lang ito sa kanang gilid. */
+@media (max-width: 1180px) {
+  .map-float-panels {
+    right: 30px;
+    top: 250px; /* sa ilalim ng zoom, hindi na katabi */
+    width: min(300px, calc(100% - 60px));
+    max-height: calc(100% - 360px);
+  }
+}
+
 /* ── Step-by-step na gabay ────────────────────────────────── */
 .sb-guide { display: flex; flex-direction: column; gap: 16px; padding-bottom: 20px; }
+.map-float.sb-guide { gap: 12px; padding: 16px; }
 .guide-head {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }

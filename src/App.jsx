@@ -569,6 +569,13 @@ export default function App() {
     setGuide(null);
   };
 
+  // Ang pinanggalingang tunguhin ng gabay. Hindi ito ang kasalukuyang
+  // napipili: nagiging blangko iyon sa mga palapag na dinaraanan lang,
+  // at nagiging "Stairs to Upper Floors" sa unang hakbang.
+  const guideDestination = guide
+    ? liveOfficeDatabase[guide.backTo.floor]?.[guide.backTo.officeKey]
+    : null;
+
   // Sa palapag na dinaraanan lang, walang tunguhin — kaya mali ang
   // “ARRIVED” na nakasulat sa pin. Ito ang tamang sasabihin doon.
   const guideStep = guide ? guide.steps[guide.index] : null;
@@ -823,40 +830,9 @@ export default function App() {
                   </div>
                 )}
 
-                <div className="transport-card">
-                  <h3>
-                    {destinationData.floor === 2
-                      ? (lang === 'EN' ? 'Choose your route' : 'Piliin ang daan papunta')
-                      : (lang === 'EN' ? 'Elevator or stairs?' : 'Elevator o hagdan?')}
-                  </h3>
-                  <div className="transport-grid">
-                    <button
-                      className="transport-btn"
-                      onClick={() => { setSelectedOfficeKey('elevator-up'); setTransportMethod('elevator'); setRouteStep('go-to-transport'); }}
-                    >
-                      <span>🛗</span><span>Elevator</span>
-                    </button>
-
-                    {destinationData.floor === 2 && (
-                      <button
-                        className="transport-btn"
-                        onClick={() => { setSelectedOfficeKey('elevator-up'); setTransportMethod('escalator'); setRouteStep('go-to-transport'); }}
-                      >
-                        <span>🪜</span><span>Escalator</span>
-                      </button>
-                    )}
-
-                    <button
-                      className="transport-btn"
-                      onClick={() => { setSelectedOfficeKey('stairs-up'); setTransportMethod('stairs'); setRouteStep('go-to-transport'); }}
-                    >
-                      <span>🚶</span><span>Stairs</span>
-                    </button>
-                  </div>
-                  <button className="transport-cancel" onClick={() => { setRouteStep('idle'); setDestinationData(null); }}>
-                    {lang === 'EN' ? 'Cancel navigation' : 'Kanselahin ang direksyon'}
-                  </button>
-                </div>
+                {/* Nasa lumulutang na panel sa gilid ng mapa ang pagpili
+                    ng daan — nakatabi sa zoom, katapat ng mismong
+                    ruta. Tingnan ang .map-float-panels sa ibaba. */}
 
                 {destinationData.description && (
                   <div className="office-about">
@@ -906,57 +882,20 @@ export default function App() {
               </div>
             )}
 
-            {/* Step-by-step na balikan ng ruta — ang bumibisita ang
-                humahawak ng palapag habang bukas ito. */}
-            {guide && (
-              <div className="sb-guide">
-                <div className="guide-head">
-                  <span className="guide-count">
-                    {lang === 'EN' ? 'Step' : 'Hakbang'} {guide.index + 1} / {guide.steps.length}
+            {/* Nasa lumulutang na panel sa gilid ng mapa ang mismong
+                gabay (tingnan ang .map-float-panels). Dito naiiwan ang
+                paalala kung saan pupunta — nagpapalit-palit kasi ang
+                napipili habang binabalikan ang mga palapag, kaya ang
+                pinanggalingang tunguhin ang ipinapakita, hindi iyon. */}
+            {guide && guideDestination && (
+              <div className="sb-detail">
+                <div className="destination-card">
+                  <p className="label">{lang === 'EN' ? 'Destination' : 'Paroroonan'}</p>
+                  <h1 className="office-title">{guideDestination.title}</h1>
+                  <span className="floor-badge">
+                    {guideDestination.badge || `Floor ${guide.backTo.floor}`}
                   </span>
-                  <button className="guide-close" onClick={closeGuide} title="Isara">✕</button>
                 </div>
-
-                <div className="guide-now">
-                  <span className="guide-now-icon">{guide.steps[guide.index].icon}</span>
-                  <h2>{guide.steps[guide.index].title}</h2>
-                  <p>{guide.steps[guide.index].body}</p>
-                </div>
-
-                <div className="guide-nav">
-                  <button
-                    className="guide-nav-btn"
-                    disabled={guide.index === 0}
-                    onClick={() => goToGuideStep(guide.index - 1)}
-                  >
-                    ⬅️ {lang === 'EN' ? 'Previous' : 'Bumalik'}
-                  </button>
-                  <button
-                    className="guide-nav-btn"
-                    disabled={guide.index === guide.steps.length - 1}
-                    onClick={() => goToGuideStep(guide.index + 1)}
-                  >
-                    {lang === 'EN' ? 'Next' : 'Susunod'} ➡️
-                  </button>
-                </div>
-
-                <ol className="guide-list">
-                  {guide.steps.map((s, i) => (
-                    <li key={`${s.floor}-${i}`}>
-                      <button
-                        className={`guide-step${i === guide.index ? ' is-now' : ''}${i < guide.index ? ' is-done' : ''}`}
-                        onClick={() => goToGuideStep(i)}
-                      >
-                        <span className="guide-step-dot">{i + 1}</span>
-                        <span className="guide-step-text">{s.title}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ol>
-
-                <button className="guide-done" onClick={closeGuide}>
-                  ✓ {lang === 'EN' ? 'Done — back to the office' : 'Tapos na — balik sa opisina'}
-                </button>
               </div>
             )}
 
@@ -1035,6 +974,102 @@ export default function App() {
           routeStep={routeStep}
           kioskLabel={guideKioskLabel}
         />
+
+        {/* ── Mga lumulutang na pagpipilian sa gilid ng mapa ──────────
+            Katabi ng zoom, sa ibabaw ng mapa. Dito sila dapat: ang
+            pinipili ay tungkol sa mismong ruta, kaya nakatingin na ang
+            bisita sa mapa — hindi sa malayong sidebar sa kabilang dulo. */}
+        <div className="map-float-panels">
+
+          {routeStep === 'choose-transport' && destinationData && (
+            <div className="map-float transport-card">
+              <h3>
+                {destinationData.floor === 2
+                  ? (lang === 'EN' ? 'Choose your route' : 'Piliin ang daan papunta')
+                  : (lang === 'EN' ? 'Elevator or stairs?' : 'Elevator o hagdan?')}
+              </h3>
+              <div className="transport-grid">
+                <button
+                  className="transport-btn"
+                  onClick={() => { setSelectedOfficeKey('elevator-up'); setTransportMethod('elevator'); setRouteStep('go-to-transport'); }}
+                >
+                  <span>🛗</span><span>Elevator</span>
+                </button>
+
+                {destinationData.floor === 2 && (
+                  <button
+                    className="transport-btn"
+                    onClick={() => { setSelectedOfficeKey('elevator-up'); setTransportMethod('escalator'); setRouteStep('go-to-transport'); }}
+                  >
+                    <span>🪜</span><span>Escalator</span>
+                  </button>
+                )}
+
+                <button
+                  className="transport-btn"
+                  onClick={() => { setSelectedOfficeKey('stairs-up'); setTransportMethod('stairs'); setRouteStep('go-to-transport'); }}
+                >
+                  <span>🚶</span><span>Stairs</span>
+                </button>
+              </div>
+              <button className="transport-cancel" onClick={() => { setRouteStep('idle'); setDestinationData(null); }}>
+                {lang === 'EN' ? 'Cancel navigation' : 'Kanselahin ang direksyon'}
+              </button>
+            </div>
+          )}
+
+          {guide && (
+            <div className="map-float sb-guide">
+              <div className="guide-head">
+                <span className="guide-count">
+                  {lang === 'EN' ? 'Step' : 'Hakbang'} {guide.index + 1} / {guide.steps.length}
+                </span>
+                <button className="guide-close" onClick={closeGuide} title="Isara">✕</button>
+              </div>
+
+              <div className="guide-now">
+                <span className="guide-now-icon">{guide.steps[guide.index].icon}</span>
+                <h2>{guide.steps[guide.index].title}</h2>
+                <p>{guide.steps[guide.index].body}</p>
+              </div>
+
+              <div className="guide-nav">
+                <button
+                  className="guide-nav-btn"
+                  disabled={guide.index === 0}
+                  onClick={() => goToGuideStep(guide.index - 1)}
+                >
+                  ⬅️ {lang === 'EN' ? 'Previous' : 'Bumalik'}
+                </button>
+                <button
+                  className="guide-nav-btn"
+                  disabled={guide.index === guide.steps.length - 1}
+                  onClick={() => goToGuideStep(guide.index + 1)}
+                >
+                  {lang === 'EN' ? 'Next' : 'Susunod'} ➡️
+                </button>
+              </div>
+
+              <ol className="guide-list">
+                {guide.steps.map((s, i) => (
+                  <li key={`${s.floor}-${i}`}>
+                    <button
+                      className={`guide-step${i === guide.index ? ' is-now' : ''}${i < guide.index ? ' is-done' : ''}`}
+                      onClick={() => goToGuideStep(i)}
+                    >
+                      <span className="guide-step-dot">{i + 1}</span>
+                      <span className="guide-step-text">{s.title}</span>
+                    </button>
+                  </li>
+                ))}
+              </ol>
+
+              <button className="guide-done" onClick={closeGuide}>
+                ✓ {lang === 'EN' ? 'Done — back to the office' : 'Tapos na — balik sa opisina'}
+              </button>
+            </div>
+          )}
+        </div>
 
         {searchParams.get('route') && (
           <div className="screenshot-hint">
