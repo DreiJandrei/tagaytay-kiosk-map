@@ -43,6 +43,13 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
   const [advisoryText, setAdvisoryText] = useState('');
   const [announcementText, setAnnouncementText] = useState('');
 
+  // Alin sa dalawang teksto ang binubuksan sa lumulutang na editor:
+  // 'announcement', 'advisory', o null kapag sarado. Hiwalay ang draft sa
+  // tunay na teksto — kaya ang Close ay tunay na pagtalikod, hindi lang
+  // pagtago ng nabago na.
+  const [annEditor, setAnnEditor] = useState(null);
+  const [annDraft, setAnnDraft] = useState('');
+
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
@@ -52,6 +59,9 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
 
   const [videos, setVideos] = useState([]);
   const [videoForm, setVideoForm] = useState(null);
+  // Larawan ng video noong binuksan ito. Dito ikinukumpara kung may
+  // nagalaw bago isara — kung wala, walang kwentang magtanong pa.
+  const [videoSnapshot, setVideoSnapshot] = useState('');
   // Tumitigil ang awtomatikong paghula ng uri kapag ang staff mismo ang
   // pumili sa dropdown — baka may kakaibang link na alam nilang tama.
   const [videoTypeTouched, setVideoTypeTouched] = useState(false);
@@ -94,8 +104,18 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
   }, []);
 
   const pickVideo = (video) => {
-    setVideoForm(video ? { ...video } : { ...BLANK_VIDEO, sort_order: videos.length });
+    const next = video ? { ...video } : { ...BLANK_VIDEO, sort_order: videos.length };
+    setVideoForm(next);
+    setVideoSnapshot(JSON.stringify(next));
     setVideoTypeTouched(!!video);
+  };
+
+  // Ang Close ay nagtatapon ng pagbabago, kaya nagtatanong muna kapag may
+  // itatapon. Kapag walang nagalaw, tahimik itong sumasara.
+  const closeVideoEditor = () => {
+    const dirty = videoForm && JSON.stringify(videoForm) !== videoSnapshot;
+    if (dirty && !window.confirm('May hindi pa nase-save na pagbabago sa video.\n\nIsara pa rin at itapon ito?')) return;
+    setVideoForm(null);
   };
 
   const setVideoField = (field, value) => setVideoForm((f) => ({ ...f, [field]: value }));
@@ -262,13 +282,37 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
     } finally { setIsSaving(false); }
   };
 
+  // ── Lumulutang na editor ng teksto ────────────────────────
+  const openAnnEditor = (which) => {
+    setAnnDraft(which === 'announcement' ? announcementText : advisoryText);
+    setAnnEditor(which);
+  };
+
+  const annOriginal = annEditor === 'announcement' ? announcementText : advisoryText;
+
+  const closeAnnEditor = () => {
+    if (annEditor && annDraft !== annOriginal
+      && !window.confirm('May hindi pa nase-save na pagbabago.\n\nIsara pa rin at itapon ito?')) return;
+    setAnnEditor(null);
+  };
+
   const handleSaveAnnouncement = async (e) => {
     e.preventDefault();
+    // Iisang row lang sa database ang kinalalagyan ng dalawang teksto,
+    // kaya kahit isa lang ang binubuksan, kailangang dalhin pabalik ang
+    // kapareha nito nang buo — kung hindi, mabubura ito.
+    const next = {
+      advisory: annEditor === 'advisory' ? annDraft : advisoryText,
+      announcement: annEditor === 'announcement' ? annDraft : announcementText,
+    };
+
     setIsSaving(true);
     try {
-      const combined = JSON.stringify({ advisory: advisoryText, announcement: announcementText });
-      await updateAnnouncement(combined);
-      alert('System Announcements & Advisories updated successfully!');
+      await updateAnnouncement(JSON.stringify(next));
+      setAdvisoryText(next.advisory);
+      setAnnouncementText(next.announcement);
+      setAnnEditor(null);
+      alert('✅ Nai-save na! Makikita ito sa welcome screen sa loob ng isang minuto.');
     } catch (error) {
       alert('Failed to update announcement.');
     } finally { setIsSaving(false); }
@@ -347,34 +391,46 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
         {activeTab === 'announcements' && (
           <div className="adm-pane">
             <h3>📢 Announcements &amp; Advisories</h3>
-            <p className="adm-hint">Manage what appears on the idle screen. Leave a field blank to hide it.</p>
+            <p className="adm-hint">
+              Ito ang lumalabas sa welcome screen. Pindutin ang <strong>✏️ Edit</strong> para
+              buksan ang kahon ng pagsusulat. Blangko = nakatago.
+            </p>
 
-            <form className="adm-form adm-form--stack" onSubmit={handleSaveAnnouncement}>
-
-              <div>
-                <label className="k-label">1 · Official Announcement (Board)</label>
-                <textarea
-                  className="k-textarea"
-                  value={announcementText}
-                  onChange={(e) => setAnnouncementText(e.target.value)}
-                  placeholder="e.g. Walang pasok bukas dahil sa bagyo… (Appears in a large card below the title)"
-                />
-              </div>
-
-              <div>
-                <label className="k-label">2 · Scrolling Advisory (Marquee)</label>
-                <textarea
-                  className="k-textarea"
-                  value={advisoryText}
-                  onChange={(e) => setAdvisoryText(e.target.value)}
-                  placeholder="e.g. Please secure your belongings… (Scrolling ticker at the very bottom)"
-                />
-              </div>
-
-              <button type="submit" className="k-btn k-btn--primary" disabled={isSaving}>
-                {isSaving ? 'Deploying to kiosks…' : '📢 Publish Updates'}
-              </button>
-            </form>
+            <div className="adm-cards">
+              {[
+                {
+                  key: 'announcement',
+                  label: '1 · Official Announcement (Board)',
+                  text: announcementText,
+                  empty: 'Walang laman — nakatago ang malaking kard sa welcome screen.',
+                },
+                {
+                  key: 'advisory',
+                  label: '2 · Scrolling Advisory (Marquee)',
+                  text: advisoryText,
+                  empty: 'Walang laman — nakatago ang gumagalaw na guhit sa ilalim.',
+                },
+              ].map((card) => (
+                <div key={card.key} className="adm-card">
+                  <div className="adm-card-head">
+                    <span className="adm-card-label">{card.label}</span>
+                    <span className={`adm-vid-pill${card.text.trim() ? ' is-on' : ''}`}>
+                      {card.text.trim() ? 'LIVE' : 'HIDDEN'}
+                    </span>
+                  </div>
+                  <p className={`adm-card-text${card.text.trim() ? '' : ' is-empty'}`}>
+                    {card.text.trim() || card.empty}
+                  </p>
+                  <button
+                    type="button"
+                    className="k-btn k-btn--ghost"
+                    onClick={() => openAnnEditor(card.key)}
+                  >
+                    ✏️ Edit
+                  </button>
+                </div>
+              ))}
+            </div>
 
             <div className="adm-divider" aria-hidden="true" />
 
@@ -384,9 +440,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
               direktang .mp4 file. Salitan itong ipapalabas katabi ng announcement board.
             </p>
 
-            {!videoForm ? (
-              <>
-                <div className="adm-vid-list">
+            <div className="adm-vid-list">
                   {videos.length === 0 && (
                     <p className="adm-hint">Wala pang video. Pindutin ang “Add Video” sa ibaba.</p>
                   )}
@@ -408,14 +462,27 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                       </button>
                     </div>
                   ))}
-                </div>
+            </div>
 
-                <button type="button" className="k-btn k-btn--primary" onClick={() => pickVideo(null)}>
-                  ＋ Add Video
+            <button type="button" className="k-btn k-btn--primary" onClick={() => pickVideo(null)}>
+              ＋ Add Video
+            </button>
+          </div>
+        )}
+
+        {/* Lumulutang na editor ng video. Nasa loob ito ng .adm para
+            abutin pa rin ng touchscreen keyboard ang mga field nito. */}
+        {videoForm && (
+          <div className="adm-modal-back">
+            <form className="adm-modal" onSubmit={handleSaveVideo}>
+              <div className="adm-modal-top">
+                <h4>{videoForm.id ? '🎬 I-edit ang video' : '🎬 Bagong video'}</h4>
+                <button type="button" className="adm-modal-x" onClick={closeVideoEditor} disabled={isSaving}>
+                  ✕
                 </button>
-              </>
-            ) : (
-              <form className="adm-form adm-form--stack adm-vid-editor" onSubmit={handleSaveVideo}>
+              </div>
+
+              <div className="adm-modal-body">
                 <div>
                   <label className="k-label">Video link (URL)</label>
                   {/* Teksto at HINDI required: may pangalawang paraan sa ibaba
@@ -581,21 +648,80 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                   </p>
                 </div>
 
-                <div className="k-btn-row">
-                  <button type="submit" className="k-btn k-btn--primary" disabled={isSaving}>
-                    {isSaving ? 'Deploying to kiosks…' : '🎬 Save Video'}
+              </div>
+
+              <div className="adm-modal-foot">
+                {videoForm.id && (
+                  <button
+                    type="button"
+                    className="k-btn k-btn--ghost adm-modal-del"
+                    onClick={handleDeleteVideo}
+                    disabled={isSaving}
+                  >
+                    🗑️ Delete
                   </button>
-                  <button type="button" className="k-btn k-btn--ghost" onClick={() => setVideoForm(null)} disabled={isSaving}>
-                    ✕ Cancel
-                  </button>
-                  {videoForm.id && (
-                    <button type="button" className="k-btn k-btn--ghost" onClick={handleDeleteVideo} disabled={isSaving}>
-                      🗑️ Delete
-                    </button>
-                  )}
-                </div>
-              </form>
-            )}
+                )}
+                <button type="button" className="k-btn k-btn--ghost" onClick={closeVideoEditor} disabled={isSaving}>
+                  ✕ Close
+                </button>
+                <button type="submit" className="k-btn k-btn--primary" disabled={isSaving}>
+                  {isSaving ? 'Deploying to kiosks…' : '💾 Save Video'}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Lumulutang na editor ng teksto — iisa lang ang kahon dito,
+            kung ano ang pinindot na Edit. */}
+        {annEditor && (
+          <div className="adm-modal-back">
+            <form className="adm-modal adm-modal--sm" onSubmit={handleSaveAnnouncement}>
+              <div className="adm-modal-top">
+                <h4>
+                  {annEditor === 'announcement'
+                    ? '📰 Official Announcement'
+                    : '🚨 Scrolling Advisory'}
+                </h4>
+                <button type="button" className="adm-modal-x" onClick={closeAnnEditor} disabled={isSaving}>
+                  ✕
+                </button>
+              </div>
+
+              <div className="adm-modal-body">
+                <label className="k-label">
+                  {annEditor === 'announcement'
+                    ? 'Teksto ng malaking kard sa welcome screen'
+                    : 'Teksto ng gumagalaw na guhit sa pinakailalim'}
+                </label>
+                <textarea
+                  className="k-textarea adm-modal-area"
+                  autoFocus
+                  value={annDraft}
+                  onChange={(e) => setAnnDraft(e.target.value)}
+                  placeholder={
+                    annEditor === 'announcement'
+                      ? 'e.g. Walang pasok bukas dahil sa bagyo…'
+                      : 'e.g. Please secure your belongings…'
+                  }
+                />
+                <p className="adm-hint">
+                  {annEditor === 'announcement'
+                    ? 'Hanggang 3 linya lang ang kasya sa kiosk — puputulin ang sobra.'
+                    : 'Isang linya bawat mensahe. Pinagsasabit ang mga ito ng “•”.'}
+                </p>
+                <p className="adm-hint">Iwanang blangko para itago ito sa welcome screen.</p>
+              </div>
+
+              <div className="adm-modal-foot">
+                <button type="button" className="k-btn k-btn--ghost" onClick={closeAnnEditor} disabled={isSaving}>
+                  ✕ Close
+                </button>
+                <button type="submit" className="k-btn k-btn--primary" disabled={isSaving}>
+                  {isSaving ? 'Deploying to kiosks…' : '💾 Save'}
+                </button>
+              </div>
+            </form>
           </div>
         )}
 
