@@ -989,11 +989,21 @@ img { max-width: 100%; }
   flex: 1; min-height: 0;
   width: 100%; max-width: 1500px;
   display: flex; flex-direction: column; align-items: center;
+  justify-content: center;
+  gap: 22px;
+}
+/* Unang palapag: ang hero at ang video. Umuurong ito para bigyang-daan
+   ang anunsyo sa ilalim. */
+.welcome-columns {
+  flex: 1; min-height: 0;
+  width: 100%;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center;
   gap: 22px;
 }
 /* Kapag may kard sa board slot, magkatabi — hindi patung-patong.
    Doon sa gilid nakatago ang espasyong kailangan. */
-.welcome-main:has(.welcome-board-slot > *) {
+.welcome-columns:has(.welcome-board-slot > *) {
   flex-direction: row;
   align-items: center;
   justify-content: center;
@@ -1029,7 +1039,7 @@ img { max-width: 100%; }
   align-items: center; justify-content: center;
   text-align: center; padding: 20px 0;
 }
-.welcome-main:has(.welcome-board-slot > *) .welcome-hero {
+.welcome-columns:has(.welcome-board-slot > *) .welcome-hero {
   --h-seal: 128px;
   --h-seal-img: 108px;
   --h-republic: .9rem;
@@ -1138,18 +1148,23 @@ img { max-width: 100%; }
 }
 .welcome-board-slot:empty { display: none; }
 
+/* Nakasentrong banner sa ilalim ng hero at ng video — hindi na ito
+   nakasiksik sa kanang hanay, kaya patag at pahaba ang hugis nito. */
 .welcome-board {
+  flex-shrink: 0;
+  width: 100%; max-width: 1040px;
+  align-self: center; text-align: center;
   min-height: 0; overflow: hidden;
   background: rgba(13,38,76,.55);
   backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
   border: 1px solid rgba(96,165,250,.45);
-  border-radius: 22px; padding: 28px 40px;
+  border-radius: 22px; padding: 22px 40px;
   box-shadow: 0 24px 55px rgba(2,10,26,.6);
   animation: rise 1.1s .8s cubic-bezier(.16,1,.3,1) both;
 }
 .welcome-board-head {
-  display: flex; align-items: center; gap: 14px;
-  padding-bottom: 14px; margin-bottom: 16px;
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  padding-bottom: 12px; margin-bottom: 14px;
   border-bottom: 1px solid rgba(147,197,253,.3);
 }
 .welcome-board-head h2 {
@@ -1161,10 +1176,10 @@ img { max-width: 100%; }
   color: #EAF4FF; font-size: 1.15rem; line-height: 1.6;
   font-weight: 500; white-space: pre-line;
   min-height: 0; overflow: hidden;
-  /* Pinuputol ang sobrang mahabang anunsyo imbes na itulak palabas ng
-     screen ang video sa ilalim nito. */
+  /* Pinuputol ang sobrang mahabang anunsyo imbes na siksikin pataas ang
+     hero at ang video na nasa itaas nito. */
   display: -webkit-box; -webkit-box-orient: vertical;
-  -webkit-line-clamp: 6; line-clamp: 6;
+  -webkit-line-clamp: 3; line-clamp: 3;
 }
 /* ── Video panel: mga event na naka-post sa FB Page ng lungsod ── */
 .welcome-video-card {
@@ -1236,7 +1251,7 @@ img { max-width: 100%; }
   margin: 0 auto;
   flex-shrink: 0;
 }
-.welcome-board-slot:has(.welcome-board) .welcome-video-frame.is-portrait {
+.welcome-main:has(.welcome-board) .welcome-video-frame.is-portrait {
   height: min(34vh, 320px);
 }
 .welcome-video-frame iframe,

@@ -69,10 +69,14 @@ export default function WelcomeScreen({ onStart }) {
           <span className="welcome-time">{timeText}</span>
         </div>
 
-        {/* Gitna. Nagiging magkatabi ang hero at ang mga kard kapag may
-            laman ang board slot — doon kasi may sobrang espasyo, at ang
-            pagpapatong-patong pababa ang dahilan ng pag-apaw. */}
+        {/* Gitna. Dalawang palapag: magkatabing hanay sa itaas, tapos ang
+            anunsyo na nakasentro sa ilalim ng dalawa. */}
         <div className="welcome-main">
+
+        {/* Nagiging magkatabi ang hero at ang video kapag may laman ang
+            board slot — doon kasi may sobrang espasyo, at ang
+            pagpapatong-patong pababa ang dahilan ng pag-apaw. */}
+        <div className="welcome-columns">
 
         {/* Seal, pamagat, at prompt */}
         <div className="welcome-hero">
@@ -104,19 +108,24 @@ export default function WelcomeScreen({ onStart }) {
           <p className="welcome-subprompt">Pindutin ang screen upang magsimula</p>
         </div>
 
-        {/* Ibaba: mga video ng lungsod, at sa ilalim ang opisyal na anunsyo */}
+        {/* Kanan: mga video ng lungsod */}
         <div className="welcome-board-slot">
           <WelcomeVideo />
-          {hasAnnouncement && (
-            <div className="welcome-board">
-              <div className="welcome-board-head">
-                <span className="welcome-board-icon">📰</span>
-                <h2>Official Announcement</h2>
-              </div>
-              <div className="welcome-board-body">{announcement}</div>
-            </div>
-          )}
         </div>
+
+        </div>
+
+        {/* Ilalim: nakasentro ang opisyal na anunsyo sa ilalim ng hero at
+            ng video — hindi na ito nakakabit sa kanang hanay. */}
+        {hasAnnouncement && (
+          <div className="welcome-board">
+            <div className="welcome-board-head">
+              <span className="welcome-board-icon">📰</span>
+              <h2>Official Announcement</h2>
+            </div>
+            <div className="welcome-board-body">{announcement}</div>
+          </div>
+        )}
 
         </div>
       </div>
