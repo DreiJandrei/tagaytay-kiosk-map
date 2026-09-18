@@ -832,7 +832,7 @@ export default function App() {
 
                 {/* Nasa lumulutang na panel sa gilid ng mapa ang pagpili
                     ng daan — nakatabi sa zoom, katapat ng mismong
-                    ruta. Tingnan ang .map-float-panels sa ibaba. */}
+                    ruta. Tingnan ang .map-mini-stack sa ibaba. */}
 
                 {destinationData.description && (
                   <div className="office-about">
@@ -883,19 +883,34 @@ export default function App() {
             )}
 
             {/* Nasa lumulutang na panel sa gilid ng mapa ang mismong
-                gabay (tingnan ang .map-float-panels). Dito naiiwan ang
+                gabay (tingnan ang .map-mini-stack). Dito naiiwan ang
                 paalala kung saan pupunta — nagpapalit-palit kasi ang
                 napipili habang binabalikan ang mga palapag, kaya ang
                 pinanggalingang tunguhin ang ipinapakita, hindi iyon. */}
-            {guide && guideDestination && (
+            {guide && (
               <div className="sb-detail">
-                <div className="destination-card">
-                  <p className="label">{lang === 'EN' ? 'Destination' : 'Paroroonan'}</p>
-                  <h1 className="office-title">{guideDestination.title}</h1>
-                  <span className="floor-badge">
-                    {guideDestination.badge || `Floor ${guide.backTo.floor}`}
-                  </span>
+                {guideDestination && (
+                  <div className="destination-card">
+                    <p className="label">{lang === 'EN' ? 'Destination' : 'Paroroonan'}</p>
+                    <h1 className="office-title">{guideDestination.title}</h1>
+                    <span className="floor-badge">
+                      {guideDestination.badge || `Floor ${guide.backTo.floor}`}
+                    </span>
+                  </div>
+                )}
+
+                {/* Ang bilang at ang pagpili ay nasa maliit na kontrol sa
+                    tabi ng zoom. Ang sinasabi ng hakbang ay nandito —
+                    dito lang kasi may sapat na lapad para mabasa ito. */}
+                <div className="guide-now">
+                  <span className="guide-now-icon">{guide.steps[guide.index].icon}</span>
+                  <h2>{guide.steps[guide.index].title}</h2>
+                  <p>{guide.steps[guide.index].body}</p>
                 </div>
+
+                <button className="guide-done" onClick={closeGuide}>
+                  ✓ {lang === 'EN' ? 'Done — back to the office' : 'Tapos na — balik sa opisina'}
+                </button>
               </div>
             )}
 
@@ -975,97 +990,93 @@ export default function App() {
           kioskLabel={guideKioskLabel}
         />
 
-        {/* ── Mga lumulutang na pagpipilian sa gilid ng mapa ──────────
-            Katabi ng zoom, sa ibabaw ng mapa. Dito sila dapat: ang
-            pinipili ay tungkol sa mismong ruta, kaya nakatingin na ang
-            bisita sa mapa — hindi sa malayong sidebar sa kabilang dulo. */}
-        <div className="map-float-panels">
+        {/* ── Maliliit na kontrol sa gilid ng mapa ───────────────────
+            Kasinlaki at kasinghugis ng zoom, nakapatong lang sa ilalim
+            nito. Ang mga pagpipilian ang nandito — ang mahabang teksto
+            ay nasa sidebar, kung saan may lugar para dito. */}
+        <div className="map-mini-stack">
 
           {routeStep === 'choose-transport' && destinationData && (
-            <div className="map-float transport-card">
-              <h3>
-                {destinationData.floor === 2
-                  ? (lang === 'EN' ? 'Choose your route' : 'Piliin ang daan papunta')
-                  : (lang === 'EN' ? 'Elevator or stairs?' : 'Elevator o hagdan?')}
-              </h3>
-              <div className="transport-grid">
-                <button
-                  className="transport-btn"
-                  onClick={() => { setSelectedOfficeKey('elevator-up'); setTransportMethod('elevator'); setRouteStep('go-to-transport'); }}
-                >
-                  <span>🛗</span><span>Elevator</span>
-                </button>
+            <div className="map-mini">
+              <span className="mini-cap">{lang === 'EN' ? 'Route' : 'Daan'}</span>
 
-                {destinationData.floor === 2 && (
-                  <button
-                    className="transport-btn"
-                    onClick={() => { setSelectedOfficeKey('elevator-up'); setTransportMethod('escalator'); setRouteStep('go-to-transport'); }}
-                  >
-                    <span>🪜</span><span>Escalator</span>
-                  </button>
-                )}
+              <button
+                className="mini-btn"
+                onClick={() => { setSelectedOfficeKey('elevator-up'); setTransportMethod('elevator'); setRouteStep('go-to-transport'); }}
+              >
+                <span className="mini-ico">🛗</span>
+                <span className="mini-txt">Elevator</span>
+              </button>
 
+              {destinationData.floor === 2 && (
                 <button
-                  className="transport-btn"
-                  onClick={() => { setSelectedOfficeKey('stairs-up'); setTransportMethod('stairs'); setRouteStep('go-to-transport'); }}
+                  className="mini-btn"
+                  onClick={() => { setSelectedOfficeKey('elevator-up'); setTransportMethod('escalator'); setRouteStep('go-to-transport'); }}
                 >
-                  <span>🚶</span><span>Stairs</span>
+                  <span className="mini-ico">🪜</span>
+                  <span className="mini-txt">Escalator</span>
                 </button>
-              </div>
-              <button className="transport-cancel" onClick={() => { setRouteStep('idle'); setDestinationData(null); }}>
-                {lang === 'EN' ? 'Cancel navigation' : 'Kanselahin ang direksyon'}
+              )}
+
+              <button
+                className="mini-btn"
+                onClick={() => { setSelectedOfficeKey('stairs-up'); setTransportMethod('stairs'); setRouteStep('go-to-transport'); }}
+              >
+                <span className="mini-ico">🚶</span>
+                <span className="mini-txt">Stairs</span>
+              </button>
+
+              <button
+                className="mini-x"
+                onClick={() => { setRouteStep('idle'); setDestinationData(null); }}
+                title={lang === 'EN' ? 'Cancel navigation' : 'Kanselahin'}
+              >
+                ✕
               </button>
             </div>
           )}
 
           {guide && (
-            <div className="map-float sb-guide">
-              <div className="guide-head">
-                <span className="guide-count">
-                  {lang === 'EN' ? 'Step' : 'Hakbang'} {guide.index + 1} / {guide.steps.length}
-                </span>
-                <button className="guide-close" onClick={closeGuide} title="Isara">✕</button>
+            <div className="map-mini">
+              <span className="mini-cap">{guide.index + 1}/{guide.steps.length}</span>
+
+              {/* Isang pindutan bawat palapag na dadaanan. Mapipindot ang
+                  kahit alin — ito ang pagbalik sa isang palapag nang
+                  hindi paulit-ulit ang pag-atras. */}
+              <div className="mini-steps">
+                {guide.steps.map((s, i) => (
+                  <button
+                    key={`${s.floor}-${i}`}
+                    className={`mini-step${i === guide.index ? ' is-now' : ''}${i < guide.index ? ' is-done' : ''}`}
+                    onClick={() => goToGuideStep(i)}
+                    title={s.title}
+                  >
+                    {s.floor === 1 ? 'GF' : s.floor}
+                  </button>
+                ))}
               </div>
 
-              <div className="guide-now">
-                <span className="guide-now-icon">{guide.steps[guide.index].icon}</span>
-                <h2>{guide.steps[guide.index].title}</h2>
-                <p>{guide.steps[guide.index].body}</p>
-              </div>
-
-              <div className="guide-nav">
+              <div className="mini-nav">
                 <button
-                  className="guide-nav-btn"
+                  className="mini-nav-btn"
                   disabled={guide.index === 0}
                   onClick={() => goToGuideStep(guide.index - 1)}
+                  title={lang === 'EN' ? 'Previous' : 'Bumalik'}
                 >
-                  ⬅️ {lang === 'EN' ? 'Previous' : 'Bumalik'}
+                  ⬅
                 </button>
                 <button
-                  className="guide-nav-btn"
+                  className="mini-nav-btn"
                   disabled={guide.index === guide.steps.length - 1}
                   onClick={() => goToGuideStep(guide.index + 1)}
+                  title={lang === 'EN' ? 'Next' : 'Susunod'}
                 >
-                  {lang === 'EN' ? 'Next' : 'Susunod'} ➡️
+                  ➡
                 </button>
               </div>
 
-              <ol className="guide-list">
-                {guide.steps.map((s, i) => (
-                  <li key={`${s.floor}-${i}`}>
-                    <button
-                      className={`guide-step${i === guide.index ? ' is-now' : ''}${i < guide.index ? ' is-done' : ''}`}
-                      onClick={() => goToGuideStep(i)}
-                    >
-                      <span className="guide-step-dot">{i + 1}</span>
-                      <span className="guide-step-text">{s.title}</span>
-                    </button>
-                  </li>
-                ))}
-              </ol>
-
-              <button className="guide-done" onClick={closeGuide}>
-                ✓ {lang === 'EN' ? 'Done — back to the office' : 'Tapos na — balik sa opisina'}
+              <button className="mini-x" onClick={closeGuide} title={lang === 'EN' ? 'Done' : 'Tapos na'}>
+                ✕
               </button>
             </div>
           )}

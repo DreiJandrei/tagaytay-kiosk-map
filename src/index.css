@@ -2064,82 +2064,138 @@ img { max-width: 100%; }
 }
 .guide-open-btn:hover { background: var(--ui-accent); color: var(--ui-accent-on); transform: translateY(-2px); }
 
-/* ── Mga lumulutang na panel sa gilid ng mapa ──────────────
-   Katabi ng zoom, sa ibabaw ng mapa. Dito nakalagay ang mga
-   pagpipiliang tungkol sa mismong ruta — doon nakatingin ang bisita
-   kapag pumipili, hindi sa sidebar sa kabilang dulo ng screen.
+/* ── Maliliit na kontrol sa gilid ng mapa ──────────────────
+   Nakapatong lang sa ilalim ng zoom, kapareho ng lapad at ng hitsura
+   nito, kaya mukha silang iisang hanay ng kontrol. Ang mga pagpipilian
+   lang ang nandito — nasa sidebar ang mahabang teksto.
 
-   Ang 158px ay: 30px na tabi ng zoom + ~112px na lapad nito + luwag. */
-.map-float-panels {
+   Ang 254px ay taas ng zoom: 30px mula sa itaas + apat na pindutan
+   (45px) + tatlong puwang (8px) + 20px na padding ng kahon nito. */
+.map-mini-stack {
   position: absolute;
-  top: 30px;
-  right: 158px;
+  top: 268px;
+  right: 30px;
   z-index: 120;
-  width: min(320px, calc(100% - 520px));
-  max-height: calc(100% - 140px); /* may puwang ang hanay ng palapag sa ilalim */
+  width: 110px; /* kapareho ng zoom sa itaas */
+  /* 268px sa itaas + ~108px na inuukupa ng hanay ng palapag sa ilalim. */
+  max-height: calc(100% - 376px);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   overflow-y: auto;
   /* Dumadaan ang pindot sa blangkong bahagi, para mahila pa rin ang
-     mapa sa likod nito. Ang mga kard lang ang sumasalo. */
+     mapa sa likod nito. Ang mga kahon lang ang sumasalo. */
   pointer-events: none;
 }
-.map-float-panels > * { pointer-events: auto; }
-.map-float-panels:empty { display: none; }
+.map-mini-stack > * { pointer-events: auto; }
+.map-mini-stack:empty { display: none; }
 
-.map-float {
-  flex-shrink: 0;
+/* Kaparehong balot ng .floor-selector sa itaas — sinasadya, para
+   magmukha silang magkapatid at hindi dalawang magkaibang bagay. */
+.map-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
   border-radius: 18px;
-  border: 1px solid var(--ui-line-2);
-  background: var(--ui-panel);
-  box-shadow: var(--ui-sh-3);
-  animation: modalPop .32s cubic-bezier(.175,.885,.32,1.1) both;
+  background: rgba(7,18,35,.8);
+  border: 1px solid rgba(96,165,250,.28);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: modalPop .3s cubic-bezier(.175,.885,.32,1.1) both;
 }
-.map-float.transport-card { margin-bottom: 0; }
-
-/* Mas masikip dito kaysa sa sidebar, kaya patong-patong ang tatlong
-   pagpipilian imbes na magkatabi — mas malaki ang mapipindot. */
-.map-float .transport-grid { flex-direction: column; }
-
-/* Sa napakakitid na screen, walang matitirang mapa sa tabi. Doon ay
-   sumasalampak na lang ito sa kanang gilid. */
-@media (max-width: 1180px) {
-  .map-float-panels {
-    right: 30px;
-    top: 250px; /* sa ilalim ng zoom, hindi na katabi */
-    width: min(300px, calc(100% - 60px));
-    max-height: calc(100% - 360px);
-  }
+.light-theme .map-mini {
+  background: rgba(255,255,255,.92);
+  border-color: #C7DCFA;
 }
 
-/* ── Step-by-step na gabay ────────────────────────────────── */
-.sb-guide { display: flex; flex-direction: column; gap: 16px; padding-bottom: 20px; }
-.map-float.sb-guide { gap: 12px; padding: 16px; }
-.guide-head {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+.mini-cap {
+  text-align: center;
+  color: var(--k-300);
+  font-size: .68rem; font-weight: 900;
+  letter-spacing: 1.2px; text-transform: uppercase;
 }
-.guide-count {
-  padding: 6px 14px;
-  border-radius: 999px;
-  background: var(--ui-accent-sf);
-  color: var(--ui-accent);
-  font-size: .82rem; font-weight: 900; letter-spacing: 1.2px; text-transform: uppercase;
+.light-theme .mini-cap { color: var(--k-700); }
+
+.mini-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 9px 4px;
+  border-radius: 10px;
+  border: 1px solid rgba(96,165,250,.4);
+  background: transparent;
+  color: var(--k-300);
+  cursor: pointer;
+  transition: background .18s ease, transform .18s ease;
 }
-.guide-close {
-  width: 38px; height: 38px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 50%;
-  border: 1px solid var(--ui-line);
-  background: var(--ui-raise);
-  color: var(--ui-ink-2);
-  font-size: 1rem; font-weight: 900;
+.light-theme .mini-btn { color: var(--k-700); border-color: #BFDBFE; }
+.mini-btn:hover { background: rgba(59,130,246,.2); transform: translateY(-2px); }
+.mini-ico { font-size: 1.3rem; line-height: 1; }
+.mini-txt { font-size: .68rem; font-weight: 800; letter-spacing: .2px; }
+
+/* Isang parisukat bawat palapag na dadaanan. */
+.mini-steps { display: flex; flex-direction: column; gap: 6px; }
+.mini-step {
+  height: 34px;
+  border-radius: 9px;
+  border: 1px solid rgba(96,165,250,.4);
+  background: transparent;
+  color: var(--k-300);
+  font-size: .9rem; font-weight: 900;
+  cursor: pointer;
+  transition: background .18s ease, transform .18s ease;
+}
+.light-theme .mini-step { color: var(--k-700); border-color: #BFDBFE; }
+.mini-step:hover { background: rgba(59,130,246,.2); }
+.mini-step.is-done { opacity: .45; }
+.mini-step.is-now {
+  background: linear-gradient(160deg, var(--k-500), var(--k-700));
+  border-color: var(--k-300);
+  color: #FFF;
+  transform: scale(1.04);
+}
+
+.mini-nav { display: flex; gap: 6px; }
+.mini-nav-btn {
+  flex: 1;
+  height: 34px;
+  border-radius: 9px;
+  border: 1px solid rgba(96,165,250,.4);
+  background: transparent;
+  color: var(--k-300);
+  font-size: .95rem; font-weight: 900;
   cursor: pointer;
   transition: background .18s ease;
 }
-.guide-close:hover { background: var(--ui-raise-2); color: var(--ui-ink); }
+.light-theme .mini-nav-btn { color: var(--k-700); border-color: #BFDBFE; }
+.mini-nav-btn:hover:not(:disabled) { background: rgba(59,130,246,.2); }
+.mini-nav-btn:disabled { opacity: .3; cursor: default; }
 
+.mini-x {
+  height: 32px;
+  border-radius: 9px;
+  border: 1px solid rgba(248,113,113,.45);
+  background: transparent;
+  color: #F87171;
+  font-size: .85rem; font-weight: 900;
+  cursor: pointer;
+  transition: background .18s ease;
+}
+.mini-x:hover { background: rgba(248,113,113,.18); }
+.light-theme .mini-x { color: #B91C1C; border-color: #FECACA; }
+
+/* Sa pandak na screen, kulang ang taas sa ilalim ng zoom para sa
+   pitong magkakapatong na palapag. Dalawahan sila doon — kasya nang
+   hindi kailangang i-scroll ang maliit na hanay, na mahirap sa daliri. */
+@media (max-height: 850px) {
+  .mini-steps { display: grid; grid-template-columns: repeat(2, 1fr); }
+  .mini-btn { padding: 7px 4px; }
+  .mini-ico { font-size: 1.15rem; }
+  .map-mini { gap: 6px; }
+}
+
+/* ── Sinasabi ng kasalukuyang hakbang (nasa sidebar) ─────── */
 .guide-now {
+  margin-bottom: 16px;
   padding: 22px 20px;
   border-radius: var(--ui-r-lg);
   border: 1px solid var(--ui-line-2);
@@ -2153,57 +2209,6 @@ img { max-width: 100%; }
   font-size: 1.32rem; font-weight: 900; letter-spacing: -.3px;
 }
 .guide-now p { margin: 0; color: var(--ui-ink-2); font-size: 1rem; line-height: 1.55; font-weight: 600; }
-
-.guide-nav { display: flex; gap: 10px; }
-.guide-nav-btn {
-  flex: 1;
-  padding: 15px 12px;
-  border-radius: var(--ui-r-md);
-  border: 1px solid var(--ui-line-2);
-  background: var(--ui-raise);
-  color: var(--ui-ink);
-  font-size: 1rem; font-weight: 900;
-  cursor: pointer;
-  transition: background .18s ease, transform .18s ease;
-}
-.guide-nav-btn:hover:not(:disabled) { background: var(--ui-raise-2); transform: translateY(-2px); }
-.guide-nav-btn:disabled { opacity: .4; cursor: default; }
-
-/* Buong listahan ng dadaanan. Mapipindot ang kahit alin — ito ang
-   paraan para balikan agad ang isang palapag nang hindi nagpi-Previous
-   nang paulit-ulit. */
-.guide-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.guide-step {
-  width: 100%;
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px 14px;
-  border-radius: var(--ui-r-sm);
-  border: 1px solid var(--ui-line);
-  background: var(--ui-raise);
-  color: var(--ui-ink-2);
-  font-size: .95rem; font-weight: 700; text-align: left;
-  cursor: pointer;
-  transition: background .18s ease, border-color .18s ease;
-}
-.guide-step:hover { background: var(--ui-raise-2); }
-.guide-step.is-now {
-  border-color: var(--ui-accent);
-  background: var(--ui-accent-sf);
-  color: var(--ui-ink);
-  font-weight: 900;
-}
-.guide-step.is-done { opacity: .72; }
-.guide-step-dot {
-  flex-shrink: 0;
-  width: 28px; height: 28px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 50%;
-  background: var(--ui-raise-2);
-  color: var(--ui-ink-3);
-  font-size: .85rem; font-weight: 900;
-}
-.guide-step.is-now .guide-step-dot { background: var(--ui-accent); color: var(--ui-accent-on); }
-.guide-step-text { flex: 1; min-width: 0; }
 
 .guide-done {
   padding: 16px;
