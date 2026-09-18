@@ -104,8 +104,9 @@ export default function WelcomeScreen({ onStart }) {
           <p className="welcome-subprompt">Pindutin ang screen upang magsimula</p>
         </div>
 
-        {/* Ibaba: opisyal na anunsyo katabi ng mga video ng lungsod */}
+        {/* Ibaba: mga video ng lungsod, at sa ilalim ang opisyal na anunsyo */}
         <div className="welcome-board-slot">
+          <WelcomeVideo />
           {hasAnnouncement && (
             <div className="welcome-board">
               <div className="welcome-board-head">
@@ -115,7 +116,6 @@ export default function WelcomeScreen({ onStart }) {
               <div className="welcome-board-body">{announcement}</div>
             </div>
           )}
-          <WelcomeVideo />
         </div>
 
         </div>
