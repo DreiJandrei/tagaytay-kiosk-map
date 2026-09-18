@@ -10,7 +10,10 @@ export default function MapScreen({
   is3DActive,
   setIs3DActive,
   transportMethod = 'elevator',
-  routeStep 
+  routeStep,
+  // Kapag may laman, ito ang nakasulat sa pin — ginagamit ito ng
+  // step-by-step na gabay sa mga palapag na dinaraanan lang.
+  kioskLabel = null
 }) {
  const pathRef = useRef(null);
   const isDragging = useRef(false);
@@ -120,6 +123,14 @@ export default function MapScreen({
       }
   } else {
       kioskStyle = { display: 'none' };
+  }
+
+  // Sa palapag na dinaraanan lang ng gabay ay walang tunguhin, kaya mali
+  // ang “ARRIVED” sa pin. Pinapakita pa rin ang pin — doon nagpapatuloy
+  // paakyat ang hagdan — pero sa tamang pananalita.
+  if (kioskLabel && kioskStyle.display !== 'none') {
+      kioskText = kioskLabel;
+      kioskStyle = { ...kioskStyle, display: 'block' };
   }
 
   // ==============================================================

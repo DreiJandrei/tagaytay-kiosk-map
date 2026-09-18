@@ -119,9 +119,14 @@ export default function App() {
   const [secretClicks, setSecretClicks] = useState(0);
   const [showAbout, setShowAbout] = useState(false); 
 
-  const [routeStep, setRouteStep] = useState('idle'); 
+  const [routeStep, setRouteStep] = useState('idle');
   const [destinationData, setDestinationData] = useState(null);
   const [transportMethod, setTransportMethod] = useState(() => searchParams.get('transport') || 'elevator');
+
+  // Step-by-step na balikan ng ruta. Kapag bukas ito, ang bumibisita na
+  // ang humahawak ng palapag — hindi na ang awtomatikong orasan. Dito
+  // nakaimbak ang pinanggalingan para maibalik kapag isinara.
+  const [guide, setGuide] = useState(null);
 
   useEffect(() => {
     const { data: authSubscription } = onAuthChange((event, session) => {
@@ -480,6 +485,99 @@ export default function App() {
 
   const selectedOffice = selectedOfficeKey ? liveOfficeDatabase[currentFloor]?.[selectedOfficeKey] : null;
 
+  // ==============================================================
+  // STEP-BY-STEP NA GABAY
+  // Isa-isang palapag mula sa kiosk hanggang sa pinto ng opisina.
+  // Hindi ito bagong ruta — ang mismong linyang ginuguhit ng mapa ang
+  // ipinapakita sa bawat hakbang, kaya walang pagkakaiba sa totoong
+  // dadaanan. Ang bago lang ay ang bumibisita na ang humahawak ng
+  // pihit, kaya kaya na niyang balikan ang nalampasan.
+  // ==============================================================
+  const buildGuideSteps = (officeKey, office, floor, method) => {
+    const EN = lang === 'EN';
+    const ride = method === 'elevator' ? 'Elevator' : method === 'escalator' ? 'Escalator' : 'Stairs';
+    const steps = [{
+      floor: 1,
+      officeKey: method === 'stairs' ? 'stairs-up' : 'elevator-up',
+      icon: '🔴',
+      title: EN ? 'Ground Floor — start here' : 'Ground Floor — dito magsimula',
+      body: EN
+        ? `You are at the map kiosk. Follow the line to the ${ride}.`
+        : `Nasa map kiosk po kayo. Sundan ang linya papunta sa ${ride === 'Stairs' ? 'Hagdan' : ride}.`,
+    }];
+
+    if (method === 'stairs') {
+      // Isang hakbang bawat palapag na aakyatin — ito ang talagang
+      // dinaraanan ng naglalakad.
+      for (let f = 2; f <= floor; f++) {
+        const isLast = f === floor;
+        steps.push({
+          floor: f,
+          officeKey: isLast ? officeKey : null,
+          icon: isLast ? '🎯' : '🚶',
+          title: isLast
+            ? `Floor ${f} — ${office.title}`
+            : (EN ? `Floor ${f} — keep climbing` : `Palapag ${f} — akyat pa`),
+          body: isLast
+            ? (EN ? 'You have arrived. Follow the line to the door.' : 'Narito na po. Sundan ang linya papunta sa pinto.')
+            : (EN
+              ? 'You pass this floor. The stairs continue up from the same spot.'
+              : 'Dadaanan po ninyo ang palapag na ito. Dito rin nagpapatuloy paakyat ang hagdan.'),
+        });
+      }
+    } else {
+      steps.push({
+        floor,
+        officeKey,
+        icon: '🎯',
+        title: `Floor ${floor} — ${office.title}`,
+        body: EN
+          ? `Get off at Floor ${floor}, then follow the line to the door.`
+          : `Bumaba po sa Palapag ${floor}, tapos sundan ang linya papunta sa pinto.`,
+      });
+    }
+
+    return steps;
+  };
+
+  const openGuide = () => {
+    if (!selectedOfficeKey || !selectedOffice || currentFloor <= 1) return;
+    const steps = buildGuideSteps(selectedOfficeKey, selectedOffice, currentFloor, transportMethod);
+    // Ang huling hakbang ang kinalalagyan na ngayon ng bumibisita, kaya
+    // doon nagbubukas — pabalik ang tingin, hindi pasimula ulit.
+    const startIndex = steps.length - 1;
+    setGuide({
+      steps,
+      index: startIndex,
+      backTo: { floor: currentFloor, officeKey: selectedOfficeKey },
+    });
+  };
+
+  const goToGuideStep = (index) => {
+    if (!guide) return;
+    const step = guide.steps[index];
+    if (!step) return;
+    setGuide({ ...guide, index });
+    setCurrentFloor(step.floor);
+    setSelectedOfficeKey(step.officeKey);
+  };
+
+  const closeGuide = () => {
+    if (!guide) return;
+    setCurrentFloor(guide.backTo.floor);
+    setSelectedOfficeKey(guide.backTo.officeKey);
+    setGuide(null);
+  };
+
+  // Sa palapag na dinaraanan lang, walang tunguhin — kaya mali ang
+  // “ARRIVED” na nakasulat sa pin. Ito ang tamang sasabihin doon.
+  const guideStep = guide ? guide.steps[guide.index] : null;
+  const guideKioskLabel = guideStep && guideStep.officeKey === null
+    ? (lang === 'EN'
+      ? `🚶 PASSING FLOOR ${guideStep.floor}`
+      : `🚶 DINARAANAN — PALAPAG ${guideStep.floor}`)
+    : null;
+
   // Mga opisinang ipinapakita sa listahan ng kasalukuyang palapag
   const floorOfficeList = Object.entries(liveOfficeDatabase[currentFloor] || {})
     .filter(([key]) => key !== 'elevator-up' && key !== 'stairs-up');
@@ -653,7 +751,7 @@ export default function App() {
               </section>
             )}
 
-            {routeStep === 'idle' && !selectedOfficeKey && (
+            {!guide && routeStep === 'idle' && !selectedOfficeKey && (
               <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
 
                 <div className="sb-section">
@@ -808,14 +906,78 @@ export default function App() {
               </div>
             )}
 
-            {(routeStep === 'arrived' || (routeStep === 'idle' && selectedOfficeKey && selectedOfficeKey !== 'elevator-up' && selectedOfficeKey !== 'stairs-up')) && selectedOffice && (
-              <div className="sb-detail">
-                <button
-                  className="back-to-list-btn"
-                  onClick={() => { setSelectedOfficeKey(null); setRouteStep('idle'); setDestinationData(null); }}
-                >
-                  ⬅️ {lang === 'EN' ? `Back to Floor ${currentFloor} list` : `Balik sa listahan ng Palapag ${currentFloor}`}
+            {/* Step-by-step na balikan ng ruta — ang bumibisita ang
+                humahawak ng palapag habang bukas ito. */}
+            {guide && (
+              <div className="sb-guide">
+                <div className="guide-head">
+                  <span className="guide-count">
+                    {lang === 'EN' ? 'Step' : 'Hakbang'} {guide.index + 1} / {guide.steps.length}
+                  </span>
+                  <button className="guide-close" onClick={closeGuide} title="Isara">✕</button>
+                </div>
+
+                <div className="guide-now">
+                  <span className="guide-now-icon">{guide.steps[guide.index].icon}</span>
+                  <h2>{guide.steps[guide.index].title}</h2>
+                  <p>{guide.steps[guide.index].body}</p>
+                </div>
+
+                <div className="guide-nav">
+                  <button
+                    className="guide-nav-btn"
+                    disabled={guide.index === 0}
+                    onClick={() => goToGuideStep(guide.index - 1)}
+                  >
+                    ⬅️ {lang === 'EN' ? 'Previous' : 'Bumalik'}
+                  </button>
+                  <button
+                    className="guide-nav-btn"
+                    disabled={guide.index === guide.steps.length - 1}
+                    onClick={() => goToGuideStep(guide.index + 1)}
+                  >
+                    {lang === 'EN' ? 'Next' : 'Susunod'} ➡️
+                  </button>
+                </div>
+
+                <ol className="guide-list">
+                  {guide.steps.map((s, i) => (
+                    <li key={`${s.floor}-${i}`}>
+                      <button
+                        className={`guide-step${i === guide.index ? ' is-now' : ''}${i < guide.index ? ' is-done' : ''}`}
+                        onClick={() => goToGuideStep(i)}
+                      >
+                        <span className="guide-step-dot">{i + 1}</span>
+                        <span className="guide-step-text">{s.title}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ol>
+
+                <button className="guide-done" onClick={closeGuide}>
+                  ✓ {lang === 'EN' ? 'Done — back to the office' : 'Tapos na — balik sa opisina'}
                 </button>
+              </div>
+            )}
+
+            {!guide && (routeStep === 'arrived' || (routeStep === 'idle' && selectedOfficeKey && selectedOfficeKey !== 'elevator-up' && selectedOfficeKey !== 'stairs-up')) && selectedOffice && (
+              <div className="sb-detail">
+                <div className="sb-detail-actions">
+                  <button
+                    className="back-to-list-btn"
+                    onClick={() => { setSelectedOfficeKey(null); setRouteStep('idle'); setDestinationData(null); }}
+                  >
+                    ⬅️ {lang === 'EN' ? `Floor ${currentFloor} list` : `Palapag ${currentFloor}`}
+                  </button>
+
+                  {/* Sa mga opisinang nasa itaas lang may dinaanang palapag
+                      na puwedeng balikan. Sa ground floor, walang laman ito. */}
+                  {currentFloor > 1 && (
+                    <button className="guide-open-btn" onClick={openGuide}>
+                      🧭 {lang === 'EN' ? 'Step-by-step' : 'Hakbang-hakbang'}
+                    </button>
+                  )}
+                </div>
 
                 <div className="destination-card">
                   <p className="label">{lang === 'EN' ? 'Destination' : 'Paroroonan'}</p>
@@ -869,8 +1031,9 @@ export default function App() {
           setSelectedOfficeKey={setSelectedOfficeKey} 
           is3DActive={is3DActive}
           setIs3DActive={setIs3DActive}
-          transportMethod={transportMethod} 
+          transportMethod={transportMethod}
           routeStep={routeStep}
+          kioskLabel={guideKioskLabel}
         />
 
         {searchParams.get('route') && (

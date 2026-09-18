@@ -2037,6 +2037,130 @@ img { max-width: 100%; }
   transform: translateX(-4px);
 }
 
+/* Magkatabi ang pabalik at ang gabay. Bumababa sila sa dalawang linya
+   kapag sumikip — hindi sila nagkakasiksikan. */
+.sb-detail-actions {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  margin-bottom: 18px;
+}
+.sb-detail-actions .back-to-list-btn { margin-bottom: 0; }
+
+.guide-open-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 11px 20px;
+  border-radius: 999px;
+  border: 1px solid var(--ui-accent);
+  background: var(--ui-accent-sf);
+  color: var(--ui-accent);
+  font-size: .95rem; font-weight: 800;
+  cursor: pointer;
+  transition: transform .18s ease, background .18s ease;
+}
+.guide-open-btn:hover { background: var(--ui-accent); color: var(--ui-accent-on); transform: translateY(-2px); }
+
+/* ── Step-by-step na gabay ────────────────────────────────── */
+.sb-guide { display: flex; flex-direction: column; gap: 16px; padding-bottom: 20px; }
+.guide-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.guide-count {
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--ui-accent-sf);
+  color: var(--ui-accent);
+  font-size: .82rem; font-weight: 900; letter-spacing: 1.2px; text-transform: uppercase;
+}
+.guide-close {
+  width: 38px; height: 38px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--ui-line);
+  background: var(--ui-raise);
+  color: var(--ui-ink-2);
+  font-size: 1rem; font-weight: 900;
+  cursor: pointer;
+  transition: background .18s ease;
+}
+.guide-close:hover { background: var(--ui-raise-2); color: var(--ui-ink); }
+
+.guide-now {
+  padding: 22px 20px;
+  border-radius: var(--ui-r-lg);
+  border: 1px solid var(--ui-line-2);
+  background: linear-gradient(160deg, var(--ui-panel-2) 0%, var(--ui-panel) 100%);
+  box-shadow: var(--ui-sh-2);
+}
+.guide-now-icon { font-size: 2.4rem; line-height: 1; }
+.guide-now h2 {
+  margin: 10px 0 8px;
+  color: var(--ui-ink);
+  font-size: 1.32rem; font-weight: 900; letter-spacing: -.3px;
+}
+.guide-now p { margin: 0; color: var(--ui-ink-2); font-size: 1rem; line-height: 1.55; font-weight: 600; }
+
+.guide-nav { display: flex; gap: 10px; }
+.guide-nav-btn {
+  flex: 1;
+  padding: 15px 12px;
+  border-radius: var(--ui-r-md);
+  border: 1px solid var(--ui-line-2);
+  background: var(--ui-raise);
+  color: var(--ui-ink);
+  font-size: 1rem; font-weight: 900;
+  cursor: pointer;
+  transition: background .18s ease, transform .18s ease;
+}
+.guide-nav-btn:hover:not(:disabled) { background: var(--ui-raise-2); transform: translateY(-2px); }
+.guide-nav-btn:disabled { opacity: .4; cursor: default; }
+
+/* Buong listahan ng dadaanan. Mapipindot ang kahit alin — ito ang
+   paraan para balikan agad ang isang palapag nang hindi nagpi-Previous
+   nang paulit-ulit. */
+.guide-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.guide-step {
+  width: 100%;
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--ui-r-sm);
+  border: 1px solid var(--ui-line);
+  background: var(--ui-raise);
+  color: var(--ui-ink-2);
+  font-size: .95rem; font-weight: 700; text-align: left;
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease;
+}
+.guide-step:hover { background: var(--ui-raise-2); }
+.guide-step.is-now {
+  border-color: var(--ui-accent);
+  background: var(--ui-accent-sf);
+  color: var(--ui-ink);
+  font-weight: 900;
+}
+.guide-step.is-done { opacity: .72; }
+.guide-step-dot {
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: var(--ui-raise-2);
+  color: var(--ui-ink-3);
+  font-size: .85rem; font-weight: 900;
+}
+.guide-step.is-now .guide-step-dot { background: var(--ui-accent); color: var(--ui-accent-on); }
+.guide-step-text { flex: 1; min-width: 0; }
+
+.guide-done {
+  padding: 16px;
+  border-radius: var(--ui-r-md);
+  border: 1px solid transparent;
+  background: var(--ui-accent);
+  color: var(--ui-accent-on);
+  font-size: 1.05rem; font-weight: 900;
+  cursor: pointer;
+  transition: transform .18s ease;
+}
+.guide-done:hover { transform: translateY(-2px); }
+
 .destination-card {
   position: relative;
   overflow: hidden;
