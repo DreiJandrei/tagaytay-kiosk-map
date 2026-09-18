@@ -135,7 +135,13 @@ img { max-width: 100%; }
 .clock { font-family: monospace; font-size: 1.3rem; font-weight: 800; color: var(--text-header-map); }
 /* -------------------------------------- */
 
-.map-workspace { display: flex; height: 91.5vh; width: 100%; }
+/* Dating `height: 91.5vh` ito — hula na 8.5vh ang header. Pero nakapako
+   sa 104px ang header (min-height sa .dir-header), kaya sa mga screen na
+   hindi 1223px ang taas, lumalampas ang workspace sa ilalim ng screen at
+   naaanod palabas ang hanay ng palapag. Flex na lang: kung ano ang natira
+   sa ilalim ng header, iyon ang kinukuha — tama sa kahit anong laki. */
+.map-workspace { display: flex; flex: 1; min-height: 0; width: 100%; }
+.map-screen-container > .dir-header { flex-shrink: 0; }
 .map-sidebar { width: 380px; background: var(--bg-sidebar-map); border-right: 1px solid var(--border-subtle-map); padding: 35px; display: flex; flex-direction: column; gap: 20px; z-index: 90; color: var(--text-header-map); overflow-y: auto;}
 
 .back-home-btn { background: #4F46E5; color: white; border: none; padding: 18px; border-radius: 12px; font-weight: 800; font-size: 1.1rem; cursor: pointer; transition: 0.2s; }

@@ -16,13 +16,125 @@ export default function MapScreen({
   kioskLabel = null
 }) {
  const pathRef = useRef(null);
+  const viewportRef = useRef(null);
   const isDragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0 });
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 1024;
-  
-  const [zoom, setZoom] = useState(isMobile ? 0.28 : 0.65);
-  const [pan, setPan] = useState(isMobile ? { x: -450, y: -230 } : { x: 20, y: -120 });
+
+  // ==============================================================
+  // PAGSENTRO NG MAPA — sinusukat, hindi hinuhulaan
+  // Dating naka-hardcode ang unang tanaw (pan 20/-120, zoom .65).
+  // Tumatama lang iyon sa screen na pinagsukatan; sa ibang laki —
+  // TV, mas maliit na monitor — lumilihis ang mapa palabas ng tabi.
+  //
+  // 1400×1300 ang guhit, at nasa gitna nito ang transform-origin, kaya
+  // ang nakikitang gitna ay (700 + pan.x, 650 + pan.y). Pinapantay lang
+  // natin iyon sa gitna ng tunay na sukat ng viewport.
+  // ==============================================================
+  const CANVAS_W = 1400;
+  const CANVAS_H = 1300;
+
+  // Hula lang mula sa bintana. Ito ang ginagamit sa unang render — bawal
+  // basahin ang ref habang nagre-render, at wala pa naman itong laman
+  // doon. Pinapalitan ito ng tunay na sukat pagkatapos ng unang render.
+  const estimateViewport = () => {
+    if (typeof window === 'undefined') return { w: 1440, h: 1060 };
+    return { w: Math.max(320, window.innerWidth - (isMobile ? 0 : 380)), h: window.innerHeight };
+  };
+
+  // Tunay na sukat ng node. Tinatawag lang ito sa labas ng render —
+  // sa effect at sa pindot ng reset.
+  const measureViewport = () => {
+    const el = viewportRef.current;
+    if (el && el.clientWidth) return { w: el.clientWidth, h: el.clientHeight };
+    return estimateViewport();
+  };
+
+  // Hindi nakasentro sa 1400×1300 na canvas ang mga guhit — sa 1st floor,
+  // nasa kanan ito, kaya malaking blangko ang kaliwa kung ang canvas ang
+  // isesentro. Ito ang tunay na sinasakop ng nakikitang bahagi.
+  const measureContent = () => {
+    const canvas = viewportRef.current?.querySelector('.map-canvas-container');
+    if (!canvas) return null;
+    const parts = canvas.querySelectorAll('.room-node, .structural-element, .exit-badge');
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    parts.forEach((el) => {
+      const w = el.offsetWidth, h = el.offsetHeight;
+      if (!w && !h) return;
+      minX = Math.min(minX, el.offsetLeft);
+      minY = Math.min(minY, el.offsetTop);
+      maxX = Math.max(maxX, el.offsetLeft + w);
+      maxY = Math.max(maxY, el.offsetTop + h);
+    });
+    if (!isFinite(minX) || maxX - minX < 50 || maxY - minY < 50) return null;
+    return { minX, minY, maxX, maxY, cx: (minX + maxX) / 2, cy: (minY + maxY) / 2 };
+  };
+
+  const viewFor = ({ w, h }, box) => {
+    // Hindi lalampas sa dating laki sa malalaking screen — doon walang
+    // nagbago. Sa masikip lang ito umuurong, para kasya ang buong palapag.
+    const base = isMobile ? 0.28 : 0.65;
+
+    // Walang masukat (unang render, o walang guhit) — ang canvas na ang
+    // isesentro. Laging may nailalabas ito, kahit paano.
+    if (!box) {
+      const fit = Math.min(w / CANVAS_W, h / CANVAS_H) * 0.92;
+      return {
+        zoom: Math.min(base, Math.max(0.2, fit)),
+        pan: { x: w / 2 - CANVAS_W / 2, y: h / 2 - CANVAS_H / 2 },
+      };
+    }
+
+    const bw = box.maxX - box.minX;
+    const bh = box.maxY - box.minY;
+    const fit = Math.min(w / bw, h / bh) * 0.88; // may kaunting luwag sa gilid
+    const zoom = Math.min(base, Math.max(0.2, fit));
+
+    // Nasa gitna ng canvas ang transform-origin, kaya ang nakikitang lugar
+    // ng puntong (cx, cy) ay: gitna-ng-canvas + (punto − gitna) × zoom + pan.
+    // Ipinapantay lang natin iyon sa gitna ng viewport.
+    return {
+      zoom,
+      pan: {
+        x: w / 2 - CANVAS_W / 2 - (box.cx - CANVAS_W / 2) * zoom,
+        y: h / 2 - CANVAS_H / 2 - (box.cy - CANVAS_H / 2) * zoom,
+      },
+    };
+  };
+
+  const computeDefaultView = () => viewFor(measureViewport(), measureContent());
+
+  const [zoom, setZoom] = useState(() => viewFor(estimateViewport(), null).zoom);
+  const [pan, setPan] = useState(() => viewFor(estimateViewport(), null).pan);
+  // Lapad ng viewport — dito nakasalalay kung sisikip ang hanay ng palapag.
+  const [viewportWidth, setViewportWidth] = useState(() => estimateViewport().w);
+
+  // Isinesentro tuwing nagbabago ang laki ng screen o ang palapag —
+  // magkaiba ang sinasakop ng bawat plano. Hindi ito humahawak kapag may
+  // hinila o ni-zoom na ang bumibisita; sa reset button lang siya babalik.
+  const hasUserMoved = useRef(false);
+  useEffect(() => {
+    const recenter = () => {
+      const size = measureViewport();
+      setViewportWidth(size.w);
+      if (hasUserMoved.current) return;
+      const next = viewFor(size, measureContent());
+      setZoom(next.zoom);
+      setPan(next.pan);
+    };
+    // Isang frame ang hinihintay bago sumukat — kakapalit lang ng palapag,
+    // at hindi pa naipipinta ang mga bagong kahon.
+    const raf = requestAnimationFrame(recenter);
+    window.addEventListener('resize', recenter);
+    window.addEventListener('orientationchange', recenter);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', recenter);
+      window.removeEventListener('orientationchange', recenter);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentFloor, offices]);
 
   useEffect(() => {
     if (pathRef.current && selectedOfficeKey && offices?.[selectedOfficeKey]) {
@@ -45,14 +157,12 @@ export default function MapScreen({
   };
 
   const handleDragMove = (clientX, clientY) => {
-    if (isMobile || !isDragging.current) return; 
+    if (isMobile || !isDragging.current) return;
+    hasUserMoved.current = true;
     setPan({ x: clientX - dragStart.current.x, y: clientY - dragStart.current.y });
   };
 
   const handleDragEnd = () => { isDragging.current = false; };
-
-  const defaultZoom = isMobile ? 0.28 : (is3DActive ? 0.8 : 0.65);
-  const defaultPan = isMobile ? { x: -450, y: -230 } : { x: 20, y: -120 };
 
   const toggleView = () => {
     setIs3DActive(prev => {
@@ -66,9 +176,17 @@ export default function MapScreen({
   };
 
   const resetView = () => {
-    setZoom(defaultZoom);
-    setPan(defaultPan);
+    const next = computeDefaultView();
+    // Mas malapit ang tingin sa 3D, gaya ng dati.
+    setZoom(is3DActive ? Math.min(1.8, next.zoom * 1.2) : next.zoom);
+    setPan(next.pan);
+    hasUserMoved.current = false;
   };
+
+  // Pitong pindutan sa buong pangalan ay humihingi ng mahigit 1050px.
+  // Sa mas makitid, pinaliliit sila — kung hindi, naipupulupot ang
+  // huling palapag palabas ng gilid at hindi na ito maaabot ng daliri.
+  const isTightBar = viewportWidth < 1120;
 
   const selectedOffice = selectedOfficeKey ? offices?.[selectedOfficeKey] : null;
 
@@ -299,7 +417,8 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
   });
 
   return (
-    <main 
+    <main
+      ref={viewportRef}
       className={`map-viewport${is3DActive ? ' is-3d-active' : ''}`}
       style={{ flexGrow: 1, position: 'relative', overflow: 'hidden', cursor: isDragging.current ? 'grabbing' : 'grab' }}
       onMouseDown={(e) => {
@@ -328,34 +447,43 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
         >
           {is3DActive ? '⬛ 2D' : '🧊 3D'}
         </button>
-        <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => setZoom(z => Math.min(1.8, z + 0.12))}>➕</button>
-        <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => setZoom(z => Math.max(0.35, z - 0.12))}>➖</button>
+        <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => { hasUserMoved.current = true; setZoom(z => Math.min(1.8, z + 0.12)); }}>➕</button>
+        <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => { hasUserMoved.current = true; setZoom(z => Math.max(0.2, z - 0.12)); }}>➖</button>
         <button className="ui-action-btn reset-view-btn" style={{ height: '45px', fontSize: '1rem' }} onClick={resetView} title="Recenter map">⟲</button>
       </div>
 
       {!isMobile && (
         <div className="bottom-floor-bar" style={{
             position: 'absolute', bottom: '30px', left: '50%', transform: 'translateX(-50%)',
-            display: 'flex', gap: '12px', background: 'rgba(15, 23, 42, 0.85)', padding: '15px 25px',
+            display: 'flex', gap: isTightBar ? '8px' : '12px', background: 'rgba(15, 23, 42, 0.85)',
+            padding: isTightBar ? '10px 14px' : '15px 25px',
             borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)',
-            zIndex: 100, boxShadow: '0 20px 40px rgba(0,0,0,0.3)', overflowX: 'auto', maxWidth: '90%', scrollBehavior: 'smooth'
+            zIndex: 100, boxShadow: '0 20px 40px rgba(0,0,0,0.3)', overflowX: 'auto',
+            maxWidth: 'calc(100% - 40px)', scrollBehavior: 'smooth'
         }}>
           {[1, 2, 3, 4, 5, 6, 7].map(floor => {
             const isActive = currentFloor === floor;
             return (
-              <button 
+              <button
                 key={floor}
                 className={`floor-chip${isActive ? ' active' : ''}`}
                 onClick={() => { setCurrentFloor(floor); setSelectedOfficeKey(null); }}
                 style={{
-                  minWidth: '130px', padding: '14px 20px', borderRadius: '16px',
+                  minWidth: isTightBar ? '86px' : '130px',
+                  padding: isTightBar ? '11px 12px' : '14px 20px',
+                  borderRadius: '16px',
                   border: isActive ? '2px solid #4F46E5' : '1px solid rgba(255,255,255,0.2)',
                   backgroundColor: isActive ? '#4F46E5' : 'transparent', color: isActive ? '#FFFFFF' : '#E2E8F0',
-                  fontWeight: '900', fontSize: '1.1rem', cursor: 'pointer', transition: 'all 0.2s ease', 
+                  fontWeight: '900', fontSize: isTightBar ? '0.92rem' : '1.1rem',
+                  cursor: 'pointer', transition: 'all 0.2s ease',
                   whiteSpace: 'nowrap', boxShadow: isActive ? '0 8px 15px rgba(79, 70, 229, 0.4)' : 'none'
                 }}
               >
-                {floor === 1 ? 'GF / 1st' : `${floor}${floor === 2 ? 'nd' : floor === 3 ? 'rd' : 'th'} Floor`}
+                {/* Sa masikip, pinaikli — "6F" imbes na "6th Floor". Mas
+                    mabuting mabasa lahat kaysa maputol ang huli. */}
+                {isTightBar
+                  ? (floor === 1 ? 'GF' : `${floor}F`)
+                  : (floor === 1 ? 'GF / 1st' : `${floor}${floor === 2 ? 'nd' : floor === 3 ? 'rd' : 'th'} Floor`)}
               </button>
             )
           })}
