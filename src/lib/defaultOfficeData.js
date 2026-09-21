@@ -29,7 +29,7 @@ export const defaultOfficeData = {
       title: "Public Information Office (Dept A)",
       badge: "1st Floor - West Wing Corridor",
       hours: "8:00 AM - 5:00 PM (Mon-Fri)",
-      head: "City Information Officer",
+      head: "Ms. Sonia S. Mendoza",
       requirements: ["Press Credentials", "Document Request Form"]
     },
     "pio-2": {
@@ -43,21 +43,21 @@ export const defaultOfficeData = {
       title: "Civil Security Unit Office",
       badge: "1st Floor - Central Concourse Wall",
       hours: "24/7 Safety Dispatch Window",
-      head: "Chief of Civil Security Services",
+      head: "Mr. Jimmy M. Quito",
       requirements: ["Incident Lodging Form Registry", "Valid ID"]
     },
     "barangay-affairs": {
       title: "Barangay Affairs Office",
       badge: "1st Floor - Central Concourse Wall",
       hours: "8:00 AM - 5:00 PM (Mon-Fri)",
-      head: "Head of Barangay Relations",
+      head: "Mr. Edwin Borja",
       requirements: ["Barangay Council Endorsement Letter", "Community Tax Certificate"]
     },
     "tourism-office": {
       title: "Tourism & Cultural Development",
       badge: "1st Floor - Central Concourse Gate",
       hours: "8:00 AM - 5:00 PM (Mon-Sat)",
-      head: "Supervising Tourism Officer",
+      head: "Ms. Faith Maranan",
       requirements: ["Accreditation Documents Pack", "Valid State ID"]
     },
     "breastfeeding-room": {
@@ -78,7 +78,7 @@ export const defaultOfficeData = {
       title: "Info Desk",
       badge: "1st Floor - Main Lobby (Left of Entrance)",
       hours: "8:00 AM - 5:00 PM (Mon-Fri)",
-      head: "Public Assistance & Complaints Desk",
+      head: "Mr. Jun D. Dolot",
       requirements: ["Valid ID for Visitor Logbook"]
     },
     "guard": {
@@ -101,14 +101,14 @@ export const defaultOfficeData = {
       title: "City Engineering Office",
       badge: "2nd Floor - West",
       hours: "8:00 AM - 5:00 PM",
-      head: "City Engineer",
+      head: "Mr. Noel Baybay",
       requirements: ["Project Plans"]
     },
     "housing": {
       title: "Tagaytay Housing Office",
       badge: "2nd Floor - West",
       hours: "8:00 AM - 5:00 PM",
-      head: "Housing Officer",
+      head: "Ms. Mabel Perea",
       requirements: ["Application Form"]
     },
     "bac": {
@@ -122,7 +122,7 @@ export const defaultOfficeData = {
       title: "City Planning and Development Office",
       badge: "2nd Floor - East",
       hours: "8:00 AM - 5:00 PM",
-      head: "Planning Officer",
+      head: "Engr. Emma Pello",
       requirements: ["Clearance"]
     },
     "back-ext": {
@@ -159,28 +159,28 @@ export const defaultOfficeData = {
       title: "BUDGET OFFICE",
       badge: "3rd Floor - North",
       hours: "8:00 AM - 5:00 PM",
-      head: "Budget Officer",
+      head: "Ms. Merly Hernando",
       requirements: ["Budget Proposal Form"]
     },
     "internal-audit": {
       title: "INTERNAL AUDIT SERVICES",
       badge: "3rd Floor - North",
       hours: "8:00 AM - 5:00 PM",
-      head: "Auditor",
+      head: "Ms. Sylvia Constante",
       requirements: []
     },
     "treasure-office": {
       title: "CITY TREASURE OFFICE",
       badge: "3rd Floor - East",
       hours: "8:00 AM - 5:00 PM",
-      head: "City Treasurer",
+      head: "Ms. Josephine Caraan",
       requirements: ["Payment Slips"]
     },
     "accounting-office": {
       title: "CITY ACCOUNTING OFFICE",
       badge: "3rd Floor - South",
       hours: "8:00 AM - 5:00 PM",
-      head: "Chief Accountant",
+      head: "Ms. Rhea Amon",
       requirements: ["Financial Reports"]
     },
     "restroom-cr-3": {
@@ -233,21 +233,21 @@ export const defaultOfficeData = {
       title: "CITY LEGAL OFFICE",
       badge: "5th Floor - West",
       hours: "8:00 AM - 5:00 PM",
-      head: "City Legal Officer",
+      head: "Ms. Marilyn Aala",
       requirements: ["Legal Documents"]
     },
     "hr-office": {
       title: "HUMAN RESOURCES MANAGEMENT OFFICE",
       badge: "5th Floor - North",
       hours: "8:00 AM - 5:00 PM",
-      head: "HR Officer",
+      head: "Ms. Mariza Agustin",
       requirements: ["Application Forms", "IDs"]
     },
     "admin-office": {
       title: "ADMINISTRATOR'S OFFICE",
       badge: "5th Floor - East",
       hours: "8:00 AM - 5:00 PM",
-      head: "City Administrator",
+      head: "Ms. Alma A. Malabanan",
       requirements: ["Appointment Schedule"]
     },
     "const-south-5": {
@@ -293,14 +293,14 @@ export const defaultOfficeData = {
       title: "MAYOR'S OFFICE",
       badge: "7th Floor",
       hours: "8:00 AM - 5:00 PM",
-      head: "City Mayor",
+      head: "Analus Angcaya",
       requirements: ["Appointment"]
     },
     "mayor-receiving": {
       title: "MAYOR'S OFFICE - RECEIVING",
       badge: "7th Floor",
       hours: "8:00 AM - 5:00 PM",
-      head: "Receiving",
+      head: "Ms. Jovie A. Maguinao",
       requirements: ["ID"]
     }
   }
