@@ -1475,6 +1475,20 @@ img { max-width: 100%; }
 .hdr-btn-glyph { font-size: 1.2rem; line-height: 1; }
 .hdr-btn-label { white-space: nowrap; }
 
+/* Pananda ng laki ng teksto: maliit na A katabi ng malaki, nakapantay
+   ang mga paa ng letra (baseline) — doon nakikita ang pagkakaiba ng
+   taas. Titik ito at hindi emoji, kaya pareho ang hitsura sa lahat ng
+   makina at sumasabay sa kulay ng buton kapag naka-ON. */
+.hdr-btn-glyph--size {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1px;
+  font-weight: 900;
+  letter-spacing: -.5px;
+}
+.hdr-btn-glyph--size .glyph-a-sm { font-size: .68em; opacity: .75; }
+.hdr-btn-glyph--size .glyph-a-lg { font-size: 1.12em; }
+
 .hdr-sep {
   width: 1px; height: 40px;
   background: var(--ui-line);
@@ -2539,6 +2553,14 @@ img { max-width: 100%; }
   line-height: 1.65;
 }
 .k-modal-text--center { text-align: center; }
+/* Pantay ang dalawang gilid para sa mahabang talata (hal. About the Kiosk).
+   Kasama ang hyphens para hindi maging malalaking agwat sa pagitan ng
+   salita — mahaba ang ilang salitang teknikal dito. */
+.k-modal-text--justify {
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
+}
 
 .k-btn {
   width: 100%;

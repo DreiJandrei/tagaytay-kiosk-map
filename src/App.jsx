@@ -644,10 +644,22 @@ export default function App() {
           <button
             className={`hdr-btn${isLarge ? ' is-on' : ''}`}
             onClick={() => setTextSize(textSize === 'normal' ? 'large' : 'normal')}
-            title={lang === 'EN' ? 'Larger text' : 'Mas malaking teksto'}
+            title={lang === 'EN'
+              ? (isLarge ? 'Back to normal text size' : 'Make the text bigger')
+              : (isLarge ? 'Ibalik sa normal na laki ng teksto' : 'Palakihin ang teksto')}
           >
-            <span className="hdr-btn-glyph">🔠</span>
-            <span className="hdr-btn-label">{isLarge ? 'A+' : 'A'}</span>
+            {/* Maliit na A katabi ng malaking A — ito ang karaniwang
+                pananda ng laki ng teksto. Mas malinaw ito kaysa sa
+                emoji na 🔠, na hindi naman pampalaki ang ibig sabihin. */}
+            <span className="hdr-btn-glyph hdr-btn-glyph--size" aria-hidden="true">
+              <span className="glyph-a-sm">A</span>
+              <span className="glyph-a-lg">A</span>
+            </span>
+            <span className="hdr-btn-label">
+              {lang === 'EN'
+                ? (isLarge ? 'Normal Text' : 'Bigger Text')
+                : (isLarge ? 'Normal' : 'Palakihin')}
+            </span>
           </button>
 
           <button className="hdr-btn" onClick={() => setLang(lang === 'EN' ? 'TL' : 'EN')}>
@@ -1081,7 +1093,7 @@ export default function App() {
               <button className="k-close" onClick={() => setShowAbout(false)}>✕</button>
             </div>
 
-            <p className="k-modal-text">
+            <p className="k-modal-text k-modal-text--justify">
               This Interactive Directory Kiosk was developed by 4th-year Bachelor of Science in
               Information Technology (BSIT) students from the City College of Tagaytay. Our goal is
               to enhance public service by providing an accessible, easy-to-use digital mapping
