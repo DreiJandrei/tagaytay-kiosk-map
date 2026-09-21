@@ -155,7 +155,7 @@ export default function DirectoryScreen({
                     
                     <p className="card-info" style={{ color: colorPalette.secondaryText, display: 'flex', alignItems: 'center', gap: '10px', margin: 0, fontSize: isLarge ? '1.35rem' : '1.05rem', fontWeight: 600 }}>
                       <span className="emoji-icon" style={{ fontSize: isLarge ? '1.6rem' : '1.2rem' }}>👤</span> 
-                      <strong style={{ color: colorPalette.primaryText, fontWeight: 800 }}>{lang === 'EN' ? 'Head:' : 'Pinuno:'}</strong> 
+                      <strong style={{ color: colorPalette.primaryText, fontWeight: 800 }}>Contact Person:</strong>
                       {office.head || "N/A"}
                     </p>
                     <p className="card-info" style={{ color: colorPalette.secondaryText, display: 'flex', alignItems: 'center', gap: '10px', margin: 0, fontSize: isLarge ? '1.35rem' : '1.05rem', fontWeight: 600 }}>

@@ -1064,7 +1064,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
 
                   <div className="adm-form--split">
                     <div>
-                      <label className="k-label">{t('Head', 'Pinuno')}</label>
+                      <label className="k-label">Contact Person</label>
                       <input type="text" className="k-input" value={formHead} onChange={(e) => setFormHead(e.target.value)} />
                     </div>
                     <div>

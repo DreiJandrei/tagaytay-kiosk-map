@@ -10,17 +10,21 @@
 -- bawat linya ay nakatali sa office_key, hindi sa pangalan.
 --
 -- Pinagmulan: super-griffin-13ae1b.netlify.app (mga floor page),
--- kinuha noong 2026-09-21. "Contact Person" ang tawag doon sa
--- pangalan; "Head" ang tawag dito sa kiosk.
+-- kinuha noong 2026-09-21. "Contact Person" din ang tawag dito sa
+-- kiosk, gaya ng pinagmulan.
 --
--- Hindi kasama (walang pangalang nakalagay sa pinagmulan):
---   pio-2, bac, building-official (F3), at lahat ng CR, hall,
---   canteen, guard post, at UNDER CONSTRUCTION na espasyo.
+-- Naipasok na ito sa database noong 2026-09-21 — nandito ito bilang
+-- talaan, at para maibalik kapag na-reset o nalinis ang database.
+--
+-- Hindi kasama (wala sa pinagmulan): building-official (F3) at
+--   lahat ng CR, hall, canteen, library, guard post, at UNDER
+--   CONSTRUCTION na espasyo — nanatili ang dating nakalagay doon.
 -- ════════════════════════════════════════════════════════════════
 
 -- ── Ground floor ────────────────────────────────────────────────
 update office_details set head = 'Mr. Jun D. Dolot'       where office_key = 'info-desk';
 update office_details set head = 'Ms. Sonia S. Mendoza'   where office_key = 'pio-1';
+update office_details set head = 'Staff'                  where office_key = 'pio-2';
 update office_details set head = 'Ms. Faith Maranan'      where office_key = 'tourism-office';
 update office_details set head = 'Mr. Edwin Borja'        where office_key = 'barangay-affairs';
 update office_details set head = 'Mr. Jimmy M. Quito'     where office_key = 'csu-office';
@@ -29,6 +33,7 @@ update office_details set head = 'Mr. Jimmy M. Quito'     where office_key = 'cs
 update office_details set head = 'Engr. Emma Pello'       where office_key = 'planning';
 update office_details set head = 'Mr. Noel Baybay'        where office_key = 'city-eng';
 update office_details set head = 'Ms. Mabel Perea'        where office_key = 'housing';
+update office_details set head = 'Staff'                  where office_key = 'bac';
 
 -- ── Ika-3 palapag ───────────────────────────────────────────────
 update office_details set head = 'Ms. Rhea Amon'          where office_key = 'accounting-office';
@@ -45,10 +50,12 @@ update office_details set head = 'Ms. Marilyn Aala'       where office_key = 'le
 update office_details set head = 'Analus Angcaya'         where office_key = 'mayor-main';
 update office_details set head = 'Ms. Jovie A. Maguinao'  where office_key = 'mayor-receiving';
 
--- Pagkatapos: tingnan kung tumama lahat (17 na hanay ang inaasahan).
+-- Pagkatapos: tingnan kung tumama lahat (18 na hanay ang inaasahan —
+-- walang hanay ang info-desk sa database, sa defaultOfficeData.js ito
+-- kinukuha, kaya 17 ang ibabalik nito).
 -- select office_key, head from office_details
---  where office_key in ('info-desk','pio-1','tourism-office','barangay-affairs',
---    'csu-office','planning','city-eng','housing','accounting-office','budget-office',
---    'internal-audit','treasure-office','admin-office','hr-office','legal-office',
---    'mayor-main','mayor-receiving')
+--  where office_key in ('pio-1','pio-2','tourism-office','barangay-affairs',
+--    'csu-office','planning','city-eng','housing','bac','accounting-office',
+--    'budget-office','internal-audit','treasure-office','admin-office','hr-office',
+--    'legal-office','mayor-main','mayor-receiving')
 --  order by office_key;

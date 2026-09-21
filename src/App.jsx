@@ -803,7 +803,7 @@ export default function App() {
                       <StatusPill status={destinationData.status} lang={lang} />
                     </p>
                     <p className="meta-row">🕒 <strong>{lang === 'EN' ? 'Hours' : 'Oras'}</strong> {destinationData.hours}</p>
-                    <p className="meta-row">👤 <strong>{lang === 'EN' ? 'Head' : 'Pinuno'}</strong> {destinationData.head}</p>
+                    <p className="meta-row">👤 <strong>Contact Person</strong> {destinationData.head}</p>
                   </div>
                 )}
 
@@ -932,7 +932,7 @@ export default function App() {
                       <StatusPill status={selectedOffice.status} lang={lang} />
                     </p>
                     <p className="meta-row">🕒 <strong>{lang === 'EN' ? 'Hours' : 'Oras'}</strong> {selectedOffice.hours}</p>
-                    <p className="meta-row">👤 <strong>{lang === 'EN' ? 'Head' : 'Pinuno'}</strong> {selectedOffice.head}</p>
+                    <p className="meta-row">👤 <strong>Contact Person</strong> {selectedOffice.head}</p>
                   </div>
                 )}
 

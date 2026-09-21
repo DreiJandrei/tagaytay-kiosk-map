@@ -36,7 +36,7 @@ export const defaultOfficeData = {
       title: "Public Information Office (Dept B)",
       badge: "1st Floor - West Wing Corridor",
       hours: "8:00 AM - 5:00 PM (Mon-Fri)",
-      head: "City Information Officer",
+      head: "Staff",
       requirements: ["Press Credentials", "Document Request Form"]
     },
     "csu-office": {
@@ -115,7 +115,7 @@ export const defaultOfficeData = {
       title: "Bids and Awards Committee",
       badge: "2nd Floor - Center",
       hours: "8:00 AM - 5:00 PM",
-      head: "BAC Chairman",
+      head: "Staff",
       requirements: ["Bidding Documents"]
     },
     "planning": {
