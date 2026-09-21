@@ -1,13 +1,17 @@
 -- ════════════════════════════════════════════════════════════════
--- PANGALAN NG NAKATALAGA SA BAWAT TANGGAPAN
+-- CONTACT PERSON AT PALIWANAG NG BAWAT TANGGAPAN
 -- ════════════════════════════════════════════════════════════════
 -- Ang defaultOfficeData.js ay seed lang: kapag may laman na ang
 -- database, iyon ang nananaig (tingnan ang mergeOfficeData). Kaya
--- para makita ang mga pangalang ito sa buhay na kiosk, patakbuhin
--- ang script na ito sa Supabase → SQL Editor → New query → Run.
+-- para makita ang mga ito sa buhay na kiosk, patakbuhin ang script
+-- na ito sa Supabase → SQL Editor → New query → Run.
 --
--- Ligtas itong ulit-ulitin: ang `head` lang ang ginagalaw, at ang
--- bawat linya ay nakatali sa office_key, hindi sa pangalan.
+-- Ligtas itong ulit-ulitin: ang `head` at `description` lang ang
+-- ginagalaw, at bawat linya ay nakatali sa office_key.
+--
+-- WALA DITO ANG TELEPONO: walang hanay para doon sa office_details,
+-- kaya sa defaultOfficeData.js (`phone`, `local`) ito nakatira —
+-- hindi ito nabubura ng database dahil hindi ito hanay nito.
 --
 -- Pinagmulan: super-griffin-13ae1b.netlify.app (mga floor page),
 -- kinuha noong 2026-09-21. "Contact Person" din ang tawag dito sa
@@ -49,6 +53,23 @@ update office_details set head = 'Ms. Marilyn Aala'       where office_key = 'le
 -- ── Ika-7 palapag ───────────────────────────────────────────────
 update office_details set head = 'Analus Angcaya'         where office_key = 'mayor-main';
 update office_details set head = 'Ms. Jovie A. Maguinao'  where office_key = 'mayor-receiving';
+
+
+-- ── Paliwanag ng mga bulwagan (About this Office) ──────────────
+-- Ito lang ang may nakasulat na paliwanag sa pinagmulan; walang
+-- ganitong teksto ang ibang tanggapan doon.
+
+update office_details set description = 'Tolentino Hall is the main multi-purpose civic hall of Tagaytay City Hall, named in honor of a distinguished public servant. It serves as the primary venue for official city government functions, public assemblies, community hearings, orientations, and large-scale events — making it a central hub for democratic participation and public engagement.'
+  where office_key = 'tolentino-hall';
+
+update office_details set description = 'The Cultural Hall is a dedicated venue celebrating the rich arts, heritage, and traditions of Tagaytay City. It hosts cultural presentations, exhibits, performances, and community gatherings that promote local identity and civic pride. The hall provides a space for residents and visitors to appreciate the city''s vibrant cultural life and diverse community programs.'
+  where office_key = 'cultural-hall';
+
+update office_details set description = 'The Conference Hall on the 6th floor is a fully equipped venue designed for official meetings, seminars, training sessions, and government forums. It accommodates delegations, inter-agency conferences, and large-scale official gatherings, providing a professional environment that supports the administrative and governance functions of Tagaytay City Hall.'
+  where office_key = 'conference-hall';
+
+update office_details set description = 'The Wedding Hall is an elegant venue available for civil wedding ceremonies and receptions within Tagaytay City Hall. It offers a dignified and memorable setting for couples celebrating their union, reflecting the city''s reputation as one of the Philippines'' most sought-after wedding destinations. The hall can be reserved through the appropriate city government office.'
+  where office_key = 'wedding-hall';
 
 -- Pagkatapos: tingnan kung tumama lahat (18 na hanay ang inaasahan —
 -- walang hanay ang info-desk sa database, sa defaultOfficeData.js ito

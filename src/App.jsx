@@ -804,6 +804,11 @@ export default function App() {
                     </p>
                     <p className="meta-row">🕒 <strong>{lang === 'EN' ? 'Hours' : 'Oras'}</strong> {destinationData.hours}</p>
                     <p className="meta-row">👤 <strong>Contact Person</strong> {destinationData.head}</p>
+                    {destinationData.phone && (
+                      <p className="meta-row">📞 <strong>{lang === 'EN' ? 'Direct Line' : 'Telepono'}</strong>
+                        {destinationData.phone}{destinationData.local ? ` · local ${destinationData.local}` : ''}
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -933,6 +938,11 @@ export default function App() {
                     </p>
                     <p className="meta-row">🕒 <strong>{lang === 'EN' ? 'Hours' : 'Oras'}</strong> {selectedOffice.hours}</p>
                     <p className="meta-row">👤 <strong>Contact Person</strong> {selectedOffice.head}</p>
+                    {selectedOffice.phone && (
+                      <p className="meta-row">📞 <strong>{lang === 'EN' ? 'Direct Line' : 'Telepono'}</strong>
+                        {selectedOffice.phone}{selectedOffice.local ? ` · local ${selectedOffice.local}` : ''}
+                      </p>
+                    )}
                   </div>
                 )}
 

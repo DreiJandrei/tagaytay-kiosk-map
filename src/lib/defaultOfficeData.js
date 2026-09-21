@@ -9,6 +9,7 @@ export const defaultOfficeData = {
       badge: "1st Floor - Rear Grand Concourse",
       hours: "8:00 AM - 5:00 PM (Event Dependent)",
       head: "General Services Office (GSO)",
+      description: "Tolentino Hall is the main multi-purpose civic hall of Tagaytay City Hall, named in honor of a distinguished public servant. It serves as the primary venue for official city government functions, public assemblies, community hearings, orientations, and large-scale events — making it a central hub for democratic participation and public engagement.",
       requirements: ["Approved Event Booking Clearance", "Valid Government ID Pass"]
     },
     "cultural-hall": {
@@ -16,6 +17,7 @@ export const defaultOfficeData = {
       badge: "1st Floor - West Wing Complex",
       hours: "8:00 AM - 5:00 PM",
       head: "Tourism & Cultural Development Division",
+      description: "The Cultural Hall is a dedicated venue celebrating the rich arts, heritage, and traditions of Tagaytay City. It hosts cultural presentations, exhibits, performances, and community gatherings that promote local identity and civic pride. The hall provides a space for residents and visitors to appreciate the city's vibrant cultural life and diverse community programs.",
       requirements: ["Venue Reservation Authorization", "Valid ID"]
     },
     "canteen": {
@@ -29,6 +31,8 @@ export const defaultOfficeData = {
       title: "Public Information Office (Dept A)",
       badge: "1st Floor - West Wing Corridor",
       hours: "8:00 AM - 5:00 PM (Mon-Fri)",
+      phone: "(046) 483-9372",
+      local: "106",
       head: "Ms. Sonia S. Mendoza",
       requirements: ["Press Credentials", "Document Request Form"]
     },
@@ -36,6 +40,8 @@ export const defaultOfficeData = {
       title: "Public Information Office (Dept B)",
       badge: "1st Floor - West Wing Corridor",
       hours: "8:00 AM - 5:00 PM (Mon-Fri)",
+      phone: "(046) 483-9372",
+      local: "106",
       head: "Staff",
       requirements: ["Press Credentials", "Document Request Form"]
     },
@@ -43,6 +49,7 @@ export const defaultOfficeData = {
       title: "Civil Security Unit Office",
       badge: "1st Floor - Central Concourse Wall",
       hours: "24/7 Safety Dispatch Window",
+      phone: "(046) 483-9370",
       head: "Mr. Jimmy M. Quito",
       requirements: ["Incident Lodging Form Registry", "Valid ID"]
     },
@@ -50,6 +57,7 @@ export const defaultOfficeData = {
       title: "Barangay Affairs Office",
       badge: "1st Floor - Central Concourse Wall",
       hours: "8:00 AM - 5:00 PM (Mon-Fri)",
+      phone: "(046) 483-9372",
       head: "Mr. Edwin Borja",
       requirements: ["Barangay Council Endorsement Letter", "Community Tax Certificate"]
     },
@@ -57,6 +65,7 @@ export const defaultOfficeData = {
       title: "Tourism & Cultural Development",
       badge: "1st Floor - Central Concourse Gate",
       hours: "8:00 AM - 5:00 PM (Mon-Sat)",
+      phone: "(046) 483-9372",
       head: "Ms. Faith Maranan",
       requirements: ["Accreditation Documents Pack", "Valid State ID"]
     },
@@ -78,6 +87,8 @@ export const defaultOfficeData = {
       title: "Info Desk",
       badge: "1st Floor - Main Lobby (Left of Entrance)",
       hours: "8:00 AM - 5:00 PM (Mon-Fri)",
+      phone: "(046) 483-9372",
+      local: "100",
       head: "Mr. Jun D. Dolot",
       requirements: ["Valid ID for Visitor Logbook"]
     },
@@ -101,6 +112,7 @@ export const defaultOfficeData = {
       title: "City Engineering Office",
       badge: "2nd Floor - West",
       hours: "8:00 AM - 5:00 PM",
+      phone: "(046) 483-9374",
       head: "Mr. Noel Baybay",
       requirements: ["Project Plans"]
     },
@@ -108,6 +120,8 @@ export const defaultOfficeData = {
       title: "Tagaytay Housing Office",
       badge: "2nd Floor - West",
       hours: "8:00 AM - 5:00 PM",
+      phone: "(046) 483-9370",
+      local: "207",
       head: "Ms. Mabel Perea",
       requirements: ["Application Form"]
     },
@@ -115,6 +129,8 @@ export const defaultOfficeData = {
       title: "Bids and Awards Committee",
       badge: "2nd Floor - Center",
       hours: "8:00 AM - 5:00 PM",
+      phone: "(046) 483-9376",
+      local: "206",
       head: "Staff",
       requirements: ["Bidding Documents"]
     },
@@ -122,6 +138,7 @@ export const defaultOfficeData = {
       title: "City Planning and Development Office",
       badge: "2nd Floor - East",
       hours: "8:00 AM - 5:00 PM",
+      phone: "(046) 483-9373",
       head: "Engr. Emma Pello",
       requirements: ["Clearance"]
     },
@@ -159,6 +176,7 @@ export const defaultOfficeData = {
       title: "BUDGET OFFICE",
       badge: "3rd Floor - North",
       hours: "8:00 AM - 5:00 PM",
+      phone: "(046) 483-9375",
       head: "Ms. Merly Hernando",
       requirements: ["Budget Proposal Form"]
     },
@@ -166,6 +184,7 @@ export const defaultOfficeData = {
       title: "INTERNAL AUDIT SERVICES",
       badge: "3rd Floor - North",
       hours: "8:00 AM - 5:00 PM",
+      phone: "(046) 483-9375",
       head: "Ms. Sylvia Constante",
       requirements: []
     },
@@ -173,6 +192,7 @@ export const defaultOfficeData = {
       title: "CITY TREASURE OFFICE",
       badge: "3rd Floor - East",
       hours: "8:00 AM - 5:00 PM",
+      phone: "(046) 483-9377",
       head: "Ms. Josephine Caraan",
       requirements: ["Payment Slips"]
     },
@@ -180,6 +200,8 @@ export const defaultOfficeData = {
       title: "CITY ACCOUNTING OFFICE",
       badge: "3rd Floor - South",
       hours: "8:00 AM - 5:00 PM",
+      phone: "(046) 483-9376",
+      local: "300",
       head: "Ms. Rhea Amon",
       requirements: ["Financial Reports"]
     },
@@ -233,6 +255,7 @@ export const defaultOfficeData = {
       title: "CITY LEGAL OFFICE",
       badge: "5th Floor - West",
       hours: "8:00 AM - 5:00 PM",
+      phone: "(046) 483-9370",
       head: "Ms. Marilyn Aala",
       requirements: ["Legal Documents"]
     },
@@ -240,6 +263,8 @@ export const defaultOfficeData = {
       title: "HUMAN RESOURCES MANAGEMENT OFFICE",
       badge: "5th Floor - North",
       hours: "8:00 AM - 5:00 PM",
+      phone: "(046) 483-9370",
+      local: "506",
       head: "Ms. Mariza Agustin",
       requirements: ["Application Forms", "IDs"]
     },
@@ -247,6 +272,7 @@ export const defaultOfficeData = {
       title: "ADMINISTRATOR'S OFFICE",
       badge: "5th Floor - East",
       hours: "8:00 AM - 5:00 PM",
+      phone: "(046) 483-9371",
       head: "Ms. Alma A. Malabanan",
       requirements: ["Appointment Schedule"]
     },
@@ -271,6 +297,7 @@ export const defaultOfficeData = {
       badge: "6th Floor - West Wing",
       hours: "By Reservation",
       head: "Events Coordinator",
+      description: "The Wedding Hall is an elegant venue available for civil wedding ceremonies and receptions within Tagaytay City Hall. It offers a dignified and memorable setting for couples celebrating their union, reflecting the city's reputation as one of the Philippines' most sought-after wedding destinations. The hall can be reserved through the appropriate city government office.",
       requirements: ["Event Booking Confirmation"]
     },
     "conference-hall": {
@@ -278,6 +305,7 @@ export const defaultOfficeData = {
       badge: "6th Floor - South Wing",
       hours: "By Reservation",
       head: "Events Coordinator",
+      description: "The Conference Hall on the 6th floor is a fully equipped venue designed for official meetings, seminars, training sessions, and government forums. It accommodates delegations, inter-agency conferences, and large-scale official gatherings, providing a professional environment that supports the administrative and governance functions of Tagaytay City Hall.",
       requirements: ["Event Booking Confirmation"]
     },
     "restroom-cr-6": {
@@ -293,6 +321,8 @@ export const defaultOfficeData = {
       title: "MAYOR'S OFFICE",
       badge: "7th Floor",
       hours: "8:00 AM - 5:00 PM",
+      phone: "(046) 483-9379",
+      local: "702",
       head: "Analus Angcaya",
       requirements: ["Appointment"]
     },
@@ -300,6 +330,7 @@ export const defaultOfficeData = {
       title: "MAYOR'S OFFICE - RECEIVING",
       badge: "7th Floor",
       hours: "8:00 AM - 5:00 PM",
+      phone: "(046) 483-9378",
       head: "Ms. Jovie A. Maguinao",
       requirements: ["ID"]
     }
