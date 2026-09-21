@@ -3441,12 +3441,26 @@ button:active { transform: scale(.97); }
   gap: 8px;
   touch-action: none;   /* para hindi mag-scroll ang pahina habang hinihila */
 }
+/* Ang buong bar ang hawakan sa paglipat ng keyboard — malapad na tuntungan
+   para sa daliri, hindi lang ang maliit na ⠿. Mataas ang padding dahil sa
+   touchscreen ito ginagamit. */
 .vkb-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
-  padding-bottom: 2px;
+  margin: -4px -4px 2px;
+  padding: 6px 8px;
+  border-radius: var(--ui-r-sm);
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+.vkb-head:active { cursor: grabbing; }
+.vkb.is-dragging .vkb-head { background: var(--ui-accent-sf); cursor: grabbing; }
+/* Bahagyang umaangat habang hinihila — senyas na ito ang gumagalaw. */
+.vkb.is-dragging {
+  box-shadow: 0 34px 70px rgba(0,0,0,.45);
+  border-color: var(--ui-accent);
 }
 .vkb-grip {
   display: flex; align-items: center; gap: 8px;
@@ -3456,11 +3470,22 @@ button:active { transform: scale(.97); }
   background: var(--ui-raise);
   color: var(--ui-ink-2);
   font-weight: 800; font-size: .78rem; letter-spacing: .6px;
-  cursor: grab;
 }
-.vkb-grip:active { cursor: grabbing; }
 .vkb-title { text-transform: uppercase; }
+/* Paalala kung paano ilipat. Ito ang unang nawawala kapag sumikip ang
+   bar — hindi ito kailangan para gumana ang paghila. */
+.vkb-hint {
+  margin-right: auto;
+  color: var(--ui-ink-3);
+  font-size: .74rem;
+  font-weight: 700;
+  letter-spacing: .4px;
+}
+@media (max-width: 720px) {
+  .vkb-hint { display: none; }
+}
 .vkb-close {
+  margin-left: auto;   /* nananatili sa kanang dulo kahit nakatago ang hint */
   padding: 7px 14px;
   border-radius: var(--ui-r-sm);
   border: 1px solid var(--ui-line-2);

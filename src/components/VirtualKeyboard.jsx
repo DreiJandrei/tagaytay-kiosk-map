@@ -47,6 +47,7 @@ export default function VirtualKeyboard({ scopeRef, onClose, lang = 'EN' }) {
   const [shift, setShift] = useState(false);
   const [symbols, setSymbols] = useState(false);
   const [pos, setPos] = useState(null);          // null = default (ilalim, gitna)
+  const [dragging, setDragging] = useState(false);
   const targetRef = useRef(null);                 // huling field na na-focus
   const dragRef = useRef(null);
   const panelRef = useRef(null);
@@ -62,30 +63,75 @@ export default function VirtualKeyboard({ scopeRef, onClose, lang = 'EN' }) {
     return () => root.removeEventListener('focusin', remember);
   }, [scopeRef]);
 
-  // Paghila ng panel
+  // Hindi puwedeng mahila palabas ng screen ang keyboard — sa kiosk, wala
+  // namang paraan para maibalik ito kung mawala sa gilid. Laging may 8px
+  // na natitira sa bawat tabi.
+  const clamp = (left, top, w, h) => {
+    const m = 8;
+    const maxLeft = Math.max(m, window.innerWidth - w - m);
+    const maxTop = Math.max(m, window.innerHeight - h - m);
+    return {
+      left: Math.min(Math.max(left, m), maxLeft),
+      top: Math.min(Math.max(top, m), maxTop),
+    };
+  };
+
+  // Paghila ng panel — sa itaas na bar, hawak man ay daliri o mouse.
   useEffect(() => {
     const move = (e) => {
-      if (!dragRef.current) return;
+      const d = dragRef.current;
+      if (!d) return;
+      // Habang hinihila, atin ang galaw — hindi ito pag-scroll ng pahina.
+      if (e.cancelable) e.preventDefault();
       const p = e.touches ? e.touches[0] : e;
-      setPos({ left: p.clientX - dragRef.current.dx, top: p.clientY - dragRef.current.dy });
+      setPos(clamp(p.clientX - d.dx, p.clientY - d.dy, d.w, d.h));
     };
-    const end = () => { dragRef.current = null; };
+    const end = () => {
+      if (!dragRef.current) return;
+      dragRef.current = null;
+      setDragging(false);
+    };
     window.addEventListener('mousemove', move);
     window.addEventListener('mouseup', end);
     window.addEventListener('touchmove', move, { passive: false });
     window.addEventListener('touchend', end);
+    window.addEventListener('touchcancel', end);
     return () => {
       window.removeEventListener('mousemove', move);
       window.removeEventListener('mouseup', end);
       window.removeEventListener('touchmove', move);
       window.removeEventListener('touchend', end);
+      window.removeEventListener('touchcancel', end);
     };
   }, []);
 
+  // Kapag nagbago ang laki ng bintana, baka nasa labas na ang dating
+  // pwesto. Ibinabalik ito sa loob sa halip na mawala nang tuluyan.
+  useEffect(() => {
+    const onResize = () => {
+      const el = panelRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      // Walang ginagawa kapag nasa default pa ang keyboard (pos === null) —
+      // ang CSS na ang bahala roon.
+      setPos((p) => (p ? clamp(p.left, p.top, r.width, r.height) : p));
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
   const startDrag = (e) => {
+    // Ang Hide na buton ay nasa loob din ng bar — hindi iyon hawakan.
+    if (e.target.closest('.vkb-close')) return;
     const rect = panelRef.current.getBoundingClientRect();
     const p = e.touches ? e.touches[0] : e;
-    dragRef.current = { dx: p.clientX - rect.left, dy: p.clientY - rect.top };
+    dragRef.current = {
+      dx: p.clientX - rect.left,
+      dy: p.clientY - rect.top,
+      w: rect.width,
+      h: rect.height,
+    };
+    setDragging(true);
     setPos({ left: rect.left, top: rect.top });
   };
 
@@ -132,24 +178,29 @@ export default function VirtualKeyboard({ scopeRef, onClose, lang = 'EN' }) {
   return (
     <div
       ref={panelRef}
-      className="vkb"
+      className={`vkb${dragging ? ' is-dragging' : ''}`}
       style={style}
       // Huwag nakawin ang focus mula sa field kapag pinindot ang key.
       onMouseDown={(e) => e.preventDefault()}
-      onTouchStart={(e) => { if (e.target.closest('.vkb-grip')) return; e.preventDefault(); }}
+      onTouchStart={(e) => { if (e.target.closest('.vkb-head')) return; e.preventDefault(); }}
     >
-      <div className="vkb-head">
-        <button
-          type="button"
-          className="vkb-grip"
-          onMouseDown={startDrag}
-          onTouchStart={startDrag}
-          title={lang === 'EN' ? 'Drag to move' : 'Hilahin para ilipat'}
-        >
+      {/* Buong bar sa itaas ang hawakan — kahit saan dito maaaring
+          i-swipe para ilipat ang keyboard. Ang Hide lang ang hindi
+          kasama (sinasala ito sa loob ng startDrag). */}
+      <div
+        className="vkb-head"
+        onMouseDown={startDrag}
+        onTouchStart={startDrag}
+        title={lang === 'EN' ? 'Swipe this bar to move the keyboard' : 'I-swipe ang bar na ito para ilipat ang keyboard'}
+      >
+        <span className="vkb-grip">
           ⠿ <span className="vkb-title">
             {lang === 'EN' ? 'Touchscreen Keyboard' : 'Keyboard sa Touchscreen'}
           </span>
-        </button>
+        </span>
+        <span className="vkb-hint">
+          {lang === 'EN' ? 'Swipe to move' : 'I-swipe para ilipat'}
+        </span>
         <button type="button" className="vkb-close" onClick={onClose}>
           {lang === 'EN' ? 'Hide' : 'Itago'} ✕
         </button>
