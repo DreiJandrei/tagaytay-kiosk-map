@@ -1716,30 +1716,6 @@ img { max-width: 100%; }
   flex-direction: column;
 }
 
-/* --- Pamagat ng seksyon --- */
-.sidebar-heading {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  margin: 0 0 14px 0;
-  padding-left: 14px !important;
-  font-size: .95rem !important;
-  font-weight: 900;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
-  color: var(--ui-ink-2) !important;
-}
-.sidebar-heading::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 50%;
-  transform: translateY(-50%);
-  width: 4px; height: 17px;
-  border-radius: 4px;
-  background: linear-gradient(180deg, var(--ui-accent), var(--ui-accent-2));
-}
-
 /* --- Panel ng resulta (paghahanap at madalas hanapin) --- */
 .sb-panel {
   border-radius: var(--ui-r-lg);
@@ -1805,62 +1781,7 @@ img { max-width: 100%; }
 }
 
 
-/* ═══════════ 4. IDLE: SERVICE GUIDE, BANNER, LISTAHAN ═══════════ */
-.sb-section { margin-bottom: 26px; flex-shrink: 0; }
-
-.service-grid {
-  display: grid !important;
-  grid-template-columns: repeat(3, 1fr) !important;
-  gap: 10px !important;
-}
-.service-tile {
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px !important;
-  padding: 16px 8px 14px !important;
-  border-radius: 18px !important;
-  border: 1px solid var(--ui-line) !important;
-  background: var(--ui-panel) !important;
-  box-shadow: var(--ui-sh-1) !important;
-  cursor: pointer;
-  transition: transform .2s var(--ui-ease), box-shadow .2s ease, border-color .2s ease !important;
-}
-.service-tile::before {
-  content: '';
-  position: absolute;
-  left: 0; right: 0; top: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--ui-accent), var(--ui-accent-2));
-}
-.service-tile:hover {
-  transform: translateY(-4px);
-  border-color: var(--ui-accent) !important;
-  box-shadow: var(--ui-sh-2) !important;
-}
-.service-tile:active { transform: translateY(-1px) scale(.98); }
-
-.service-icon {
-  width: 52px; height: 52px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.65rem !important;
-  border-radius: 50%;
-  background: var(--ui-accent-sf);
-  border: 1px solid var(--ui-line);
-  transition: transform .25s cubic-bezier(.34,1.56,.64,1);
-}
-.service-tile:hover .service-icon { transform: scale(1.1) rotate(-6deg); }
-
-.service-name {
-  font-size: .84rem !important;
-  font-weight: 800;
-  line-height: 1.25;
-  letter-spacing: .1px;
-  text-align: center;
-  color: var(--ui-ink) !important;
-}
+/* ═══════════ 4. IDLE: BANNER AT LISTAHAN ═══════════ */
 
 /* --- Banner ng palapag --- */
 .floor-banner {
@@ -3233,6 +3154,23 @@ button:active { transform: scale(.97); }
   overflow-y: auto;
 }
 .adm-modal-area { min-height: 180px; }
+
+/* Bilang ng titik sa ilalim mismo ng kahon ng pagsusulat. Nakadikit ito sa
+   textarea (negatibong margin laban sa gap ng .adm-modal-body) para malinaw
+   na ang kahon sa itaas ang binibilang, hindi ang paalala sa ibaba. */
+.adm-count {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: -8px 0 0 0;
+  color: var(--ui-ink-3);
+  font-size: .88rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.adm-count.is-near { color: var(--ui-gold); }
+.adm-count.is-full { color: var(--ui-danger); }
 /* Nakadikit ang mga pagpipilian sa ibaba — hindi ito nawawala kahit
    mahaba ang form at nag-scroll na ang laman. */
 .adm-modal-foot {

@@ -16,43 +16,6 @@ import { coordinateMapping, mergeOfficeData } from './lib/coordinateMapping';
 import { defaultOfficeData } from './lib/defaultOfficeData';
 import { isRecoveryLink } from './lib/recoveryFlag';
 
-const serviceGuidesConfig = [
-  {
-    id: 'business-permit',
-    icon: '💼',
-    titleEn: 'Business Permit',
-    titleTl: 'Business Permit',
-    isExternal: true, 
-    locationTextEn: 'Please proceed to the BPLO at the Annex Building (Old City Hall). This is located outside the main building.',
-    locationTextTl: 'Mangyaring pumunta sa BPLO sa Annex Building (Lumang City Hall). Ito ay nasa labas ng gusaling ito.',
-    requirements: []
-  },
-  {
-    id: 'building-permit',
-    icon: '🏗️',
-    titleEn: 'Building Permit',
-    titleTl: 'Building Permit',
-    isExternal: false, 
-    floor: 3, 
-    dbKey: 'building-official', 
-    locationTextEn: 'Please proceed to the Office of the Building Official (OBO), 3rd Floor.',
-    locationTextTl: 'Mangyaring pumunta sa Office of the Building Official (OBO), Ika-3 Palapag.',
-    requirements: []
-  },
-  {
-    id: 'tax-dec',
-    icon: '📄',
-    titleEn: 'Tax Declaration',
-    titleTl: 'Tax Declaration',
-    isExternal: false, 
-    floor: 3, 
-    dbKey: 'treasure-office', 
-    locationTextEn: 'Please proceed to the Assessor / City Treasurer Office, 3rd Floor.',
-    locationTextTl: 'Mangyaring pumunta sa Assessor / City Treasurer Office, Ika-3 Palapag.',
-    requirements: []
-  }
-];
-
 // Isang pinagmumulan ng estado ng opisina: kulay, salin, at hugis ng pill.
 const statusPresets = {
   'In a Meeting':  { mod: 'meeting', tl: 'May Pulong' },
@@ -99,7 +62,6 @@ export default function App() {
   const [selectedOfficeKey, setSelectedOfficeKey] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showKeyboard, setShowKeyboard] = useState(false);
-  const [selectedService, setSelectedService] = useState(null);
 
   const [lang, setLang] = useState('EN');     
   const [textSize, setTextSize] = useState('normal'); 
@@ -293,7 +255,6 @@ export default function App() {
         setSelectedOfficeKey(null);
         setSearchQuery("");
         setShowKeyboard(false);
-        setSelectedService(null);
         setRouteStep('idle');
         setDestinationData(null);
         setShowAdmin(false);
@@ -772,22 +733,6 @@ export default function App() {
             {!guide && routeStep === 'idle' && !selectedOfficeKey && (
               <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
 
-                <div className="sb-section">
-                  <h3 className="sidebar-heading">
-                    📋 {lang === 'EN' ? 'Quick Service Guides' : 'Mabilisang Serbisyo'}
-                  </h3>
-                  <div className="service-grid">
-                    {serviceGuidesConfig.map((service, idx) => (
-                      <button key={idx} className="service-tile" onClick={() => setSelectedService(service)}>
-                        <span className="service-icon">{service.icon}</span>
-                        <span className="service-name">
-                          {lang === 'EN' ? service.titleEn : service.titleTl}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
                 <div className="floor-banner">
                   <div className="floor-banner-row">
                     <div>
@@ -1126,48 +1071,6 @@ export default function App() {
         )}
 
       </div>
-
-      {selectedService && (
-        <div className="k-overlay" onClick={() => setSelectedService(null)}>
-          <div className="k-modal" onClick={(e) => e.stopPropagation()}>
-
-            <div className="k-modal-head">
-              <div>
-                <span className="k-modal-icon">{selectedService.icon}</span>
-                <span className="k-modal-eyebrow">{lang === 'EN' ? 'Service guide' : 'Gabay sa serbisyo'}</span>
-                <h2 className="k-modal-title">
-                  {lang === 'EN' ? selectedService.titleEn : selectedService.titleTl}
-                </h2>
-              </div>
-              <button className="k-close" onClick={() => setSelectedService(null)}>✕</button>
-            </div>
-
-            <div className={`k-callout${selectedService.isExternal ? ' k-callout--alert' : ''}`}>
-              <span className="k-callout-glyph">{selectedService.isExternal ? '🏛️' : '📍'}</span>
-              {lang === 'EN' ? selectedService.locationTextEn : selectedService.locationTextTl}
-            </div>
-
-            <div style={{ marginTop: '22px' }}>
-              {selectedService.isExternal ? (
-                <button className="k-btn k-btn--ok" onClick={() => setSelectedService(null)}>
-                  👍 {lang === 'EN' ? 'Got it, thank you!' : 'Sige po, salamat!'}
-                </button>
-              ) : (
-                <button
-                  className="k-btn k-btn--primary"
-                  onClick={() => {
-                    handleSelectOffice(selectedService.dbKey, selectedService.floor);
-                    setSelectedService(null);
-                  }}
-                >
-                  🗺️ {lang === 'EN' ? 'Show me the way' : 'Ituro ang daan sa mapa'}
-                </button>
-              )}
-            </div>
-
-          </div>
-        </div>
-      )}
 
       {showAbout && (
         <div className="k-overlay" onClick={() => setShowAbout(false)}>

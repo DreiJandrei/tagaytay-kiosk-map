@@ -17,6 +17,13 @@ const BLANK_VIDEO = {
   orientation: 'landscape', has_sound: false,
 };
 
+// Hangganan ng haba ng dalawang teksto sa welcome screen. Hindi ito basta
+// bilang: 3 linya lang ang kasya sa announcement card at puputulin ng kiosk
+// ang sobra, at ang marquee ay kailangang mabasa habang gumagalaw. Kaya
+// dito pa lang sa admin pinipigilan — para hindi magsulat ang staff ng
+// hindi naman makikita ng bisita.
+const TEXT_LIMITS = { announcement: 300, advisory: 150 };
+
 export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang = 'EN', setLang }) {
   // Iisang switch lang ang wika ng buong kiosk — ang header toggle. Dito
   // lang ito sinasalain: `t(english, tagalog)`. Walang teksto sa panel na
@@ -328,11 +335,21 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
 
   // ── Lumulutang na editor ng teksto ────────────────────────
   const openAnnEditor = (which) => {
-    setAnnDraft(which === 'announcement' ? announcementText : advisoryText);
+    const current = which === 'announcement' ? announcementText : advisoryText;
+    // Ginugupit din ang lumang teksto na nauna pa sa hangganan — para ang
+    // nasa kahon ang mismong maisa-save, walang sorpresang nawawala.
+    setAnnDraft(current.slice(0, TEXT_LIMITS[which]));
     setAnnEditor(which);
   };
 
   const annOriginal = annEditor === 'announcement' ? announcementText : advisoryText;
+  const annLimit = TEXT_LIMITS[annEditor] || TEXT_LIMITS.announcement;
+  const annLeft = annLimit - annDraft.length;
+
+  // Ginugupit dito, hindi lang sa `maxLength` ng textarea: ang touchscreen
+  // keyboard ay direktang nagtatakda ng value, at hindi nito iginagalang
+  // ang maxLength. Isang pigil lang ang dinadaanan ng lahat ng pag-type.
+  const changeAnnDraft = (value) => setAnnDraft(value.slice(0, annLimit));
 
   const closeAnnEditor = () => {
     if (annEditor && annDraft !== annOriginal
@@ -348,9 +365,12 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     // Iisang row lang sa database ang kinalalagyan ng dalawang teksto,
     // kaya kahit isa lang ang binubuksan, kailangang dalhin pabalik ang
     // kapareha nito nang buo — kung hindi, mabubura ito.
+    // Huling pigil sa haba, sakaling may nakalusot na teksto sa textarea
+    // (hal. galing sa touchscreen keyboard na hindi dumaan sa onChange).
+    const draft = annDraft.slice(0, annLimit);
     const next = {
-      advisory: annEditor === 'advisory' ? annDraft : advisoryText,
-      announcement: annEditor === 'announcement' ? annDraft : announcementText,
+      advisory: annEditor === 'advisory' ? draft : advisoryText,
+      announcement: annEditor === 'announcement' ? draft : announcementText,
     };
 
     setIsSaving(true);
@@ -888,23 +908,36 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                 <textarea
                   className="k-textarea adm-modal-area"
                   autoFocus
+                  maxLength={annLimit}
                   value={annDraft}
-                  onChange={(e) => setAnnDraft(e.target.value)}
+                  onChange={(e) => changeAnnDraft(e.target.value)}
                   placeholder={
                     annEditor === 'announcement'
                       ? t('e.g. No classes tomorrow due to the typhoon…', 'hal. Walang pasok bukas dahil sa bagyo…')
                       : t('e.g. Please secure your belongings…', 'hal. Pakiingatan po ang inyong mga gamit…')
                   }
                 />
+
+                {/* Bilang ng natitirang titik. Nagbabago ang kulay bago pa
+                    maubos para may abiso muna bago tumigil ang pag-type. */}
+                <p className={`adm-count${annLeft === 0 ? ' is-full' : annLeft <= 25 ? ' is-near' : ''}`}>
+                  <span>{annDraft.length} / {annLimit} {t('characters', 'na titik')}</span>
+                  <span>
+                    {annLeft === 0
+                      ? t('Limit reached.', 'Umabot na sa hangganan.')
+                      : t(`${annLeft} left`, `${annLeft} pa ang natitira`)}
+                  </span>
+                </p>
+
                 <p className="adm-hint">
                   {annEditor === 'announcement'
                     ? t(
-                        'Only 3 lines fit on the kiosk — anything past that is cut off.',
-                        'Hanggang 3 linya lang ang kasya sa kiosk — puputulin ang sobra.',
+                        `Only 3 lines fit on the kiosk — anything past that is cut off, so the limit here is ${annLimit} characters.`,
+                        `Hanggang 3 linya lang ang kasya sa kiosk — puputulin ang sobra, kaya ${annLimit} na titik lang ang hangganan dito.`,
                       )
                     : t(
-                        'One line per message. They are strung together with “•”.',
-                        'Isang linya bawat mensahe. Pinagsasabit ang mga ito ng “•”.',
+                        `One line per message. They are strung together with “•”. Keep it short — the limit is ${annLimit} characters so it can still be read while it scrolls.`,
+                        `Isang linya bawat mensahe. Pinagsasabit ang mga ito ng “•”. Panatilihing maikli — ${annLimit} na titik lang ang hangganan para mabasa pa habang gumagalaw.`,
                       )}
                 </p>
                 <p className="adm-hint">

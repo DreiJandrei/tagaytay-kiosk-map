@@ -10,44 +10,6 @@ const frequentOfficesConfig = [
   { name: "Health Office", nameTl: "Tanggapan ng Kalusugan", floor: 2, floorLabel: "2nd Floor", floorLabelTl: "Ika-2 na Palapag", dbKey: "library" },
 ];
 
-// Service Guides Configuration
-const serviceGuidesConfig = [
-  {
-    id: 'business-permit',
-    icon: '💼',
-    titleEn: 'Apply for Business Permit',
-    titleTl: 'Kumuha ng Business Permit',
-    isExternal: true, 
-    locationTextEn: 'Please proceed to the BPLO at the Annex Building (Old City Hall). This is located outside the main building.',
-    locationTextTl: 'Mangyaring pumunta sa BPLO sa Annex Building (Lumang City Hall). Ito ay nasa labas ng gusaling ito.',
-    requirements: []
-  },
-  {
-    id: 'building-permit',
-    icon: '🏗️',
-    titleEn: 'Apply for Building Permit',
-    titleTl: 'Kumuha ng Building Permit',
-    isExternal: false, 
-    floor: 3, 
-    dbKey: 'building-official', 
-    locationTextEn: 'Please proceed to the Office of the Building Official (OBO), 3rd Floor.',
-    locationTextTl: 'Mangyaring pumunta sa Office of the Building Official (OBO), Ika-3 Palapag.',
-    requirements: []
-  },
-  {
-    id: 'tax-dec',
-    icon: '📄',
-    titleEn: 'Request Tax Declaration',
-    titleTl: 'Kumuha ng Tax Declaration',
-    isExternal: false, 
-    floor: 3, 
-    dbKey: 'treasure-office', 
-    locationTextEn: 'Please proceed to the Assessor / City Treasurer Office, 3rd Floor.',
-    locationTextTl: 'Mangyaring pumunta sa Assessor / City Treasurer Office, Ika-3 Palapag.',
-    requirements: []
-  }
-];
-
 export default function DashboardScreen({ 
   tagaytaySeal, 
   onNavigateToDirectory, 
@@ -61,7 +23,6 @@ export default function DashboardScreen({
   setTextSize
 }) {
   const [time, setTime] = useState("--:-- --");
-  const [selectedService, setSelectedService] = useState(null);
 
   const isDarkMode = theme === 'dark';
   const isLarge = textSize === 'large';
@@ -203,35 +164,6 @@ export default function DashboardScreen({
             </div>
           </div>
 
-          {/* Quick Service Guides (FAQ Routing) */}
-          <div>
-            <h3 style={{ fontSize: isLarge ? '2.2rem' : '1.8rem', color: colorPalette.primaryText, fontWeight: 900, marginBottom: '25px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-              📋 {lang === 'EN' ? 'Quick Service Guides' : 'Mga Gabay sa Transaksyon'}
-            </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '25px' }}>
-              {serviceGuidesConfig.map((service, idx) => (
-                <button 
-                  key={idx} 
-                  style={{ ...replicatedButtonBaseStyle, justifyContent: 'space-between', padding: '25px 30px', borderRadius: '20px', boxShadow: isDarkMode ? '0 4px 12px rgba(0,0,0,0.2)' : '0 4px 12px rgba(79, 70, 229, 0.05)', background: isDarkMode ? '#1E293B' : '#FFFFFF', color: colorPalette.primaryText, border: colorPalette.cardBorder }}
-                  onClick={() => setSelectedService(service)}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '18px', textAlign: 'left' }}>
-                    <div style={{ fontSize: '2rem' }}>{service.icon}</div>
-                    <div>
-                      <h4 style={{ margin: 0, fontSize: isLarge ? '1.35rem' : '1.2rem', fontWeight: 800 }}>
-                        {lang === 'EN' ? service.titleEn : service.titleTl}
-                      </h4>
-                      <span style={{ display: 'inline-block', marginTop: '6px', color: '#4F46E5', fontSize: isLarge ? '1rem' : '0.9rem', fontWeight: 800 }}>
-                        {lang === 'EN' ? 'View Location' : 'Tingnan ang Lokasyon'}
-                      </span>
-                    </div>
-                  </div>
-                  <span style={{ fontSize: '2.2rem', fontWeight: 700, opacity: 0.8, color: '#475569' }}>›</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Frequently Visited Offices Grid */}
           <div>
             <h3 style={{ fontSize: isLarge ? '2.2rem' : '1.8rem', color: colorPalette.primaryText, fontWeight: 900, marginBottom: '25px', display: 'flex', alignItems: 'center', gap: '12px', transition: 'all 0.2s' }}>
@@ -276,64 +208,6 @@ export default function DashboardScreen({
 
         </div>
       </div>
-
-      {/* POPUP MODAL FOR LOCATION & ROUTING */}
-      {selectedService && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(8px)',
-          display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 99999
-        }}>
-          <div style={{
-            backgroundColor: colorPalette.cardBg, borderRadius: '24px', padding: '40px',
-            maxWidth: '650px', width: '90%', border: colorPalette.cardBorder,
-            boxShadow: '0 25px 50px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', gap: '25px'
-          }}>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <span style={{ fontSize: '3rem', display: 'block', marginBottom: '10px' }}>{selectedService.icon}</span>
-                <h2 style={{ margin: 0, color: colorPalette.primaryText, fontSize: '2.2rem', fontWeight: 900 }}>
-                  {lang === 'EN' ? selectedService.titleEn : selectedService.titleTl}
-                </h2>
-              </div>
-              <button 
-                onClick={() => setSelectedService(null)} 
-                style={{ background: '#E2E8F0', border: 'none', color: '#0F172A', width: '45px', height: '45px', borderRadius: '50%', fontSize: '1.2rem', fontWeight: 900, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* LOCATION BOX ONLY */}
-            <div style={{ background: selectedService.isExternal ? '#FEF2F2' : '#EEF2FF', border: `2px solid ${selectedService.isExternal ? '#FECDD3' : '#C7D2FE'}`, padding: '20px', borderRadius: '16px', color: selectedService.isExternal ? '#9F1239' : '#3730A3', fontSize: '1.2rem', fontWeight: 800, display: 'flex', gap: '15px', alignItems: 'center', lineHeight: '1.5' }}>
-              <span style={{ fontSize: '2rem' }}>{selectedService.isExternal ? '🏛️' : '📍'}</span>
-              {lang === 'EN' ? selectedService.locationTextEn : selectedService.locationTextTl}
-            </div>
-
-            {/* SMART BUTTON LOGIC */}
-            {selectedService.isExternal ? (
-              <button 
-                onClick={() => setSelectedService(null)}
-                style={{ width: '100%', padding: '20px', borderRadius: '16px', background: '#10B981', color: 'white', border: 'none', fontSize: '1.3rem', fontWeight: 900, cursor: 'pointer', marginTop: '10px', boxShadow: '0 10px 20px rgba(16, 185, 129, 0.3)' }}
-              >
-                👍 {lang === 'EN' ? 'Got it, thank you!' : 'Sige po, salamat!'}
-              </button>
-            ) : (
-              <button 
-                onClick={() => {
-                  onQuickRoute(selectedService.floor, selectedService.dbKey);
-                  setSelectedService(null);
-                }}
-                style={{ width: '100%', padding: '20px', borderRadius: '16px', background: '#4F46E5', color: 'white', border: 'none', fontSize: '1.3rem', fontWeight: 900, cursor: 'pointer', marginTop: '10px', boxShadow: '0 10px 20px rgba(79, 70, 229, 0.3)' }}
-              >
-                🗺️ {lang === 'EN' ? 'Show me the way' : 'Ituro ang daan sa mapa'}
-              </button>
-            )}
-
-          </div>
-        </div>
-      )}
 
     </div>
   );
