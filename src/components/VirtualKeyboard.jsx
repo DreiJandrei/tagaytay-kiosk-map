@@ -43,7 +43,7 @@ const isTypable = (el) =>
   ((el.tagName === 'INPUT' && !['checkbox', 'radio', 'submit', 'button', 'file'].includes(el.type)) ||
     el.tagName === 'TEXTAREA');
 
-export default function VirtualKeyboard({ scopeRef, onClose }) {
+export default function VirtualKeyboard({ scopeRef, onClose, lang = 'EN' }) {
   const [shift, setShift] = useState(false);
   const [symbols, setSymbols] = useState(false);
   const [pos, setPos] = useState(null);          // null = default (ilalim, gitna)
@@ -144,11 +144,15 @@ export default function VirtualKeyboard({ scopeRef, onClose }) {
           className="vkb-grip"
           onMouseDown={startDrag}
           onTouchStart={startDrag}
-          title="Hilahin para ilipat"
+          title={lang === 'EN' ? 'Drag to move' : 'Hilahin para ilipat'}
         >
-          ⠿ <span className="vkb-title">Touchscreen Keyboard</span>
+          ⠿ <span className="vkb-title">
+            {lang === 'EN' ? 'Touchscreen Keyboard' : 'Keyboard sa Touchscreen'}
+          </span>
         </button>
-        <button type="button" className="vkb-close" onClick={onClose}>Hide ✕</button>
+        <button type="button" className="vkb-close" onClick={onClose}>
+          {lang === 'EN' ? 'Hide' : 'Itago'} ✕
+        </button>
       </div>
 
       {rows.map((row, i) => (

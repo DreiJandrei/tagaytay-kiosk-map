@@ -5,11 +5,19 @@
 //   youtube  — video o Shorts sa YouTube
 //   file     — direktang .mp4/.webm (hal. na-upload sa Supabase Storage)
 
-export const VIDEO_TYPES = [
-  { value: 'facebook', label: '📘 Facebook post / video' },
-  { value: 'youtube', label: '▶️ YouTube video' },
-  { value: 'file', label: '🎞️ Direct video file (.mp4)' },
-];
+// Ang mga label ay sumusunod sa napiling wika ng kiosk ('EN' o 'TL') —
+// ang `value` ay hindi nagbabago, iyon ang naiimbak sa database.
+export function getVideoTypes(lang = 'EN') {
+  const EN = lang === 'EN';
+  return [
+    { value: 'facebook', label: '📘 Facebook post / video' },
+    { value: 'youtube', label: '▶️ YouTube video' },
+    {
+      value: 'file',
+      label: EN ? '🎞️ Direct video file (.mp4)' : '🎞️ Direktang video file (.mp4)',
+    },
+  ];
+}
 
 const FILE_EXT = /\.(mp4|webm|ogg|ogv|mov|m4v)(\?|#|$)/i;
 
@@ -90,10 +98,19 @@ export function readVideoMeta(file) {
   });
 }
 
-export const ORIENTATIONS = [
-  { value: 'landscape', label: '▭ Landscape (16:9) — karaniwang video' },
-  { value: 'portrait', label: '▯ Portrait (9:16) — Reels / patayo' },
-];
+export function getOrientations(lang = 'EN') {
+  const EN = lang === 'EN';
+  return [
+    {
+      value: 'landscape',
+      label: EN ? '▭ Landscape (16:9) — ordinary video' : '▭ Landscape (16:9) — karaniwang video',
+    },
+    {
+      value: 'portrait',
+      label: EN ? '▯ Portrait (9:16) — Reels / upright' : '▯ Portrait (9:16) — Reels / patayo',
+    },
+  ];
+}
 
 // Sinusuri ang ORIHINAL na na-paste, bago pa ito i-normalize — nawawala
 // kasi ang senyas na "reel" kapag naging /watch/?v= na ito.
@@ -172,35 +189,60 @@ export function buildEmbedUrl(video, { loop = false, sound = false } = {}) {
 
 // Panimulang tsek bago i-save, para maaga pang masabihan ang staff na
 // mali ang na-paste na link.
-export function validateVideoUrl(url, type) {
+export function validateVideoUrl(url, type, lang = 'EN') {
+  const EN = lang === 'EN';
   const link = (url || '').trim();
   if (!link) {
-    return 'Wala pang video.\n\nDalawang paraan:\n'
-      + '• I-paste ang link ng public na FB post o YouTube video sa itaas, O\n'
-      + '• Pumili ng video file sa “Mag-upload ng video file” at hintaying matapos';
+    return EN
+      ? 'No video yet.\n\nTwo ways to add one:\n'
+        + '• Paste the link of a public FB post or YouTube video above, OR\n'
+        + '• Pick a video file under “Upload a video file” and wait for it to finish'
+      : 'Wala pang video.\n\nDalawang paraan:\n'
+        + '• I-paste ang link ng public na FB post o YouTube video sa itaas, O\n'
+        + '• Pumili ng video file sa “Mag-upload ng video file” at hintaying matapos';
   }
 
   // Ang "Copy link" ng FB app ay nagbibigay ng /share/ na stub. Mukhang
   // tama ito at bumubukas sa browser, pero "Video Unavailable" sa kiosk.
   if (isFacebookShareLink(link)) {
-    return 'Share link ito (facebook.com/share/…) — hindi ito kayang buksan ng kiosk.\n\n'
-      + 'Ganito ang tamang kunin:\n'
-      + '1. Buksan ang post sa DESKTOP browser (hindi sa FB app)\n'
-      + '2. I-click ang petsa/oras ng post, o ang video mismo\n'
-      + '3. Kopyahin ang link sa address bar\n\n'
-      + 'Dapat ganito ang hitsura:\n'
-      + 'facebook.com/TagaytayCity/videos/1234567890\n\n'
-      + 'Mas sigurado: 3 dots (…) sa post → Embed → kopyahin ang buong '
-      + '<iframe> code at i-paste dito nang buo.';
+    return EN
+      ? 'That is a share link (facebook.com/share/…) — the kiosk cannot open it.\n\n'
+        + 'Here is how to get the right one:\n'
+        + '1. Open the post in a DESKTOP browser (not the FB app)\n'
+        + '2. Click the date/time of the post, or the video itself\n'
+        + '3. Copy the link from the address bar\n\n'
+        + 'It should look like this:\n'
+        + 'facebook.com/TagaytayCity/videos/1234567890\n\n'
+        + 'Even safer: 3 dots (…) on the post → Embed → copy the whole '
+        + '<iframe> code and paste all of it here.'
+      : 'Share link ito (facebook.com/share/…) — hindi ito kayang buksan ng kiosk.\n\n'
+        + 'Ganito ang tamang kunin:\n'
+        + '1. Buksan ang post sa DESKTOP browser (hindi sa FB app)\n'
+        + '2. I-click ang petsa/oras ng post, o ang video mismo\n'
+        + '3. Kopyahin ang link sa address bar\n\n'
+        + 'Dapat ganito ang hitsura:\n'
+        + 'facebook.com/TagaytayCity/videos/1234567890\n\n'
+        + 'Mas sigurado: 3 dots (…) sa post → Embed → kopyahin ang buong '
+        + '<iframe> code at i-paste dito nang buo.';
   }
 
-  if (!/^https?:\/\//i.test(link)) return 'Dapat magsimula ang link sa http:// o https://';
-  if (type === 'youtube' && !getYouTubeId(link)) return 'Hindi mabasa ang YouTube video ID sa link na ito.';
+  if (!/^https?:\/\//i.test(link)) {
+    return EN
+      ? 'The link must start with http:// or https://'
+      : 'Dapat magsimula ang link sa http:// o https://';
+  }
+  if (type === 'youtube' && !getYouTubeId(link)) {
+    return EN
+      ? 'The YouTube video ID cannot be read from this link.'
+      : 'Hindi mabasa ang YouTube video ID sa link na ito.';
+  }
   if (type === 'facebook' && !/(facebook\.com|fb\.watch|fb\.com)/i.test(link)) {
-    return 'Hindi ito mukhang Facebook link.';
+    return EN ? 'This does not look like a Facebook link.' : 'Hindi ito mukhang Facebook link.';
   }
   if (type === 'file' && !FILE_EXT.test(link)) {
-    return 'Dapat direktang video file ang link (nagtatapos sa .mp4, .webm, atbp.).';
+    return EN
+      ? 'The link must be a direct video file (ending in .mp4, .webm, etc.).'
+      : 'Dapat direktang video file ang link (nagtatapos sa .mp4, .webm, atbp.).';
   }
   return '';
 }

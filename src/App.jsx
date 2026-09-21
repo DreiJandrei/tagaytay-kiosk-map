@@ -74,10 +74,10 @@ function StatusPill({ status, lang }) {
 // Keyboard para sa mga auth modal. Hiwalay na component para ang pag-unmount
 // nito (pagsara ng modal) ang mag-reset ng "hidden" — kaya hindi na kailangan
 // ng useEffect na nagse-setState, na nagdudulot ng cascading renders.
-function AuthKeyboard({ scopeRef }) {
+function AuthKeyboard({ scopeRef, lang }) {
   const [hidden, setHidden] = useState(false);
   if (hidden) return null;
-  return <VirtualKeyboard scopeRef={scopeRef} onClose={() => setHidden(true)} />;
+  return <VirtualKeyboard scopeRef={scopeRef} onClose={() => setHidden(true)} lang={lang} />;
 }
 
 export default function App() {
@@ -342,7 +342,9 @@ export default function App() {
       setShowPassword(false);
       setShowAdmin(true); 
     } catch (error) {
-      alert('❌ Access Denied: Incorrect Password or Network Error.');
+      alert(lang === 'EN'
+        ? '❌ Access Denied: Incorrect Password or Network Error.'
+        : '❌ Hindi Makapasok: Maling password o may problema sa koneksyon.');
       setAdminPasswordInput('');
     } finally {
       setIsLoggingIn(false);
@@ -352,7 +354,9 @@ export default function App() {
   const handleForgotPassword = async () => {
     try {
       await resetPasswordEmail('tagaytaykiosk@gmail.com');
-      alert('✅ Recovery link sent to tagaytaykiosk@gmail.com!\n\nPlease check the Gmail inbox to set a new password.');
+      alert(lang === 'EN'
+        ? '✅ Recovery link sent to tagaytaykiosk@gmail.com!\n\nPlease check the Gmail inbox to set a new password.'
+        : '✅ Naipadala ang recovery link sa tagaytaykiosk@gmail.com!\n\nTingnan ang Gmail inbox para maglagay ng bagong password.');
     } catch (error) {
       // Dati ay laging "internet connection" ang sinasabi nito kahit ano pa
       // ang tunay na dahilan — kaya mahirap i-debug. Ipakita ang totoo.
@@ -360,19 +364,26 @@ export default function App() {
       const isRateLimited = code === 'over_email_send_rate_limit' || error?.status === 429;
 
       if (isRateLimited) {
-        alert(
-          '⏳ Too many reset requests.\n\n' +
-          'May limitasyon ang Supabase sa dami ng email na maipapadala kada oras, ' +
-          'at naabot na ito. Maghintay ng mga isang oras bago subukan ulit.\n\n' +
-          '(Supabase: email rate limit exceeded)'
+        alert(lang === 'EN'
+          ? '⏳ Too many reset requests.\n\n' +
+            'Supabase limits how many emails can be sent per hour, and that limit ' +
+            'has been reached. Wait about an hour before trying again.\n\n' +
+            '(Supabase: email rate limit exceeded)'
+          : '⏳ Sobrang dami nang reset request.\n\n' +
+            'May limitasyon ang Supabase sa dami ng email na maipapadala kada oras, ' +
+            'at naabot na ito. Maghintay ng mga isang oras bago subukan ulit.\n\n' +
+            '(Supabase: email rate limit exceeded)'
         );
         return;
       }
 
-      alert(
-        '❌ Failed to send reset email.\n\n' +
-        `Dahilan: ${error?.message || 'Hindi matukoy'}` +
-        (error?.status ? ` (HTTP ${error.status})` : '')
+      alert(lang === 'EN'
+        ? '❌ Failed to send reset email.\n\n' +
+          `Reason: ${error?.message || 'Unknown'}` +
+          (error?.status ? ` (HTTP ${error.status})` : '')
+        : '❌ Hindi naipadala ang reset email.\n\n' +
+          `Dahilan: ${error?.message || 'Hindi matukoy'}` +
+          (error?.status ? ` (HTTP ${error.status})` : '')
       );
     }
   };
@@ -846,7 +857,7 @@ export default function App() {
                   <div className="qr-frame">
                     <QRCodeSVG value={`${window.location.origin}/?route=${destinationData.key}&transport=${transportMethod}`} size={130} bgColor={"#ffffff"} fgColor={"#0F172A"} />
                   </div>
-                  <span className="qr-note">Magpapatuloy ang direksyon sa iyong phone.</span>
+                  <span className="qr-note">{lang === 'EN' ? 'The directions continue on your phone.' : 'Magpapatuloy ang direksyon sa iyong phone.'}</span>
                 </div>
               </div>
             )}
@@ -969,7 +980,7 @@ export default function App() {
                   <div className="qr-frame">
                     <QRCodeSVG value={`${window.location.origin}/?route=${selectedOfficeKey}&transport=${transportMethod}`} size={130} bgColor={"#ffffff"} fgColor={"#0F172A"} />
                   </div>
-                  <span className="qr-note">Magpapatuloy ang direksyon sa iyong phone.</span>
+                  <span className="qr-note">{lang === 'EN' ? 'The directions continue on your phone.' : 'Magpapatuloy ang direksyon sa iyong phone.'}</span>
                 </div>
               </div>
             )}
@@ -1207,8 +1218,14 @@ export default function App() {
         <div className="k-overlay">
           <div className="k-modal k-modal--sm" ref={authModalRef} style={{ textAlign: 'center' }}>
             <span className="k-modal-icon" style={{ margin: '0 auto 16px' }}>🔑</span>
-            <h2 className="k-modal-title" style={{ marginBottom: '10px' }}>Set New Password</h2>
-            <p className="k-modal-text k-modal-text--center">Enter your new master password below.</p>
+            <h2 className="k-modal-title" style={{ marginBottom: '10px' }}>
+              {lang === 'EN' ? 'Set New Password' : 'Maglagay ng Bagong Password'}
+            </h2>
+            <p className="k-modal-text k-modal-text--center">
+              {lang === 'EN'
+                ? 'Enter your new master password below.'
+                : 'Ilagay sa ibaba ang bagong master password.'}
+            </p>
 
             <form onSubmit={async (e) => {
               e.preventDefault();
@@ -1216,18 +1233,24 @@ export default function App() {
               const hasLower = /[a-z]/.test(recoveryPassword);
               const hasNumber = /\d/.test(recoveryPassword);
               if (recoveryPassword.length < 6 || !hasUpper || !hasLower || !hasNumber) {
-                return alert('❌ Weak Password:\n\nPassword must be at least 6 characters long and include:\n- At least 1 Uppercase letter\n- At least 1 Lowercase letter\n- At least 1 Number');
+                return alert(lang === 'EN'
+                  ? '❌ Weak Password:\n\nPassword must be at least 6 characters long and include:\n- At least 1 Uppercase letter\n- At least 1 Lowercase letter\n- At least 1 Number'
+                  : '❌ Mahinang Password:\n\nKailangang hindi bababa sa 6 na karakter ang password at may kasamang:\n- Kahit 1 malaking letra\n- Kahit 1 maliit na letra\n- Kahit 1 numero');
               }
               try {
                 setIsLoggingIn(true);
                 await changeAdminPassword(recoveryPassword);
-                alert('✅ Password successfully changed! You can now login.');
+                alert(lang === 'EN'
+                  ? '✅ Password successfully changed! You can now login.'
+                  : '✅ Matagumpay na napalitan ang password! Maaari na kayong mag-login.');
                 setShowRecoveryModal(false);
                 setRecoveryPassword('');
                 await logoutAdmin(); 
                 setShowAdminLogin(true); 
               } catch (err) {
-                alert('❌ Failed to update password. Link might be expired.');
+                alert(lang === 'EN'
+                  ? '❌ Failed to update password. Link might be expired.'
+                  : '❌ Hindi na-update ang password. Baka expired na ang link.');
               } finally {
                 setIsLoggingIn(false);
               }
@@ -1239,7 +1262,9 @@ export default function App() {
                   className="k-input"
                   value={recoveryPassword}
                   onChange={(e) => setRecoveryPassword(e.target.value)}
-                  placeholder="Min 6 chars, 1 uppercase, 1 number"
+                  placeholder={lang === 'EN'
+                    ? 'Min 6 chars, 1 uppercase, 1 number'
+                    : 'Hindi bababa sa 6 na karakter, 1 malaking letra, 1 numero'}
                   autoFocus
                   required
                 />
@@ -1249,7 +1274,9 @@ export default function App() {
               </div>
 
               <button type="submit" className="k-btn k-btn--ok" disabled={isLoggingIn}>
-                {isLoggingIn ? 'Saving…' : '💾 Save New Password'}
+                {lang === 'EN'
+                  ? (isLoggingIn ? 'Saving…' : '💾 Save New Password')
+                  : (isLoggingIn ? 'Sine-save…' : '💾 I-save ang Bagong Password')}
               </button>
 
             </form>
@@ -1261,8 +1288,14 @@ export default function App() {
         <div className="k-overlay">
           <div className="k-modal k-modal--sm" ref={authModalRef} style={{ textAlign: 'center' }}>
             <span className="k-modal-icon" style={{ margin: '0 auto 16px' }}>🔒</span>
-            <h2 className="k-modal-title" style={{ marginBottom: '10px' }}>Admin Access</h2>
-            <p className="k-modal-text k-modal-text--center">Enter the password for tagaytaykiosk@gmail.com</p>
+            <h2 className="k-modal-title" style={{ marginBottom: '10px' }}>
+              {lang === 'EN' ? 'Admin Access' : 'Pagpasok ng Admin'}
+            </h2>
+            <p className="k-modal-text k-modal-text--center">
+              {lang === 'EN'
+                ? 'Enter the password for tagaytaykiosk@gmail.com'
+                : 'Ilagay ang password para sa tagaytaykiosk@gmail.com'}
+            </p>
 
             <form onSubmit={handleAdminLogin}>
 
@@ -1272,14 +1305,16 @@ export default function App() {
                   className="k-input"
                   value={adminPasswordInput}
                   onChange={(e) => setAdminPasswordInput(e.target.value)}
-                  placeholder="Enter password…"
+                  placeholder={lang === 'EN' ? 'Enter password…' : 'Ilagay ang password…'}
                   autoFocus
                 />
                 <button
                   type="button"
                   className="k-eye"
                   onClick={() => setShowPassword(!showPassword)}
-                  title={showPassword ? "Hide password" : "Show password"}
+                  title={lang === 'EN'
+                    ? (showPassword ? 'Hide password' : 'Show password')
+                    : (showPassword ? 'Itago ang password' : 'Ipakita ang password')}
                 >
                   {showPassword ? '🙈' : '👁️'}
                 </button>
@@ -1291,15 +1326,19 @@ export default function App() {
                   className="k-btn k-btn--ghost"
                   onClick={() => { setShowAdminLogin(false); setAdminPasswordInput(''); setShowPassword(false); }}
                 >
-                  Cancel
+                  {lang === 'EN' ? 'Cancel' : 'Kanselahin'}
                 </button>
                 <button type="submit" className="k-btn k-btn--primary" disabled={isLoggingIn}>
-                  {isLoggingIn ? 'Checking…' : 'Login'}
+                  {lang === 'EN'
+                    ? (isLoggingIn ? 'Checking…' : 'Login')
+                    : (isLoggingIn ? 'Sinusuri…' : 'Mag-login')}
                 </button>
               </div>
 
               <button type="button" className="k-btn k-btn--link" onClick={handleForgotPassword}>
-                Forgot password? Send reset link
+                {lang === 'EN'
+                  ? 'Forgot password? Send reset link'
+                  : 'Nakalimutan ang password? Magpadala ng reset link'}
               </button>
 
             </form>
@@ -1307,13 +1346,21 @@ export default function App() {
         </div>
       )}
 
-      {showAdmin && <AdminPanel officeDatabase={liveOfficeDatabase} onClose={() => setShowAdmin(false)} onDataUpdate={() => { fetchKioskData(); }} />}
+      {showAdmin && (
+        <AdminPanel
+          officeDatabase={liveOfficeDatabase}
+          onClose={() => setShowAdmin(false)}
+          onDataUpdate={() => { fetchKioskData(); }}
+          lang={lang}
+          setLang={setLang}
+        />
+      )}
 
       {/* Nasa TOP LEVEL, hindi sa loob ng .k-modal. Ang .vkb ay position:fixed —
           kung may ninuno itong may transform/filter, ang ninuno ang magiging
           containing block at malilihis (o maiipit sa overflow) ang keyboard.
           Dito, ang viewport lagi ang sukatan. */}
-      {(showAdminLogin || showRecoveryModal) && <AuthKeyboard scopeRef={authModalRef} />}
+      {(showAdminLogin || showRecoveryModal) && <AuthKeyboard scopeRef={authModalRef} lang={lang} />}
     </div>
   );
 }

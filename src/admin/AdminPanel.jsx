@@ -6,7 +6,7 @@ import {
   uploadKioskVideoFile, deleteKioskVideoFile, isUploadedFile,
 } from '../lib/api';
 import {
-  VIDEO_TYPES, ORIENTATIONS, detectVideoType, validateVideoUrl,
+  getVideoTypes, getOrientations, detectVideoType, validateVideoUrl,
   normalizeFacebookUrl, looksLikeReel, readVideoMeta,
   MAX_VIDEO_BYTES, formatBytes,
 } from '../lib/videoUtils';
@@ -17,7 +17,13 @@ const BLANK_VIDEO = {
   orientation: 'landscape', has_sound: false,
 };
 
-export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
+export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang = 'EN', setLang }) {
+  // Iisang switch lang ang wika ng buong kiosk — ang header toggle. Dito
+  // lang ito sinasalain: `t(english, tagalog)`. Walang teksto sa panel na
+  // nakapako sa isang wika, kaya hindi na nahahaluan ang napiling wika.
+  const EN = lang === 'EN';
+  const t = (en, tl) => (EN ? en : tl);
+
   const [activeTab, setActiveTab] = useState('announcements');
 
   // Kiosk touchscreen keyboard — walang pisikal na keyboard sa terminal.
@@ -39,7 +45,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
     root.addEventListener('focusin', open);
     return () => root.removeEventListener('focusin', open);
   }, []);
-  
+
   const [advisoryText, setAdvisoryText] = useState('');
   const [announcementText, setAnnouncementText] = useState('');
 
@@ -70,10 +76,10 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
   const [formTitle, setFormTitle] = useState('');
   const [formHours, setFormHours] = useState('');
   const [formHead, setFormHead] = useState('');
-  const [formDescription, setFormDescription] = useState(''); 
+  const [formDescription, setFormDescription] = useState('');
   const [formRequirements, setFormRequirements] = useState('');
   const [formCssClass, setFormCssClass] = useState('');
-  const [formStatus, setFormStatus] = useState('Available'); 
+  const [formStatus, setFormStatus] = useState('Available');
 
   useEffect(() => {
     const fetchAdminData = async () => {
@@ -83,7 +89,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
         setAdvisoryText(parsed.advisory || '');
         setAnnouncementText(parsed.announcement || '');
       } catch (e) {
-        setAdvisoryText(text); 
+        setAdvisoryText(text);
       }
     };
     fetchAdminData();
@@ -114,7 +120,10 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
   // itatapon. Kapag walang nagalaw, tahimik itong sumasara.
   const closeVideoEditor = () => {
     const dirty = videoForm && JSON.stringify(videoForm) !== videoSnapshot;
-    if (dirty && !window.confirm('May hindi pa nase-save na pagbabago sa video.\n\nIsara pa rin at itapon ito?')) return;
+    if (dirty && !window.confirm(t(
+      'This video has unsaved changes.\n\nClose anyway and discard them?',
+      'May hindi pa nase-save na pagbabago sa video.\n\nIsara pa rin at itapon ito?',
+    ))) return;
     setVideoForm(null);
   };
 
@@ -140,11 +149,14 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
     if (!file) return;
 
     if (file.size > MAX_VIDEO_BYTES) {
-      return alert(
+      return alert(t(
+        `❌ That file is too large (${formatBytes(file.size)}).\n\n`
+        + `The limit is ${formatBytes(MAX_VIDEO_BYTES)}. Compress the video first, `
+        + `or trim it to a shorter clip.`,
         `❌ Masyadong malaki ang file (${formatBytes(file.size)}).\n\n`
         + `Ang hangganan ay ${formatBytes(MAX_VIDEO_BYTES)}. I-compress muna ang video, `
-        + `o gupitin ang mas maiikling bahagi.`
-      );
+        + `o gupitin ang mas maiikling bahagi.`,
+      ));
     }
 
     setIsUploading(true);
@@ -172,15 +184,28 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
       // ang pinagkaiba ng solusyon, kaya hiwalay ang bawat paliwanag.
       let hint = '';
       if (/bucket not found/i.test(detail)) {
-        hint = '\n\n👉 WALA PANG BUCKET.\n'
-          + 'Supabase → Storage → New bucket → pangalan: kiosk-videos → i-ON ang Public bucket.';
+        hint = t(
+          '\n\n👉 THERE IS NO BUCKET YET.\n'
+          + 'Supabase → Storage → New bucket → name: kiosk-videos → turn ON Public bucket.',
+          '\n\n👉 WALA PANG BUCKET.\n'
+          + 'Supabase → Storage → New bucket → pangalan: kiosk-videos → i-ON ang Public bucket.',
+        );
       } else if (/row-level security|policy|unauthorized|403/i.test(detail)) {
-        hint = '\n\n👉 MAY BUCKET NA, PERO BAWAL MAG-UPLOAD.\n'
+        hint = t(
+          '\n\n👉 THE BUCKET EXISTS, BUT UPLOADS ARE BLOCKED.\n'
+          + 'A permission is missing. Supabase → Storage → Policies → find '
+          + 'kiosk-videos → New policy → allow INSERT and DELETE for the '
+          + '“authenticated” role.',
+          '\n\n👉 MAY BUCKET NA, PERO BAWAL MAG-UPLOAD.\n'
           + 'Kulang ang permission. Supabase → Storage → Policies → hanapin ang '
           + 'kiosk-videos → New policy → payagan ang INSERT at DELETE para sa '
-          + '“authenticated” na role.';
+          + '“authenticated” na role.',
+        );
       }
-      alert(`❌ Hindi na-upload ang video.\n\n${detail}${hint}`);
+      alert(t(
+        `❌ The video was not uploaded.\n\n${detail}${hint}`,
+        `❌ Hindi na-upload ang video.\n\n${detail}${hint}`,
+      ));
     } finally { setIsUploading(false); }
   };
 
@@ -188,7 +213,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
     e.preventDefault();
     if (!videoForm) return;
 
-    const problem = validateVideoUrl(videoForm.source_url, videoForm.video_type);
+    const problem = validateVideoUrl(videoForm.source_url, videoForm.video_type, lang);
     if (problem) return alert(`❌ ${problem}`);
 
     setIsSaving(true);
@@ -198,15 +223,25 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
       // Pagsasara ng editor: ang bagong row sa listahan — kasama ang
       // LIVE/OFF na pill — ang nagpapatunay na natanggap ang pagbabago.
       setVideoForm(null);
-      alert('🎬 Video saved! Lalabas na ito sa welcome screen sa loob ng isang minuto.');
+      alert(t(
+        '🎬 Video saved! It will show up on the welcome screen within a minute.',
+        '🎬 Nai-save na ang video! Lalabas na ito sa welcome screen sa loob ng isang minuto.',
+      ));
     } catch (error) {
-      alert(`❌ Failed to save video.\n\n${error.message || error}`);
+      alert(t(
+        `❌ Failed to save video.\n\n${error.message || error}`,
+        `❌ Hindi na-save ang video.\n\n${error.message || error}`,
+      ));
     } finally { setIsSaving(false); }
   };
 
   const handleDeleteVideo = async () => {
     if (!videoForm?.id) return;
-    if (!window.confirm(`Burahin ang video na "${videoForm.title || videoForm.source_url}"?`)) return;
+    const name = videoForm.title || videoForm.source_url;
+    if (!window.confirm(t(
+      `Delete the video “${name}”?`,
+      `Burahin ang video na "${name}"?`,
+    ))) return;
 
     setIsSaving(true);
     try {
@@ -221,7 +256,10 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
       await loadVideos();
       setVideoForm(null);
     } catch (error) {
-      alert(`❌ Failed to delete video.\n\n${error.message || error}`);
+      alert(t(
+        `❌ Failed to delete video.\n\n${error.message || error}`,
+        `❌ Hindi nabura ang video.\n\n${error.message || error}`,
+      ));
     } finally { setIsSaving(false); }
   };
 
@@ -229,7 +267,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
     if (!officeDatabase) return [];
     if (officeDatabase[selectedFloor]) {
       return Object.entries(officeDatabase[selectedFloor])
-        .filter(([key]) => key !== 'elevator-up' && key !== 'stairs-up') 
+        .filter(([key]) => key !== 'elevator-up' && key !== 'stairs-up')
         .map(([key, details]) => ({ key: key, ...details }));
     }
     return [];
@@ -243,9 +281,9 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
       setFormTitle(currentOffice.title || '');
       setFormHours(currentOffice.hours || '');
       setFormHead(currentOffice.head || '');
-      setFormDescription(currentOffice.description || ''); 
+      setFormDescription(currentOffice.description || '');
       setFormCssClass(currentOffice.cssClass || '');
-      setFormStatus(currentOffice.status || 'Available'); 
+      setFormStatus(currentOffice.status || 'Available');
       if (Array.isArray(currentOffice.requirements)) {
         setFormRequirements(currentOffice.requirements.join('\n'));
       } else {
@@ -266,19 +304,25 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
     try {
       const requirementsArray = formRequirements.split('\n').map(line => line.trim()).filter(line => line.length > 0);
       await updateOffice(selectedOfficeKey, {
-        title: formTitle, 
-        hours: formHours, 
+        title: formTitle,
+        hours: formHours,
         head: formHead,
-        description: formDescription, 
-        badge: currentOffice?.badge || '', 
+        description: formDescription,
+        badge: currentOffice?.badge || '',
         requirements: requirementsArray,
-        cssClass: formCssClass, 
-        status: formStatus 
+        cssClass: formCssClass,
+        status: formStatus
       });
       if (onDataUpdate) onDataUpdate();
-      alert('Office updates successfully deployed!');
+      alert(t(
+        'Office updates successfully deployed!',
+        'Nai-save na ang pagbabago sa tanggapan!',
+      ));
     } catch (error) {
-      alert('Database error. Check logs.');
+      alert(t(
+        'Database error. Check logs.',
+        'May problema sa database. Tingnan ang logs.',
+      ));
     } finally { setIsSaving(false); }
   };
 
@@ -292,7 +336,10 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
 
   const closeAnnEditor = () => {
     if (annEditor && annDraft !== annOriginal
-      && !window.confirm('May hindi pa nase-save na pagbabago.\n\nIsara pa rin at itapon ito?')) return;
+      && !window.confirm(t(
+        'You have unsaved changes.\n\nClose anyway and discard them?',
+        'May hindi pa nase-save na pagbabago.\n\nIsara pa rin at itapon ito?',
+      ))) return;
     setAnnEditor(null);
   };
 
@@ -312,34 +359,59 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
       setAdvisoryText(next.advisory);
       setAnnouncementText(next.announcement);
       setAnnEditor(null);
-      alert('✅ Nai-save na! Makikita ito sa welcome screen sa loob ng isang minuto.');
+      alert(t(
+        '✅ Saved! It will show up on the welcome screen within a minute.',
+        '✅ Nai-save na! Makikita ito sa welcome screen sa loob ng isang minuto.',
+      ));
     } catch (error) {
-      alert('Failed to update announcement.');
+      alert(t(
+        'Failed to update announcement.',
+        'Hindi na-update ang anunsyo.',
+      ));
     } finally { setIsSaving(false); }
   };
 
   const handleSavePassword = async (e) => {
     e.preventDefault();
-    if (!newPassword || newPassword.trim() === '') return alert('Please enter a valid password.');
-    if (newPassword !== confirmPassword) return alert('Passwords do not match! Please try again.');
-    
+    if (!newPassword || newPassword.trim() === '') {
+      return alert(t(
+        'Please enter a valid password.',
+        'Maglagay po ng wastong password.',
+      ));
+    }
+    if (newPassword !== confirmPassword) {
+      return alert(t(
+        'Passwords do not match! Please try again.',
+        'Hindi magkatugma ang dalawang password! Subukan po ulit.',
+      ));
+    }
+
     const hasUpper = /[A-Z]/.test(newPassword);
     const hasLower = /[a-z]/.test(newPassword);
     const hasNumber = /\d/.test(newPassword);
-    
+
     if (newPassword.length < 6 || !hasUpper || !hasLower || !hasNumber) {
-      return alert('❌ Weak Password:\n\nPassword must be at least 6 characters long and include:\n- At least 1 Uppercase letter\n- At least 1 Lowercase letter\n- At least 1 Number');
+      return alert(t(
+        '❌ Weak Password:\n\nPassword must be at least 6 characters long and include:\n- At least 1 Uppercase letter\n- At least 1 Lowercase letter\n- At least 1 Number',
+        '❌ Mahinang Password:\n\nKailangang hindi bababa sa 6 na karakter ang password at may kasamang:\n- Kahit 1 malaking letra\n- Kahit 1 maliit na letra\n- Kahit 1 numero',
+      ));
     }
 
     try {
       await changeAdminPassword(newPassword);
       setNewPassword('');
       setConfirmPassword('');
-      alert('✅ Admin Password updated securely in the cloud!\n\nYou will now be logged out. Please login again using your new password.');
+      alert(t(
+        '✅ Admin Password updated securely in the cloud!\n\nYou will now be logged out. Please login again using your new password.',
+        '✅ Ligtas nang na-update ang Admin Password sa cloud!\n\nMa-lo-log out po kayo ngayon. Mag-login ulit gamit ang bagong password.',
+      ));
       await logoutAdmin();
-      onClose(); 
+      onClose();
     } catch (error) {
-      alert('❌ Failed to update password. You must be logged in to do this.');
+      alert(t(
+        '❌ Failed to update password. You must be logged in to do this.',
+        '❌ Hindi na-update ang password. Kailangan pong naka-login kayo para dito.',
+      ));
     }
   };
 
@@ -352,17 +424,34 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
             🔧
             <span>
               Admin Panel
-              <span className="adm-top-sub">Tagaytay City Hall Kiosk</span>
+              <span className="adm-top-sub">
+                {t('Tagaytay City Hall Kiosk', 'Kiosk ng City Hall ng Tagaytay')}
+              </span>
             </span>
           </h2>
           <div className="adm-top-actions">
+            {/* Kapareho ng toggle sa header ng kiosk — iisa ang state,
+                kaya hindi na kailangang lumabas muna para magpalit. */}
+            {setLang && (
+              <button
+                type="button"
+                className="adm-kb-toggle"
+                onClick={() => setLang(EN ? 'TL' : 'EN')}
+                title={t('Switch to Tagalog', 'Lumipat sa English')}
+              >
+                🌐 {t('English', 'Tagalog')}
+              </button>
+            )}
             <button
               type="button"
               className={`adm-kb-toggle${showKeyboard ? ' is-on' : ''}`}
               onClick={() => setShowKeyboard((v) => !v)}
-              title="Para sa kiosk na walang pisikal na keyboard"
+              title={t(
+                'For kiosks without a physical keyboard',
+                'Para sa kiosk na walang pisikal na keyboard',
+              )}
             >
-              ⌨️ {showKeyboard ? 'Hide Keyboard' : 'Keyboard'}
+              ⌨️ {showKeyboard ? t('Hide Keyboard', 'Itago ang Keyboard') : 'Keyboard'}
             </button>
             <button
               className="adm-exit"
@@ -371,51 +460,66 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                 onClose();
               }}
             >
-              ✕ Close &amp; Logout
+              ✕ {t('Close & Logout', 'Isara at Mag-logout')}
             </button>
           </div>
         </div>
 
         <div className="adm-tabs">
           <button className={`adm-tab${activeTab === 'announcements' ? ' active' : ''}`} onClick={() => setActiveTab('announcements')}>
-            📢 Announcements
+            📢 {t('Announcements', 'Mga Anunsyo')}
           </button>
           <button className={`adm-tab${activeTab === 'offices' ? ' active' : ''}`} onClick={() => setActiveTab('offices')}>
-            🏢 Office Directory
+            🏢 {t('Office Directory', 'Direktoryo ng Tanggapan')}
           </button>
           <button className={`adm-tab${activeTab === 'security' ? ' active' : ''}`} onClick={() => setActiveTab('security')}>
-            🔒 Admin Password
+            🔒 {t('Admin Password', 'Password ng Admin')}
           </button>
         </div>
 
         {activeTab === 'announcements' && (
           <div className="adm-pane">
-            <h3>📢 Announcements &amp; Advisories</h3>
+            <h3>📢 {t('Announcements & Advisories', 'Mga Anunsyo at Paalala')}</h3>
             <p className="adm-hint">
-              Ito ang lumalabas sa welcome screen. Pindutin ang <strong>✏️ Edit</strong> para
-              buksan ang kahon ng pagsusulat. Blangko = nakatago.
+              {EN ? (
+                <>
+                  This is what shows on the welcome screen. Tap <strong>✏️ Edit</strong> to
+                  open the writing box. Blank = hidden.
+                </>
+              ) : (
+                <>
+                  Ito ang lumalabas sa welcome screen. Pindutin ang <strong>✏️ Edit</strong> para
+                  buksan ang kahon ng pagsusulat. Blangko = nakatago.
+                </>
+              )}
             </p>
 
             <div className="adm-cards">
               {[
                 {
                   key: 'announcement',
-                  label: '1 · Official Announcement (Board)',
+                  label: t('1 · Official Announcement (Board)', '1 · Opisyal na Anunsyo (Board)'),
                   text: announcementText,
-                  empty: 'Walang laman — nakatago ang malaking kard sa welcome screen.',
+                  empty: t(
+                    'Empty — the large card stays hidden on the welcome screen.',
+                    'Walang laman — nakatago ang malaking kard sa welcome screen.',
+                  ),
                 },
                 {
                   key: 'advisory',
-                  label: '2 · Scrolling Advisory (Marquee)',
+                  label: t('2 · Scrolling Advisory (Marquee)', '2 · Gumagalaw na Paalala (Marquee)'),
                   text: advisoryText,
-                  empty: 'Walang laman — nakatago ang gumagalaw na guhit sa ilalim.',
+                  empty: t(
+                    'Empty — the scrolling strip at the bottom stays hidden.',
+                    'Walang laman — nakatago ang gumagalaw na guhit sa ilalim.',
+                  ),
                 },
               ].map((card) => (
                 <div key={card.key} className="adm-card">
                   <div className="adm-card-head">
                     <span className="adm-card-label">{card.label}</span>
                     <span className={`adm-vid-pill${card.text.trim() ? ' is-on' : ''}`}>
-                      {card.text.trim() ? 'LIVE' : 'HIDDEN'}
+                      {card.text.trim() ? 'LIVE' : t('HIDDEN', 'NAKATAGO')}
                     </span>
                   </div>
                   <p className={`adm-card-text${card.text.trim() ? '' : ' is-empty'}`}>
@@ -426,7 +530,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                     className="k-btn k-btn--ghost"
                     onClick={() => openAnnEditor(card.key)}
                   >
-                    ✏️ Edit
+                    ✏️ {t('Edit', 'I-edit')}
                   </button>
                 </div>
               ))}
@@ -434,15 +538,29 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
 
             <div className="adm-divider" aria-hidden="true" />
 
-            <h3>🎬 Welcome Screen Videos</h3>
+            <h3>🎬 {t('Welcome Screen Videos', 'Mga Video sa Welcome Screen')}</h3>
             <p className="adm-hint">
-              3 · I-paste ang link ng <strong>public</strong> na Facebook post, YouTube video, o
-              direktang .mp4 file. Salitan itong ipapalabas katabi ng announcement board.
+              {EN ? (
+                <>
+                  3 · Paste the link of a <strong>public</strong> Facebook post, a YouTube video, or
+                  a direct .mp4 file. These play in turn beside the announcement board.
+                </>
+              ) : (
+                <>
+                  3 · I-paste ang link ng <strong>public</strong> na Facebook post, YouTube video, o
+                  direktang .mp4 file. Salitan itong ipapalabas katabi ng announcement board.
+                </>
+              )}
             </p>
 
             <div className="adm-vid-list">
                   {videos.length === 0 && (
-                    <p className="adm-hint">Wala pang video. Pindutin ang “Add Video” sa ibaba.</p>
+                    <p className="adm-hint">
+                      {t(
+                        'No videos yet. Tap “Add Video” below.',
+                        'Wala pang video. Pindutin ang “Add Video” sa ibaba.',
+                      )}
+                    </p>
                   )}
                   {videos.map((video, i) => (
                     <div key={video.id} className="adm-vid-item">
@@ -451,21 +569,23 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                         <span className="adm-vid-name">{video.title || video.source_url}</span>
                         <span className="adm-vid-meta">
                           {video.video_type} · {video.duration_seconds}s ·{' '}
-                          {video.orientation === 'portrait' ? '▯ portrait' : '▭ landscape'}
+                          {video.orientation === 'portrait'
+                            ? t('▯ portrait', '▯ patayo')
+                            : t('▭ landscape', '▭ pahiga')}
                         </span>
                       </span>
                       <span className={`adm-vid-pill${video.is_active ? ' is-on' : ''}`}>
                         {video.is_active ? 'LIVE' : 'OFF'}
                       </span>
                       <button type="button" className="k-btn k-btn--ghost" onClick={() => pickVideo(video)}>
-                        ✏️ Edit
+                        ✏️ {t('Edit', 'I-edit')}
                       </button>
                     </div>
                   ))}
             </div>
 
             <button type="button" className="k-btn k-btn--primary" onClick={() => pickVideo(null)}>
-              ＋ Add Video
+              ＋ {t('Add Video', 'Magdagdag ng Video')}
             </button>
           </div>
         )}
@@ -476,7 +596,11 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
           <div className="adm-modal-back">
             <form className="adm-modal" onSubmit={handleSaveVideo}>
               <div className="adm-modal-top">
-                <h4>{videoForm.id ? '🎬 I-edit ang video' : '🎬 Bagong video'}</h4>
+                <h4>
+                  {videoForm.id
+                    ? t('🎬 Edit video', '🎬 I-edit ang video')
+                    : t('🎬 New video', '🎬 Bagong video')}
+                </h4>
                 <button type="button" className="adm-modal-x" onClick={closeVideoEditor} disabled={isSaving}>
                   ✕
                 </button>
@@ -484,7 +608,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
 
               <div className="adm-modal-body">
                 <div>
-                  <label className="k-label">Video link (URL)</label>
+                  <label className="k-label">{t('Video link (URL)', 'Link ng video (URL)')}</label>
                   {/* Teksto at HINDI required: may pangalawang paraan sa ibaba
                       (upload), kaya walang saysay ang "Please fill out this
                       field" ng browser. Ang sarili nating validation na may
@@ -497,18 +621,30 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                     placeholder="https://www.facebook.com/TagaytayCity/videos/1234567890"
                   />
                   <p className="adm-hint">
-                    Kailangang naka-<strong>Public</strong> ang post. Huwag gamitin ang
-                    “Copy link” ng FB app — <strong>share link</strong> ang ibinibigay niyon
-                    at hindi ito bubukas sa kiosk. Sa desktop browser, i-click ang petsa ng
-                    post at kopyahin ang address bar. Pinakasigurado: 3 dots (…) →
-                    <strong> Embed</strong> → i-paste dito ang buong <code>&lt;iframe&gt;</code> code.
+                    {EN ? (
+                      <>
+                        The post must be set to <strong>Public</strong>. Do not use the FB app’s
+                        “Copy link” — that gives a <strong>share link</strong> and it will not open
+                        on the kiosk. On a desktop browser, click the date of the post and copy the
+                        address bar. Most reliable: 3 dots (…) →
+                        <strong> Embed</strong> → paste the whole <code>&lt;iframe&gt;</code> code here.
+                      </>
+                    ) : (
+                      <>
+                        Kailangang naka-<strong>Public</strong> ang post. Huwag gamitin ang
+                        “Copy link” ng FB app — <strong>share link</strong> ang ibinibigay niyon
+                        at hindi ito bubukas sa kiosk. Sa desktop browser, i-click ang petsa ng
+                        post at kopyahin ang address bar. Pinakasigurado: 3 dots (…) →
+                        <strong> Embed</strong> → i-paste dito ang buong <code>&lt;iframe&gt;</code> code.
+                      </>
+                    )}
                   </p>
                 </div>
 
-                <div className="adm-or"><span>o kaya</span></div>
+                <div className="adm-or"><span>{t('or', 'o kaya')}</span></div>
 
                 <div>
-                  <label className="k-label">Mag-upload ng video file</label>
+                  <label className="k-label">{t('Upload a video file', 'Mag-upload ng video file')}</label>
                   <label className={`adm-upload${isUploading ? ' is-busy' : ''}`}>
                     <input
                       type="file"
@@ -518,30 +654,49 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                     />
                     <span className="adm-upload-icon">{isUploading ? '⏳' : '⬆️'}</span>
                     <span className="adm-upload-text">
-                      {isUploading ? 'Ina-upload… huwag isara ang window' : 'Pumili ng video mula sa computer'}
+                      {isUploading
+                        ? t('Uploading… do not close this window', 'Ina-upload… huwag isara ang window')
+                        : t('Choose a video from this computer', 'Pumili ng video mula sa computer')}
                       <small>
-                        MP4, WebM, o MOV · hanggang {formatBytes(MAX_VIDEO_BYTES)} ·
-                        kusang nababasa ang hugis at haba
+                        {EN
+                          ? `MP4, WebM, or MOV · up to ${formatBytes(MAX_VIDEO_BYTES)} · shape and length are read automatically`
+                          : `MP4, WebM, o MOV · hanggang ${formatBytes(MAX_VIDEO_BYTES)} · kusang nababasa ang hugis at haba`}
                       </small>
                     </span>
                   </label>
                   {isUploadedFile(videoForm.source_url) && (
                     <p className="adm-ok">
-                      ✅ Na-upload na ang video. Pindutin ang <strong>Save Video</strong> sa ibaba
-                      para mailagay ito sa kiosk.
+                      {EN ? (
+                        <>
+                          ✅ The video is uploaded. Tap <strong>Save Video</strong> below to
+                          put it on the kiosk.
+                        </>
+                      ) : (
+                        <>
+                          ✅ Na-upload na ang video. Pindutin ang <strong>Save Video</strong> sa ibaba
+                          para mailagay ito sa kiosk.
+                        </>
+                      )}
                     </p>
                   )}
 
                   <p className="adm-hint">
-                    Ito ang pinaka-maaasahan para sa kiosk — hindi na kailangan ng Facebook,
-                    at gumagana kahit mabagal ang internet. Mainam para sa Reels na
-                    ayaw mag-embed: i-download mo, tapos i-upload dito.
+                    {t(
+                      'This is the most reliable option for the kiosk — no Facebook needed, '
+                      + 'and it works even on a slow connection. Best for Reels that refuse to '
+                      + 'embed: download it, then upload it here.',
+                      'Ito ang pinaka-maaasahan para sa kiosk — hindi na kailangan ng Facebook, '
+                      + 'at gumagana kahit mabagal ang internet. Mainam para sa Reels na '
+                      + 'ayaw mag-embed: i-download mo, tapos i-upload dito.',
+                    )}
                   </p>
                 </div>
 
                 <div className="adm-form--split">
                   <div>
-                    <label className="k-label">Title (header sa kiosk)</label>
+                    <label className="k-label">
+                      {t('Title (header on the kiosk)', 'Title (header sa kiosk)')}
+                    </label>
                     <input
                       type="text"
                       className="k-input"
@@ -551,14 +706,14 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                     />
                   </div>
                   <div>
-                    <label className="k-label">Source type</label>
+                    <label className="k-label">{t('Source type', 'Uri ng pinagmulan')}</label>
                     <select
                       className="k-select"
                       value={videoForm.video_type}
                       onChange={(e) => { setVideoTypeTouched(true); setVideoField('video_type', e.target.value); }}
                     >
-                      {VIDEO_TYPES.map((t) => (
-                        <option key={t.value} value={t.value}>{t.label}</option>
+                      {getVideoTypes(lang).map((t2) => (
+                        <option key={t2.value} value={t2.value}>{t2.label}</option>
                       ))}
                     </select>
                   </div>
@@ -566,7 +721,12 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
 
                 <div className="adm-form--split">
                   <div>
-                    <label className="k-label">Display seconds (bago lumipat sa susunod)</label>
+                    <label className="k-label">
+                      {t(
+                        'Display seconds (before moving to the next)',
+                        'Display seconds (bago lumipat sa susunod)',
+                      )}
+                    </label>
                     <input
                       type="number"
                       className="k-input"
@@ -576,11 +736,16 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                       onChange={(e) => setVideoField('duration_seconds', e.target.value)}
                     />
                     <p className="adm-hint">
-                      Hindi ito ginagamit sa .mp4 — hinihintay doon ang tunay na dulo ng video.
+                      {t(
+                        'This is not used for .mp4 — there, the kiosk waits for the real end of the video.',
+                        'Hindi ito ginagamit sa .mp4 — hinihintay doon ang tunay na dulo ng video.',
+                      )}
                     </p>
                   </div>
                   <div>
-                    <label className="k-label">Order (mas mababa, mas nauna)</label>
+                    <label className="k-label">
+                      {t('Order (lower shows first)', 'Order (mas mababa, mas nauna)')}
+                    </label>
                     <input
                       type="number"
                       className="k-input"
@@ -591,29 +756,36 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                 </div>
 
                 <div>
-                  <label className="k-label">Hugis ng video</label>
+                  <label className="k-label">{t('Video shape', 'Hugis ng video')}</label>
                   <select
                     className="k-select"
                     value={videoForm.orientation || 'landscape'}
                     onChange={(e) => setVideoField('orientation', e.target.value)}
                   >
-                    {ORIENTATIONS.map((o) => (
+                    {getOrientations(lang).map((o) => (
                       <option key={o.value} value={o.value}>{o.label}</option>
                     ))}
                   </select>
                   <p className="adm-hint">
-                    Awtomatikong napipili ang Portrait kapag Reels ang na-paste. Kung mali,
-                    palitan mo dito — kung hindi, magkakaroon ng itim na gilid sa kiosk.
+                    {t(
+                      'Portrait is picked automatically when a Reel is pasted. If that is wrong, '
+                      + 'change it here — otherwise the kiosk will show black bars on the sides.',
+                      'Awtomatikong napipili ang Portrait kapag Reels ang na-paste. Kung mali, '
+                      + 'palitan mo dito — kung hindi, magkakaroon ng itim na gilid sa kiosk.',
+                    )}
                   </p>
                 </div>
 
                 <div>
-                  <label className="k-label">Caption (opsyonal)</label>
+                  <label className="k-label">{t('Caption (optional)', 'Caption (opsyonal)')}</label>
                   <textarea
                     className="k-textarea"
                     value={videoForm.caption}
                     onChange={(e) => setVideoField('caption', e.target.value)}
-                    placeholder="Maikling paliwanag na lalabas sa ilalim ng video…"
+                    placeholder={t(
+                      'A short line that shows under the video…',
+                      'Maikling paliwanag na lalabas sa ilalim ng video…',
+                    )}
                   />
                 </div>
 
@@ -623,7 +795,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                     checked={videoForm.is_active !== false}
                     onChange={(e) => setVideoField('is_active', e.target.checked)}
                   />
-                  <span>Ipakita sa welcome screen</span>
+                  <span>{t('Show on the welcome screen', 'Ipakita sa welcome screen')}</span>
                 </label>
 
                 <div>
@@ -634,17 +806,28 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                       onChange={(e) => setVideoField('has_sound', e.target.checked)}
                       disabled={videoForm.video_type === 'facebook'}
                     />
-                    <span>🔊 Buksan ang tunog</span>
+                    <span>🔊 {t('Turn the sound on', 'Buksan ang tunog')}</span>
                   </label>
                   <p className="adm-hint">
                     {videoForm.video_type === 'facebook'
-                      ? 'Hindi kayang buksan ang tunog ng Facebook embed — laging tahimik ito. '
-                        + 'Kung kailangan talaga ng tunog, i-download ang video at i-upload dito.'
-                      : 'Lalabas ang bilog na 🔊 na buton sa ibabaw ng video sa welcome screen. '
-                        + 'Doon kayang buksan o patayin ng bisita ang tunog nang hindi nagsisimula '
-                        + 'ang kiosk. Kung haharangin ng browser ang tunog sa umpisa, isang pindot '
-                        + 'lang sa buton na iyon ay sapat na. Para bukas agad kahit walang pumipindot, '
-                        + 'tingnan ang README (Chrome kiosk flag).'}
+                      ? t(
+                          'A Facebook embed cannot have its sound turned on — it is always silent. '
+                          + 'If the sound really matters, download the video and upload it here.',
+                          'Hindi kayang buksan ang tunog ng Facebook embed — laging tahimik ito. '
+                          + 'Kung kailangan talaga ng tunog, i-download ang video at i-upload dito.',
+                        )
+                      : t(
+                          'A round 🔊 button appears over the video on the welcome screen. '
+                          + 'From there a visitor can turn the sound on or off without starting '
+                          + 'the kiosk. If the browser blocks sound at first, one tap on that '
+                          + 'button is enough. To have it on from the start with nobody tapping, '
+                          + 'see the README (Chrome kiosk flag).',
+                          'Lalabas ang bilog na 🔊 na buton sa ibabaw ng video sa welcome screen. '
+                          + 'Doon kayang buksan o patayin ng bisita ang tunog nang hindi nagsisimula '
+                          + 'ang kiosk. Kung haharangin ng browser ang tunog sa umpisa, isang pindot '
+                          + 'lang sa buton na iyon ay sapat na. Para bukas agad kahit walang pumipindot, '
+                          + 'tingnan ang README (Chrome kiosk flag).',
+                        )}
                   </p>
                 </div>
 
@@ -658,14 +841,16 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                     onClick={handleDeleteVideo}
                     disabled={isSaving}
                   >
-                    🗑️ Delete
+                    🗑️ {t('Delete', 'Burahin')}
                   </button>
                 )}
                 <button type="button" className="k-btn k-btn--ghost" onClick={closeVideoEditor} disabled={isSaving}>
-                  ✕ Close
+                  ✕ {t('Close', 'Isara')}
                 </button>
                 <button type="submit" className="k-btn k-btn--primary" disabled={isSaving}>
-                  {isSaving ? 'Deploying to kiosks…' : '💾 Save Video'}
+                  {isSaving
+                    ? t('Deploying to kiosks…', 'Ipinapadala sa mga kiosk…')
+                    : t('💾 Save Video', '💾 I-save ang Video')}
                 </button>
               </div>
             </form>
@@ -680,8 +865,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
               <div className="adm-modal-top">
                 <h4>
                   {annEditor === 'announcement'
-                    ? '📰 Official Announcement'
-                    : '🚨 Scrolling Advisory'}
+                    ? t('📰 Official Announcement', '📰 Opisyal na Anunsyo')
+                    : t('🚨 Scrolling Advisory', '🚨 Gumagalaw na Paalala')}
                 </h4>
                 <button type="button" className="adm-modal-x" onClick={closeAnnEditor} disabled={isSaving}>
                   ✕
@@ -691,8 +876,14 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
               <div className="adm-modal-body">
                 <label className="k-label">
                   {annEditor === 'announcement'
-                    ? 'Teksto ng malaking kard sa welcome screen'
-                    : 'Teksto ng gumagalaw na guhit sa pinakailalim'}
+                    ? t(
+                        'Text of the large card on the welcome screen',
+                        'Teksto ng malaking kard sa welcome screen',
+                      )
+                    : t(
+                        'Text of the scrolling strip at the very bottom',
+                        'Teksto ng gumagalaw na guhit sa pinakailalim',
+                      )}
                 </label>
                 <textarea
                   className="k-textarea adm-modal-area"
@@ -701,24 +892,37 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
                   onChange={(e) => setAnnDraft(e.target.value)}
                   placeholder={
                     annEditor === 'announcement'
-                      ? 'e.g. Walang pasok bukas dahil sa bagyo…'
-                      : 'e.g. Please secure your belongings…'
+                      ? t('e.g. No classes tomorrow due to the typhoon…', 'hal. Walang pasok bukas dahil sa bagyo…')
+                      : t('e.g. Please secure your belongings…', 'hal. Pakiingatan po ang inyong mga gamit…')
                   }
                 />
                 <p className="adm-hint">
                   {annEditor === 'announcement'
-                    ? 'Hanggang 3 linya lang ang kasya sa kiosk — puputulin ang sobra.'
-                    : 'Isang linya bawat mensahe. Pinagsasabit ang mga ito ng “•”.'}
+                    ? t(
+                        'Only 3 lines fit on the kiosk — anything past that is cut off.',
+                        'Hanggang 3 linya lang ang kasya sa kiosk — puputulin ang sobra.',
+                      )
+                    : t(
+                        'One line per message. They are strung together with “•”.',
+                        'Isang linya bawat mensahe. Pinagsasabit ang mga ito ng “•”.',
+                      )}
                 </p>
-                <p className="adm-hint">Iwanang blangko para itago ito sa welcome screen.</p>
+                <p className="adm-hint">
+                  {t(
+                    'Leave it blank to hide it on the welcome screen.',
+                    'Iwanang blangko para itago ito sa welcome screen.',
+                  )}
+                </p>
               </div>
 
               <div className="adm-modal-foot">
                 <button type="button" className="k-btn k-btn--ghost" onClick={closeAnnEditor} disabled={isSaving}>
-                  ✕ Close
+                  ✕ {t('Close', 'Isara')}
                 </button>
                 <button type="submit" className="k-btn k-btn--primary" disabled={isSaving}>
-                  {isSaving ? 'Deploying to kiosks…' : '💾 Save'}
+                  {isSaving
+                    ? t('Deploying to kiosks…', 'Ipinapadala sa mga kiosk…')
+                    : t('💾 Save', '💾 I-save')}
                 </button>
               </div>
             </form>
@@ -729,9 +933,11 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
           <div className="adm-split">
             <div className="adm-list">
               <div>
-                <label className="k-label">Select Floor</label>
+                <label className="k-label">{t('Select Floor', 'Pumili ng Palapag')}</label>
                 <select className="k-select" value={selectedFloor} onChange={handleFloorChange}>
-                  {[1, 2, 3, 4, 5, 6, 7].map(f => (<option key={f} value={f}>Floor {f}</option>))}
+                  {[1, 2, 3, 4, 5, 6, 7].map(f => (
+                    <option key={f} value={f}>{t(`Floor ${f}`, `Palapag ${f}`)}</option>
+                  ))}
                 </select>
               </div>
               <div className="adm-list-scroll">
@@ -751,49 +957,63 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
               {!selectedOfficeKey ? (
                 <div className="adm-empty">
                   <span>📝</span>
-                  <h3>Select an office to edit</h3>
-                  <p className="adm-hint">Pick a floor, then choose an office from the list.</p>
+                  <h3>{t('Select an office to edit', 'Pumili ng tanggapang ie-edit')}</h3>
+                  <p className="adm-hint">
+                    {t(
+                      'Pick a floor, then choose an office from the list.',
+                      'Pumili ng palapag, tapos pumili ng tanggapan sa listahan.',
+                    )}
+                  </p>
                 </div>
               ) : (
                 <form className="adm-form" onSubmit={handleSaveOffice}>
                   <div className="adm-form--split">
                     <div>
-                      <label className="k-label">Title</label>
+                      <label className="k-label">{t('Title', 'Pangalan')}</label>
                       <input type="text" className="k-input" value={formTitle} onChange={(e) => setFormTitle(e.target.value)} required />
                     </div>
                     <div>
-                      <label className="k-label">Hours</label>
+                      <label className="k-label">{t('Hours', 'Oras')}</label>
                       <input type="text" className="k-input" value={formHours} onChange={(e) => setFormHours(e.target.value)} />
                     </div>
                   </div>
 
                   <div className="adm-form--split">
                     <div>
-                      <label className="k-label">Head</label>
+                      <label className="k-label">{t('Head', 'Pinuno')}</label>
                       <input type="text" className="k-input" value={formHead} onChange={(e) => setFormHead(e.target.value)} />
                     </div>
                     <div>
-                      <label className="k-label">Status</label>
+                      <label className="k-label">{t('Status', 'Estado')}</label>
+                      {/* Ang `value` ay nananatiling Ingles — iyon ang nasa
+                          database. Ang label lang ang nagsasalin. */}
                       <select className="k-select" value={formStatus} onChange={(e) => setFormStatus(e.target.value)}>
-                        <option value="Available">🟢 Available</option>
-                        <option value="In a Meeting">🔴 In a Meeting</option>
-                        <option value="Out of Office">🟡 Out of Office</option>
+                        <option value="Available">🟢 {t('Available', 'Bukas')}</option>
+                        <option value="In a Meeting">🔴 {t('In a Meeting', 'May Pulong')}</option>
+                        <option value="Out of Office">🟡 {t('Out of Office', 'Wala sa Opisina')}</option>
                       </select>
                     </div>
                   </div>
 
                   <div className="adm-grow">
-                    <label className="k-label">Office Description / Info</label>
+                    <label className="k-label">
+                      {t('Office Description / Info', 'Paglalarawan / Impormasyon ng Tanggapan')}
+                    </label>
                     <textarea
                       className="k-textarea"
                       value={formDescription}
                       onChange={(e) => setFormDescription(e.target.value)}
-                      placeholder="Short information about what this office does…"
+                      placeholder={t(
+                        'Short information about what this office does…',
+                        'Maikling paliwanag tungkol sa ginagawa ng tanggapang ito…',
+                      )}
                     />
                   </div>
 
                   <button type="submit" className="k-btn k-btn--primary" disabled={isSaving}>
-                    {isSaving ? 'Saving…' : '💾 Save Office Metadata'}
+                    {isSaving
+                      ? t('Saving…', 'Sine-save…')
+                      : t('💾 Save Office Metadata', '💾 I-save ang Datos ng Tanggapan')}
                   </button>
                 </form>
               )}
@@ -803,39 +1023,55 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
 
         {activeTab === 'security' && (
           <div className="adm-pane">
-            <h3>🔒 Cloud Security &amp; Authentication</h3>
+            <h3>🔒 {t('Cloud Security & Authentication', 'Seguridad sa Cloud at Pagpapatunay')}</h3>
             <p className="adm-hint">
-              Change the master password for <strong>tagaytaykiosk@gmail.com</strong>. This is updated
-              directly in the Supabase Cloud.
+              {EN ? (
+                <>
+                  Change the master password for <strong>tagaytaykiosk@gmail.com</strong>. This is updated
+                  directly in the Supabase Cloud.
+                </>
+              ) : (
+                <>
+                  Palitan ang master password ng <strong>tagaytaykiosk@gmail.com</strong>. Direkta itong
+                  ina-update sa Supabase Cloud.
+                </>
+              )}
             </p>
 
             <form className="adm-form" onSubmit={handleSavePassword} style={{ maxWidth: '480px', flex: 'none' }}>
               <div>
-                <label className="k-label">New admin password (min 6 chars, 1 uppercase, 1 number)</label>
+                <label className="k-label">
+                  {t(
+                    'New admin password (min 6 chars, 1 uppercase, 1 number)',
+                    'Bagong password ng admin (hindi bababa sa 6 na karakter, 1 malaking letra, 1 numero)',
+                  )}
+                </label>
                 <input
                   type="password"
                   className="k-input"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter new password…"
+                  placeholder={t('Enter new password…', 'Ilagay ang bagong password…')}
                   required
                   minLength="6"
                 />
               </div>
               <div>
-                <label className="k-label">Confirm new password</label>
+                <label className="k-label">
+                  {t('Confirm new password', 'Ulitin ang bagong password')}
+                </label>
                 <input
                   type="password"
                   className="k-input"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Re-type new password…"
+                  placeholder={t('Re-type new password…', 'I-type ulit ang bagong password…')}
                   required
                   minLength="6"
                 />
               </div>
               <button type="submit" className="k-btn k-btn--primary">
-                ☁️ Save Password to Cloud
+                ☁️ {t('Save Password to Cloud', 'I-save ang Password sa Cloud')}
               </button>
             </form>
           </div>
@@ -843,7 +1079,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate }) {
       </div>
 
       {showKeyboard && (
-        <VirtualKeyboard scopeRef={admRef} onClose={() => setShowKeyboard(false)} />
+        <VirtualKeyboard scopeRef={admRef} onClose={() => setShowKeyboard(false)} lang={lang} />
       )}
     </div>
   );
