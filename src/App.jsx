@@ -786,6 +786,16 @@ export default function App() {
                   <span className="floor-badge">{destinationData.badge || `Floor ${destinationData.floor}`}</span>
                 </div>
 
+                {/* Sunod agad sa pangalan: ano ang ginagawa ng tanggapang
+                    ito. Iyon ang unang tanong ng bisita — nauuna pa ito sa
+                    oras at pinuno, kaya nasa itaas ito ng .office-meta. */}
+                {destinationData.description && (
+                  <div className="office-about">
+                    <strong>ℹ️ {lang === 'EN' ? 'About this Office' : 'Tungkol sa Opisina'}</strong>
+                    <div className="office-about-body">{destinationData.description}</div>
+                  </div>
+                )}
+
                 {!destinationData.isDirectionOnly && (
                   <div className="office-meta">
                     <p className="meta-row">
@@ -800,13 +810,6 @@ export default function App() {
                 {/* Nasa lumulutang na panel sa gilid ng mapa ang pagpili
                     ng daan — nakatabi sa zoom, katapat ng mismong
                     ruta. Tingnan ang .map-mini-stack sa ibaba. */}
-
-                {destinationData.description && (
-                  <div className="office-about">
-                    <strong>ℹ️ {lang === 'EN' ? 'About this Office' : 'Tungkol sa Opisina'}</strong>
-                    <div className="office-about-body">{destinationData.description}</div>
-                  </div>
-                )}
 
                 <div className="qr-card">
                   <span className="qr-title">📱 {lang === 'EN' ? 'Scan for live mobile map' : 'I-scan para sa live mobile map'}</span>
@@ -906,6 +909,15 @@ export default function App() {
                   <span className="floor-badge">{selectedOffice.badge}</span>
                 </div>
 
+                {/* Tingnan ang nasa itaas: sunod sa pangalan ang paliwanag
+                    tungkol sa tanggapan, bago ang estado at oras. */}
+                {selectedOffice.description && (
+                  <div className="office-about">
+                    <strong>ℹ️ {lang === 'EN' ? 'About this Office' : 'Tungkol sa Opisina'}</strong>
+                    <div className="office-about-body">{selectedOffice.description}</div>
+                  </div>
+                )}
+
                 {selectedOffice.isDirectionOnly ? (
                   <div className="wayfinding-note">
                     🚶 <strong>{lang === 'EN' ? 'Wayfinding path generated.' : 'Nakahanda na ang daan.'}</strong>{' '}
@@ -921,13 +933,6 @@ export default function App() {
                     </p>
                     <p className="meta-row">🕒 <strong>{lang === 'EN' ? 'Hours' : 'Oras'}</strong> {selectedOffice.hours}</p>
                     <p className="meta-row">👤 <strong>{lang === 'EN' ? 'Head' : 'Pinuno'}</strong> {selectedOffice.head}</p>
-                  </div>
-                )}
-
-                {selectedOffice.description && (
-                  <div className="office-about">
-                    <strong>ℹ️ {lang === 'EN' ? 'About this Office' : 'Tungkol sa Opisina'}</strong>
-                    <div className="office-about-body">{selectedOffice.description}</div>
                   </div>
                 )}
 
