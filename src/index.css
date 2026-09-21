@@ -98,7 +98,6 @@ img { max-width: 100%; }
 .empty-floor-message h2 { font-size: 2rem; color: #0F172A; margin-bottom: 15px; font-family: 'Playfair Display', serif; font-weight: 800;}
 .empty-floor-message p { font-size: 1.2rem; }
 
-
 /* =========================================
    MAP SCREEN STYLES
    ========================================= */
@@ -192,8 +191,6 @@ img { max-width: 100%; }
     border: none !important; 
     box-shadow: none !important; 
 }
-.is-3d-active .floor-plate { transform: translateZ(-20px); box-shadow: -10px 20px 0 rgba(0,0,0,0.4), -20px 40px 60px rgba(0,0,0,0.5); }
-.light-theme .is-3d-active .floor-plate { box-shadow: -10px 20px 0 #CBD5E1, -20px 40px 60px rgba(0,0,0,0.2); }
 
 .room-node { position: absolute; display: flex; align-items: center; justify-content: center; border-radius: 12px; cursor: pointer; font-weight: 800; font-size: 1rem; text-align: center; padding: 15px; z-index: 10; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 20px rgba(0,0,0,0.2); transform-style: preserve-3d; transition: all 0.2s ease; backdrop-filter: blur(10px); }
 .room-node:hover { transform: translateY(-5px); filter: brightness(1.2); }
@@ -210,7 +207,6 @@ img { max-width: 100%; }
    dati ang mahabang pangalan ng makikitid na kwarto tulad ng PIO. */
 .room-label .vertical-text { writing-mode: vertical-rl; transform: rotate(180deg); }
 
-.is-3d-active .room-node { transform: translateZ(30px); }
 .active-room { background: linear-gradient(135deg, #F43F5E, #BE123C) !important; color: white !important; border: 2px solid #FDA4AF !important; animation: pulse 1.5s infinite alternate !important; z-index: 20; box-shadow: 0 0 40px rgba(244, 63, 94, 0.5) !important;}
 @keyframes pulse { from { filter: brightness(1); } to { filter: brightness(1.2); } }
 
@@ -233,8 +229,6 @@ img { max-width: 100%; }
 /* Parking area — nasa labas ng gusali. */
 .parking-area { background: rgba(255,255,255,0.04); border: 2px dashed rgba(255,255,255,0.25); color: white; }
 
-.is-3d-active .structural-element { transform: translateZ(10px); }
-
 .light-theme .structural-element { border-color: #E2E8F0; }
 .light-theme .garden-area { background: #F1F5F9; border-color: #CBD5E1; }
 .light-theme .stairs-block, .light-theme .escalator-block { background: #F8FAFC; border-color: #E2E8F0; }
@@ -245,15 +239,14 @@ img { max-width: 100%; }
 .light-theme .parking-area { background: #F1F5F9; border-color: #CBD5E1; color: #0F172A; }
 
 .path-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 25; pointer-events: none; transform-style: preserve-3d; }
-.is-3d-active .path-overlay { transform: translateZ(25px); }
+
 .marching-route-line { fill: none; stroke: #EF4444; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 15; filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.6)); animation: routeMarch 0.6s linear infinite; }
 @keyframes routeMarch { to { stroke-dashoffset: -30; } }
 
 .node { position: absolute; padding: 6px 14px; border-radius: 30px; font-weight: 800; font-size: 0.75rem; box-shadow: 0 5px 10px rgba(0,0,0,0.3); z-index: 75; transform: translate(-50%, -50%); }
-.is-3d-active .node { transform: translate(-50%, -50%) translateZ(70px); }
+
 .pin-kiosk { background: #FFFFFF; color: #0F172A; border: 2px solid #EF4444; }
 .pin-destination { background: #0F172A; color: #FFFFFF; border: 2px solid #FFFFFF; }
-
 
 /* =========================================
    MAP LEGEND (Added safely at bottom-left)
@@ -461,7 +454,6 @@ img { max-width: 100%; }
    coordinates, o click handler.
    ████████████████████████████████████████████████████████████ */
 
-
 /* ═══════════ 1. PALETTE ═══════════ */
 :root {
   --k-50:  #EFF6FF;
@@ -477,7 +469,6 @@ img { max-width: 100%; }
   --k-cyan: #22D3EE;
   --k-line: #7FA9E0;
 }
-
 
 /* ═══════════ 2. MAPA ═══════════ */
 
@@ -506,8 +497,7 @@ img { max-width: 100%; }
    shadow dito ay laging mukhang naka-offset at hindi pantay.
    Dapat itong manatiling ganap na walang laman.                 */
 .mock-map-graphic,
-.light-theme .mock-map-graphic,
-.is-3d-active .mock-map-graphic {
+.light-theme .mock-map-graphic {
   background: none !important;
   background-color: transparent !important;
   border: none !important;
@@ -521,8 +511,7 @@ img { max-width: 100%; }
 
 /* Ganoon din ang floor-plate — dapat di-nakikita */
 .floor-plate,
-.light-theme .floor-plate,
-.is-3d-active .floor-plate {
+.light-theme .floor-plate {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
@@ -752,109 +741,7 @@ img { max-width: 100%; }
   box-shadow: 0 10px 26px rgba(37,99,235,.6) !important;
 }
 
-
-/* ═══════════ 3. 3D MODE ═══════════ */
-/* Mahalaga: ang backdrop-filter ay pumipilit ng transform-style:flat,
-   kaya kailangang patay ito para gumana ang tunay na extrusion.     */
-.is-3d-active .room-node,
-.is-3d-active .structural-element {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  transform-style: preserve-3d !important;
-}
-.map-viewport.is-3d-active {
-  perspective: 2200px !important;
-  perspective-origin: 50% 42% !important;
-}
-
-/* Taas ayon sa uri ng espasyo */
-.is-3d-active .room-node   { --room-h: 44px; }
-.is-3d-active .theme-amber,
-.is-3d-active .theme-cyan  { --room-h: 62px; }
-.is-3d-active .theme-gray  { --room-h: 24px; }
-.is-3d-active .theme-const { --room-h: 30px; }
-.is-3d-active .active-room { --room-h: 78px; }
-
-.is-3d-active .room-node,
-.is-3d-active .room-node:not(.active-room):not(.theme-const) {
-  transform: translateZ(var(--room-h, 44px)) !important;
-  border-radius: 4px !important;
-  box-shadow: 0 0 0 1px rgba(0,0,0,.25),
-              0 54px 38px -26px rgba(0,0,0,.7) !important;
-}
-.is-3d-active .room-node:hover,
-.is-3d-active .room-node:not(.active-room):not(.theme-const):hover {
-  transform: translateZ(calc(var(--room-h, 44px) + 22px)) !important;
-}
-.light-theme .is-3d-active .room-node,
-.light-theme .is-3d-active .room-node:not(.active-room):not(.theme-const) {
-  box-shadow: 0 0 0 1px rgba(15,23,42,.1),
-              0 46px 32px -26px rgba(15,23,42,.35) !important;
-}
-
-/* Ang pader — ito ang nagbibigay ng tunay na lalim */
-.is-3d-active .room-node::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 100%;
-  width: 100%;
-  height: var(--room-h, 44px);
-  transform-origin: top center;
-  transform: rotateX(-90deg);
-  background: linear-gradient(180deg, #0F2A5C 0%, #071A3A 100%);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.1);
-  pointer-events: none;
-}
-.light-theme .is-3d-active .room-node::before {
-  background: linear-gradient(180deg, #D6E4F8 0%, #A9C4E8 100%);
-}
-.is-3d-active .active-room::before {
-  background: linear-gradient(180deg, var(--k-700) 0%, #0E2E70 100%);
-}
-.is-3d-active .theme-const::before {
-  background: repeating-linear-gradient(45deg,
-    #1E40AF, #1E40AF 10px, #0E1526 10px, #0E1526 20px);
-}
-
-/* Istruktura: mas mababa kaysa kwarto */
-.is-3d-active .structural-element {
-  --room-h: 18px;
-  transform: translateZ(var(--room-h)) !important;
-  border-radius: 3px !important;
-}
-.is-3d-active .structural-element::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 100%;
-  width: 100%;
-  height: var(--room-h);
-  transform-origin: top center;
-  transform: rotateX(-90deg);
-  background: linear-gradient(180deg, #16305F 0%, #0A1C3C 100%);
-  pointer-events: none;
-}
-.light-theme .is-3d-active .structural-element::before {
-  background: linear-gradient(180deg, #E0EBFA 0%, #BFD2EC 100%);
-}
-.is-3d-active .garden-area { --room-h: 6px; }
-
-/* Ruta at pin sa 3D */
-.is-3d-active .path-overlay { transform: translateZ(7px) !important; }
-.is-3d-active .node { transform: translate(-50%,-50%) translateZ(150px) !important; }
-.is-3d-active .pin-destination::before {
-  content: '';
-  position: absolute;
-  left: 50%; top: 50%;
-  width: 2px; height: 150px;
-  margin-left: -1px;
-  transform-origin: top center;
-  transform: rotateX(-90deg);
-  background: linear-gradient(180deg, rgba(96,165,250,.9), rgba(96,165,250,.05));
-  pointer-events: none;
-}
-
-
-/* ═══════════ 4. ANIMASYON NG NAVIGATION ═══════════ */
+/* ═══════════ 3. ANIMASYON NG NAVIGATION ═══════════ */
 
 /* Malapad na base ng daan */
 .route-underlay {
@@ -891,12 +778,6 @@ img { max-width: 100%; }
   60%  { opacity:1; }
   100% { opacity:1; transform: translate(-50%,-50%) translateY(0) scale(1); }
 }
-.is-3d-active .pin-destination { animation: pinDrop3D .75s cubic-bezier(.34,1.56,.64,1) both !important; }
-@keyframes pinDrop3D {
-  0%   { opacity:0; transform: translate(-50%,-50%) translateZ(300px) scale(.6); }
-  60%  { opacity:1; }
-  100% { opacity:1; transform: translate(-50%,-50%) translateZ(150px) scale(1); }
-}
 
 /* Napiling opisina */
 .active-room {
@@ -913,11 +794,6 @@ img { max-width: 100%; }
 @keyframes roomGlow {
   from { box-shadow: 0 0 0 1px rgba(147,197,253,.5), 0 10px 24px rgba(37,99,235,.45); }
   to   { box-shadow: 0 0 0 1px rgba(147,197,253,.9), 0 16px 42px rgba(59,130,246,.75); }
-}
-.is-3d-active .active-room { animation: roomRise3D .7s cubic-bezier(.34,1.56,.64,1) both !important; }
-@keyframes roomRise3D {
-  0%   { transform: translateZ(44px); filter: brightness(2); }
-  100% { transform: translateZ(var(--room-h)); filter: brightness(1); }
 }
 
 /* Lumalawak na singsing sa destinasyon */
@@ -944,8 +820,7 @@ img { max-width: 100%; }
 
 @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
 
-
-/* ═══════════ 5. WELCOME SCREEN ═══════════ */
+/* ═══════════ 4. WELCOME SCREEN ═══════════ */
 .welcome-screen {
   position: fixed; inset: 0; z-index: 9999;
   overflow: hidden; cursor: pointer;
@@ -1415,7 +1290,6 @@ img { max-width: 100%; }
    coordinates, o click handler ng mapa.
    ████████████████████████████████████████████████████████████ */
 
-
 /* ═══════════ 1. TOKEN ═══════════ */
 /* Default = Dark. Ang .light-theme ay nasa <html> kapag Light ang piniling tema. */
 :root {
@@ -1484,7 +1358,6 @@ img { max-width: 100%; }
   --ui-sh-2: 0 12px 28px rgba(37,99,235,.12);
   --ui-sh-3: 0 30px 60px rgba(15,23,42,.22);
 }
-
 
 /* ═══════════ 2. SHELL AT HEADER ═══════════ */
 .map-screen-container {
@@ -1637,7 +1510,6 @@ img { max-width: 100%; }
   color: var(--ui-ink-3);
 }
 
-
 /* ═══════════ 3. SIDEBAR AT PAGHAHANAP ═══════════ */
 .map-sidebar {
   width: 450px;
@@ -1779,7 +1651,6 @@ img { max-width: 100%; }
   line-height: 1.3;
   color: var(--ui-ink);
 }
-
 
 /* ═══════════ 4. IDLE: BANNER AT LISTAHAN ═══════════ */
 
@@ -1937,7 +1808,6 @@ img { max-width: 100%; }
 }
 .sb-empty span { font-size: 2rem; }
 .sb-empty p { margin-top: 10px; font-weight: 700; }
-
 
 /* ═══════════ 5. DETALYE NG OPISINA AT RUTA ═══════════ */
 .sb-detail { display: flex; flex-direction: column; padding-bottom: 20px; }
@@ -2431,7 +2301,6 @@ img { max-width: 100%; }
 .screenshot-hint strong { display: block; font-size: 1rem; font-weight: 900; margin-bottom: 2px; }
 .screenshot-hint span { font-size: .82rem; font-weight: 700; line-height: 1.25; }
 
-
 /* ═══════════ 6. KONTROL NG MAPA (hindi ginalaw) ═══════════ */
 .floor-selector {
   background: rgba(7,18,35,.8) !important;
@@ -2444,7 +2313,8 @@ img { max-width: 100%; }
   background: rgba(255,255,255,.92) !important;
   border-color: #C7DCFA !important;
 }
-.ui-action-btn.zoom-btn, .view-mode-btn, .reset-view-btn {
+.ui-action-btn.zoom-btn,
+.reset-view-btn {
   background: transparent !important;
   border: 1px solid rgba(96,165,250,.4) !important;
   color: var(--k-300) !important;
@@ -2452,15 +2322,12 @@ img { max-width: 100%; }
   font-weight: 800 !important;
   transition: transform .18s ease, background .18s ease !important;
 }
-.ui-action-btn.zoom-btn:hover, .view-mode-btn:hover, .reset-view-btn:hover {
+.ui-action-btn.zoom-btn:hover,
+.reset-view-btn:hover {
   background: rgba(59,130,246,.2) !important; transform: translateY(-2px) !important;
 }
-.view-mode-btn.active {
-  background: linear-gradient(160deg, var(--k-500), var(--k-700)) !important;
-  color: #FFF !important; border-color: var(--k-300) !important;
-}
+
 .light-theme .ui-action-btn.zoom-btn,
-.light-theme .view-mode-btn,
 .light-theme .reset-view-btn { color: var(--k-700) !important; border-color: #BFDBFE !important; }
 
 .bottom-floor-bar {
@@ -2490,7 +2357,6 @@ img { max-width: 100%; }
 }
 .light-theme .floor-chip { color: #44618C !important; border-color: #BFDBFE !important; }
 .light-theme .floor-chip.active { color: #FFF !important; }
-
 
 /* ═══════════ 7. KIOSK KEYBOARD ═══════════ */
 .kiosk-virtual-keyboard {
@@ -2565,7 +2431,6 @@ img { max-width: 100%; }
   border-color: var(--ui-danger);
   color: var(--ui-danger);
 }
-
 
 /* ═══════════ 8. MODAL AT FORM ═══════════ */
 .k-overlay {
@@ -2687,6 +2552,9 @@ img { max-width: 100%; }
 }
 .k-btn:hover { transform: translateY(-2px); }
 .k-btn:disabled { opacity: .6; cursor: wait; transform: none; }
+/* Hindi paghihintay ang dahilan ng pagkapatay nito kundi hangganan —
+   kaya hindi orasan ang cursor, at hindi ito tumutugon sa hover. */
+.k-btn--blocked:disabled { cursor: not-allowed; opacity: .45; }
 .k-btn--primary {
   background: linear-gradient(160deg, var(--ui-accent-2), #1E3A8A);
   color: #FFFFFF;
@@ -2804,7 +2672,6 @@ img { max-width: 100%; }
   border: 2px solid var(--ui-line-2);
 }
 
-
 /* ═══════════ 9. SYSTEM SCREEN ═══════════ */
 .sys {
   display: flex;
@@ -2882,7 +2749,6 @@ img { max-width: 100%; }
   100% { transform: translateX(250%); }
 }
 
-
 /* ═══════════ 10. GALAW AT SCROLLBAR ═══════════ */
 button { -webkit-tap-highlight-color: transparent; }
 button:active { transform: scale(.97); }
@@ -2901,7 +2767,6 @@ button:active { transform: scale(.97); }
 @media (prefers-reduced-motion: reduce) {
   .office-row, .k-modal, .k-overlay, .map-screen-container { animation: none !important; }
 }
-
 
 /* ═══════════ 11. ADMIN PANEL ═══════════ */
 .adm {
@@ -3171,6 +3036,28 @@ button:active { transform: scale(.97); }
 }
 .adm-count.is-near { color: var(--ui-gold); }
 .adm-count.is-full { color: var(--ui-danger); }
+
+/* Bilang ng nagamit na puwesto katabi ng pamagat ng seksyon (hal. 3 / 5).
+   Pumupula kapag puno na — doon nawawalan ng silbi ang Add Video. */
+.adm-tally {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 4px;
+  padding: 3px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--ui-line);
+  background: var(--ui-raise);
+  color: var(--ui-ink-3);
+  font-size: .82rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .3px;
+}
+.adm-tally.is-full {
+  border-color: var(--ui-danger);
+  background: var(--ui-danger-sf);
+  color: var(--ui-danger);
+}
 /* Nakadikit ang mga pagpipilian sa ibaba — hindi ito nawawala kahit
    mahaba ang form at nag-scroll na ang laman. */
 .adm-modal-foot {
@@ -3511,7 +3398,6 @@ button:active { transform: scale(.97); }
   .pin-kiosk::after { animation: none !important; }
   .brand .dir-title { -webkit-text-fill-color: var(--ui-ink); color: var(--ui-ink) !important; }
 }
-
 
 /* ═══════════ FLOATING TOUCHSCREEN KEYBOARD (admin) ═══════════
    Nakalutang at nahihila. Nasa itaas ng .k-overlay (z-index 99999)

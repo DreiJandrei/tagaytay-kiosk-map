@@ -24,6 +24,11 @@ const BLANK_VIDEO = {
 // hindi naman makikita ng bisita.
 const TEXT_LIMITS = { announcement: 300, advisory: 150 };
 
+// Ilang video ang puwedeng nakatala. Salitan itong pinapalabas sa welcome
+// screen, kaya ang bawat dagdag ay dagdag hintay bago maulit ang una —
+// sa lima pa lang, mahigit tatlong minuto na ang buong ikot.
+const MAX_VIDEOS = 5;
+
 export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang = 'EN', setLang }) {
   // Iisang switch lang ang wika ng buong kiosk — ang header toggle. Dito
   // lang ito sinasalain: `t(english, tagalog)`. Walang teksto sa panel na
@@ -116,7 +121,19 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     fetchVideos();
   }, []);
 
+  const isVideoListFull = videos.length >= MAX_VIDEOS;
+
   const pickVideo = (video) => {
+    // Bagong video lang ang hinaharang ng hangganan — ang pag-edit at
+    // pagbura ng nakatala na ay bukas pa rin kahit puno na.
+    if (!video && isVideoListFull) {
+      return alert(t(
+        `❌ ${MAX_VIDEOS} videos is the limit.\n\n`
+        + 'Delete one of the videos on the list first before adding another.',
+        `❌ ${MAX_VIDEOS} na video lang ang hangganan.\n\n`
+        + 'Burahin muna ang isa sa listahan bago magdagdag ng bago.',
+      ));
+    }
     const next = video ? { ...video } : { ...BLANK_VIDEO, sort_order: videos.length };
     setVideoForm(next);
     setVideoSnapshot(JSON.stringify(next));
@@ -219,6 +236,17 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
   const handleSaveVideo = async (e) => {
     e.preventDefault();
     if (!videoForm) return;
+
+    // Pangalawang pigil: maaaring nakabukas na ang form bago pa nadagdagan
+    // ng ibang admin ang listahan sa ibang kiosk.
+    if (!videoForm.id && isVideoListFull) {
+      return alert(t(
+        `❌ ${MAX_VIDEOS} videos is the limit — this one was not saved.\n\n`
+        + 'Delete one of the videos on the list first.',
+        `❌ ${MAX_VIDEOS} na video lang ang hangganan — hindi na-save ito.\n\n`
+        + 'Burahin muna ang isa sa listahan.',
+      ));
+    }
 
     const problem = validateVideoUrl(videoForm.source_url, videoForm.video_type, lang);
     if (problem) return alert(`❌ ${problem}`);
@@ -558,17 +586,27 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
 
             <div className="adm-divider" aria-hidden="true" />
 
-            <h3>🎬 {t('Welcome Screen Videos', 'Mga Video sa Welcome Screen')}</h3>
+            <h3>
+              🎬 {t('Welcome Screen Videos', 'Mga Video sa Welcome Screen')}
+              {' '}
+              <span className={`adm-tally${isVideoListFull ? ' is-full' : ''}`}>
+                {videos.length} / {MAX_VIDEOS}
+              </span>
+            </h3>
             <p className="adm-hint">
               {EN ? (
                 <>
                   3 · Paste the link of a <strong>public</strong> Facebook post, a YouTube video, or
                   a direct .mp4 file. These play in turn beside the announcement board.
+                  Up to <strong>{MAX_VIDEOS} videos</strong> — past that, the wait before the first
+                  one comes around again is too long.
                 </>
               ) : (
                 <>
                   3 · I-paste ang link ng <strong>public</strong> na Facebook post, YouTube video, o
                   direktang .mp4 file. Salitan itong ipapalabas katabi ng announcement board.
+                  Hanggang <strong>{MAX_VIDEOS} na video</strong> lang — sa sobra pa riyan, masyado
+                  nang matagal bago maulit ang una.
                 </>
               )}
             </p>
@@ -604,9 +642,22 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   ))}
             </div>
 
-            <button type="button" className="k-btn k-btn--primary" onClick={() => pickVideo(null)}>
+            <button
+              type="button"
+              className={`k-btn k-btn--primary${isVideoListFull ? ' k-btn--blocked' : ''}`}
+              onClick={() => pickVideo(null)}
+              disabled={isVideoListFull}
+            >
               ＋ {t('Add Video', 'Magdagdag ng Video')}
             </button>
+            {isVideoListFull && (
+              <p className="adm-hint">
+                {t(
+                  `The list is full (${MAX_VIDEOS}). Tap ✏️ Edit on a video and delete it to free up a slot.`,
+                  `Puno na ang listahan (${MAX_VIDEOS}). Pindutin ang ✏️ Edit sa isang video at burahin ito para may mabakante.`,
+                )}
+              </p>
+            )}
           </div>
         )}
 

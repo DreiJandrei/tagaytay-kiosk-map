@@ -56,7 +56,6 @@ export default function App() {
   const [appState, setAppState] = useState('welcome');
   const [theme, setTheme] = useState('light'); 
   const [currentFloor, setCurrentFloor] = useState(1);
-  const [is3DActive, setIs3DActive] = useState(false);
   const [time, setTime] = useState("--:-- --");
   
   const [selectedOfficeKey, setSelectedOfficeKey] = useState(null);
@@ -939,8 +938,6 @@ export default function App() {
           currentFloor={currentFloor}
           setCurrentFloor={setCurrentFloor} 
           setSelectedOfficeKey={setSelectedOfficeKey} 
-          is3DActive={is3DActive}
-          setIs3DActive={setIs3DActive}
           transportMethod={transportMethod}
           routeStep={routeStep}
           kioskLabel={guideKioskLabel}
