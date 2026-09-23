@@ -490,9 +490,13 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
                     pader. */}
                 <path d="M 1110 310 L 1110 425 M 1110 465 L 1110 570 L 1350 570" />
 
-                {/* Restroom (CR) — kaliwang pader na may pinto sa 610-650,
-                    tapos ang ilalim nito hanggang sa silangang pader. */}
-                <path d="M 1140 570 L 1140 610 M 1140 650 L 1140 670 L 1350 670" />
+                {/* Restroom (CR) — dalawang pahalang na pader lang: ang
+                    ilalim ng Breastfeeding Room (570) ang bubong nito, at
+                    ito ang sahig (670). BUKAS ang buong kanlurang gilid —
+                    iyon ang bukana, at doon dumadaan ang ruta papasok.
+                    Walang patayong pader dito: kung may pader sa kaliwa,
+                    masikip na silid ang lalabas at hindi na bukana. */}
+                <path d="M 1140 670 L 1350 670" />
 
                 {/* Fire exit sa kanang pader. */}
                 <path d="M 1310 740 L 1350 740" />
