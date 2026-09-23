@@ -255,12 +255,13 @@ export const coordinateMapping = {
                 clipPath: 'polygon(0% 0%, 100% 0%, 100% 36%, 36.36% 36%, 36.36% 100%, 0% 100%)',
                 backgroundColor: '#4338ca', color: 'white', textAlign: 'center',
                 display: 'flex',
-                // Nasa itaas ang pangalan, hindi sa gitna: nasa gitna ng
-                // kahon ang gupit, kaya doon ito mawawala.
+                // Nasa sanga sa itaas ang pangalan, hindi sa gitna ng kahon:
+                // nagupit ang gitna, kaya doon ito mawawala. Ang `l-shape-top`
+                // sa index.css ang nagsesentro nito sa loob ng sanga.
                 alignItems: 'flex-start', justifyContent: 'center',
                 fontWeight: 'bold', fontSize: '1.2rem', borderRadius: '4px'
             },
-            cssClass: ""
+            cssClass: "l-shape-top"
         },
         "mayor-receiving": {
             targetX: 700,

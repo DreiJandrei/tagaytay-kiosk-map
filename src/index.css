@@ -604,6 +604,23 @@ img { max-width: 100%; }
 .room-node[style*="0.75rem"] .room-label,
 .room-node[style*="0.8rem"] .room-label { font-size: inherit !important; }
 
+/* --- Hugis-L na kwarto (tanggapan ng Mayor sa 7th Floor) ---
+   Ginugupit ng clip-path ang kanang-ibaba ng kahon, kaya ang gitna nito —
+   ang normal na kinalalagyan ng pangalan — ay wala nang makikita. Dito
+   ibinibigay ang sanga sa itaas bilang sariling kahon ng pangalan, at
+   doon ito isinesentro.
+
+   156px = 180px na taas ng sanga, bawas ang 12px na padding sa itaas at
+   sa ibaba. Ang gitna nito ay tumatapat mismo sa gitna ng sanga. Hindi
+   ito nakasalalay sa laki ng titik, kaya tama pa rin kahit naka-ON ang
+   "Bigger Text" o kahit dalawang linya ang pangalan. */
+.room-node.l-shape-top .room-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 156px;
+}
+
 /* --- Istruktura: hagdan, escalator, elevator, garden --- */
 .structural-element { border-radius: 6px !important; box-shadow: none !important; }
 .stairs-block, .escalator-block, .elevator-block {
