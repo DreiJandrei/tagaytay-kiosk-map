@@ -474,6 +474,26 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
                 {/* Pader sa ilalim ng Tolentino Hall, may pintuan sa 1000-1060. */}
                 <path d="M 330 310 L 1000 310 M 1060 310 L 1350 310" />
                 <path d="M 720 575 L 980 575" />
+
+                {/* Gitnang pader (x 1010) — ito ang naghahati sa hanay ng
+                    opisina sa kanluran at sa lobby sa silangan. Limang
+                    puwang ito: tig-isang PINTO para sa Civil Security
+                    (350-390), Barangay Affairs (470-510) at Tourism
+                    (595-635) — doon mismo dumaraan ang ruta papasok sa
+                    bawat isa — at ang malapad na daanan pakanluran
+                    (680-740) na dinaraanan ng lahat ng rutang papuntang
+                    Cultural Hall, PIO, hagdan at canteen. */}
+                <path d="M 1010 310 L 1010 350 M 1010 390 L 1010 470 M 1010 510 L 1010 595 M 1010 635 L 1010 680 M 1010 740 L 1010 960" />
+
+                {/* Breastfeeding Room — kaliwang pader na may pinto sa
+                    425-465, tapos ang ilalim nito hanggang sa silangang
+                    pader. */}
+                <path d="M 1110 310 L 1110 425 M 1110 465 L 1110 570 L 1350 570" />
+
+                {/* Restroom (CR) — kaliwang pader na may pinto sa 610-650,
+                    tapos ang ilalim nito hanggang sa silangang pader. */}
+                <path d="M 1140 570 L 1140 610 M 1140 650 L 1140 670 L 1350 670" />
+
                 {/* Fire exit sa kanang pader. */}
                 <path d="M 1310 740 L 1350 740" />
               </g>
@@ -579,9 +599,10 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
                 </div>
               </div>
 
-              {/* Gitnang pader na naghahati sa kanluran at silangang bahagi. */}
-              <div className="grey-wall" style={{ width: '0px', height: '65px', left: '1010px', top: '615px' }}></div>
-              <div className="grey-wall" style={{ width: '0px', height: '220px', left: '1010px', top: '740px' }}></div>
+              {/* Ang dating dalawang `grey-wall` na div dito ay naging
+                  bahagi na ng gitnang pader sa SVG sa itaas — doon na
+                  kasama ang mga pinto, at iisa na lang ang paraan ng
+                  pagguhit ng pader sa buong mapa. */}
 
               <div className="exit-badge" style={exitBadgeStyle(1262, 730)}>FIRE EXIT</div>
               <div className="exit-badge" style={exitBadgeStyle(1080, 968)}>EXIT</div>
