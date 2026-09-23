@@ -8,30 +8,39 @@
 export const coordinateMapping = {
  1: {
       // ==========================================================
-      // GROUND FLOOR — nakaayon sa opisyal na 1st Floor floor plan.
-      // Ang kiosk ("YOU ARE HERE") ay nasa loob ng lobby, katapat ng
-      // pulang "Map" block sa plano: (1045, 822).
-      // Mga pangunahing daanan (para hindi tumagos sa pader):
-      //   x = 1045  -> pasilyo ng lobby paakyat (hilaga)
-      //   x = 1100  -> pasilyo ng lobby pababa (timog)
-      //   y = 710   -> pagtawid pakanluran, sa bukana ng gitnang pader
-      //   y = 935   -> pasilyo sa may bukana/entrance
+      // GROUND FLOOR — nakaayon sa opisyal na ground floor na plano.
+      //
+      // TATLONG PASILYO lang ang dinadaanan ng LAHAT ng ruta rito.
+      // Nakatago ang mga numerong ito sa bawat pathData sa ibaba, kaya
+      // walang linyang tumatagos sa pader o sa loob ng ibang kwarto:
+      //
+      //   x = 880  (V2) — lobby, mula sa kiosk paakyat sa hilaga.
+      //                   Nasa kanan ito ng escalator (dulo: 855).
+      //   y = 655  (H1) — pahalang na pasilyo sa likuran ng lahat ng
+      //                   opisina. Nasa ilalim ito ng pinakamababang
+      //                   kwarto (PIO, 625) at ng hagdan (605).
+      //   x = 727  (V1) — makitid na daanan sa pagitan ng gitnang hanay
+      //                   (dulo: 710) at ng silangang hanay (simula: 745).
+      //                   Dito dumadaan ang ruta paakyat sa Tolentino.
+      //
+      // Ang kiosk ("YOU ARE HERE") ay nasa lobby, katabi ng bukana:
+      // (880, 832) — doon din nakatayo ang pulang "MAP" block.
       // ==========================================================
 
       // ======== MULTI-FLOOR TRANSPORT ROUTES ========
       "elevator-up": {
-          // Nasa ILALIM ng elevator block ang pinto (x 1153-1213), kaya
-          // pahalang muna sa pasilyo (y 822) bago pumasok paakyat sa pinto.
-          targetX: 1183, targetY: 745,
-          pathData: "M 1045 822 L 1183 822 L 1183 790",
+          // Nasa ILALIM ng elevator block ang pinto (x 745-855), kaya
+          // sa pasilyo muna (y 655) bago tumapat sa pinto paakyat.
+          targetX: 800, targetY: 618,
+          pathData: "M 880 832 L 880 655 L 800 655 L 800 618",
           style: { display: 'none' },
           isDirectionOnly: true,
           title: "Elevator to Upper Floors",
           badge: "Vertical Transport"
       },
       "stairs-up": {
-          targetX: 450, targetY: 630,
-          pathData: "M 1045 822 L 1045 710 L 500 710 L 500 630 L 450 630",
+          targetX: 335, targetY: 618,
+          pathData: "M 880 832 L 880 655 L 335 655 L 335 618",
           style: { display: 'none' },
           isDirectionOnly: true,
           title: "Stairs to Upper Floors",
@@ -39,61 +48,82 @@ export const coordinateMapping = {
       },
 
       "tolentino-hall": {
-          targetX: 1045, targetY: 260, pathData: "M 1045 822 L 1045 260",
-          style: { width: 940, height: 180, left: 370, top: 120 }, cssClass: "theme-amber"
+          // Ang puwang sa pagitan ng CSU (710) at ng Breastfeeding (745)
+          // ang pinto ng bulwagan — doon dumadaan ang V1 paakyat.
+          targetX: 727, targetY: 290,
+          pathData: "M 880 832 L 880 655 L 727 655 L 727 290",
+          style: { width: 335, height: 200, left: 520, top: 180 }, cssClass: "theme-blue"
       },
       "cultural-hall": {
-          targetX: 500, targetY: 540, pathData: "M 1045 822 L 1045 710 L 625 710 L 625 585 L 500 585 L 500 540",
-          style: { width: 260, height: 240, left: 370, top: 320 }, cssClass: "theme-cyan"
+          // Nakaharang ang hagdan (260-410) sa ilalim ng bulwagan, kaya
+          // sa gawing kanan (x 430) pumapasok ang ruta — doon lang
+          // malinis ang akyat — tapos pakaliwa na sa loob mismo.
+          targetX: 350, targetY: 465,
+          pathData: "M 880 832 L 880 655 L 430 655 L 430 465 L 350 465",
+          style: { width: 200, height: 135, left: 250, top: 380 }, cssClass: "theme-blue"
       },
       "canteen": {
-          // Labas ng gusali sa kaliwa — dumadaan sa pintuan ng kanlurang pader (y 480-560).
-          targetX: 190, targetY: 520,
-          pathData: "M 1045 822 L 1045 710 L 645 710 L 645 572 L 345 572 L 345 520 L 190 520",
-          style: { width: 280, height: 250, left: 0, top: 400 }, cssClass: "theme-blue"
+          // Labas ng gusali sa kanluran — dumadaan sa pintuan ng
+          // kanlurang pader (puwang sa y 620-690).
+          targetX: 105, targetY: 760,
+          pathData: "M 880 832 L 880 655 L 105 655 L 105 760",
+          style: { width: 130, height: 200, left: 40, top: 690 }, cssClass: "theme-blue"
       },
       "pio-1": {
-          targetX: 695, targetY: 495, pathData: "M 1045 822 L 1045 710 L 695 710 L 695 660",
-          style: { width: 90, height: 340, left: 650, top: 320 }, cssClass: "theme-purple vertical-text-wrapper"
+          targetX: 490, targetY: 555,
+          pathData: "M 880 832 L 880 655 L 490 655 L 490 555",
+          style: { width: 70, height: 240, left: 455, top: 385, fontSize: '0.75rem' },
+          cssClass: "theme-blue vertical-text-wrapper"
       },
       "pio-2": {
-          targetX: 785, targetY: 495, pathData: "M 1045 822 L 1045 710 L 785 710 L 785 660",
-          style: { width: 90, height: 340, left: 740, top: 320 }, cssClass: "theme-purple vertical-text-wrapper"
+          targetX: 565, targetY: 555,
+          pathData: "M 880 832 L 880 655 L 565 655 L 565 555",
+          style: { width: 70, height: 240, left: 530, top: 385, fontSize: '0.75rem' },
+          cssClass: "theme-blue vertical-text-wrapper"
       },
       "csu-office": {
-          targetX: 990, targetY: 370, pathData: "M 1045 822 L 1045 370 L 1010 370",
-          style: { width: 180, height: 100, left: 830, top: 320 }, cssClass: "theme-teal"
+          // Nakaharap sa V1 ang tatlong kwarto ng gitnang hanay, kaya
+          // pareho ang hugis ng ruta: akyat sa 727, tapos pakaliwa.
+          targetX: 695, targetY: 420,
+          pathData: "M 880 832 L 880 655 L 727 655 L 727 420 L 695 420",
+          style: { width: 105, height: 70, left: 605, top: 385, fontSize: '0.75rem' }, cssClass: "theme-blue"
       },
       "barangay-affairs": {
-          targetX: 990, targetY: 490, pathData: "M 1045 822 L 1045 490 L 1010 490",
-          style: { width: 180, height: 100, left: 830, top: 440 }, cssClass: "theme-teal"
+          targetX: 695, targetY: 495,
+          pathData: "M 880 832 L 880 655 L 727 655 L 727 495 L 695 495",
+          style: { width: 105, height: 70, left: 605, top: 460, fontSize: '0.75rem' }, cssClass: "theme-blue"
       },
       "tourism-office": {
-          targetX: 990, targetY: 615, pathData: "M 1045 822 L 1045 615 L 1010 615",
-          style: { width: 180, height: 110, left: 830, top: 560 }, cssClass: "theme-teal"
+          targetX: 695, targetY: 575,
+          pathData: "M 880 832 L 880 655 L 727 655 L 727 575 L 695 575",
+          style: { width: 105, height: 80, left: 605, top: 535, fontSize: '0.75rem' }, cssClass: "theme-blue"
       },
       "breastfeeding-room": {
-          targetX: 1130, targetY: 445, pathData: "M 1045 822 L 1045 445 L 1130 445",
-          style: { width: 200, height: 250, left: 1110, top: 320 }, cssClass: "theme-cyan"
+          targetX: 760, targetY: 420,
+          pathData: "M 880 832 L 880 655 L 727 655 L 727 420 L 760 420",
+          style: { width: 110, height: 70, left: 745, top: 385, fontSize: '0.75rem' }, cssClass: "theme-blue"
       },
       "restroom-cr": {
-          targetX: 1180, targetY: 630, pathData: "M 1045 822 L 1045 630 L 1180 630",
-          style: { width: 140, height: 70, left: 1160, top: 595, padding: '8px', fontSize: '0.8rem' },
-          cssClass: "theme-gray",
+          targetX: 760, targetY: 497,
+          pathData: "M 880 832 L 880 655 L 727 655 L 727 497 L 760 497",
+          style: { width: 110, height: 65, left: 745, top: 465, fontSize: '0.75rem' },
+          cssClass: "theme-blue",
           isDirectionOnly: true
       },
       "info-desk": {
-          // Kaliwa mismo ng bukana, nakadikit sa gitnang pader.
-          targetX: 1045, targetY: 910, pathData: "M 1045 822 L 1045 910",
-          style: { width: 75, height: 75, left: 1010, top: 880, padding: '6px', fontSize: '0.75rem' },
-          cssClass: "theme-blue"
+          // Nasa lobby mismo, nakasandal sa kanlurang pader — ilang
+          // hakbang lang mula sa kiosk, kaya tuwid ang ruta.
+          targetX: 730, targetY: 832,
+          pathData: "M 880 832 L 730 832",
+          style: { width: 60, height: 130, left: 660, top: 760, fontSize: '0.75rem' },
+          cssClass: "theme-blue vertical-text-wrapper"
       },
       "guard": {
-          // Kanan ng bukana, katabi ng pinto papasok.
-          targetX: 1287, targetY: 945,
-          pathData: "M 1045 822 L 1105 822 L 1105 945 L 1287 945",
-          style: { width: 75, height: 58, left: 1250, top: 900, padding: '6px', fontSize: '0.75rem' },
-          cssClass: "theme-indigo"
+          // Katabi ng bukana sa gawing silangan.
+          targetX: 945, targetY: 875,
+          pathData: "M 880 832 L 945 832 L 945 875",
+          style: { width: 80, height: 55, left: 905, top: 880, fontSize: '0.75rem' },
+          cssClass: "theme-blue"
       }
   },
   2: {

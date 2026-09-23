@@ -195,9 +195,10 @@ export default function MapScreen({
 
   if (currentFloor === 1) {
       // Katapat ng pulang "Map" block sa floor plan — sa loob ng lobby,
-      // kaliwa ng escalator. Dito nagsisimula lahat ng ruta sa 1st floor.
+      // kanan ng escalator at malapit sa bukana. Dito nagsisimula ang
+      // lahat ng ruta sa ground floor (tingnan ang coordinateMapping).
       kioskText = "🔴 YOU ARE HERE (Map Kiosk)";
-      kioskStyle = { left: 1045, top: 822, display: 'block' };
+      kioskStyle = { left: 880, top: 832, display: 'block' };
   } else if (selectedOfficeKey || routeStep !== 'idle') {
       kioskStyle = { display: 'block' };
       const isClimbing = routeStep === 'climbing-stairs';
@@ -250,13 +251,13 @@ export default function MapScreen({
   }
 
 if (currentFloor === 1 && transportMethod === 'escalator') {
-      // Nasa KANANG dulo ang sakayan paakyat ng escalator. Kaya pahalang
-      // muna sa pasilyo (y 822, nasa pagitan ng elevator at escalator),
-      // hanggang x 1225, tapos pababa papasok sa kanang dulo.
+      // Nasa KANANG gilid ang sakayan paakyat ng escalator (dulo: x 855).
+      // Kaya paakyat muna sa daanan ng lobby (x 880) hanggang katapat ng
+      // gitna nito (y 720), tapos pakaliwa papasok.
       // Inililipat din ang tunguhin sa escalator (hindi elevator).
-      finalPathData = "M 1045 822 L 1225 822 L 1225 885";
-      destX = 1225;
-      destY = 885;
+      finalPathData = "M 880 832 L 880 720 L 862 720";
+      destX = 862;
+      destY = 720;
       destTitle = "Escalator to Upper Floors";
   }
 
@@ -474,14 +475,26 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
           {currentFloor === 1 && (
             <svg width="1400" height="1300" style={{ position: 'absolute', top: 0, left: 0, zIndex: 1, pointerEvents: 'none' }}>
               <g stroke="#9CA3AF" strokeWidth="8" fill="transparent" strokeLinecap="round">
-                {/* Panlabas na pader. Puwang sa baba (1100-1230) = bukana/entrance,
-                    puwang sa kaliwa (y 480-560) = pinto papuntang canteen. */}
-                <path d="M 1100 960 L 330 960 L 330 560 M 330 480 L 330 75 L 1350 75 L 1350 960 L 1230 960" />
-                {/* Pader sa ilalim ng Tolentino Hall, may pintuan sa 1000-1060. */}
-                <path d="M 330 310 L 1000 310 M 1060 310 L 1350 310" />
-                <path d="M 720 575 L 980 575" />
-                {/* Fire exit sa kanang pader. */}
-                <path d="M 1310 740 L 1350 740" />
+                {/* Hilagang pader, mula sa kanang sulok ng Tolentino Hall,
+                    tapos ang pinutol na sulok sa hilagang-silangan. */}
+                <path d="M 855 180 L 1170 180 L 1330 285 L 1330 555" />
+                {/* Silangang pader — ang puwang (y 555-625) ay fire exit. */}
+                <path d="M 1330 625 L 1330 810 L 1010 955" />
+                {/* Timog na pader. Ang malaking puwang (700-880) ay siyang
+                    bukana: doon pumapasok at lumalabas ang bisita. */}
+                <path d="M 1010 955 L 880 955 M 700 955 L 655 955" />
+                {/* Kanlurang gilid ng lobby, tapos hakbang-hakbang
+                    pakanluran — ito ang hugis ng gusali sa plano. */}
+                <path d="M 655 955 L 655 800 L 520 800 L 520 690 L 250 690" />
+                {/* Kanlurang pader. Ang puwang (y 620-690) ang pintong
+                    palabas papuntang canteen. */}
+                <path d="M 250 620 L 250 510" />
+                {/* Maikling pader na nagsasara sa pagitan ng Cultural Hall
+                    at ng Tolentino Hall. */}
+                <path d="M 450 380 L 520 380" />
+                {/* Panloob na pader sa pagitan ng lobby at ng atrium sa
+                    silangan. May pintuan sa y 640-700. */}
+                <path d="M 990 180 L 990 640 M 990 700 L 990 955" />
               </g>
             </svg>
           )}
@@ -542,48 +555,45 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
 
           {currentFloor === 1 && (
             <>
-              <div className="structural-element garden-area" style={{ width: '400px', height: '220px', left: '350px', top: '730px' }}>
+              {/* Bukas na atrium sa silangan — nasa loob ng panlabas na
+                  pader, pero walang opisina rito. */}
+              <div className="structural-element garden-area" style={{ width: '260px', height: '380px', left: '1040px', top: '320px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
                   <div style={{ fontSize: '2.2rem', display: 'flex', gap: '15px', justifyContent: 'center' }}>🌿 🪴 🌴</div>
                   <div style={{ textAlign: 'center', fontWeight: '800', marginTop: '10px' }}>Atrium Garden</div>
                 </div>
               </div>
-              <div className="structural-element stairs-block" style={{ width: '255px', height: '100px', left: '370px', top: '585px' }}>
+
+              {/* Hagdan — nasa ilalim ng Cultural Hall. Dahil nakaharang
+                  ito sa gitna, sa gawing kanan (x 430) pumapasok ang ruta
+                  papunta sa bulwagan. */}
+              <div className="structural-element stairs-block" style={{ width: '150px', height: '60px', left: '260px', top: '545px' }}>
                 <div className="stair-lines"></div><span className="stair-label">Stairs ▶</span>
               </div>
-              {/* Elevator: nasa ibaba ang pinto. May 60px na pasilyo (y 790-850)
-                  sa pagitan nito at ng escalator para may daanan ang ruta. */}
-              <div className="structural-element elevator-block" style={{ width: '145px', height: '100px', left: '1110px', top: '690px' }}>
-                Elevator<div className="elevator-doors" style={{ left: '43px' }}></div>
+
+              {/* Elevator: nasa ibaba ang pinto, nakaharap sa pasilyo (y 655). */}
+              <div className="structural-element elevator-block" style={{ width: '110px', height: '65px', left: '745px', top: '540px' }}>
+                Elevator<div className="elevator-doors" style={{ left: '25px' }}></div>
               </div>
-              <div className="structural-element escalator-block" style={{ width: '120px', height: '80px', left: '1120px', top: '845px' }}>
+
+              {/* Escalator — nasa lobby. Iniiwan ang 25px na puwang sa
+                  kanan nito (x 855-880) para may madaanan ang ruta paakyat. */}
+              <div className="structural-element escalator-block" style={{ width: '110px', height: '60px', left: '745px', top: '690px' }}>
                 <div className="stair-lines"></div><span className="escalator-label">Escalator ◀</span>
               </div>
 
               {/* Pulang "Map" block — ito ang pisikal na kiosk kung saan
                   nakatayo ang bumibisita. Dito nagsisimula ang lahat ng ruta. */}
-              <div className="structural-element kiosk-block" style={{ width: '40px', height: '85px', left: '1025px', top: '780px' }}>
+              <div className="structural-element kiosk-block" style={{ width: '40px', height: '85px', left: '860px', top: '790px' }}>
                 <span className="kiosk-block-label">MAP</span>
               </div>
 
               {/* Hagdan papasok galing sa labas (harap ng bukana). */}
-              <div className="structural-element entrance-steps" style={{ width: '180px', height: '40px', left: '1080px', top: '1005px' }}></div>
+              <div className="structural-element entrance-steps" style={{ width: '180px', height: '40px', left: '700px', top: '1000px' }}></div>
 
-              {/* Parking area — nasa labas ng gusali, kaliwang bahagi. */}
-              <div className="structural-element parking-area" style={{ width: '240px', height: '150px', left: '20px', top: '730px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
-                  <div style={{ fontSize: '2rem' }}>🅿️ 🚗</div>
-                  <div style={{ textAlign: 'center', fontWeight: '800', marginTop: '8px' }}>Parking Area</div>
-                </div>
-              </div>
-
-              {/* Gitnang pader na naghahati sa kanluran at silangang bahagi. */}
-              <div className="grey-wall" style={{ width: '0px', height: '65px', left: '1010px', top: '615px' }}></div>
-              <div className="grey-wall" style={{ width: '0px', height: '220px', left: '1010px', top: '740px' }}></div>
-
-              <div className="exit-badge" style={exitBadgeStyle(1262, 730)}>FIRE EXIT</div>
-              <div className="exit-badge" style={exitBadgeStyle(1080, 968)}>EXIT</div>
-              <div className="exit-badge entrance-badge" style={exitBadgeStyle(1150, 968)}>ENTRANCE</div>
+              <div className="exit-badge" style={exitBadgeStyle(1240, 575)}>FIRE EXIT</div>
+              <div className="exit-badge" style={exitBadgeStyle(705, 963)}>EXIT</div>
+              <div className="exit-badge entrance-badge" style={exitBadgeStyle(790, 963)}>ENTRANCE</div>
             </>
           )}
           
