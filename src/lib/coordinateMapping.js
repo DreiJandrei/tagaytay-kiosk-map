@@ -256,12 +256,17 @@ export const coordinateMapping = {
                 backgroundColor: '#4338ca', color: 'white', textAlign: 'center',
                 display: 'flex',
                 // Nasa sanga sa itaas ang pangalan, hindi sa gitna ng kahon:
-                // nagupit ang gitna, kaya doon ito mawawala. Ang `l-shape-top`
-                // sa index.css ang nagsesentro nito sa loob ng sanga.
+                // nagupit ang gitna, kaya doon ito mawawala.
                 alignItems: 'flex-start', justifyContent: 'center',
+                // Taas ng sanga na kasya sa pangalan: 180px, bawas ang 12px
+                // na padding sa itaas at sa ibaba. Dito ito isinesentro ng
+                // index.css. Sa `style` ito nakalagay at HINDI sa `cssClass`
+                // dahil ang `cssClass` ay pinapalitan ng galing sa database
+                // (tingnan ang mergeOfficeData sa ibaba) — mawawala ito roon.
+                '--l-arm': '156px',
                 fontWeight: 'bold', fontSize: '1.2rem', borderRadius: '4px'
             },
-            cssClass: "l-shape-top"
+            cssClass: ""
         },
         "mayor-receiving": {
             targetX: 700,

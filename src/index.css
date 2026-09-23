@@ -610,15 +610,20 @@ img { max-width: 100%; }
    ibinibigay ang sanga sa itaas bilang sariling kahon ng pangalan, at
    doon ito isinesentro.
 
-   156px = 180px na taas ng sanga, bawas ang 12px na padding sa itaas at
-   sa ibaba. Ang gitna nito ay tumatapat mismo sa gitna ng sanga. Hindi
-   ito nakasalalay sa laki ng titik, kaya tama pa rin kahit naka-ON ang
-   "Bigger Text" o kahit dalawang linya ang pangalan. */
-.room-node.l-shape-top .room-label {
+   Ang `--l-arm` ay nasa inline style ng kwarto (coordinateMapping), at
+   ito ang taas ng sangang iyon. Sa style ito hinahanap at hindi sa isang
+   class dahil ang `cssClass` ay pinapalitan ng galing sa database kapag
+   pinagsama na ang datos — mawawala ito roon. Ganito rin ang ginagawa ng
+   panuntunan sa itaas para sa maliliit na titik.
+
+   Dahil taas ng sanga ang sinusukat at hindi laki ng titik, nasa gitna
+   pa rin ito kahit naka-ON ang "Bigger Text" o kahit dalawang linya ang
+   pangalan. */
+.room-node[style*="--l-arm"] .room-label {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 156px;
+  height: var(--l-arm);
 }
 
 /* --- Istruktura: hagdan, escalator, elevator, garden --- */
