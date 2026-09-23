@@ -11,7 +11,12 @@ export default function MapScreen({
   routeStep,
   // Kapag may laman, ito ang nakasulat sa pin — ginagamit ito ng
   // step-by-step na gabay sa mga palapag na dinaraanan lang.
-  kioskLabel = null
+  kioskLabel = null,
+  // Naka-lock na tanawin: ito ang lumalabas sa telepono ng bisita kapag
+  // na-scan ang QR. Larawan lang ito ng palapag at ng ruta — walang
+  // mahihila, walang mapapalaki, at walang mapipindot na kwarto. Hindi
+  // ito para sa kiosk mismo.
+  staticView = false
 }) {
  const pathRef = useRef(null);
   const viewportRef = useRef(null);
@@ -72,7 +77,11 @@ export default function MapScreen({
   const viewFor = ({ w, h }, box) => {
     // Hindi lalampas sa dating laki sa malalaking screen — doon walang
     // nagbago. Sa masikip lang ito umuurong, para kasya ang buong palapag.
-    const base = isMobile ? 0.28 : 0.65;
+    //
+    // Sa naka-lock na tanawin, ang sukat ng screen na lang ang masusunod:
+    // walang buton na pampalaki roon, kaya kailangang kasya agad ang buong
+    // palapag sa unang tingin — kahit anong telepono ang gamit.
+    const base = staticView ? 1.6 : (isMobile ? 0.28 : 0.65);
 
     // Walang masukat (unang render, o walang guhit) — ang canvas na ang
     // isesentro. Laging may nailalabas ito, kahit paano.
@@ -149,7 +158,7 @@ export default function MapScreen({
   }, [selectedOfficeKey, offices]); 
 
   const handleDragStart = (clientX, clientY) => {
-    if (isMobile) return; 
+    if (isMobile || staticView) return;
     isDragging.current = true;
     dragStart.current = { x: clientX - pan.x, y: clientY - pan.y };
   };
@@ -400,7 +409,7 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
     <main
       ref={viewportRef}
       className="map-viewport"
-      style={{ flexGrow: 1, position: 'relative', overflow: 'hidden', cursor: isDragging.current ? 'grabbing' : 'grab' }}
+      style={{ flexGrow: 1, position: 'relative', overflow: 'hidden', cursor: staticView ? 'default' : (isDragging.current ? 'grabbing' : 'grab') }}
       onMouseDown={(e) => {
         if(!e.target.closest('.room-node') && !e.target.closest('.floor-selector') && !e.target.closest('.map-legend') && !e.target.closest('.bottom-floor-bar')) {
           handleDragStart(e.clientX, e.clientY);
@@ -418,11 +427,14 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
       onTouchEnd={handleDragEnd}
     >
 
-      <div className="floor-selector" style={{ position: 'absolute', top: 30, right: 30, zIndex: 10, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => { hasUserMoved.current = true; setZoom(z => Math.min(1.8, z + 0.12)); }}>➕</button>
-        <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => { hasUserMoved.current = true; setZoom(z => Math.max(0.2, z - 0.12)); }}>➖</button>
-        <button className="ui-action-btn reset-view-btn" style={{ height: '45px', fontSize: '1rem' }} onClick={resetView} title="Recenter map">⟲</button>
-      </div>
+      {/* Walang kontrol sa naka-lock na tanawin — larawan lang ito. */}
+      {!staticView && (
+        <div className="floor-selector" style={{ position: 'absolute', top: 30, right: 30, zIndex: 10, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => { hasUserMoved.current = true; setZoom(z => Math.min(1.8, z + 0.12)); }}>➕</button>
+          <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => { hasUserMoved.current = true; setZoom(z => Math.max(0.2, z - 0.12)); }}>➖</button>
+          <button className="ui-action-btn reset-view-btn" style={{ height: '45px', fontSize: '1rem' }} onClick={resetView} title="Recenter map">⟲</button>
+        </div>
+      )}
 
       {!isMobile && (
         <div className="bottom-floor-bar" style={{
@@ -661,11 +673,15 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
             } : { transition: 'all 0.3s ease' };
 
             return (
-              <div 
+              <div
                 key={key}
                 className={`room-node ${office.cssClass || ''} ${selectedOfficeKey === key ? 'active-room' : ''}`}
-                style={{...office.style, ...activeStyle}}
-                onClick={() => onSelectOffice(key)}
+                // Sa naka-lock na tanawin, hindi mapipindot ang kwarto:
+                // iisang ruta lang ang ipinapakita ng larawang ito — ang
+                // pinili sa kiosk — at hindi ito dapat mapalitan ng
+                // aksidenteng pindot sa telepono.
+                style={{...office.style, ...activeStyle, ...(staticView ? { cursor: 'default' } : null)}}
+                onClick={staticView ? undefined : () => onSelectOffice(key)}
               >
                 <span className="room-label">
                   {isVertical ? <span className="vertical-text">{office.title}</span> : office.title}

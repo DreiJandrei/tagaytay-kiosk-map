@@ -973,6 +973,11 @@ export default function App() {
           transportMethod={transportMethod}
           routeStep={routeStep}
           kioskLabel={guideKioskLabel}
+          // Ang `route` sa URL ay galing lang sa QR na na-scan ng bisita —
+          // hindi ito kailanman nilalagay ng kiosk sa sarili nitong URL.
+          // Kaya ito ang malinaw na senyas na nasa telepono na ito, at
+          // larawan lang ng palapag ang dapat lumabas doon.
+          staticView={!!searchParams.get('route')}
         />
 
         {/* ── Maliliit na kontrol sa gilid ng mapa ───────────────────
