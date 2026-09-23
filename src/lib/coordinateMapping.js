@@ -226,11 +226,21 @@ export const coordinateMapping = {
         // na lang ang gumuguhit sa dalawa). Kaya pareho rin ang kinaroroonan
         // at ang ruta ng mga kwarto rito — ang pangalan lang ang naiiba,
         // dahil ang tanggapan ng Mayor ang nasa 7th Floor.
-        // Walang comfort room sa 7th Floor, kaya ang buong itaas na bahagi
-        // ay tanggapan na ng Mayor: mula sa kanlurang gilid hanggang sa
-        // pader ng gitnang core (x 800). Ang ilalim nito (y 330) ang
-        // hangganan — doon nagsisimula ang elevator, kaya hindi ito
-        // natatakpan.
+        // Walang comfort room sa 7th Floor, kaya sakop na ng tanggapan ng
+        // Mayor ang buong itaas — mula sa kanlurang gilid hanggang sa pader
+        // ng gitnang core (x 800) — habang nananatili ang mahabang bahagi
+        // nito pababa sa kanluran. Hugis L ang kinalabasan.
+        //
+        // Isang kahon lang ito (250-800 × 150-650) na ginugupit ng
+        // `clipPath` para maging L. Hindi puwedeng dalawang kahon: isang
+        // tala lang ito sa directory, at iisa lang dapat ang nagliliwanag
+        // kapag pinindot. Ang ginugupit na bahagi — ang kanang-ibaba — ay
+        // siyang kinalalagyan ng elevator at ng hagdan, at hindi rin ito
+        // tumatanggap ng pindot (sumusunod ang pindot sa hugis ng clip).
+        //
+        //   36%    ng 500px na taas = 180px -> ilalim ng sanga (y 330),
+        //                                      nasa itaas ng elevator (350)
+        //   36.36% ng 550px na lapad = 200px -> kanan ng haligi (x 450)
         "mayor-main": {
             // Nasa pasukan ang tudlaan, hindi sa gitna: nasa gitna ang
             // pangalan ng tanggapan, at magkakapatong sila roon.
@@ -239,7 +249,16 @@ export const coordinateMapping = {
             // Galing sa elevator: diretsong paakyat papasok sa tanggapan —
             // bukas ang itaas ng core, walang pader na hinaharang.
             pathData: "M 620 350 L 620 290",
-            style: { width: 550, height: 180, left: 250, top: 150, backgroundColor: '#4338ca', color: 'white', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.2rem', borderRadius: '4px' },
+            style: {
+                width: 550, height: 500, left: 250, top: 150,
+                clipPath: 'polygon(0% 0%, 100% 0%, 100% 36%, 36.36% 36%, 36.36% 100%, 0% 100%)',
+                backgroundColor: '#4338ca', color: 'white', textAlign: 'center',
+                display: 'flex',
+                // Nasa itaas ang pangalan, hindi sa gitna: nasa gitna ng
+                // kahon ang gupit, kaya doon ito mawawala.
+                alignItems: 'flex-start', justifyContent: 'center',
+                fontWeight: 'bold', fontSize: '1.2rem', borderRadius: '4px'
+            },
             cssClass: ""
         },
         "mayor-receiving": {

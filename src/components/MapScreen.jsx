@@ -296,9 +296,10 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
               else if (finalPathData.startsWith("M 700 480 L 850 480")) finalPathData = finalPathData.replace("M 700 480 L 850 480", "M 650 580 L 650 480 L 700 480 L 850 480");
               else if (finalPathData.startsWith("M 650 480 L 480 480")) finalPathData = finalPathData.replace("M 650 480 L 480 480", "M 650 580 L 650 480 L 480 480");
               // 7th Floor, papuntang tanggapan ng Mayor. Sarado ang gitnang
-              // core maliban sa pinto nito, kaya sa kanlurang pasilyo (x 450)
-              // umaakyat ang galing sa hagdan — hindi sa gitna.
-              else if (finalPathData.startsWith("M 620 350")) finalPathData = "M 650 580 L 450 580 L 450 290 L 620 290";
+              // core maliban sa pinto nito, kaya sa makitid na pasilyo sa
+              // pagitan ng haligi ng tanggapan (dulo: 450) at ng core
+              // (simula: 500) umaakyat ang galing sa hagdan — sa x 470.
+              else if (finalPathData.startsWith("M 620 350")) finalPathData = "M 650 580 L 470 580 L 470 290 L 620 290";
           }
       }
   }
