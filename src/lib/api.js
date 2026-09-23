@@ -278,26 +278,31 @@ export const saveKioskVideo = async (video) => {
 };
 
 // ==============================================================
-// 8. VIDEO FILE UPLOAD (SUPABASE STORAGE)
+// 8. VIDEO / PICTURE FILE UPLOAD (SUPABASE STORAGE)
 // ==============================================================
+// Iisang bucket lang ang pinagsasaluhan ng video at larawan — magkasama
+// naman silang lumalabas sa iisang kahon sa welcome screen, at iisa rin
+// ang mabuburang path kapag tinanggal ang isang tala.
 const VIDEO_BUCKET = 'kiosk-videos';
 const PUBLIC_MARKER = `/object/public/${VIDEO_BUCKET}/`;
 
 export const uploadKioskVideoFile = async (file) => {
   try {
-    const ext = (file.name.match(/\.[a-z0-9]+$/i)?.[0] || '.mp4').toLowerCase();
+    const isImage = (file.type || '').startsWith('image/');
+    const fallbackExt = isImage ? '.jpg' : '.mp4';
+    const ext = (file.name.match(/\.[a-z0-9]+$/i)?.[0] || fallbackExt).toLowerCase();
     const base = file.name
       .replace(/\.[^.]+$/, '')
       .replace(/[^a-z0-9]+/gi, '-')
       .replace(/^-+|-+$/g, '')
-      .slice(0, 60) || 'video';
+      .slice(0, 60) || (isImage ? 'picture' : 'video');
     // Kakaiba ang pangalan bawat upload, kaya ligtas ang mahabang cache
     // at hindi nagkakapatungan ang magkaparehong file name.
     const path = `${Date.now()}-${base}${ext}`;
 
     const { error } = await supabase.storage.from(VIDEO_BUCKET).upload(path, file, {
       cacheControl: '31536000',
-      contentType: file.type || 'video/mp4',
+      contentType: file.type || (isImage ? 'image/jpeg' : 'video/mp4'),
       upsert: false,
     });
     if (error) throw error;

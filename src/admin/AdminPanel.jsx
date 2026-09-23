@@ -7,8 +7,8 @@ import {
 } from '../lib/api';
 import {
   getVideoTypes, getOrientations, detectVideoType, validateVideoUrl,
-  normalizeFacebookUrl, looksLikeReel, readVideoMeta,
-  MAX_VIDEO_BYTES, formatBytes,
+  normalizeFacebookUrl, looksLikeReel, readVideoMeta, readImageMeta,
+  MAX_VIDEO_BYTES, MAX_IMAGE_BYTES, formatBytes, isImageFile,
 } from '../lib/videoUtils';
 
 const BLANK_VIDEO = {
@@ -128,9 +128,9 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     // pagbura ng nakatala na ay bukas pa rin kahit puno na.
     if (!video && isVideoListFull) {
       return alert(t(
-        `❌ ${MAX_VIDEOS} videos is the limit.\n\n`
-        + 'Delete one of the videos on the list first before adding another.',
-        `❌ ${MAX_VIDEOS} na video lang ang hangganan.\n\n`
+        `❌ ${MAX_VIDEOS} items is the limit.\n\n`
+        + 'Delete one on the list first before adding another.',
+        `❌ ${MAX_VIDEOS} na tala lang ang hangganan.\n\n`
         + 'Burahin muna ang isa sa listahan bago magdagdag ng bago.',
       ));
     }
@@ -172,30 +172,41 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     e.target.value = ''; // para mapili ulit ang parehong file kung kailangan
     if (!file) return;
 
-    if (file.size > MAX_VIDEO_BYTES) {
+    // Iisa lang ang buton ng upload — ang file mismo ang nagsasabi kung
+    // video ba ito o larawan, para walang dagdag na pipiliin ang staff.
+    const image = isImageFile(file);
+    const limit = image ? MAX_IMAGE_BYTES : MAX_VIDEO_BYTES;
+
+    if (file.size > limit) {
       return alert(t(
         `❌ That file is too large (${formatBytes(file.size)}).\n\n`
-        + `The limit is ${formatBytes(MAX_VIDEO_BYTES)}. Compress the video first, `
-        + `or trim it to a shorter clip.`,
+        + `The limit is ${formatBytes(limit)}. `
+        + (image
+          ? 'Shrink the picture first (or save it as JPG).'
+          : 'Compress the video first, or trim it to a shorter clip.'),
         `❌ Masyadong malaki ang file (${formatBytes(file.size)}).\n\n`
-        + `Ang hangganan ay ${formatBytes(MAX_VIDEO_BYTES)}. I-compress muna ang video, `
-        + `o gupitin ang mas maiikling bahagi.`,
+        + `Ang hangganan ay ${formatBytes(limit)}. `
+        + (image
+          ? 'Paliitin muna ang larawan (o i-save bilang JPG).'
+          : 'I-compress muna ang video, o gupitin ang mas maiikling bahagi.'),
       ));
     }
 
     setIsUploading(true);
     try {
       // Binabasa muna ang hugis at haba bago i-upload — kung mabibigo ang
-      // upload, wala namang nasayang kundi ilang segundo.
-      const meta = await readVideoMeta(file);
+      // upload, wala namang nasayang kundi ilang segundo. Sa larawan,
+      // hugis lang ang mababasa: walang haba ang larawan, ang admin ang
+      // nagtatakda ng ilang segundo ito mananatili.
+      const meta = image ? await readImageMeta(file) : await readVideoMeta(file);
       const publicUrl = await uploadKioskVideoFile(file);
 
       setVideoForm((f) => ({
         ...f,
         source_url: publicUrl,
-        video_type: 'file',
+        video_type: image ? 'image' : 'file',
         orientation: meta && meta.height > meta.width ? 'portrait' : f.orientation,
-        duration_seconds: meta?.duration
+        duration_seconds: (!image && meta?.duration)
           ? Math.min(600, Math.max(5, Math.round(meta.duration)))
           : f.duration_seconds,
         title: f.title || file.name.replace(/\.[^.]+$/, ''),
@@ -214,6 +225,18 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
           '\n\n👉 WALA PANG BUCKET.\n'
           + 'Supabase → Storage → New bucket → pangalan: kiosk-videos → i-ON ang Public bucket.',
         );
+      } else if (/mime type|not supported/i.test(detail)) {
+        // Video lang ang tinatanggap ng lumang bucket. Ito ang unang
+        // makikita ng admin kapag larawan ang unang ini-upload sa isang
+        // kiosk na na-set up bago pa dumating ang larawan.
+        hint = t(
+          '\n\n👉 THE STORAGE DOES NOT ACCEPT PICTURES YET.\n'
+          + 'Run supabase/kiosk_videos_storage.sql again in Supabase → SQL Editor, '
+          + 'or Storage → kiosk-videos → Settings → add image/jpeg, image/png, image/webp.',
+          '\n\n👉 HINDI PA TUMATANGGAP NG LARAWAN ANG STORAGE.\n'
+          + 'Patakbuhin ulit ang supabase/kiosk_videos_storage.sql sa Supabase → SQL Editor, '
+          + 'o Storage → kiosk-videos → Settings → idagdag ang image/jpeg, image/png, image/webp.',
+        );
       } else if (/row-level security|policy|unauthorized|403/i.test(detail)) {
         hint = t(
           '\n\n👉 THE BUCKET EXISTS, BUT UPLOADS ARE BLOCKED.\n'
@@ -227,8 +250,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
         );
       }
       alert(t(
-        `❌ The video was not uploaded.\n\n${detail}${hint}`,
-        `❌ Hindi na-upload ang video.\n\n${detail}${hint}`,
+        `❌ The file was not uploaded.\n\n${detail}${hint}`,
+        `❌ Hindi na-upload ang file.\n\n${detail}${hint}`,
       ));
     } finally { setIsUploading(false); }
   };
@@ -241,9 +264,9 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     // ng ibang admin ang listahan sa ibang kiosk.
     if (!videoForm.id && isVideoListFull) {
       return alert(t(
-        `❌ ${MAX_VIDEOS} videos is the limit — this one was not saved.\n\n`
-        + 'Delete one of the videos on the list first.',
-        `❌ ${MAX_VIDEOS} na video lang ang hangganan — hindi na-save ito.\n\n`
+        `❌ ${MAX_VIDEOS} items is the limit — this one was not saved.\n\n`
+        + 'Delete one on the list first.',
+        `❌ ${MAX_VIDEOS} na tala lang ang hangganan — hindi na-save ito.\n\n`
         + 'Burahin muna ang isa sa listahan.',
       ));
     }
@@ -259,8 +282,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
       // LIVE/OFF na pill — ang nagpapatunay na natanggap ang pagbabago.
       setVideoForm(null);
       alert(t(
-        '🎬 Video saved! It will show up on the welcome screen within a minute.',
-        '🎬 Nai-save na ang video! Lalabas na ito sa welcome screen sa loob ng isang minuto.',
+        '🎬 Saved! It will show up on the welcome screen within a minute.',
+        '🎬 Nai-save na! Lalabas na ito sa welcome screen sa loob ng isang minuto.',
       ));
     } catch (error) {
       alert(t(
@@ -587,7 +610,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
             <div className="adm-divider" aria-hidden="true" />
 
             <h3>
-              🎬 {t('Welcome Screen Videos', 'Mga Video sa Welcome Screen')}
+              🎬 {t('Welcome Screen Videos & Pictures', 'Mga Video at Larawan sa Welcome Screen')}
               {' '}
               <span className={`adm-tally${isVideoListFull ? ' is-full' : ''}`}>
                 {videos.length} / {MAX_VIDEOS}
@@ -596,17 +619,21 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
             <p className="adm-hint">
               {EN ? (
                 <>
-                  3 · Paste the link of a <strong>public</strong> Facebook post, a YouTube video, or
-                  a direct .mp4 file. These play in turn beside the announcement board.
-                  Up to <strong>{MAX_VIDEOS} videos</strong> — past that, the wait before the first
+                  3 · Paste the link of a <strong>public</strong> Facebook post or a YouTube video —
+                  or upload a video file or a <strong>picture</strong>. These play in turn beside the
+                  announcement board. A picture stays on screen for the number of
+                  <strong> seconds you set</strong> below, then the next one comes up.
+                  Up to <strong>{MAX_VIDEOS} items</strong> — past that, the wait before the first
                   one comes around again is too long.
                 </>
               ) : (
                 <>
-                  3 · I-paste ang link ng <strong>public</strong> na Facebook post, YouTube video, o
-                  direktang .mp4 file. Salitan itong ipapalabas katabi ng announcement board.
-                  Hanggang <strong>{MAX_VIDEOS} na video</strong> lang — sa sobra pa riyan, masyado
-                  nang matagal bago maulit ang una.
+                  3 · I-paste ang link ng <strong>public</strong> na Facebook post o YouTube video —
+                  o mag-upload ng video file o <strong>larawan</strong>. Salitan itong ipapalabas
+                  katabi ng announcement board. Ang larawan ay nananatili sa screen sa
+                  <strong> bilang ng segundong itinakda mo</strong> sa ibaba, tapos susunod na ang
+                  kasunod. Hanggang <strong>{MAX_VIDEOS} na tala</strong> lang — sa sobra pa riyan,
+                  masyado nang matagal bago maulit ang una.
                 </>
               )}
             </p>
@@ -615,8 +642,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   {videos.length === 0 && (
                     <p className="adm-hint">
                       {t(
-                        'No videos yet. Tap “Add Video” below.',
-                        'Wala pang video. Pindutin ang “Add Video” sa ibaba.',
+                        'Nothing here yet. Tap “Add Video / Picture” below.',
+                        'Wala pa rito. Pindutin ang “Magdagdag ng Video / Larawan” sa ibaba.',
                       )}
                     </p>
                   )}
@@ -626,7 +653,10 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                       <span className="adm-vid-body">
                         <span className="adm-vid-name">{video.title || video.source_url}</span>
                         <span className="adm-vid-meta">
-                          {video.video_type} · {video.duration_seconds}s ·{' '}
+                          {video.video_type === 'image'
+                            ? t('🖼️ picture', '🖼️ larawan')
+                            : video.video_type}
+                          {' · '}{video.duration_seconds}s ·{' '}
                           {video.orientation === 'portrait'
                             ? t('▯ portrait', '▯ patayo')
                             : t('▭ landscape', '▭ pahiga')}
@@ -648,13 +678,13 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
               onClick={() => pickVideo(null)}
               disabled={isVideoListFull}
             >
-              ＋ {t('Add Video', 'Magdagdag ng Video')}
+              ＋ {t('Add Video / Picture', 'Magdagdag ng Video / Larawan')}
             </button>
             {isVideoListFull && (
               <p className="adm-hint">
                 {t(
-                  `The list is full (${MAX_VIDEOS}). Tap ✏️ Edit on a video and delete it to free up a slot.`,
-                  `Puno na ang listahan (${MAX_VIDEOS}). Pindutin ang ✏️ Edit sa isang video at burahin ito para may mabakante.`,
+                  `The list is full (${MAX_VIDEOS}). Tap ✏️ Edit on one of them and delete it to free up a slot.`,
+                  `Puno na ang listahan (${MAX_VIDEOS}). Pindutin ang ✏️ Edit sa isa at burahin ito para may mabakante.`,
                 )}
               </p>
             )}
@@ -668,9 +698,13 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
             <form className="adm-modal" onSubmit={handleSaveVideo}>
               <div className="adm-modal-top">
                 <h4>
-                  {videoForm.id
-                    ? t('🎬 Edit video', '🎬 I-edit ang video')
-                    : t('🎬 New video', '🎬 Bagong video')}
+                  {videoForm.video_type === 'image'
+                    ? (videoForm.id
+                        ? t('🖼️ Edit picture', '🖼️ I-edit ang larawan')
+                        : t('🖼️ New picture', '🖼️ Bagong larawan'))
+                    : (videoForm.id
+                        ? t('🎬 Edit video', '🎬 I-edit ang video')
+                        : t('🎬 New video', '🎬 Bagong video'))}
                 </h4>
                 <button type="button" className="adm-modal-x" onClick={closeVideoEditor} disabled={isSaving}>
                   ✕
@@ -679,7 +713,9 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
 
               <div className="adm-modal-body">
                 <div>
-                  <label className="k-label">{t('Video link (URL)', 'Link ng video (URL)')}</label>
+                  <label className="k-label">
+                    {t('Video or picture link (URL)', 'Link ng video o larawan (URL)')}
+                  </label>
                   {/* Teksto at HINDI required: may pangalawang paraan sa ibaba
                       (upload), kaya walang saysay ang "Please fill out this
                       field" ng browser. Ang sarili nating validation na may
@@ -715,11 +751,13 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                 <div className="adm-or"><span>{t('or', 'o kaya')}</span></div>
 
                 <div>
-                  <label className="k-label">{t('Upload a video file', 'Mag-upload ng video file')}</label>
+                  <label className="k-label">
+                    {t('Upload a video or picture', 'Mag-upload ng video o larawan')}
+                  </label>
                   <label className={`adm-upload${isUploading ? ' is-busy' : ''}`}>
                     <input
                       type="file"
-                      accept="video/mp4,video/webm,video/ogg,video/quicktime"
+                      accept="video/mp4,video/webm,video/ogg,video/quicktime,image/jpeg,image/png,image/webp"
                       onChange={handleVideoFileUpload}
                       disabled={isUploading}
                     />
@@ -727,11 +765,18 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                     <span className="adm-upload-text">
                       {isUploading
                         ? t('Uploading… do not close this window', 'Ina-upload… huwag isara ang window')
-                        : t('Choose a video from this computer', 'Pumili ng video mula sa computer')}
+                        : t(
+                            'Choose a video or picture from this computer',
+                            'Pumili ng video o larawan mula sa computer',
+                          )}
                       <small>
                         {EN
-                          ? `MP4, WebM, or MOV · up to ${formatBytes(MAX_VIDEO_BYTES)} · shape and length are read automatically`
-                          : `MP4, WebM, o MOV · hanggang ${formatBytes(MAX_VIDEO_BYTES)} · kusang nababasa ang hugis at haba`}
+                          ? `Video: MP4, WebM, MOV · up to ${formatBytes(MAX_VIDEO_BYTES)}. `
+                            + `Picture: JPG, PNG, WebP · up to ${formatBytes(MAX_IMAGE_BYTES)}. `
+                            + 'Shape and length are read automatically.'
+                          : `Video: MP4, WebM, MOV · hanggang ${formatBytes(MAX_VIDEO_BYTES)}. `
+                            + `Larawan: JPG, PNG, WebP · hanggang ${formatBytes(MAX_IMAGE_BYTES)}. `
+                            + 'Kusang nababasa ang hugis at haba.'}
                       </small>
                     </span>
                   </label>
@@ -739,13 +784,13 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                     <p className="adm-ok">
                       {EN ? (
                         <>
-                          ✅ The video is uploaded. Tap <strong>Save Video</strong> below to
-                          put it on the kiosk.
+                          ✅ The {videoForm.video_type === 'image' ? 'picture' : 'video'} is
+                          uploaded. Tap <strong>Save</strong> below to put it on the kiosk.
                         </>
                       ) : (
                         <>
-                          ✅ Na-upload na ang video. Pindutin ang <strong>Save Video</strong> sa ibaba
-                          para mailagay ito sa kiosk.
+                          ✅ Na-upload na ang {videoForm.video_type === 'image' ? 'larawan' : 'video'}.
+                          Pindutin ang <strong>I-save</strong> sa ibaba para mailagay ito sa kiosk.
                         </>
                       )}
                     </p>
@@ -755,10 +800,14 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                     {t(
                       'This is the most reliable option for the kiosk — no Facebook needed, '
                       + 'and it works even on a slow connection. Best for Reels that refuse to '
-                      + 'embed: download it, then upload it here.',
+                      + 'embed: download it, then upload it here. A picture (a poster or a '
+                      + 'photo of an event) works the same way — it stays on screen for the '
+                      + 'seconds you set below.',
                       'Ito ang pinaka-maaasahan para sa kiosk — hindi na kailangan ng Facebook, '
                       + 'at gumagana kahit mabagal ang internet. Mainam para sa Reels na '
-                      + 'ayaw mag-embed: i-download mo, tapos i-upload dito.',
+                      + 'ayaw mag-embed: i-download mo, tapos i-upload dito. Ganito rin ang '
+                      + 'larawan (poster o litrato ng aktibidad) — mananatili ito sa screen sa '
+                      + 'bilang ng segundong itatakda mo sa ibaba.',
                     )}
                   </p>
                 </div>
@@ -807,10 +856,17 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                       onChange={(e) => setVideoField('duration_seconds', e.target.value)}
                     />
                     <p className="adm-hint">
-                      {t(
-                        'This is not used for .mp4 — there, the kiosk waits for the real end of the video.',
-                        'Hindi ito ginagamit sa .mp4 — hinihintay doon ang tunay na dulo ng video.',
-                      )}
+                      {videoForm.video_type === 'image'
+                        ? t(
+                            'This is how long the picture stays on screen before the next one '
+                            + 'comes up. 10–20 seconds is usually enough to read a poster.',
+                            'Ito ang tagal ng larawan sa screen bago lumipat sa susunod. '
+                            + 'Karaniwang sapat ang 10–20 segundo para mabasa ang isang poster.',
+                          )
+                        : t(
+                            'This is not used for .mp4 — there, the kiosk waits for the real end of the video.',
+                            'Hindi ito ginagamit sa .mp4 — hinihintay doon ang tunay na dulo ng video.',
+                          )}
                     </p>
                   </div>
                   <div>
@@ -827,7 +883,11 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                 </div>
 
                 <div>
-                  <label className="k-label">{t('Video shape', 'Hugis ng video')}</label>
+                  <label className="k-label">
+                    {videoForm.video_type === 'image'
+                      ? t('Picture shape', 'Hugis ng larawan')
+                      : t('Video shape', 'Hugis ng video')}
+                  </label>
                   <select
                     className="k-select"
                     value={videoForm.orientation || 'landscape'}
@@ -839,10 +899,12 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   </select>
                   <p className="adm-hint">
                     {t(
-                      'Portrait is picked automatically when a Reel is pasted. If that is wrong, '
-                      + 'change it here — otherwise the kiosk will show black bars on the sides.',
-                      'Awtomatikong napipili ang Portrait kapag Reels ang na-paste. Kung mali, '
-                      + 'palitan mo dito — kung hindi, magkakaroon ng itim na gilid sa kiosk.',
+                      'Portrait is picked automatically when a Reel is pasted, or when an upright '
+                      + 'picture or video is uploaded. If that is wrong, change it here — otherwise '
+                      + 'the kiosk will show black bars on the sides.',
+                      'Awtomatikong napipili ang Portrait kapag Reels ang na-paste, o kapag patayo '
+                      + 'ang na-upload na larawan o video. Kung mali, palitan mo dito — kung hindi, '
+                      + 'magkakaroon ng itim na gilid sa kiosk.',
                     )}
                   </p>
                 </div>
@@ -854,8 +916,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                     value={videoForm.caption}
                     onChange={(e) => setVideoField('caption', e.target.value)}
                     placeholder={t(
-                      'A short line that shows under the video…',
-                      'Maikling paliwanag na lalabas sa ilalim ng video…',
+                      'A short line that shows underneath…',
+                      'Maikling paliwanag na lalabas sa ilalim…',
                     )}
                   />
                 </div>
@@ -875,12 +937,17 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                       type="checkbox"
                       checked={videoForm.has_sound === true}
                       onChange={(e) => setVideoField('has_sound', e.target.checked)}
-                      disabled={videoForm.video_type === 'facebook'}
+                      disabled={videoForm.video_type === 'facebook' || videoForm.video_type === 'image'}
                     />
                     <span>🔊 {t('Turn the sound on', 'Buksan ang tunog')}</span>
                   </label>
                   <p className="adm-hint">
-                    {videoForm.video_type === 'facebook'
+                    {videoForm.video_type === 'image'
+                      ? t(
+                          'A picture has no sound — nothing to turn on here.',
+                          'Walang tunog ang larawan — wala ritong bubuksan.',
+                        )
+                      : videoForm.video_type === 'facebook'
                       ? t(
                           'A Facebook embed cannot have its sound turned on — it is always silent. '
                           + 'If the sound really matters, download the video and upload it here.',
@@ -921,7 +988,9 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                 <button type="submit" className="k-btn k-btn--primary" disabled={isSaving}>
                   {isSaving
                     ? t('Deploying to kiosks…', 'Ipinapadala sa mga kiosk…')
-                    : t('💾 Save Video', '💾 I-save ang Video')}
+                    : videoForm.video_type === 'image'
+                      ? t('💾 Save Picture', '💾 I-save ang Larawan')
+                      : t('💾 Save Video', '💾 I-save ang Video')}
                 </button>
               </div>
             </form>

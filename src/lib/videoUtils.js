@@ -1,9 +1,10 @@
 // videoUtils.js
 // Ginagawang embeddable ang link na kinopya ng staff mula sa browser.
-// Tatlong pinagmumulan ang sinusuportahan ng kiosk:
+// Apat na pinagmumulan ang sinusuportahan ng kiosk:
 //   facebook — post/reel/video mula sa opisyal na FB Page ng Tagaytay
 //   youtube  — video o Shorts sa YouTube
 //   file     — direktang .mp4/.webm (hal. na-upload sa Supabase Storage)
+//   image    — larawan (.jpg/.png/.webp); orasan ang naglilipat nito
 
 // Ang mga label ay sumusunod sa napiling wika ng kiosk ('EN' o 'TL') —
 // ang `value` ay hindi nagbabago, iyon ang naiimbak sa database.
@@ -16,21 +17,31 @@ export function getVideoTypes(lang = 'EN') {
       value: 'file',
       label: EN ? '🎞️ Direct video file (.mp4)' : '🎞️ Direktang video file (.mp4)',
     },
+    {
+      value: 'image',
+      label: EN ? '🖼️ Picture (.jpg / .png)' : '🖼️ Larawan (.jpg / .png)',
+    },
   ];
 }
 
 const FILE_EXT = /\.(mp4|webm|ogg|ogv|mov|m4v)(\?|#|$)/i;
+const IMAGE_EXT = /\.(jpe?g|png|webp|gif|avif|bmp)(\?|#|$)/i;
 
 // Hinuhulaan ang uri mula mismo sa link para hindi na kailangang mag-isip
 // pa ang staff kung ano ang pipiliin sa dropdown.
 export function detectVideoType(url) {
   const link = (url || '').trim();
   if (!link) return 'facebook';
+  if (IMAGE_EXT.test(link)) return 'image';
   if (FILE_EXT.test(link)) return 'file';
   if (/(^|\.)(youtube\.com|youtu\.be)/i.test(link)) return 'youtube';
   if (/(^|\.)(facebook\.com|fb\.watch|fb\.com)/i.test(link)) return 'facebook';
   return 'file';
 }
+
+// Larawan ba ito — hindi video? Iisang tanong lang ito, pero maraming
+// lugar ang nagtatanong: ang player, ang admin, at ang validation.
+export const isImageType = (type) => type === 'image';
 
 // Hindi lahat ng kinokopyang link ay kayang basahin ng FB video plugin.
 // Tatlong anyo ang madalas na na-paste ng staff:
@@ -72,7 +83,16 @@ export function isFacebookShareLink(url) {
 // 50MB ang karaniwang hangganan ng Supabase Storage sa libreng plano.
 export const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 
+// Mas mababa ang hangganan ng larawan: hindi ito kailangang umabot ng
+// 50MB para maging malinaw sa kiosk, at ang mabigat na larawan ay
+// nagpapabagal sa paglipat ng slideshow.
+export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+
 export const formatBytes = (bytes) => `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+
+// Tinutukoy mula sa file mismo — hindi sa pangalan — kung larawan ba ang
+// pinili ng staff, para sa iisang buton ng upload.
+export const isImageFile = (file) => (file?.type || '').startsWith('image/');
 
 // Binabasa ang file sa browser bago i-upload, para awtomatikong matukoy
 // kung patayo ba ito at gaano katagal — hindi na kailangang hulaan pa
@@ -98,16 +118,39 @@ export function readVideoMeta(file) {
   });
 }
 
+// Katulad ng readVideoMeta pero para sa larawan — ang hugis lang ang
+// mababasa dito. Walang haba ang larawan; ang admin ang nagtatakda ng
+// ilang segundo ito mananatili sa screen.
+export function readImageMeta(file) {
+  return new Promise((resolve) => {
+    const objectUrl = URL.createObjectURL(file);
+    const probe = new Image();
+
+    const done = (result) => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(result);
+    };
+
+    probe.onload = () => done({ width: probe.naturalWidth, height: probe.naturalHeight });
+    probe.onerror = () => done(null);
+    probe.src = objectUrl;
+  });
+}
+
 export function getOrientations(lang = 'EN') {
   const EN = lang === 'EN';
   return [
     {
       value: 'landscape',
-      label: EN ? '▭ Landscape (16:9) — ordinary video' : '▭ Landscape (16:9) — karaniwang video',
+      label: EN
+        ? '▭ Landscape (16:9) — ordinary video / picture'
+        : '▭ Landscape (16:9) — karaniwang video / larawan',
     },
     {
       value: 'portrait',
-      label: EN ? '▯ Portrait (9:16) — Reels / upright' : '▯ Portrait (9:16) — Reels / patayo',
+      label: EN
+        ? '▯ Portrait (9:16) — Reels / upright picture'
+        : '▯ Portrait (9:16) — Reels / patayong larawan',
     },
   ];
 }
@@ -194,12 +237,12 @@ export function validateVideoUrl(url, type, lang = 'EN') {
   const link = (url || '').trim();
   if (!link) {
     return EN
-      ? 'No video yet.\n\nTwo ways to add one:\n'
+      ? 'Nothing to show yet.\n\nTwo ways to add one:\n'
         + '• Paste the link of a public FB post or YouTube video above, OR\n'
-        + '• Pick a video file under “Upload a video file” and wait for it to finish'
-      : 'Wala pang video.\n\nDalawang paraan:\n'
+        + '• Pick a video or picture under “Upload a video or picture” and wait for it to finish'
+      : 'Wala pang ipapakita.\n\nDalawang paraan:\n'
         + '• I-paste ang link ng public na FB post o YouTube video sa itaas, O\n'
-        + '• Pumili ng video file sa “Mag-upload ng video file” at hintaying matapos';
+        + '• Pumili ng video o larawan sa “Mag-upload ng video o larawan” at hintaying matapos';
   }
 
   // Ang "Copy link" ng FB app ay nagbibigay ng /share/ na stub. Mukhang
@@ -243,6 +286,13 @@ export function validateVideoUrl(url, type, lang = 'EN') {
     return EN
       ? 'The link must be a direct video file (ending in .mp4, .webm, etc.).'
       : 'Dapat direktang video file ang link (nagtatapos sa .mp4, .webm, atbp.).';
+  }
+  if (type === 'image' && !IMAGE_EXT.test(link)) {
+    return EN
+      ? 'The link must be a direct picture file (ending in .jpg, .png, .webp, etc.).\n\n'
+        + 'Easiest way: pick the picture under “Upload a video or picture”.'
+      : 'Dapat direktang larawan ang link (nagtatapos sa .jpg, .png, .webp, atbp.).\n\n'
+        + 'Pinakamadali: piliin ang larawan sa “Mag-upload ng video o larawan”.';
   }
   return '';
 }

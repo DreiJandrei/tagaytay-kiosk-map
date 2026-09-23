@@ -54,7 +54,10 @@ export default function App() {
   const [isMobileSessionExpired, setIsMobileSessionExpired] = useState(false);
 
   const [appState, setAppState] = useState('welcome');
-  const [theme, setTheme] = useState('light'); 
+  // Dark ang panimula — ito ang nakikita ng bisita paggising ng kiosk.
+  // Mas madaling tingnan sa lobby na may matapang na ilaw sa itaas, at
+  // hindi nakakasilaw sa gabi. Nasa header pa rin ang panlipat.
+  const [theme, setTheme] = useState('dark');
   const [currentFloor, setCurrentFloor] = useState(1);
   const [time, setTime] = useState("--:-- --");
   
@@ -634,11 +637,13 @@ export default function App() {
 
         <div className="hdr-tools">
           <button
-            className="hdr-btn hdr-btn--icon"
+            className="hdr-btn"
             onClick={() => setShowAbout(true)}
             title={lang === 'EN' ? 'About this kiosk' : 'Tungkol sa kiosk'}
           >
-            ℹ️
+            {/* Salita, hindi emoji: ang ℹ️ ay hulaan pa ng bisita kung ano
+                ang laman. Ang "About" ay mismong sagot na. */}
+            <span className="hdr-btn-label">{lang === 'EN' ? 'About' : 'Tungkol'}</span>
           </button>
 
           <button

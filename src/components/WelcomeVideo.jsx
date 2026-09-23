@@ -53,11 +53,15 @@ export default function WelcomeVideo() {
   const single = videos.length === 1;
   const type = current ? (current.video_type || detectVideoType(current.source_url)) : '';
 
+  const isImage = type === 'image';
   // Ang .mp4 at YouTube ay kayang umulit nang kusa kapag iisa lang ang
-  // video; ang Facebook plugin ay walang loop kaya ini-remount ito.
-  const selfLoops = single && (type === 'file' || type === 'youtube');
+  // video; ang Facebook plugin ay walang loop kaya ini-remount ito. Ang
+  // nag-iisang larawan ay wala namang dulo — nakatitig lang ito, kaya
+  // walang saysay ang orasan doon.
+  const selfLoops = single && (type === 'file' || type === 'youtube' || isImage);
   // Sa file, ang totoong dulo ng video ang hudyat — hindi ang orasan —
-  // para hindi maputol ang panonood.
+  // para hindi maputol ang panonood. Sa larawan, orasan talaga: iyon ang
+  // takdang segundo na inilagay ng admin.
   const usesTimer = !!current && !selfLoops && type !== 'file';
 
   useEffect(() => {
@@ -68,7 +72,8 @@ export default function WelcomeVideo() {
   }, [usesTimer, current, cycle, advance]);
 
   // May tunog bang maaaring buksan — ito ang nagpapakita ng buton.
-  const soundAvailable = !!current?.has_sound && type !== 'facebook';
+  // Tahimik ang larawan, kaya walang buton doon kahit anong nakatakda.
+  const soundAvailable = !!current?.has_sound && type !== 'facebook' && !isImage;
   const wantsSound = soundChoice !== null ? soundChoice : !!current?.has_sound;
   const soundOn = soundAvailable && wantsSound && !soundBlocked;
 
@@ -105,7 +110,9 @@ export default function WelcomeVideo() {
 
   if (!current) return null;
 
-  const embedUrl = type === 'file' ? '' : buildEmbedUrl(current, { loop: selfLoops, sound: soundOn });
+  const embedUrl = (type === 'file' || isImage)
+    ? ''
+    : buildEmbedUrl(current, { loop: selfLoops, sound: soundOn });
   const heading = (current.title || '').trim() || 'City Updates';
   const caption = (current.caption || '').trim();
   // Umaangkop ang kahon sa hugis ng video — kung hindi, puro itim na
@@ -115,7 +122,7 @@ export default function WelcomeVideo() {
   return (
     <div className={`welcome-video-card${portrait ? ' is-portrait' : ''}`}>
       <div className="welcome-video-head">
-        <span className="welcome-video-icon">🎬</span>
+        <span className="welcome-video-icon">{isImage ? '🖼️' : '🎬'}</span>
         <h2>{heading}</h2>
         {soundAvailable && (
           <button
@@ -133,7 +140,20 @@ export default function WelcomeVideo() {
       </div>
 
       <div className={`welcome-video-frame${portrait ? ' is-portrait' : ''}`}>
-        {type === 'file' ? (
+        {isImage ? (
+          // Walang key na kasama ang `cycle` dito: sa larawan, ang
+          // pagpapalit ng key ay pagbura at paggawa ulit ng parehong
+          // larawan — kumukurap lang ang screen, walang napapala.
+          <img
+            key={current.id}
+            src={current.source_url}
+            alt={heading}
+            // Kapag sira ang link ng larawan at iisa lang ang nakatala,
+            // hindi puwedeng lumipat — ang paglipat ay babalik din dito
+            // at mauuwi sa walang hintong ikot.
+            onError={single ? undefined : advance}
+          />
+        ) : type === 'file' ? (
           <video
             key={`${current.id}-${cycle}`}
             ref={fileRef}

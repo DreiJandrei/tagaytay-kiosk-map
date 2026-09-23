@@ -1,5 +1,9 @@
 -- ============================================================
--- STORAGE PARA SA NA-UPLOAD NA VIDEO FILE
+-- STORAGE PARA SA NA-UPLOAD NA VIDEO AT LARAWAN
+--
+-- ℹ️ Kung may bucket ka nang gawa noong video pa lang ang tinatanggap,
+-- patakbuhin ulit ito: ang `on conflict do update` sa ibaba ang
+-- magdaragdag ng mga uri ng larawan sa dati mong bucket.
 --
 -- ⚠️ BASAHIN MUNA: isang transaction ang buong query sa SQL Editor.
 -- Kapag may isang statement na nabigo, binabawi ang LAHAT — pati ang
@@ -19,7 +23,14 @@ values (
   'kiosk-videos',
   true,
   52428800, -- 50 MB
-  array['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime']
+  -- Kasama ang larawan dito: iisang kahon lang sa welcome screen ang
+  -- pinagsasaluhan ng video at ng larawan, kaya iisa rin ang bucket.
+  -- Ang 10MB na hangganan ng larawan ay nasa admin — mas mahigpit iyon
+  -- kaysa sa 50MB dito, at iyon ang unang makikita ng staff.
+  array[
+    'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime',
+    'image/jpeg', 'image/png', 'image/webp'
+  ]
 )
 on conflict (id) do update set
   public             = excluded.public,

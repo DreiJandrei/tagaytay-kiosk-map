@@ -1,5 +1,5 @@
 -- ============================================================
--- WELCOME SCREEN VIDEOS
+-- WELCOME SCREEN VIDEOS AT LARAWAN
 -- Patakbuhin ito nang isang beses sa Supabase → SQL Editor → New query.
 -- Ligtas itong ulitin: gumagamit ng IF NOT EXISTS / DROP POLICY IF EXISTS.
 -- ============================================================
@@ -9,10 +9,11 @@ create table if not exists public.kiosk_videos (
   title            text        not null default '',
   caption          text        not null default '',
   source_url       text        not null,
-  -- 'facebook' | 'youtube' | 'file'
+  -- 'facebook' | 'youtube' | 'file' | 'image'
   video_type       text        not null default 'facebook',
-  -- Ilang segundo bago lumipat sa susunod na video. Hindi ginagamit sa
-  -- 'file' — hinihintay doon ang tunay na dulo ng video.
+  -- Ilang segundo bago lumipat sa susunod. Hindi ginagamit sa 'file' —
+  -- hinihintay doon ang tunay na dulo ng video. Sa 'image', ito mismo
+  -- ang tagal ng larawan sa screen: wala itong sariling dulo.
   duration_seconds integer     not null default 45,
   sort_order       integer     not null default 0,
   is_active        boolean     not null default true,
@@ -25,7 +26,7 @@ create table if not exists public.kiosk_videos (
   created_at       timestamptz not null default now(),
 
   constraint kiosk_videos_type_check
-    check (video_type in ('facebook', 'youtube', 'file')),
+    check (video_type in ('facebook', 'youtube', 'file', 'image')),
   constraint kiosk_videos_duration_check
     check (duration_seconds between 5 and 600),
   constraint kiosk_videos_orientation_check
@@ -35,6 +36,17 @@ create table if not exists public.kiosk_videos (
 -- Para sa table na nagawa na bago naidagdag ang mga column na ito.
 alter table public.kiosk_videos
   add column if not exists orientation text not null default 'landscape';
+
+-- Ang lumang check ay tatlong uri lang ang kilala, kaya tatanggihan nito
+-- ang unang larawan na ise-save ng admin. Ibinabagsak muna ang luma bago
+-- ilagay ang bagong bersyon — hindi kasi puwedeng baguhin ang isang
+-- check constraint nang hindi ito inaalis.
+alter table public.kiosk_videos
+  drop constraint if exists kiosk_videos_type_check;
+
+alter table public.kiosk_videos
+  add constraint kiosk_videos_type_check
+  check (video_type in ('facebook', 'youtube', 'file', 'image'));
 
 -- Hinaharangan ng browser ang tunog hangga't walang pumipindot sa screen,
 -- kaya laging nagsisimulang tahimik ang video. Senyas lang ito ng gusto
