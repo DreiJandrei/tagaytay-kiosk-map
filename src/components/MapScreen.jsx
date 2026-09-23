@@ -295,6 +295,10 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
               if (finalPathData.startsWith("M 650 480 L 450 480")) finalPathData = finalPathData.replace("M 650 480 L 450 480", "M 650 580 L 650 480 L 450 480");
               else if (finalPathData.startsWith("M 700 480 L 850 480")) finalPathData = finalPathData.replace("M 700 480 L 850 480", "M 650 580 L 650 480 L 700 480 L 850 480");
               else if (finalPathData.startsWith("M 650 480 L 480 480")) finalPathData = finalPathData.replace("M 650 480 L 480 480", "M 650 580 L 650 480 L 480 480");
+              // 7th Floor, papuntang tanggapan ng Mayor. Sarado ang gitnang
+              // core maliban sa pinto nito, kaya sa kanlurang pasilyo (x 450)
+              // umaakyat ang galing sa hagdan — hindi sa gitna.
+              else if (finalPathData.startsWith("M 620 350")) finalPathData = "M 650 580 L 450 580 L 450 290 L 620 290";
           }
       }
   }
@@ -514,8 +518,23 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
             <svg width="1400" height="1300" style={{ position: 'absolute', top: 0, left: 0, zIndex: 1, pointerEvents: 'none' }}>
               <g stroke="#9CA3AF" strokeWidth="6" fill="rgba(255,255,255,0.03)">
                 <rect x="200" y="100" width="750" height="800" rx="4" fill="none" stroke="#9CA3AF" strokeWidth="6" />
-                <path d="M 450 150 L 250 150 L 250 650 L 450 650 L 450 520 M 450 440 L 450 150" />
-                <path d="M 600 150 L 500 150 L 500 450 L 800 450 L 800 150 L 700 150" />
+
+                {currentFloor === 6 ? (
+                  <>
+                    {/* Silid sa kanluran (Wedding Hall) at ang gitnang core
+                        na kinalalagyan ng comfort room at ng elevator. */}
+                    <path d="M 450 150 L 250 150 L 250 650 L 450 650 L 450 520 M 450 440 L 450 150" />
+                    <path d="M 600 150 L 500 150 L 500 450 L 800 450 L 800 150 L 700 150" />
+                  </>
+                ) : (
+                  /* 7th Floor: walang comfort room dito, at sakop na ng
+                     tanggapan ng Mayor ang buong itaas — ang kahon mismo
+                     nito ang gilid ng silid. Ang natira sa gitnang core ay
+                     ang elevator lang, at may pintuan ito sa ibaba (600-720)
+                     palabas sa pasilyo. */
+                  <path d="M 500 330 L 500 450 L 600 450 M 720 450 L 800 450 L 800 330" />
+                )}
+
                 <path d="M 500 650 L 500 850 L 900 850 L 900 650 L 750 650 M 650 650 L 500 650" />
               </g>
             </svg>

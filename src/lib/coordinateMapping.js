@@ -226,11 +226,20 @@ export const coordinateMapping = {
         // na lang ang gumuguhit sa dalawa). Kaya pareho rin ang kinaroroonan
         // at ang ruta ng mga kwarto rito — ang pangalan lang ang naiiba,
         // dahil ang tanggapan ng Mayor ang nasa 7th Floor.
+        // Walang comfort room sa 7th Floor, kaya ang buong itaas na bahagi
+        // ay tanggapan na ng Mayor: mula sa kanlurang gilid hanggang sa
+        // pader ng gitnang core (x 800). Ang ilalim nito (y 330) ang
+        // hangganan — doon nagsisimula ang elevator, kaya hindi ito
+        // natatakpan.
         "mayor-main": {
-            targetX: 450,
-            targetY: 480,
-            pathData: "M 650 480 L 450 480",
-            style: { width: 200, height: 500, left: 250, top: 150, backgroundColor: '#4338ca', color: 'white', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.2rem', borderRadius: '4px' },
+            // Nasa pasukan ang tudlaan, hindi sa gitna: nasa gitna ang
+            // pangalan ng tanggapan, at magkakapatong sila roon.
+            targetX: 620,
+            targetY: 290,
+            // Galing sa elevator: diretsong paakyat papasok sa tanggapan —
+            // bukas ang itaas ng core, walang pader na hinaharang.
+            pathData: "M 620 350 L 620 290",
+            style: { width: 550, height: 180, left: 250, top: 150, backgroundColor: '#4338ca', color: 'white', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.2rem', borderRadius: '4px' },
             cssClass: ""
         },
         "mayor-receiving": {
@@ -239,12 +248,6 @@ export const coordinateMapping = {
             pathData: "M 700 480 L 850 480 L 850 620 L 700 620 L 700 650",
             style: { width: 400, height: 200, left: 500, top: 650, backgroundColor: '#4338ca', color: 'white', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.2rem', borderRadius: '4px' },
             cssClass: ""
-        },
-        "restroom-cr-7": {
-            targetX: 650, targetY: 200,
-            pathData: "M 650 480 L 480 480 L 480 120 L 650 120 L 650 200",
-            style: { width: 200, height: 80, left: 550, top: 200, backgroundColor: '#93c5fd', color: 'black' }, cssClass: "",
-            isDirectionOnly: true
         }
     }
 };

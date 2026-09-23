@@ -333,13 +333,6 @@ export const defaultOfficeData = {
       phone: "(046) 483-9378",
       head: "Ms. Jovie A. Maguinao",
       requirements: ["ID"]
-    },
-    "restroom-cr-7": {
-      title: "Comfort Room",
-      badge: "7th Floor - Center",
-      hours: "Open 24/7",
-      head: "Public Utilities",
-      requirements: []
     }
   }
 };
