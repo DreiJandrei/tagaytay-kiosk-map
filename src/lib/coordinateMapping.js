@@ -221,19 +221,30 @@ export const coordinateMapping = {
       }
   },
   7: {
-        "mayor-main": { 
-            targetX: 250, 
-            targetY: 400, 
-            pathData: "M 580 340 L 580 400 L 250 400", 
-            style: { width: 400, height: 400, left: 50, top: 50, backgroundColor: '#4338ca', color: 'white', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.2rem', borderRadius: '4px' }, 
-            cssClass: "" 
+        // Iisa na ang hugis ng 6th at 7th Floor: pareho ang pader, ang
+        // hagdan, at ang elevator (tingnan ang MapScreen — isang sanga
+        // na lang ang gumuguhit sa dalawa). Kaya pareho rin ang kinaroroonan
+        // at ang ruta ng mga kwarto rito — ang pangalan lang ang naiiba,
+        // dahil ang tanggapan ng Mayor ang nasa 7th Floor.
+        "mayor-main": {
+            targetX: 450,
+            targetY: 480,
+            pathData: "M 650 480 L 450 480",
+            style: { width: 200, height: 500, left: 250, top: 150, backgroundColor: '#4338ca', color: 'white', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.2rem', borderRadius: '4px' },
+            cssClass: ""
         },
-        "mayor-receiving": { 
-            targetX: 870, 
-            targetY: 730, 
-            pathData: "M 580 340 L 580 400 L 870 400 L 870 730", 
-            style: { width: 360, height: 265, left: 590, top: 605, backgroundColor: '#4338ca', color: 'white', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.2rem', borderRadius: '4px' }, 
-            cssClass: "" 
+        "mayor-receiving": {
+            targetX: 700,
+            targetY: 650,
+            pathData: "M 700 480 L 850 480 L 850 620 L 700 620 L 700 650",
+            style: { width: 400, height: 200, left: 500, top: 650, backgroundColor: '#4338ca', color: 'white', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.2rem', borderRadius: '4px' },
+            cssClass: ""
+        },
+        "restroom-cr-7": {
+            targetX: 650, targetY: 200,
+            pathData: "M 650 480 L 480 480 L 480 120 L 650 120 L 650 200",
+            style: { width: 200, height: 80, left: 550, top: 200, backgroundColor: '#93c5fd', color: 'black' }, cssClass: "",
+            isDirectionOnly: true
         }
     }
 };

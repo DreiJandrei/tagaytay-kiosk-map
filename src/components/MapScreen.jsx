@@ -206,24 +206,23 @@ export default function MapScreen({
           kioskText = isClimbing ? "⬆️ CLIMBING STAIRS..." : "🚶‍♂️ ARRIVED VIA STAIRS";
           if (currentFloor === 2) kioskStyle = { left: 220, top: 420 };
           else if (currentFloor >= 3 && currentFloor <= 5) kioskStyle = { left: 240, top: 720 };
-          else if (currentFloor === 6) kioskStyle = { left: 650, top: 580 };
-          else if (currentFloor === 7) kioskStyle = { left: 600, top: 460 };
-      } 
+          // Iisa ang plano ng 6th at 7th Floor, kaya iisa rin ang
+          // kinatatayuan pagdating — walang hiwalay na sanga ang 7th.
+          else if (currentFloor >= 6) kioskStyle = { left: 650, top: 580 };
+      }
       else if (transportMethod === 'escalator') {
           kioskText = "🪜 ARRIVED VIA ESCALATOR";
           if (currentFloor === 2) kioskStyle = { left: 575, top: 670 };
           // Walang naka-mapa na escalator sa 3rd pataas — gamitin ang
           // posisyon ng elevator para hindi mawala sa (0,0) ang pin.
           else if (currentFloor >= 3 && currentFloor <= 5) kioskStyle = { left: 600, top: 410 };
-          else if (currentFloor === 6) kioskStyle = { left: 620, top: 350 };
-          else if (currentFloor === 7) kioskStyle = { left: 580, top: 320 };
-      } 
+          else if (currentFloor >= 6) kioskStyle = { left: 620, top: 350 };
+      }
       else {
           kioskText = "🛗 ARRIVED VIA ELEVATOR";
           if (currentFloor === 2) kioskStyle = { left: 820, top: 460 };
           else if (currentFloor >= 3 && currentFloor <= 5) kioskStyle = { left: 600, top: 410 };
-          else if (currentFloor === 6) kioskStyle = { left: 620, top: 350 };
-          else if (currentFloor === 7) kioskStyle = { left: 580, top: 320 };
+          else if (currentFloor >= 6) kioskStyle = { left: 620, top: 350 };
       }
   } else {
       kioskStyle = { display: 'none' };
@@ -289,18 +288,13 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
               }
           }
       }
-      else if (currentFloor === 6) {
+      // Pareho ang plano ng 6th at 7th Floor — pati ang pinagmumulan ng
+      // bawat ruta — kaya iisang sanga na lang ang humahawak sa dalawa.
+      else if (currentFloor >= 6) {
           if (transportMethod === 'stairs') {
               if (finalPathData.startsWith("M 650 480 L 450 480")) finalPathData = finalPathData.replace("M 650 480 L 450 480", "M 650 580 L 650 480 L 450 480");
               else if (finalPathData.startsWith("M 700 480 L 850 480")) finalPathData = finalPathData.replace("M 700 480 L 850 480", "M 650 580 L 650 480 L 700 480 L 850 480");
               else if (finalPathData.startsWith("M 650 480 L 480 480")) finalPathData = finalPathData.replace("M 650 480 L 480 480", "M 650 580 L 650 480 L 480 480");
-          }
-      }
-      else if (currentFloor === 7) {
-          if (transportMethod === 'stairs') {
-              finalPathData = finalPathData.replace("M 580 340 L 580 400", "M 600 460 L 430 460 L 430 400 L 580 400");
-          } else if (transportMethod === 'elevator') {
-              finalPathData = finalPathData.replace("M 580 340 L 580 400", "M 580 340 L 430 340 L 430 400 L 580 400");
           }
       }
   }
@@ -513,29 +507,16 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
             </svg>
           )}
           
-          {currentFloor === 6 && (
+          {/* Iisang plano ang 6th at 7th Floor — magkapatong na palapag
+              sila sa tunay na gusali, kaya pareho ang pader at daanan.
+              Ang pangalan lang ng mga kwarto ang naiiba. */}
+          {currentFloor >= 6 && (
             <svg width="1400" height="1300" style={{ position: 'absolute', top: 0, left: 0, zIndex: 1, pointerEvents: 'none' }}>
               <g stroke="#9CA3AF" strokeWidth="6" fill="rgba(255,255,255,0.03)">
                 <rect x="200" y="100" width="750" height="800" rx="4" fill="none" stroke="#9CA3AF" strokeWidth="6" />
                 <path d="M 450 150 L 250 150 L 250 650 L 450 650 L 450 520 M 450 440 L 450 150" />
                 <path d="M 600 150 L 500 150 L 500 450 L 800 450 L 800 150 L 700 150" />
                 <path d="M 500 650 L 500 850 L 900 850 L 900 650 L 750 650 M 650 650 L 500 650" />
-              </g>
-            </svg>
-          )}
-          
-          {currentFloor === 7 && (
-            <svg width="1400" height="1300" style={{ position: 'absolute', zIndex: 1, pointerEvents: 'none' }}>
-              <g stroke="#9CA3AF" strokeWidth="6" fill="transparent">
-                <rect x="50" y="50" width="900" height="820" />
-                <path d="M 50 450 L 450 450" />
-                <path d="M 450 50 L 450 380" />
-                <path d="M 450 380 L 950 380" />
-                <path d="M 680 50 L 680 380" />
-                <path d="M 620 420 L 515 420 L 515 510 L 600 510" />
-                <path d="M 600 510 L 600 605" />
-                <path d="M 590 605 L 820 605" />
-                <path d="M 590 605 L 590 870" />
               </g>
             </svg>
           )}
@@ -613,22 +594,13 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
             </>
           )}
           
-          {currentFloor === 6 && (
+          {currentFloor >= 6 && (
             <>
               <div style={{ position: 'absolute', width: 50, height: 40, left: 570, top: 350, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
               <div style={{ position: 'absolute', width: 50, height: 40, left: 680, top: 350, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
               <div className="structural-element stairs-block" style={{ width: 200, height: 60, left: 550, top: 550, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">Stairs ↙ ↗</span></div>
-              
+
               <div className="exit-badge" style={exitBadgeStyle(765, 435)}>FIRE EXIT</div>
-            </>
-          )}
-          
-          {currentFloor === 7 && (
-            <>
-              <div style={{ position: 'absolute', width: 60, height: 40, left: 550, top: 320, background: '#9CA3AF', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937', zIndex: 5 }}>ELEV</div>
-              <div className="structural-element stairs-block" style={{ width: 100, height: 60, left: 550, top: 430, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">Stairs ↙</span></div>
-              
-              <div className="exit-badge" style={exitBadgeStyle(655, 360)}>FIRE EXIT</div>
             </>
           )}
 
