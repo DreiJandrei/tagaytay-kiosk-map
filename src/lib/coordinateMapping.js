@@ -242,13 +242,14 @@ export const coordinateMapping = {
         //                                      nasa itaas ng elevator (350)
         //   36.36% ng 550px na lapad = 200px -> kanan ng haligi (x 450)
         "mayor-main": {
-            // Nasa pasukan ang tudlaan, hindi sa gitna: nasa gitna ang
-            // pangalan ng tanggapan, at magkakapatong sila roon.
-            targetX: 620,
-            targetY: 290,
-            // Galing sa elevator: diretsong paakyat papasok sa tanggapan —
-            // bukas ang itaas ng core, walang pader na hinaharang.
-            pathData: "M 620 350 L 620 290",
+            // Sa pinto mismo (x 450, y 440-520) ang tudlaan — iyon din ang
+            // pinto ng katapat nitong silid sa 6th Floor. Hindi sa gitna
+            // ng kahon, dahil doon nakasulat ang pangalan ng tanggapan.
+            targetX: 450,
+            targetY: 480,
+            // Kapareho ng 6th Floor: lumalabas sa pinto ng elevator lobby,
+            // tapos pakanluran sa pasilyo hanggang sa pinto ng tanggapan.
+            pathData: "M 650 480 L 450 480",
             style: {
                 width: 550, height: 500, left: 250, top: 150,
                 clipPath: 'polygon(0% 0%, 100% 0%, 100% 36%, 36.36% 36%, 36.36% 100%, 0% 100%)',

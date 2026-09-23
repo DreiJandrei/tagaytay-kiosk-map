@@ -295,11 +295,6 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
               if (finalPathData.startsWith("M 650 480 L 450 480")) finalPathData = finalPathData.replace("M 650 480 L 450 480", "M 650 580 L 650 480 L 450 480");
               else if (finalPathData.startsWith("M 700 480 L 850 480")) finalPathData = finalPathData.replace("M 700 480 L 850 480", "M 650 580 L 650 480 L 700 480 L 850 480");
               else if (finalPathData.startsWith("M 650 480 L 480 480")) finalPathData = finalPathData.replace("M 650 480 L 480 480", "M 650 580 L 650 480 L 480 480");
-              // 7th Floor, papuntang tanggapan ng Mayor. Sarado ang gitnang
-              // core maliban sa pinto nito, kaya sa makitid na pasilyo sa
-              // pagitan ng haligi ng tanggapan (dulo: 450) at ng core
-              // (simula: 500) umaakyat ang galing sa hagdan — sa x 470.
-              else if (finalPathData.startsWith("M 620 350")) finalPathData = "M 650 580 L 470 580 L 470 290 L 620 290";
           }
       }
   }
@@ -528,12 +523,18 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
                     <path d="M 600 150 L 500 150 L 500 450 L 800 450 L 800 150 L 700 150" />
                   </>
                 ) : (
-                  /* 7th Floor: walang comfort room dito, at sakop na ng
-                     tanggapan ng Mayor ang buong itaas — ang kahon mismo
-                     nito ang gilid ng silid. Ang natira sa gitnang core ay
-                     ang elevator lang, at may pintuan ito sa ibaba (600-720)
-                     palabas sa pasilyo. */
-                  <path d="M 500 330 L 500 450 L 600 450 M 720 450 L 800 450 L 800 330" />
+                  <>
+                    {/* 7th Floor: walang comfort room dito, at sakop na ng
+                        tanggapan ng Mayor ang buong itaas. Sinusundan ng
+                        pader ang hugis-L nito. Ang puwang sa gilid
+                        (x 450, y 440-520) ay ang PINTO — kapareho ng pinto
+                        ng katapat nitong silid sa 6th Floor. */}
+                    <path d="M 250 150 L 800 150 L 800 330 L 450 330 L 450 440 M 450 520 L 450 650 L 250 650 L 250 150" />
+                    {/* Ang natira sa gitnang core ay ang elevator lang. Ang
+                        itaas nito ay pader na ng tanggapan; ang pintuan nito
+                        ay nasa ibaba (x 600-720), palabas sa pasilyo. */}
+                    <path d="M 500 330 L 500 450 L 600 450 M 720 450 L 800 450 L 800 330" />
+                  </>
                 )}
 
                 <path d="M 500 650 L 500 850 L 900 850 L 900 650 L 750 650 M 650 650 L 500 650" />
