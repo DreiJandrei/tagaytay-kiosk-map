@@ -1162,9 +1162,24 @@ img { max-width: 100%; }
   border-radius: 14px; overflow: hidden; background: #000;
   border: 1px solid rgba(96,165,250,.3);
   /* Anumang pindot sa video ay pagsisimula pa rin ng kiosk — walang
-     kontrol na maaabot ng daliri, attract loop lang ito. */
+     kontrol na maaabot ng daliri, attract loop lang ito. Ang salaming
+     panghagod lang ang inaalis sa tuntuning ito. */
   pointer-events: none;
+  /* Bumabalik nang malambot pagkabitiw ng daliri. Habang hawak, wala
+     itong transition (tingnan ang .is-dragging) para dikit sa kamay. */
+  transition: transform .28s cubic-bezier(.22,.61,.36,1);
 }
+.welcome-video-frame.is-dragging { transition: none; }
+/* Ang hagod ay dumadaan dito, hindi sa iframe ng YouTube o Facebook.
+   `touch-action: none` para hindi ito agawin ng pag-scroll ng browser. */
+.welcome-video-swipe {
+  position: absolute; inset: 0; z-index: 2;
+  pointer-events: auto;
+  touch-action: none;
+  cursor: grab;
+  background: transparent;
+}
+.welcome-video-swipe:active { cursor: grabbing; }
 /* Patayong video (Reels): ang taas ang hangganan, at doon kinukuha ang
    lapad — kung hindi, aabot ito sa labas ng kiosk. Umuurong pa kapag
    may kasamang anunsyo sa iisang hanay. */
@@ -1213,6 +1228,13 @@ img { max-width: 100%; }
   display: -webkit-box; -webkit-box-orient: vertical;
   -webkit-line-clamp: 2; line-clamp: 2;
 }
+.welcome-video-nav {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.welcome-video-hint {
+  color: rgba(147,197,253,.6);
+  font-size: .78rem; font-weight: 700; letter-spacing: .6px;
+}
 .welcome-video-dots { display: flex; justify-content: center; gap: 9px; }
 .welcome-video-dots span {
   width: 9px; height: 9px; border-radius: 50%;
@@ -1259,6 +1281,10 @@ img { max-width: 100%; }
   .welcome-video-icon { font-size: 1.3rem; }
   .welcome-video-sound { width: 42px; height: 42px; font-size: 1.1rem; }
   .welcome-video-caption { font-size: .9rem; -webkit-line-clamp: 1; line-clamp: 1; }
+  /* Masikip na ang taas dito. Ang mga tuldok ang nagsasabi ng posisyon —
+     iyon ang naiiwan; ang paalala sa hagod ang unang isinusuko. */
+  .welcome-video-nav { gap: 4px; }
+  .welcome-video-hint { display: none; }
   .welcome-main:has(.welcome-board) .welcome-video-frame.is-portrait {
     height: min(40vh, 360px);
   }
