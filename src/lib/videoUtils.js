@@ -137,20 +137,23 @@ export function readImageMeta(file) {
   });
 }
 
+// Walang simbolo ng hugis sa mga label na ito: ang ▯ ay walang glyph sa
+// font ng panel at kahon-tofu ang lumalabas. Sinasabi naman na ng ratio
+// kung ano ang hugis, kaya walang nawawala.
 export function getOrientations(lang = 'EN') {
   const EN = lang === 'EN';
   return [
     {
       value: 'landscape',
       label: EN
-        ? '▭ Landscape (16:9) — ordinary video / picture'
-        : '▭ Landscape (16:9) — karaniwang video / larawan',
+        ? 'Landscape (16:9) — ordinary video / picture'
+        : 'Landscape (16:9) — karaniwang video / larawan',
     },
     {
       value: 'portrait',
       label: EN
-        ? '▯ Portrait (9:16) — Reels / upright picture'
-        : '▯ Portrait (9:16) — Reels / patayong larawan',
+        ? 'Portrait (9:16) — Reels / upright picture'
+        : 'Portrait (9:16) — Reels / patayong larawan',
     },
   ];
 }

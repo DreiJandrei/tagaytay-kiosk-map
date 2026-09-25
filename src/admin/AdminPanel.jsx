@@ -657,9 +657,11 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                             ? t('🖼️ picture', '🖼️ larawan')
                             : video.video_type}
                           {' · '}{video.duration_seconds}s ·{' '}
+                          {/* Walang simbolo rito: ang ▯ ay walang glyph sa
+                              font ng panel — kahon-tofu ang lumalabas. */}
                           {video.orientation === 'portrait'
-                            ? t('▯ portrait', '▯ patayo')
-                            : t('▭ landscape', '▭ pahiga')}
+                            ? t('portrait', 'patayo')
+                            : t('landscape', 'pahiga')}
                         </span>
                       </span>
                       <span className={`adm-vid-pill${video.is_active ? ' is-on' : ''}`}>

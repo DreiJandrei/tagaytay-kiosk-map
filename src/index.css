@@ -3156,7 +3156,17 @@ button:active { transform: scale(.97); }
   border-radius: var(--ui-r-sm);
   background: var(--ui-raise);
 }
-.adm-vid-item .k-btn { flex-shrink: 0; padding: 9px 16px; font-size: .85rem; }
+/* `width: auto` — mahalaga ito. Ang `.k-btn` ay `width: 100%` bilang
+   patakaran (nakasalansan silang pahaba sa ibang bahagi ng panel); sa
+   hanay na ito, ang buong lapad kasabay ng `flex-shrink: 0` ang
+   dumudurog sa pangalan at nagtutulak sa buton palabas ng kahon. */
+.adm-vid-item .k-btn {
+  width: auto;
+  flex-shrink: 0;
+  padding: 9px 16px;
+  font-size: .85rem;
+  white-space: nowrap;
+}
 .adm-vid-idx {
   flex-shrink: 0;
   width: 30px; height: 30px;
@@ -3192,6 +3202,10 @@ button:active { transform: scale(.97); }
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .5px;
+  /* Isang hanay lang ito. Kapag pinayagang bumalot, isang salita kada
+     linya ang kinahihinatnan sa makipot na hanay — at doon nagsasapawan
+     ang teksto at ang pill. */
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 /* "o kaya" — paghahati ng link at upload na paraan */
 .adm-or {
