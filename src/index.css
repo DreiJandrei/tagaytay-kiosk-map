@@ -1109,8 +1109,22 @@ img { max-width: 100%; }
   border: 1px solid rgba(96,165,250,.45);
   border-radius: 22px; padding: 22px var(--vid-pad);
   box-shadow: 0 24px 55px rgba(2,10,26,.6);
-  animation: rise 1.1s .7s cubic-bezier(.16,1,.3,1) both;
+  /* `backwards`, hindi `both`: ang `rise` ay gumagalaw sa transform, at
+     ang naiiwang fill ng `both` ay tatakpan ang inline na transform ng
+     hagod — hindi na aandar ang swipe. Pareho lang ang hitsura: ang
+     hulihang keyframe ay siya ring likas na anyo ng kard. */
+  animation: rise 1.1s .7s cubic-bezier(.16,1,.3,1) backwards;
 }
+/* Buong kahon ang hinahawakan kapag may dalawa o higit pang video. */
+.welcome-video-card.is-swipeable {
+  /* Patayo lang ang ipinauubaya sa browser — ang pahalang ay atin. */
+  touch-action: pan-y;
+  cursor: grab;
+  /* Bumabalik nang malambot pagkabitiw ng daliri. Habang hawak, wala
+     itong transition (tingnan ang .is-dragging) para dikit sa kamay. */
+  transition: transform .28s cubic-bezier(.22,.61,.36,1);
+}
+.welcome-video-card.is-dragging { transition: none; cursor: grabbing; }
 .welcome-video-head {
   display: flex; align-items: center; gap: 14px;
   padding-bottom: 12px;
@@ -1162,24 +1176,11 @@ img { max-width: 100%; }
   border-radius: 14px; overflow: hidden; background: #000;
   border: 1px solid rgba(96,165,250,.3);
   /* Anumang pindot sa video ay pagsisimula pa rin ng kiosk — walang
-     kontrol na maaabot ng daliri, attract loop lang ito. Ang salaming
-     panghagod lang ang inaalis sa tuntuning ito. */
+     kontrol na maaabot ng daliri, attract loop lang ito. Ito rin ang
+     nagpapadaan ng hagod pababa sa kard: click-through ang buong frame,
+     kaya kahit ang iframe ng YouTube ay hindi na nakakasalo ng daliri. */
   pointer-events: none;
-  /* Bumabalik nang malambot pagkabitiw ng daliri. Habang hawak, wala
-     itong transition (tingnan ang .is-dragging) para dikit sa kamay. */
-  transition: transform .28s cubic-bezier(.22,.61,.36,1);
 }
-.welcome-video-frame.is-dragging { transition: none; }
-/* Ang hagod ay dumadaan dito, hindi sa iframe ng YouTube o Facebook.
-   `touch-action: none` para hindi ito agawin ng pag-scroll ng browser. */
-.welcome-video-swipe {
-  position: absolute; inset: 0; z-index: 2;
-  pointer-events: auto;
-  touch-action: none;
-  cursor: grab;
-  background: transparent;
-}
-.welcome-video-swipe:active { cursor: grabbing; }
 /* Patayong video (Reels): ang taas ang hangganan, at doon kinukuha ang
    lapad — kung hindi, aabot ito sa labas ng kiosk. Umuurong pa kapag
    may kasamang anunsyo sa iisang hanay. */

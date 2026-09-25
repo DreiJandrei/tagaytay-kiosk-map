@@ -122,11 +122,6 @@ export default function WelcomeVideo() {
       id: e.pointerId, x: e.clientX, y: e.clientY,
       active: true, moved: false,
     };
-    // Kahit lumabas ang daliri sa kahon ng video, sa amin pa rin ang
-    // galaw — malapad ang kiosk, madaling makalampas ang hagod.
-    if (e.currentTarget.setPointerCapture) {
-      try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* wala lang */ }
-    }
   };
 
   const onPointerMove = (e) => {
@@ -142,7 +137,16 @@ export default function WelcomeVideo() {
       endSwipe();
       return;
     }
-    if (Math.abs(dx) > 8) s.moved = true;
+
+    if (!s.moved && Math.abs(dx) > 8) {
+      s.moved = true;
+      // Dito lang — hindi sa pagdampi — inaangkin ang daliri. Kapag sa
+      // pagdampi pa lang inagaw, ang buton ng tunog ang unang masisira:
+      // sa kard na napupunta ang click, hindi na sa buton.
+      if (e.currentTarget.setPointerCapture) {
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* wala lang */ }
+      }
+    }
 
     // Bumibigat ang paghila habang papalayo — may hangganan ang sunod
     // na kard, kaya ramdam na hindi ito basta hinihila kahit saan.
@@ -206,7 +210,21 @@ export default function WelcomeVideo() {
   const portrait = current.orientation === 'portrait';
 
   return (
-    <div className={`welcome-video-card${portrait ? ' is-portrait' : ''}`}>
+    // Buong kard ang tinatanggap ng hagod — pati pamagat, caption at
+    // tuldok. Click-through ang frame (`pointer-events: none`), kaya
+    // dumadaan pababa rito ang bawat pindot sa mismong video.
+    <div
+      className={
+        `welcome-video-card${portrait ? ' is-portrait' : ''}` +
+        `${swipeable ? ' is-swipeable' : ''}${dragX ? ' is-dragging' : ''}`
+      }
+      style={dragX ? { transform: `translateX(${dragX}px)` } : undefined}
+      onPointerDown={swipeable ? onPointerDown : undefined}
+      onPointerMove={swipeable ? onPointerMove : undefined}
+      onPointerUp={swipeable ? onPointerUp : undefined}
+      onPointerCancel={swipeable ? endSwipe : undefined}
+      onClickCapture={swipeable ? onClickCapture : undefined}
+    >
       <div className="welcome-video-head">
         <span className="welcome-video-icon">{isImage ? '🖼️' : '🎬'}</span>
         <h2>{heading}</h2>
@@ -225,10 +243,7 @@ export default function WelcomeVideo() {
         )}
       </div>
 
-      <div
-        className={`welcome-video-frame${portrait ? ' is-portrait' : ''}${dragX ? ' is-dragging' : ''}`}
-        style={dragX ? { transform: `translateX(${dragX}px)` } : undefined}
-      >
+      <div className={`welcome-video-frame${portrait ? ' is-portrait' : ''}`}>
         {isImage ? (
           // Walang key na kasama ang `cycle` dito: sa larawan, ang
           // pagpapalit ng key ay pagbura at paggawa ulit ng parehong
@@ -268,21 +283,6 @@ export default function WelcomeVideo() {
             <span>⚠️</span>
             <p>Hindi mabasa ang video link.</p>
           </div>
-        )}
-
-        {/* Ang YouTube at Facebook ay nakabalot sa iframe — nilululon
-            nito ang bawat pindot bago pa makarating sa amin. Ito ang
-            salaming nakapatong sa lahat: dito dumadaan ang hagod, at
-            dito rin dumadaan pababa ang tuyot na pindot. */}
-        {swipeable && (
-          <div
-            className="welcome-video-swipe"
-            onPointerDown={onPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={onPointerUp}
-            onPointerCancel={endSwipe}
-            onClickCapture={onClickCapture}
-          />
         )}
       </div>
 
