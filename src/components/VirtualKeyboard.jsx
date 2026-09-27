@@ -38,6 +38,25 @@ const setNativeValue = (el, value) => {
   el.dispatchEvent(new Event('input', { bubbles: true }));
 };
 
+// Sa isang-linyang field, ang Enter sa tunay na keyboard ay hindi titik —
+// ipinapasa nito ang form na kinabibilangan ng field. Ito ang tumutulad
+// doon, kaya sa admin login ay sapat nang pindutin ang ⏎ para makapasok;
+// hindi na kailangang abutin pa ang Login na buton.
+const submitOwningForm = (el) => {
+  const form = el.form;
+  if (!form) return;
+
+  // Kapareho ng ginagawa ng browser: kapag naka-disable ang pangunahing
+  // buton — halimbawa, habang sinusuri pa ang password — walang
+  // nangyayari sa Enter. Dito napipigilan ang dalawang beses na pagpasok
+  // kapag naulit ang pindot habang naghihintay.
+  const submitter = form.querySelector('button[type="submit"], input[type="submit"]');
+  if (submitter?.disabled) return;
+
+  if (typeof form.requestSubmit === 'function') form.requestSubmit(submitter || undefined);
+  else submitter?.click();
+};
+
 const isTypable = (el) =>
   !!el &&
   ((el.tagName === 'INPUT' && !['checkbox', 'radio', 'submit', 'button', 'file'].includes(el.type)) ||
@@ -157,8 +176,12 @@ export default function VirtualKeyboard({ scopeRef, onClose, lang = 'EN' }) {
       const ch = key === 'SPACE' ? ' '
         : key === 'ENTER' ? '\n'
         : (shift && !symbols ? key.toUpperCase() : key);
-      // Ang Enter ay newline lang sa textarea; walang saysay sa input.
-      if (key === 'ENTER' && el.tagName !== 'TEXTAREA') return;
+      // Newline ang Enter sa textarea. Sa isang-linyang field, ipinapasa
+      // nito ang form — dating walang anumang nangyayari dito.
+      if (key === 'ENTER' && el.tagName !== 'TEXTAREA') {
+        submitOwningForm(el);
+        return;
+      }
       next = value.slice(0, start) + ch + value.slice(end);
       caret = start + ch.length;
     }
