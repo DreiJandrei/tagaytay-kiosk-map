@@ -259,6 +259,11 @@ export default function App() {
         setShowKeyboard(false);
         setRouteStep('idle');
         setDestinationData(null);
+        // Kasama ang gabay sa nililinis. Kung maiiwan itong bukas nang
+        // umalis ang dating bisita, ang gabay pa rin niya ang sasalubong
+        // sa susunod na pipindot — kasama ang pangalan ng opisinang
+        // hinanap ng iba, sa halip na ang listahan ng palapag.
+        setGuide(null);
         setShowAdmin(false);
         setShowAdminLogin(false);
         setAdminPasswordInput('');
@@ -354,6 +359,14 @@ export default function App() {
   const handleSelectOffice = (key, floor) => {
     const targetOffice = liveOfficeDatabase[floor]?.[key];
     const isMobile = typeof window !== 'undefined' && window.innerWidth <= 1024;
+
+    // Bagong opisina ang pinili — paglabas na iyon sa hakbang-hakbang na
+    // gabay. Kung maiiwan itong bukas, nakapako sa `backTo` ang ipinapakita
+    // sa gilid: ang opisinang PINAGSIMULAN ng gabay, hindi ang bagong
+    // pinindot. Kaya nagbabago ang ruta sa mapa pero hindi ang pangalan sa
+    // sidebar — at sa opisinang nasa itaas, dalawang panel pa ang sabay na
+    // lumalabas (ang gabay at ang bagong pagpili ng daan).
+    setGuide(null);
 
     if (floor === 1 || isMobile) {
       setCurrentFloor(floor);
