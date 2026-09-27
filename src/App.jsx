@@ -362,10 +362,43 @@ export default function App() {
       setDestinationData(null);
     } else {
       setDestinationData({ key, floor, ...targetOffice });
-      setCurrentFloor(1); 
+      setCurrentFloor(1);
       setSelectedOfficeKey(null);
-      setRouteStep('choose-transport'); 
+      // Bumabalik sa elevator ang panimula tuwing bagong paroroonan.
+      // Kung hindi, ang daang pinili sa NAKARAANG opisina ang nakasakay
+      // pa rin habang wala pang pinipili ang bisita — at iyon ang
+      // naisusulat sa QR, kaya ibang daan ang nababasa sa telepono
+      // kaysa sa pipiliin niya sa kiosk pagkatapos.
+      setTransportMethod('elevator');
+      setRouteStep('choose-transport');
     }
+  };
+
+  // ==============================================================
+  // PAGPILI NG PALAPAG SA HANAY SA ILALIM NG MAPA
+  // Sadyang paglabas ito sa kasalukuyang ruta: ang ibig sabihin ng
+  // pindot ay "ipakita mo sa akin ang palapag na ito", hindi "ituloy
+  // ang dinadaanan ko". Kaya tinatapos nito ang lahat ng nakabukas.
+  //
+  // Dating `setCurrentFloor` at `setSelectedOfficeKey` lang ito, at
+  // naiiwan ang `routeStep` sa dating halaga. Dalawa ang nasisira:
+  //
+  //  • Mula sa 'arrived' — naaalis ang napiling opisina, kaya wala nang
+  //    maipapakitang detalye; pero 'arrived' pa rin ang hakbang, kaya
+  //    nakatago pa rin ang listahan ng opisina. Blangko ang buong
+  //    sidebar, at wala nang balikan ang bisita.
+  //
+  //  • Mula sa 'choose-transport' — naiiwang nakalutang ang pagpili ng
+  //    daan sa ibabaw ng ibang palapag. Ang pindot doon ay parang
+  //    walang nangyayari, tapos biglang lilipat ang mapa pagkaraan ng
+  //    apat na segundo.
+  // ==============================================================
+  const handlePickFloor = (floor) => {
+    setCurrentFloor(floor);
+    setSelectedOfficeKey(null);
+    setRouteStep('idle');
+    setDestinationData(null);
+    setGuide(null);
   };
 
   useEffect(() => {
@@ -400,7 +433,11 @@ export default function App() {
         timeoutId = setTimeout(() => {
           setCurrentFloor(prev => prev + 1);
         }, 1500);
-      } else if (currentFloor === destinationData.floor) {
+      } else {
+        // `>=`, hindi `===`. Kung sakaling makalampas ang palapag sa
+        // paroroonan, walang sasalo sa dating `===` at doon titigil ang
+        // pag-akyat habambuhay — mananatiling "papunta pa" ang kiosk at
+        // wala nang darating. Ang lampas ay itinuturing nang dating.
         setSelectedOfficeKey(destinationData.key);
         setRouteStep('arrived');
       }
@@ -968,8 +1005,7 @@ export default function App() {
           selectedOfficeKey={selectedOfficeKey}
           onSelectOffice={(key) => handleSelectOffice(key, currentFloor)}
           currentFloor={currentFloor}
-          setCurrentFloor={setCurrentFloor} 
-          setSelectedOfficeKey={setSelectedOfficeKey} 
+          onPickFloor={handlePickFloor}
           transportMethod={transportMethod}
           routeStep={routeStep}
           kioskLabel={guideKioskLabel}
@@ -1018,7 +1054,10 @@ export default function App() {
 
               <button
                 className="mini-x"
-                onClick={() => { setRouteStep('idle'); setDestinationData(null); }}
+                // Kasama ang napiling opisina sa binubura. Nakatago ang
+                // listahan hangga't may napili, kaya kung maiiwan ito,
+                // blangko ang sidebar pagkatapos kanselahin.
+                onClick={() => { setRouteStep('idle'); setDestinationData(null); setSelectedOfficeKey(null); }}
                 title={lang === 'EN' ? 'Cancel navigation' : 'Kanselahin'}
               >
                 ✕

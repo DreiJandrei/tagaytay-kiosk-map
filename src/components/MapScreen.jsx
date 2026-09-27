@@ -5,8 +5,10 @@ export default function MapScreen({
   selectedOfficeKey, 
   onSelectOffice, 
   currentFloor,
-  setCurrentFloor,
-  setSelectedOfficeKey,
+  // Pindot sa hanay ng palapag sa ilalim. Hindi lang ito pagpalit ng
+  // palapag — pagtatapos din ito ng anumang rutang nakabukas. Nasa App
+  // ang buong kahulugan nito (`handlePickFloor`).
+  onPickFloor,
   transportMethod = 'elevator',
   routeStep,
   // Kapag may laman, ito ang nakasulat sa pin — ginagamit ito ng
@@ -477,7 +479,7 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
               <button
                 key={floor}
                 className={`floor-chip${isActive ? ' active' : ''}`}
-                onClick={() => { setCurrentFloor(floor); setSelectedOfficeKey(null); }}
+                onClick={() => onPickFloor(floor)}
                 style={{
                   minWidth: isTightBar ? '86px' : '130px',
                   padding: isTightBar ? '11px 12px' : '14px 20px',
