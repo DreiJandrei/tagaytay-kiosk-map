@@ -92,8 +92,9 @@ export default function MapScreen({
   // muna, kaya sa 0.88 ay dumudulas ang plano sa ilalim ng hanay ng
   // palapag — doon ito nagmukhang sobra.
   //
-  // Kung malaki pa rin: babaan (0.60). Kung maliit naman: taasan (0.75).
-  const COMPACT_FILL = 0.68;
+  // Kung malaki pa rin: babaan (0.58). Kung naliitan naman: taasan (0.66).
+  // Mga 0.04 ang isang hakbang na kitang-kita pa rin ngunit hindi biglaan.
+  const COMPACT_FILL = 0.62;
 
   const viewFor = ({ w, h }, box) => {
     // Hindi lalampas sa dating laki sa malalaking screen — doon walang
