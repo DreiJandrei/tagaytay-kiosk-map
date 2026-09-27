@@ -74,6 +74,17 @@ export default function MapScreen({
     return { minX, minY, maxX, maxY, cx: (minX + maxX) / 2, cy: (minY + maxY) / 2 };
   };
 
+  // Iisang plano ang 3rd, 4th at 5th Floor, at ito ang pinakamaliit sa
+  // gusali — mas makitid at mas mababa kaysa sa 1st, 2nd at 6th. Sa
+  // hangganang 0.65, natatapon ang kalahati ng TV sa blangkong grid at
+  // maliit ang mababasa mula sa malayo. Dito lang natin pinapayagang
+  // lumaki hanggang kasya; ang ibang palapag ay nasa dating laki pa rin.
+  //
+  // Kung masyadong malaki o maliit pa rin ang 3rd–5th sa TV, ang 1.6 sa
+  // ibaba ang babaan o taasan — iyon lang ang hangganan, at ang mismong
+  // pagkasya ang bahala kung hindi ito maabot.
+  const isCompactPlan = currentFloor >= 3 && currentFloor <= 5;
+
   const viewFor = ({ w, h }, box) => {
     // Hindi lalampas sa dating laki sa malalaking screen — doon walang
     // nagbago. Sa masikip lang ito umuurong, para kasya ang buong palapag.
@@ -81,7 +92,7 @@ export default function MapScreen({
     // Sa naka-lock na tanawin, ang sukat ng screen na lang ang masusunod:
     // walang buton na pampalaki roon, kaya kailangang kasya agad ang buong
     // palapag sa unang tingin — kahit anong telepono ang gamit.
-    const base = staticView ? 1.6 : (isMobile ? 0.28 : 0.65);
+    const base = staticView ? 1.6 : (isMobile ? 0.28 : (isCompactPlan ? 1.6 : 0.65));
 
     // Walang masukat (unang render, o walang guhit) — ang canvas na ang
     // isesentro. Laging may nailalabas ito, kahit paano.
@@ -659,10 +670,13 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
               <div className="structural-element stairs-block" style={{ width: 80, height: 80, left: 280, top: 740, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">Stairs ↗</span></div>
               <div style={{ position: 'absolute', width: 40, height: 30, left: 560, top: 410, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
               <div style={{ position: 'absolute', width: 40, height: 30, left: 640, top: 410, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
-              {(currentFloor === 4 || currentFloor === 5) && (
-                  <div className="structural-element escalator-block" style={{ width: 120, height: 50, left: 560, top: 480, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="escalator-lines"></div><span className="escalator-label">Escalator ▼</span></div>
-              )}
-              
+              {/* Walang escalator sa 3rd hanggang 5th Floor. Hanggang 2nd
+                  Floor lang ito sa tunay na gusali — hagdan at elevator
+                  na ang paakyat mula rito. Ang ruta na "escalator" ang
+                  pinili ay sa elevator na dumadaan sa mga palapag na ito
+                  (tingnan ang kioskStyle sa itaas), kaya walang ruta ang
+                  nawawalan ng tunguhin. */}
+
               <div className="exit-badge" style={exitBadgeStyle(700, 445)}>FIRE EXIT</div>
             </>
           )}
