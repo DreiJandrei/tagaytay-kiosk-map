@@ -1130,19 +1130,15 @@ export default function App() {
 
               <div className="k-roster-row">
                 <span className="k-roster-name">Franz Jandrei Valderama</span>
-                <span className="k-roster-role">Full Stack Developer</span>
               </div>
               <div className="k-roster-row">
                 <span className="k-roster-name">Neftali Luya</span>
-                <span className="k-roster-role">Front End Developer</span>
               </div>
               <div className="k-roster-row">
                 <span className="k-roster-name">Ricalyn Mereyes</span>
-                <span className="k-roster-role k-roster-role--alt">Main Documentation</span>
               </div>
               <div className="k-roster-row">
                 <span className="k-roster-name">Marlon Panganiban</span>
-                <span className="k-roster-role k-roster-role--alt">Documentation</span>
               </div>
             </div>
 

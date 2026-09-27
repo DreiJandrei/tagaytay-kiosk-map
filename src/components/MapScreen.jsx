@@ -121,7 +121,22 @@ export default function MapScreen({
   // magkaiba ang sinasakop ng bawat plano. Hindi ito humahawak kapag may
   // hinila o ni-zoom na ang bumibisita; sa reset button lang siya babalik.
   const hasUserMoved = useRef(false);
+  // Alin ang palapag na huling naisentro. Dito nakikita kung tunay ngang
+  // nagpalit ng palapag, o iba lang ang naging laman ng `offices` —
+  // nababago rin ito ng bilang ng hanap at ng sagot ng Supabase.
+  const lastCenteredFloor = useRef(currentFloor);
   useEffect(() => {
+    // Bagong palapag, bagong tanaw. Sa touch TV, halos laging nahihila o
+    // nailalaki ang mapa bago pumili ng susunod na palapag — kung
+    // itatago natin ang nakaraang posisyon, ang lumalabas ay gilid o
+    // blangkong bahagi ng bagong plano. Kaya kinakalimutan natin ang
+    // hinila kapag nagpalit ng palapag, at ang buong palapag agad ang
+    // sumasalubong sa bisita.
+    if (lastCenteredFloor.current !== currentFloor) {
+      lastCenteredFloor.current = currentFloor;
+      hasUserMoved.current = false;
+    }
+
     const recenter = () => {
       const size = measureViewport();
       setViewportWidth(size.w);
