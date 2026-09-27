@@ -25,6 +25,22 @@ REM  bawat "&" ng "^&" — kung hindi, doon puputulin ng Windows
 REM  ang linya at mali ang mabubuksan.
 set "KIOSK_URL=https://tagaytay-kiosk-map-one.vercel.app/?key=cct-bsit-kiosk"
 
+REM --- Laki ng lahat sa screen (parang zoom ng Chrome) -------
+REM  0.8 = parang 80% na zoom: lumiliit ang lahat, kaya mas marami
+REM  ang kasya at hindi na sumisikip sa TV. Ito na ang laki tuwing
+REM  bubukas — hindi na kailangang mag-Ctrl at minus, at hindi rin
+REM  ito mababago ng bisita.
+REM
+REM  Kung masyado pang maliit o malaki, dito lang ito palitan:
+REM  0.9 ay bahagyang malaki, 0.75 ay mas maliit pa.
+REM
+REM  TANDAAN: pinapalitan nito ang scaling ng Windows, hindi
+REM  dinadagdag. Kung nasa 100% ang Windows (karaniwan sa TV),
+REM  tumpak na 80% ang 0.8. Kung nasa 125% ang Windows, ang
+REM  katumbas ng 80% ay 1.0 — kaya tingnan muna ang Scale sa
+REM  Settings, System, Display bago galawin ang bilang na ito.
+set "KIOSK_SCALE=0.8"
+
 REM --- Hiwalay na profile ------------------------------------
 REM  Para hindi magulo ang normal na Chrome ng gumagamit ng
 REM  mini PC, at para malinis ang simula tuwing bubukas.
@@ -78,6 +94,7 @@ if exist "%KIOSK_PROFILE%\Default\Sessions" rmdir /s /q "%KIOSK_PROFILE%\Default
 start "" /wait "%CHROME%" ^
  --kiosk "%KIOSK_URL%" ^
  --user-data-dir="%KIOSK_PROFILE%" ^
+ --force-device-scale-factor=%KIOSK_SCALE% ^
  --autoplay-policy=no-user-gesture-required ^
  --disable-session-crashed-bubble ^
  --disable-infobars ^

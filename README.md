@@ -19,7 +19,25 @@ Doble-klik ang `start-kiosk.bat`. Dapat bumukas ang kiosk sa buong
 screen — walang address bar, walang tab, walang paraan para makalabas
 ang bisita.
 
-**3 · Auto-start tuwing bubukas ang makina**
+**3 · Laki ng lahat sa screen**
+
+Bumubukas na ito sa katumbas ng **80% na zoom ng Chrome** — mas marami
+ang kasya, at hindi na sumisikip sa TV. Nasa `start-kiosk.bat` ang
+bilang, malapit sa itaas:
+
+```
+set "KIOSK_SCALE=0.8"
+```
+
+Palitan lang iyon kung masyado pang maliit o malaki: `0.9` ay bahagyang
+malaki, `0.75` ay mas maliit pa. Hindi na kailangang mag-`Ctrl` at minus
+tuwing bubukas, at hindi rin ito mababago ng bisita.
+
+Kung nasa `100%` ang Scale ng Windows (karaniwan sa TV), tumpak na 80%
+ang `0.8`. Kung iba ang Scale sa **Settings → System → Display**,
+pinapalitan ito ng bilang sa itaas — hindi dinadagdag.
+
+**4 · Auto-start tuwing bubukas ang makina**
 
 1. Pindutin ang `Windows + R`, i-type ang `shell:startup`, Enter.
 2. Kanang-klik sa `start-kiosk.bat` → **Copy**.
