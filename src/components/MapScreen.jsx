@@ -82,10 +82,18 @@ export default function MapScreen({
   // maliit ang mababasa mula sa malayo. Dito lang natin pinapayagang
   // lumaki hanggang kasya; ang ibang palapag ay nasa dating laki pa rin.
   //
-  // Kung masyadong malaki o maliit pa rin ang 3rd–5th sa TV, ang 1.6 sa
-  // ibaba ang babaan o taasan — iyon lang ang hangganan, at ang mismong
-  // pagkasya ang bahala kung hindi ito maabot.
   const isCompactPlan = currentFloor >= 3 && currentFloor <= 5;
+
+  // ITO ANG PIHIT NG LAKI NG 3rd–5th. Ito ang bahagi ng nakikitang mapa
+  // na pinupuno ng plano. Mas maliit = mas maluwag ang paligid.
+  //
+  // Ang 0.88 na ginagamit ng ibang palapag ay halos dikit na sa itaas at
+  // ibaba. Sa malalaking plano, tama iyon. Sa 3rd–5th, taas ang sumisikip
+  // muna, kaya sa 0.88 ay dumudulas ang plano sa ilalim ng hanay ng
+  // palapag — doon ito nagmukhang sobra.
+  //
+  // Kung malaki pa rin: babaan (0.60). Kung maliit naman: taasan (0.75).
+  const COMPACT_FILL = 0.68;
 
   const viewFor = ({ w, h }, box) => {
     // Hindi lalampas sa dating laki sa malalaking screen — doon walang
@@ -108,7 +116,8 @@ export default function MapScreen({
 
     const bw = box.maxX - box.minX;
     const bh = box.maxY - box.minY;
-    const fit = Math.min(w / bw, h / bh) * 0.88; // may kaunting luwag sa gilid
+    // Luwag sa gilid. Mas maluwag sa 3rd–5th — tingnan ang COMPACT_FILL.
+    const fit = Math.min(w / bw, h / bh) * (isCompactPlan ? COMPACT_FILL : 0.88);
     const zoom = Math.min(base, Math.max(0.2, fit));
 
     // Nasa gitna ng canvas ang transform-origin, kaya ang nakikitang lugar
