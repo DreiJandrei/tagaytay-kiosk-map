@@ -227,6 +227,7 @@ export const updateOffice = async (officeKey, updates) => {
       : supabase.from('office_details').insert({ office_key: officeKey, ...fields }));
 
     let { error: err2 } = await writeDetails(detailFields);
+    let phoneSkipped = false;
 
     // Kapag hindi pa napatakbo ang supabase/office_phones.sql, wala pang
     // hanay para sa telepono — at tatanggihan ng database ang BUONG
@@ -237,6 +238,12 @@ export const updateOffice = async (officeKey, updates) => {
     // Kaya kapag ito ang dahilan ng pagtanggi — at ITO LAMANG — muli
     // itong isinusubok nang wala ang telepono. Nakakapag-save pa rin ang
     // admin sa lahat ng iba habang hindi pa napapatakbo ang SQL.
+    //
+    // PERO KAILANGANG MALAMAN ITO NG NAG-SAVE. Ang unang gawa nito ay
+    // sa console lang nagbababala — at walang console na nakikita sa
+    // TV ng kiosk. Kaya para sa nag-e-edit, mukhang tahimik na hindi
+    // pumapasok ang numero: "na-save" naman daw, pero hindi nagbabago.
+    // Ang `phoneSkipped` ang nagpapaabot niyon sa tumawag.
     if (err2 && isMissingPhoneColumn(err2)) {
       console.warn(
         'Wala pang hanay na phone/local ang office_details — na-save ang '
@@ -245,10 +252,11 @@ export const updateOffice = async (officeKey, updates) => {
       /* eslint-disable-next-line no-unused-vars */
       const { phone, local, ...withoutPhone } = detailFields;
       ({ error: err2 } = await writeDetails(withoutPhone));
+      phoneSkipped = !err2;
     }
     if (err2) throw err2;
 
-    return { success: true };
+    return { success: true, phoneSkipped };
   } catch (error) { 
     console.error(`Error updating office ${officeKey}:`, error); 
     throw error; 

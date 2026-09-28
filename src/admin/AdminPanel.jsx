@@ -370,7 +370,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     setIsSaving(true);
     try {
       const requirementsArray = formRequirements.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-      await updateOffice(selectedOfficeKey, {
+      const result = await updateOffice(selectedOfficeKey, {
         title: formTitle,
         hours: formHours,
         head: formHead,
@@ -383,10 +383,29 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
         local: formLocal.trim()
       });
       if (onDataUpdate) onDataUpdate();
-      alert(t(
-        'Office updates successfully deployed!',
-        'Nai-save na ang pagbabago sa tanggapan!',
-      ));
+
+      // Hindi puwedeng "nai-save na" kapag may naiwan. Mahirap nang
+      // hanapin ang dahilan kung bakit hindi nagbabago ang numero sa
+      // kiosk; huwag na itong pataguin sa isang masayang mensahe.
+      if (result?.phoneSkipped) {
+        alert(t(
+          'Saved — BUT NOT THE PHONE NUMBER.\n\n'
+          + 'The database has no column for it yet. Open Supabase → SQL Editor '
+          + '→ New query, paste all of supabase/office_phones.sql, and Run. '
+          + 'Then save this office again.\n\n'
+          + 'Everything else was saved.',
+          'NA-SAVE — PERO HINDI ANG TELEPONO.\n\n'
+          + 'Wala pang hanay para doon sa database. Buksan ang Supabase → SQL '
+          + 'Editor → New query, i-paste ang buong supabase/office_phones.sql, '
+          + 'tapos Run. Pagkatapos, i-save itong muli.\n\n'
+          + 'Ang lahat ng iba ay na-save naman.',
+        ));
+      } else {
+        alert(t(
+          'Office updates successfully deployed!',
+          'Nai-save na ang pagbabago sa tanggapan!',
+        ));
+      }
     } catch (error) {
       alert(t(
         'Database error. Check logs.',

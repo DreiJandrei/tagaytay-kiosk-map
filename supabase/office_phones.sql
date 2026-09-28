@@ -56,7 +56,14 @@ update office_details set phone = '(046) 483-9371'                   where offic
 update office_details set phone = '(046) 483-9379', "local" = '702'  where office_key = 'mayor-main';
 update office_details set phone = '(046) 483-9378'                   where office_key = 'mayor-receiving';
 
--- ── 3. Pagtingin kung tumama ────────────────────────────────────
+-- ── 3. Pagpapaalam sa API ───────────────────────────────────────
+-- May tinatandaang listahan ng hanay ang API ng Supabase (PostgREST).
+-- Karaniwang kusa itong nagbabago, pero may pagkakataóng naiiwan itong
+-- luma — at doon, "hindi kilala ang hanay na phone" pa rin ang isasagot
+-- nito kahit nadagdag na ito sa itaas. Ito ang pumipilit magbago.
+notify pgrst, 'reload schema';
+
+-- ── 4. Pagtingin kung tumama ────────────────────────────────────
 -- Labing-siyam ang inaasahan. Kulang kung wala pang hanay sa
 -- office_details ang ilang tanggapan (hal. info-desk) — hindi iyon
 -- sira: sa code pa rin kinukuha ang numero nila hanggang may mag-save
