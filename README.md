@@ -117,6 +117,17 @@ Habang hindi pa ito napapatakbo, hindi masisira ang Admin Panel — nai-save
 pa rin ang lahat maliban sa telepono, at may paalala sa console. Ang
 lumalabas na numero sa kiosk ay ang nasa code pa rin.
 
+### Pagkatapos: mga numero mula sa Citizen's Charter 2025
+
+Ang `supabase/office_contacts_charter.sql` ang naglalagay ng numero at
+contact person mula sa opisyal na Citizen's Charter 2025 ng lungsod — sa
+labintatlong tanggapang **may katapat sa mapa** lang. **Patakbuhin ito
+pagkatapos ng `office_phones.sql`**, hindi bago.
+
+Basahin muna ang babala sa itaas ng file: `(046) 888-9500` + 3-digit na
+local ang nasa charter, samantalang `(046) 483-937x` ang dating nasa
+kiosk. Malaking pagbabago iyon, at hindi pa napagtitibay sa City Hall.
+
 ---
 
 ## Tunog sa welcome screen video
