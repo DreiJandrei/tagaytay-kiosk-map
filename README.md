@@ -64,11 +64,30 @@ nag-iiwan ng sirang screen ay hinaharangan na sa loob ng app
 |---|---|
 | Hawak nang matagal sa screen | Lumalabas ang right-click menu ng Chrome |
 | Dalawang daliri / double-tap | Naka-zoom ang layout, hindi na bumabalik |
+| Dalawang kamay na pag-swipe | Nagwawala ang mapa habang nag-zoom ang Chrome |
 | Naligaw na `Ctrl`+`P`, `Ctrl`+`S` | Bumubukas ang print/save dialog |
 | `Backspace` sa labas ng textbox | Umaatras palabas ng kiosk |
 
 Hinihingi rin nito sa browser na huwag hayaang matulog ang screen
 (Wake Lock) — pangalawang depensa sa power settings.
+
+### Bakit hindi lang JavaScript ang panangga sa pag-zoom
+
+Tatlong bagay ang kailangan, at dalawa sa mga ito ay hindi JavaScript:
+
+1. **`touch-action: pan-x pan-y` sa `html`** (`src/index.css`) — ito ang
+   tunay na panangga. Ang pinch ay hinahawakan ng compositor ng Chrome,
+   at ito lang ang kayang magsabing huwag. Naka-`html.is-kiosk` ito, kaya
+   hindi ito umaabot sa telepono ng bisita — doon, ang pinch ang tanging
+   paraan niyang tingnan nang malapitan ang mapa.
+2. **`--disable-pinch`** sa `kiosk/start-kiosk.bat` — panangga sa labas
+   ng pahina. **Kung luma ang kopya ng `.bat` sa mini PC, wala ito.**
+3. **`kioskMode.js`** — pandagdag lang: `touchstart`/`touchmove` na may
+   `passive: false` (kung wala iyon, walang ginagawa ang
+   `preventDefault()`), at `Ctrl` + gulong.
+
+Hindi kabilang dito ang `user-scalable=no` sa `<meta viewport>`:
+binabale-wala iyon ng Chrome sa Windows, sa mobile lang iyon tumatalab.
 
 Walang epekto ang alinman sa mga ito sa telepono ng bisita na
 nag-scan ng QR: ang link nila ay may `?route=`, at doon normal na

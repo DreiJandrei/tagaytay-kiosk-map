@@ -26,12 +26,30 @@ const isTouchKiosk = () => {
 // ang menu ng Chrome, at walang makakapagsara niyon sa kiosk.
 const blockContextMenu = (e) => e.preventDefault();
 
+// ── Pag-zoom ──────────────────────────────────────────────
 // Dalawang daliri o double-tap = zoom. Kapag nangyari iyon, hindi na
 // bumabalik sa dating laki ang layout at mukhang sira ang kiosk.
+//
+// HINDI DITO ang pangunahing pananggalang. Ang pinch ay hinahawakan ng
+// compositor ng Chrome, at ang CSS na `touch-action` lang ang kayang
+// pigilan iyon — nasa `html.is-kiosk` iyon sa index.css, at doon talaga
+// ito nahuhuli. Pandagdag lang ang nasa ibaba, para sa mga daang hindi
+// nasasapol ng `touch-action`.
+//
+// Ang `gesture*` ay sa WebKit lang (Safari, iPad) — wala itong
+// ginagawa sa Chrome ng kiosk. Nandito pa rin para sa iPad na
+// pinagbukas nito nang hindi dumaan sa QR.
 const blockGesture = (e) => e.preventDefault();
+
+// Ctrl + gulong = zoom. Ito ang daan ng trackpad at ng naligaw na mouse.
 const blockCtrlWheel = (e) => { if (e.ctrlKey) e.preventDefault(); };
 
-const blockPinch = (e) => { if (e.touches && e.touches.length > 1) e.preventDefault(); };
+// Sa pagdapo pa ng PANGALAWANG daliri ito humaharang, hindi sa paggalaw
+// na nito. Doon pa lang nagdedesisyon ang Chrome kung pinch ba ito o
+// hindi — kapag hinintay ang `touchmove`, huli na ang lahat.
+const blockPinch = (e) => {
+  if (e.touches && e.touches.length > 1) e.preventDefault();
+};
 
 // Mga pindot na naglalabas ng dialog o nag-aalis sa pahina. Sa kiosk na
 // may nakasaksak na keyboard (o naligaw na presentation remote), ito ang
@@ -83,11 +101,22 @@ const onVisibilityChange = () => {
 export function installKioskMode() {
   if (typeof window === 'undefined' || !isTouchKiosk()) return () => {};
 
+  // Ito ang nagbubukas ng `html.is-kiosk` na mga tuntunin sa index.css —
+  // doon nakasulat ang pangunahing panangga sa pag-zoom (`touch-action`).
+  // Nakasabit ito sa parehong pagsusuri ng lahat ng nasa ibaba, kaya
+  // hindi naaabot ng pagbabawal ang telepono ng bisita.
+  document.documentElement.classList.add('is-kiosk');
+
   window.addEventListener('contextmenu', blockContextMenu);
   window.addEventListener('gesturestart', blockGesture);
   window.addEventListener('gesturechange', blockGesture);
   window.addEventListener('gestureend', blockGesture);
   window.addEventListener('wheel', blockCtrlWheel, { passive: false });
+  // Kailangang-kailangan ang `passive: false` sa dalawang ito. Sa touch
+  // na pangyayari, PASSIVE ang default ng Chrome — at sa passive na
+  // tagapakinig, walang ginagawa ang preventDefault(). Walang babala,
+  // walang error: tahimik lang itong hindi tumatalab.
+  window.addEventListener('touchstart', blockPinch, { passive: false });
   window.addEventListener('touchmove', blockPinch, { passive: false });
   window.addEventListener('keydown', blockKeys);
   document.addEventListener('visibilitychange', onVisibilityChange);
@@ -98,11 +127,13 @@ export function installKioskMode() {
   window.addEventListener('pointerdown', requestWakeLock, { once: true });
 
   return () => {
+    document.documentElement.classList.remove('is-kiosk');
     window.removeEventListener('contextmenu', blockContextMenu);
     window.removeEventListener('gesturestart', blockGesture);
     window.removeEventListener('gesturechange', blockGesture);
     window.removeEventListener('gestureend', blockGesture);
     window.removeEventListener('wheel', blockCtrlWheel);
+    window.removeEventListener('touchstart', blockPinch);
     window.removeEventListener('touchmove', blockPinch);
     window.removeEventListener('keydown', blockKeys);
     document.removeEventListener('visibilitychange', onVisibilityChange);

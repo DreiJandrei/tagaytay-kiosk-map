@@ -456,13 +456,24 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
       onMouseMove={(e) => handleDragMove(e.clientX, e.clientY)}
       onMouseUp={handleDragEnd}
       onMouseLeave={handleDragEnd}
+      // Isang daliri lang ang naghihila. Dati'y `e.touches[0]` agad ito,
+      // kahit ilan ang nakadapo — kaya sa dalawang kamay, sinusundan pa
+      // rin ng mapa ang unang daliri habang sinusubukan ng Chrome na
+      // i-zoom, at parang nagwawala ang buong screen. Ang pangalawang
+      // daliri ay nagtatapos na ngayon ng paghila: iyon ang senyas na
+      // hindi na paghila ang ginagawa.
       onTouchStart={(e) => {
+        if (e.touches.length > 1) { handleDragEnd(); return; }
         if(!e.target.closest('.room-node') && !e.target.closest('.floor-selector') && !e.target.closest('.map-legend') && !e.target.closest('.bottom-floor-bar')) {
           handleDragStart(e.touches[0].clientX, e.touches[0].clientY);
         }
       }}
-      onTouchMove={(e) => handleDragMove(e.touches[0].clientX, e.touches[0].clientY)}
+      onTouchMove={(e) => {
+        if (e.touches.length > 1) { handleDragEnd(); return; }
+        handleDragMove(e.touches[0].clientX, e.touches[0].clientY);
+      }}
       onTouchEnd={handleDragEnd}
+      onTouchCancel={handleDragEnd}
     >
 
       {/* Walang kontrol sa naka-lock na tanawin — larawan lang ito. */}

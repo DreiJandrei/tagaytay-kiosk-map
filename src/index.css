@@ -6,6 +6,51 @@
     user-select: none; -webkit-font-smoothing: antialiased;
 }
 
+/* ══════════ WALANG PAG-ZOOM SA TOUCHSCREEN ══════════
+   Dalawang daliri (o dalawang kamay) sa screen = pinch-zoom sa Chrome,
+   at hindi na bumabalik sa dating laki ang kiosk pagkatapos — naiiwan
+   itong mukhang sira hanggang may dumaan.
+
+   DITO ito napipigil, hindi sa JavaScript. Mahalaga ang pagkakaibang
+   iyon: ang pinch ay hinahawakan ng compositor ng Chrome, at ang
+   `touch-action` ang tanging paraan para masabihan itong huwag. Ang
+   `preventDefault()` sa touchmove ay huli na — napagdesisyunan na ng
+   Chrome na pinch iyon bago pa dumating ang JavaScript natin. (Kaya
+   hindi sapat ang blockPinch sa kioskMode.js — pandagdag lang iyon.)
+
+   Ganoon din ang `user-scalable=no` sa <meta viewport> ng index.html:
+   binabale-wala ito ng Chrome sa desktop at Windows — sa mobile lang
+   iyon tumatalab. Kaya hindi iyon ang nagpipigil nito.
+
+   Nasa <html> ito dahil ang pinapayagang galaw ay ang SALUBUNGAN ng
+   `touch-action` ng elemento at ng lahat ng ninuno nito. Kapag dito
+   nakatakda, wala nang makakalampas kahit ano ang nasa ilalim.
+
+   `pan-x pan-y` — hindi `none`: nananatili ang isang-daliring pag-scroll
+   (sidebar, listahan sa admin), pero nawawala ang pinch-zoom AT ang
+   double-tap na pag-zoom. Ang `manipulation` ay hindi puwede rito:
+   pinapayagan pa rin niyon ang pinch.
+
+   SA KIOSK LANG ITO. Ang `is-kiosk` ay isinasabit ng installKioskMode()
+   sa <html>, at ang parehong pagsusuri ang pinagdadaanan nito
+   (isTouchKiosk). Sa telepono ng bisitang nag-scan ng QR, larawan lang
+   ang mapa — naka-off doon ang paghila — kaya ang pinch ang TANGING
+   paraan niyang tingnan nang malapitan ang isang maliit na silid. Doon,
+   hindi sira ang pag-zoom: iyon ang tamang gamit, at hindi natin ito
+   dapat bawalan. */
+html.is-kiosk {
+  touch-action: pan-x pan-y;
+}
+
+/* Sa kiosk, ang mapa ang humahawak ng sarili nitong paghila sa
+   JavaScript (handleDragStart sa MapScreen.jsx), kaya buo nang
+   ipinapaubaya sa atin ang mga daliri dito: walang pinch, walang
+   double-tap na zoom, at walang aksidenteng pag-scroll ng pahina
+   habang hinihila ang mapa. */
+html.is-kiosk .map-viewport {
+  touch-action: none;
+}
+
 /* ================= GLOBAL COLOR THEME VARIABLES ================= */
 :root {
   /* This is your default look (Dark Theme variables) */
