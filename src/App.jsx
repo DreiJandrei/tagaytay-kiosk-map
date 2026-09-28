@@ -34,6 +34,50 @@ function StatusPill({ status, lang }) {
   );
 }
 
+// May laman ba talaga? Hindi lang pagsusuring `if (x)`: ang hanay na
+// puro puwang (" ") ay totoo sa mata ng JavaScript, kaya dumaraan iyon
+// at nag-iiwan ng blangkong kahon sa gilid. Ganoon din ang naisusulat
+// ng admin na aksidenteng nakapindot ng space bar.
+const hasText = (v) => typeof v === 'string' && v.trim() !== '';
+
+// ── Ang detalye ng tanggapan sa gilid ────────────────────────────
+// Ang blangkong sangkap ay NAWAWALA, hindi nagiging blangkong linya.
+// Dati'y laging nakalabas ang oras at ang contact person, kaya kapag
+// wala pang nakatala, "🕒 Oras" na walang kasunod ang nakikita ng
+// bumibisita — mukhang may nawawalang pangalan, samantalang wala
+// namang dapat naroon.
+//
+// Isang component, hindi dalawang magkatulad na sipi: ganito ito
+// lumalabas sa pagpili ng daan AT sa pagdating, at dating magkahiwalay
+// silang isinusulat — dalawang lugar na dapat sabay baguhin tuwing may
+// bagong hanay.
+function OfficeMeta({ office, lang }) {
+  return (
+    <div className="office-meta">
+      {/* Laging nandito ang estado: may takdang halaga ito (Available)
+          kahit hindi pa nagagalaw, kaya hindi ito nabibitin. */}
+      <p className="meta-row">
+        <strong>{lang === 'EN' ? 'Status' : 'Estado'}</strong>
+        <StatusPill status={office.status} lang={lang} />
+      </p>
+
+      {hasText(office.hours) && (
+        <p className="meta-row">🕒 <strong>{lang === 'EN' ? 'Hours' : 'Oras'}</strong> {office.hours}</p>
+      )}
+
+      {hasText(office.head) && (
+        <p className="meta-row">👤 <strong>Contact Person</strong> {office.head}</p>
+      )}
+
+      {hasText(office.phone) && (
+        <p className="meta-row">📞 <strong>{lang === 'EN' ? 'Direct Line' : 'Telepono'}</strong>
+          {office.phone}{hasText(office.local) ? ` · local ${office.local}` : ''}
+        </p>
+      )}
+    </div>
+  );
+}
+
 // Keyboard para sa mga auth modal. Hiwalay na component para ang pag-unmount
 // nito (pagsara ng modal) ang mag-reset ng "hidden" — kaya hindi na kailangan
 // ng useEffect na nagse-setState, na nagdudulot ng cascading renders.
@@ -844,7 +888,7 @@ export default function App() {
                 {/* Sunod agad sa pangalan: ano ang ginagawa ng tanggapang
                     ito. Iyon ang unang tanong ng bisita — nauuna pa ito sa
                     oras at pinuno, kaya nasa itaas ito ng .office-meta. */}
-                {destinationData.description && (
+                {hasText(destinationData.description) && (
                   <div className="office-about">
                     <strong>ℹ️ {lang === 'EN' ? 'About this Office' : 'Tungkol sa Opisina'}</strong>
                     <div className="office-about-body">{destinationData.description}</div>
@@ -852,19 +896,7 @@ export default function App() {
                 )}
 
                 {!destinationData.isDirectionOnly && (
-                  <div className="office-meta">
-                    <p className="meta-row">
-                      <strong>{lang === 'EN' ? 'Status' : 'Estado'}</strong>
-                      <StatusPill status={destinationData.status} lang={lang} />
-                    </p>
-                    <p className="meta-row">🕒 <strong>{lang === 'EN' ? 'Hours' : 'Oras'}</strong> {destinationData.hours}</p>
-                    <p className="meta-row">👤 <strong>Contact Person</strong> {destinationData.head}</p>
-                    {destinationData.phone && (
-                      <p className="meta-row">📞 <strong>{lang === 'EN' ? 'Direct Line' : 'Telepono'}</strong>
-                        {destinationData.phone}{destinationData.local ? ` · local ${destinationData.local}` : ''}
-                      </p>
-                    )}
-                  </div>
+                  <OfficeMeta office={destinationData} lang={lang} />
                 )}
 
                 {/* Nasa lumulutang na bintana sa gitna ng screen ang
@@ -972,7 +1004,7 @@ export default function App() {
 
                 {/* Tingnan ang nasa itaas: sunod sa pangalan ang paliwanag
                     tungkol sa tanggapan, bago ang estado at oras. */}
-                {selectedOffice.description && (
+                {hasText(selectedOffice.description) && (
                   <div className="office-about">
                     <strong>ℹ️ {lang === 'EN' ? 'About this Office' : 'Tungkol sa Opisina'}</strong>
                     <div className="office-about-body">{selectedOffice.description}</div>
@@ -987,19 +1019,7 @@ export default function App() {
                       : 'Sundan po ang linyang nakahighlight sa mapa.'}
                   </div>
                 ) : (
-                  <div className="office-meta">
-                    <p className="meta-row">
-                      <strong>{lang === 'EN' ? 'Status' : 'Estado'}</strong>
-                      <StatusPill status={selectedOffice.status} lang={lang} />
-                    </p>
-                    <p className="meta-row">🕒 <strong>{lang === 'EN' ? 'Hours' : 'Oras'}</strong> {selectedOffice.hours}</p>
-                    <p className="meta-row">👤 <strong>Contact Person</strong> {selectedOffice.head}</p>
-                    {selectedOffice.phone && (
-                      <p className="meta-row">📞 <strong>{lang === 'EN' ? 'Direct Line' : 'Telepono'}</strong>
-                        {selectedOffice.phone}{selectedOffice.local ? ` · local ${selectedOffice.local}` : ''}
-                      </p>
-                    )}
-                  </div>
+                  <OfficeMeta office={selectedOffice} lang={lang} />
                 )}
 
                 <div className="qr-card">
