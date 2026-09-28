@@ -81,6 +81,25 @@ ang bagong anunsyo at video.
 
 ---
 
+## Telepono ng mga tanggapan (kailangang patakbuhin minsan)
+
+Para mapalitan ang contact number mula sa Admin Panel, kailangan munang
+may hanay para doon sa database. **Minsan lang ito:**
+
+1. Supabase → **SQL Editor** → **New query**
+2. I-paste ang buong `supabase/office_phones.sql`
+3. **Run**
+
+Nagdadagdag ito ng `phone` at `local` sa `office_details`, at inililipat
+ang mga numerong dati'y nasa `src/lib/defaultOfficeData.js`. Ligtas itong
+ulit-ulitin.
+
+Habang hindi pa ito napapatakbo, hindi masisira ang Admin Panel — nai-save
+pa rin ang lahat maliban sa telepono, at may paalala sa console. Ang
+lumalabas na numero sa kiosk ay ang nasa code pa rin.
+
+---
+
 ## Tunog sa welcome screen video
 
 Hinaharangan ng lahat ng browser ang tunog hangga't walang pumipindot sa

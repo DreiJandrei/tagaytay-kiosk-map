@@ -1,6 +1,22 @@
 import { supabase } from './supabase';
 
 // ==============================================================
+// HINDI PA NAPAPATAKBO ANG supabase/office_phones.sql
+// ==============================================================
+// Hinahanap kung ang dahilan ng pagtanggi ng database ay walang hanay
+// para sa telepono, at hindi ibang sira. Mahigpit ito nang tiyakan: ang
+// ibang pagkakamali ay dapat umabot pa rin sa admin, hindi basta
+// malunod dito.
+//   42703    — ang sagot ng Postgres sa hanay na wala
+//   PGRST204 — ang sagot ng PostgREST kapag hindi nito kilala ang hanay
+const isMissingPhoneColumn = (error) => {
+  const code = error?.code;
+  if (code !== '42703' && code !== 'PGRST204') return false;
+  const haystack = `${error?.message || ''} ${error?.details || ''}`.toLowerCase();
+  return haystack.includes('phone') || haystack.includes('local');
+};
+
+// ==============================================================
 // 1. SUPABASE AUTHENTICATION
 // ==============================================================
 export const loginAdmin = async (email, password) => {
@@ -65,12 +81,16 @@ export const initializeDatabase = async (seedData) => {
         });
 
         detailsToInsert.push({
-          office_key: officeKey, 
-          hours: item.hours || '', 
-          head: item.head || '', 
-          description: item.description || '', 
+          office_key: officeKey,
+          hours: item.hours || '',
+          head: item.head || '',
+          description: item.description || '',
           requirements: Array.isArray(item.requirements) ? item.requirements : [],
-          status: item.status || 'Available'
+          status: item.status || 'Available',
+          // NULL, hindi '' — may kahulugan ang pagkakaiba sa getAllOffices:
+          // ang NULL ay "walang nakatala", ang '' ay "sinadyang walisin".
+          phone: item.phone || null,
+          local: item.local || null
         });
       });
     });
@@ -78,7 +98,20 @@ export const initializeDatabase = async (seedData) => {
     const { error: insertError1 } = await supabase.from('offices').insert(officesToInsert);
     if (insertError1) throw insertError1;
 
-    const { error: insertError2 } = await supabase.from('office_details').insert(detailsToInsert);
+    let { error: insertError2 } = await supabase.from('office_details').insert(detailsToInsert);
+
+    // Gaya ng nasa updateOffice: kapag wala pang hanay para sa telepono,
+    // huwag ipatumba ang buong pagbibinhi ng bagong database — ang lahat
+    // ng iba ay maisasalba pa. Tingnan ang isMissingPhoneColumn.
+    if (insertError2 && isMissingPhoneColumn(insertError2)) {
+      console.warn(
+        'Wala pang hanay na phone/local ang office_details — nabinhi ang '
+        + 'lahat maliban sa telepono. Patakbuhin ang supabase/office_phones.sql.',
+      );
+      /* eslint-disable-next-line no-unused-vars */
+      const withoutPhone = detailsToInsert.map(({ phone, local, ...rest }) => rest);
+      ({ error: insertError2 } = await supabase.from('office_details').insert(withoutPhone));
+    }
     if (insertError2) throw insertError2;
 
     return { success: true };
@@ -117,17 +150,41 @@ export const getAllOffices = async () => {
         }
       }
 
-      structuredData[row.floor][row.office_key] = {
-        title: row.title, 
-        badge: row.badge, 
-        hours: safeDetails?.hours || '', 
+      const office = {
+        title: row.title,
+        badge: row.badge,
+        hours: safeDetails?.hours || '',
         head: safeDetails?.head || '',
-        description: safeDetails?.description || '', 
-        requirements: safeRequirements, 
-        cssClass: row.css_class, 
+        description: safeDetails?.description || '',
+        requirements: safeRequirements,
+        cssClass: row.css_class,
         status: safeDetails?.status || 'Available',
         searchCount: row.search_count || 0
       };
+
+      // ── Telepono ────────────────────────────────────────────
+      // Hindi ito laging isinasama, at sinasadya iyon. Ang
+      // mergeOfficeData ay spread: `{...default, ...db}` — kaya ang
+      // ANUMANG isinama rito ay tumatabon sa nasa defaultOfficeData.js,
+      // pati ang blangko. Kung palagi itong isasama, ang bawat
+      // tanggapang hindi pa nagagalaw ng admin (NULL pa ang hanay) ay
+      // mawawalan ng numero sa kiosk sa mismong araw na idagdag ang
+      // hanay — kahit walang binago ang sinuman.
+      //
+      // Kaya ganito ang basa ng tatlong halaga:
+      //   NULL  → walang nakatala; hindi isinasama, kaya ang nasa code
+      //           pa rin ang lumalabas (tingnan ang office_phones.sql)
+      //   ''    → sinadyang walisin ng admin; isinasama, kaya nabubura
+      //           nga ang nasa code at wala nang numerong lumalabas
+      //   teksto → ito ang totoong numero ngayon
+      if (safeDetails?.phone !== null && safeDetails?.phone !== undefined) {
+        office.phone = safeDetails.phone;
+      }
+      if (safeDetails?.local !== null && safeDetails?.local !== undefined) {
+        office.local = safeDetails.local;
+      }
+
+      structuredData[row.floor][row.office_key] = office;
     });
     return structuredData;
   } catch (error) { 
@@ -139,6 +196,7 @@ export const getAllOffices = async () => {
 // ==============================================================
 // 4. BULLETPROOF UPDATE FUNCTION
 // ==============================================================
+
 export const updateOffice = async (officeKey, updates) => {
   try {
     const { error: err1 } = await supabase.from('offices').update({
@@ -151,26 +209,44 @@ export const updateOffice = async (officeKey, updates) => {
     const { data: existingDetail, error: checkErr } = await supabase.from('office_details').select('office_key').eq('office_key', officeKey).maybeSingle();
     if (checkErr) throw checkErr;
 
-    if (existingDetail) {
-      const { error: err2 } = await supabase.from('office_details').update({
-        head: updates.head, 
-        hours: updates.hours, 
-        description: updates.description, 
-        status: updates.status, 
-        requirements: updates.requirements
-      }).eq('office_key', officeKey);
-      if (err2) throw err2;
-    } else {
-      const { error: err2 } = await supabase.from('office_details').insert({
-        office_key: officeKey, 
-        head: updates.head, 
-        hours: updates.hours, 
-        description: updates.description, 
-        status: updates.status, 
-        requirements: updates.requirements
-      });
-      if (err2) throw err2;
+    // Mula sa admin, ang blangkong kahon ay '' — sinadyang pagwalis
+    // iyon, at ganoon ito dapat maitala. Ang NULL ay para lang sa
+    // hindi pa nagagalaw, at hindi na iyon nagdaraan dito.
+    const detailFields = {
+      head: updates.head,
+      hours: updates.hours,
+      description: updates.description,
+      status: updates.status,
+      requirements: updates.requirements,
+      phone: updates.phone ?? '',
+      local: updates.local ?? ''
+    };
+
+    const writeDetails = (fields) => (existingDetail
+      ? supabase.from('office_details').update(fields).eq('office_key', officeKey)
+      : supabase.from('office_details').insert({ office_key: officeKey, ...fields }));
+
+    let { error: err2 } = await writeDetails(detailFields);
+
+    // Kapag hindi pa napatakbo ang supabase/office_phones.sql, wala pang
+    // hanay para sa telepono — at tatanggihan ng database ang BUONG
+    // pag-save dahil doon. Ang mawawala ay hindi lang ang numero: hindi
+    // na rin maipapalit ang oras, ang status, ang paliwanag. Iyon ang
+    // pinakamasamang kalalabasan: mukhang sirang-sira ang admin panel.
+    //
+    // Kaya kapag ito ang dahilan ng pagtanggi — at ITO LAMANG — muli
+    // itong isinusubok nang wala ang telepono. Nakakapag-save pa rin ang
+    // admin sa lahat ng iba habang hindi pa napapatakbo ang SQL.
+    if (err2 && isMissingPhoneColumn(err2)) {
+      console.warn(
+        'Wala pang hanay na phone/local ang office_details — na-save ang '
+        + 'lahat maliban sa telepono. Patakbuhin ang supabase/office_phones.sql.',
+      );
+      /* eslint-disable-next-line no-unused-vars */
+      const { phone, local, ...withoutPhone } = detailFields;
+      ({ error: err2 } = await writeDetails(withoutPhone));
     }
+    if (err2) throw err2;
 
     return { success: true };
   } catch (error) { 

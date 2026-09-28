@@ -92,6 +92,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
   const [formRequirements, setFormRequirements] = useState('');
   const [formCssClass, setFormCssClass] = useState('');
   const [formStatus, setFormStatus] = useState('Available');
+  const [formPhone, setFormPhone] = useState('');
+  const [formLocal, setFormLocal] = useState('');
 
   useEffect(() => {
     const fetchAdminData = async () => {
@@ -342,6 +344,13 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
       setFormDescription(currentOffice.description || '');
       setFormCssClass(currentOffice.cssClass || '');
       setFormStatus(currentOffice.status || 'Available');
+      // Kahit nasa code pa ang numero (hindi pa nagagalaw ang hanay sa
+      // database), ito ang lumalabas dito — pinagsama na sila ng
+      // mergeOfficeData bago makarating dito. Kaya ang nakikita ng
+      // admin ay ang mismong numerong nasa kiosk ngayon, kahit saan
+      // pa iyon nanggaling.
+      setFormPhone(currentOffice.phone || '');
+      setFormLocal(currentOffice.local || '');
       if (Array.isArray(currentOffice.requirements)) {
         setFormRequirements(currentOffice.requirements.join('\n'));
       } else {
@@ -369,7 +378,9 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
         badge: currentOffice?.badge || '',
         requirements: requirementsArray,
         cssClass: formCssClass,
-        status: formStatus
+        status: formStatus,
+        phone: formPhone.trim(),
+        local: formLocal.trim()
       });
       if (onDataUpdate) onDataUpdate();
       alert(t(
@@ -1149,6 +1160,48 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                       </select>
                     </div>
                   </div>
+
+                  {/* Ang numerong lumalabas sa tabi ng 📞 sa kiosk. Dati'y
+                      nasa code lang ito (defaultOfficeData.js) at kailangan
+                      pang may humawak niyon tuwing may bagong numero —
+                      tingnan ang supabase/office_phones.sql. */}
+                  <div className="adm-form--split adm-form--split-wide">
+                    <div>
+                      <label className="k-label">
+                        {t('Direct Line', 'Telepono')}
+                      </label>
+                      <input
+                        type="text"
+                        inputMode="tel"
+                        className="k-input"
+                        value={formPhone}
+                        onChange={(e) => setFormPhone(e.target.value)}
+                        placeholder="(046) 483-9372"
+                      />
+                    </div>
+                    <div>
+                      <label className="k-label">{t('Local', 'Local')}</label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        className="k-input"
+                        value={formLocal}
+                        onChange={(e) => setFormLocal(e.target.value)}
+                        placeholder="106"
+                      />
+                    </div>
+                  </div>
+                  <p className="adm-hint">
+                    {formPhone.trim()
+                      ? t(
+                          `The kiosk will show: ${formPhone.trim()}${formLocal.trim() ? ` · local ${formLocal.trim()}` : ''}`,
+                          `Ipapakita ng kiosk: ${formPhone.trim()}${formLocal.trim() ? ` · local ${formLocal.trim()}` : ''}`,
+                        )
+                      : t(
+                          'Leave this blank and the kiosk will not show a phone line for this office at all.',
+                          'Iwanang blangko at walang teleponong ipapakita ang kiosk para sa tanggapang ito.',
+                        )}
+                  </p>
 
                   <div className="adm-grow">
                     <label className="k-label">

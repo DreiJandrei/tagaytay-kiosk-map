@@ -3142,6 +3142,8 @@ button:active { transform: scale(.97); }
 
 .adm-form { display: flex; flex-direction: column; gap: 18px; flex: 1; min-height: 0; }
 .adm-form--split { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+/* Mas maluwag ang telepono kaysa sa tatlong numerong local. */
+.adm-form--split-wide { grid-template-columns: 2fr 1fr; }
 .adm-grow { display: flex; flex-direction: column; flex: 1; min-height: 140px; }
 .adm-grow .k-textarea { flex: 1; }
 

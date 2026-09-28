@@ -9,9 +9,10 @@
 -- Ligtas itong ulit-ulitin: ang `head` at `description` lang ang
 -- ginagalaw, at bawat linya ay nakatali sa office_key.
 --
--- WALA DITO ANG TELEPONO: walang hanay para doon sa office_details,
--- kaya sa defaultOfficeData.js (`phone`, `local`) ito nakatira —
--- hindi ito nabubura ng database dahil hindi ito hanay nito.
+-- WALA DITO ANG TELEPONO: nasa sariling file na ito — tingnan ang
+-- office_phones.sql, na siyang nagdadagdag ng hanay para sa `phone` at
+-- `local` at naglilipat ng mga numero mula sa defaultOfficeData.js.
+-- Pagkatapos noon, sa admin panel na napapalitan ang numero.
 --
 -- Pinagmulan: super-griffin-13ae1b.netlify.app (mga floor page),
 -- kinuha noong 2026-09-21. "Contact Person" din ang tawag dito sa
