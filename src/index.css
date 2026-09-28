@@ -1347,10 +1347,35 @@ img { max-width: 100%; }
 /* ═══════════ 1. TOKEN ═══════════ */
 /* Default = Dark. Ang .light-theme ay nasa <html> kapag Light ang piniling tema. */
 :root {
+  /* Sinasabi nito sa browser kung anong tema ang gamitin sa mga
+     bahaging SIYA ang gumuguhit, hindi tayo: ang bumubukang listahan
+     ng <select>, ang pataas-pababa ng <input type="number">, ang
+     scrollbar, at ang tooltip ng validation.
+
+     Dito nagmula ang bug na puti-sa-puti ang Status sa kiosk. Ang
+     <option> ay nagmamana ng `color` sa <select> — halos puti iyon sa
+     dark. Ang likod naman ng bumubukang listahan ay hindi galing sa
+     atin kundi sa browser, at kung wala ito, PUTI ang default. Kaya
+     puting teksto sa puting likod = wala kang mababasa.
+
+     Sa laptop (macOS) hindi ito lumilitaw: ang macOS mismo ang
+     gumuguhit ng listahan, at binabale-wala nito ang `color` natin.
+     Sa Windows mini PC ng kiosk, ang Chrome na mismo ang gumuguhit —
+     doon nagmamana ng kulay ang <option>, at doon lang lumalabas ang
+     sira. Tingnan ang README para sa kiosk na Windows. */
+  color-scheme: dark;
+  /* Ang tsek at ang katulad na kontrol na kinukulayan ng browser. */
+  accent-color: var(--ui-accent);
+
   --ui-bg:        #060F1E;
   --ui-panel:     #0B1A33;
   --ui-panel-2:   #0E2450;
   --ui-raise:     rgba(59,130,246,.09);
+  /* Kapareho ng kinalalabasan ng --ui-raise kapag napatong sa
+     --ui-panel, pero SOLIDO. Kailangang solido ang mga form control:
+     ang alanganing kulay sa ibabaw ng puting canvas ng browser ay
+     namumuti sa kiosk. */
+  --ui-field:     #0F2745;
   --ui-raise-2:   rgba(59,130,246,.16);
   --ui-line:      rgba(96,165,250,.22);
   --ui-line-2:    rgba(96,165,250,.42);
@@ -1384,10 +1409,17 @@ img { max-width: 100%; }
 }
 
 .light-theme {
+  /* Kasama ang tema ng browser sa pagpapalit — kung hindi, mananatiling
+     madilim ang bumubukang listahan at ang scrollbar kahit maliwanag na
+     ang buong app. */
+  color-scheme: light;
+  accent-color: var(--ui-accent);
+
   --ui-bg:        #EEF4FC;
   --ui-panel:     #FFFFFF;
   --ui-panel-2:   #F6FAFF;
   --ui-raise:     #F5F9FF;
+  --ui-field:     #F5F9FF;
   --ui-raise-2:   #E8F1FE;
   --ui-line:      #DCE8F8;
   --ui-line-2:    #B9D2F4;
@@ -2806,7 +2838,10 @@ img { max-width: 100%; }
   padding: 15px 17px;
   border-radius: var(--ui-r-md);
   border: 2px solid var(--ui-line);
-  background: var(--ui-raise);
+  /* Solido, hindi --ui-raise. Kaparehong-kapareho ang hitsura, pero
+     may masasandigang kulay ang browser kapag ito ang ginagaya niya sa
+     bumubukang listahan. */
+  background: var(--ui-field);
   color: var(--ui-ink);
   font-family: inherit;
   font-size: 1.05rem;
@@ -2819,6 +2854,36 @@ img { max-width: 100%; }
 .k-input:focus, .k-textarea:focus, .k-select:focus {
   border-color: var(--ui-accent);
   box-shadow: 0 0 0 4px var(--ui-accent-sf);
+}
+
+/* ── Ang bumubukang listahan ng <select> ─────────────────────
+   Hindi sapat ang `color-scheme` sa itaas: ibinibigay lang nito ang
+   default ng browser (kulay-abong madilim). Dito natin itinutumbas ang
+   listahan sa palette ng app — at dito rin tuluyang napapatay ang
+   puti-sa-puti, dahil sinasabi na natin ANG DALAWA: ang teksto at ang
+   likod nito, hindi na lang ang isa.
+
+   Sa macOS, binabale-wala ang `background-color` ng <option> — walang
+   masama, ganoon pa rin ang hitsura nito sa laptop. Sa Windows ito
+   tumatalab, at doon naman kailangan. */
+.k-select option,
+.k-select optgroup {
+  background-color: var(--ui-panel);
+  color: var(--ui-ink);
+  font-weight: 700;
+}
+
+/* Sinasapawan ng Chrome ang kulay ng kahong pinunan nito para sa iyo —
+   mapusyaw na asul na likod at itim na teksto, kahit madilim ang tema.
+   Sa kiosk, ang login ng admin ang naaabot nito. Ang `box-shadow` na
+   nasa loob ang tanging paraan para matakpan iyon. */
+.k-input:-webkit-autofill,
+.k-input:-webkit-autofill:hover,
+.k-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--ui-ink);
+  -webkit-box-shadow: 0 0 0 100px var(--ui-field) inset;
+  box-shadow: 0 0 0 100px var(--ui-field) inset;
+  caret-color: var(--ui-ink);
 }
 .k-textarea { resize: none; line-height: 1.55; }
 .k-input-wrap { position: relative; }
