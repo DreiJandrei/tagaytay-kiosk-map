@@ -123,7 +123,9 @@ export const coordinateMapping = {
       },
       "restroom-cr-2": {
           targetX: 835, targetY: 340, pathData: "M 860 490 L 860 470 L 680 470 L 680 260 L 835 260 L 835 340",
-          style: { width: 140, height: 60, left: 780, top: 310, backgroundColor: '#93c5fd', color: 'black' }, cssClass: "",
+          // Kasinlaki ng nasa 3rd-5th, kaya ganoon din ang naputol na
+          // pangalan. Tingnan ang restroom-cr-3 para sa dahilan.
+          style: { width: 140, height: 60, left: 780, top: 310, backgroundColor: '#93c5fd', color: 'black', fontSize: '0.75rem' }, cssClass: "",
           isDirectionOnly: true
       },
       "library": {
@@ -154,7 +156,13 @@ export const coordinateMapping = {
       },
       "restroom-cr-3": {
           targetX: 620, targetY: 350, pathData: "M 620 480 L 450 480 L 450 285 L 620 285 L 620 350",
-          style: { width: 140, height: 60, left: 550, top: 320, backgroundColor: '#93c5fd', color: 'black' }, cssClass: "",
+          // Ang 0.75rem ay hindi palamuti: sa 140x60 na kahon na may 14px na
+          // padding sa magkabila, 112px lang ang laman — at ang "Comfort Room"
+          // sa dating 1rem ay ~115px, kaya napipilitang dalawang linya. Hindi
+          // kasya ang dalawa sa 36px na taas, at ginugupit ito ng `overflow:
+          // hidden` ng .room-label. Naputol ang pangalan. Isang linya na ito
+          // ngayon, may lugar pa kahit naka-ON ang "Bigger Text" (120%).
+          style: { width: 140, height: 60, left: 550, top: 320, backgroundColor: '#93c5fd', color: 'black', fontSize: '0.75rem' }, cssClass: "",
           isDirectionOnly: true
       }
   },
@@ -177,7 +185,8 @@ export const coordinateMapping = {
       },
       "restroom-cr-4": {
           targetX: 620, targetY: 350, pathData: "M 620 480 L 450 480 L 450 285 L 620 285 L 620 350",
-          style: { width: 140, height: 60, left: 550, top: 320, backgroundColor: '#93c5fd', color: 'black' }, cssClass: "",
+          // Tingnan ang restroom-cr-3 sa itaas kung bakit may fontSize dito.
+          style: { width: 140, height: 60, left: 550, top: 320, backgroundColor: '#93c5fd', color: 'black', fontSize: '0.75rem' }, cssClass: "",
           isDirectionOnly: true
       }
   },
@@ -200,7 +209,8 @@ export const coordinateMapping = {
       },
       "restroom-cr-5": {
           targetX: 620, targetY: 350, pathData: "M 620 480 L 450 480 L 450 285 L 620 285 L 620 350",
-          style: { width: 140, height: 60, left: 550, top: 320, backgroundColor: '#93c5fd', color: 'black' }, cssClass: "",
+          // Tingnan ang restroom-cr-3 sa itaas kung bakit may fontSize dito.
+          style: { width: 140, height: 60, left: 550, top: 320, backgroundColor: '#93c5fd', color: 'black', fontSize: '0.75rem' }, cssClass: "",
           isDirectionOnly: true
       }
   },
