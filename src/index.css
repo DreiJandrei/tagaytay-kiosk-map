@@ -1925,8 +1925,9 @@ img { max-width: 100%; }
 
 /* ── Maliliit na kontrol sa gilid ng mapa ──────────────────
    Nakapatong lang sa ilalim ng zoom, kapareho ng lapad at ng hitsura
-   nito, kaya mukha silang iisang hanay ng kontrol. Ang mga pagpipilian
-   lang ang nandito — nasa sidebar ang mahabang teksto.
+   nito, kaya mukha silang iisang hanay ng kontrol. Paglipat-lipat lang
+   sa mga hakbang ng gabay ang nandito — nasa sidebar ang mahabang
+   teksto, at nasa .route-pick-back ang pagpili ng daan.
 
    Ang 254px ay taas ng zoom: 30px mula sa itaas + apat na pindutan
    (45px) + tatlong puwang (8px) + 20px na padding ng kahon nito. */
@@ -1975,21 +1976,6 @@ img { max-width: 100%; }
   letter-spacing: 1.2px; text-transform: uppercase;
 }
 .light-theme .mini-cap { color: var(--k-700); }
-
-.mini-btn {
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 9px 4px;
-  border-radius: 10px;
-  border: 1px solid rgba(96,165,250,.4);
-  background: transparent;
-  color: var(--k-300);
-  cursor: pointer;
-  transition: background .18s ease, transform .18s ease;
-}
-.light-theme .mini-btn { color: var(--k-700); border-color: #BFDBFE; }
-.mini-btn:hover { background: rgba(59,130,246,.2); transform: translateY(-2px); }
-.mini-ico { font-size: 1.3rem; line-height: 1; }
-.mini-txt { font-size: .68rem; font-weight: 800; letter-spacing: .2px; }
 
 /* Isang parisukat bawat palapag na dadaanan. */
 .mini-steps { display: flex; flex-direction: column; gap: 6px; }
@@ -2047,9 +2033,157 @@ img { max-width: 100%; }
    hindi kailangang i-scroll ang maliit na hanay, na mahirap sa daliri. */
 @media (max-height: 850px) {
   .mini-steps { display: grid; grid-template-columns: repeat(2, 1fr); }
-  .mini-btn { padding: 7px 4px; }
-  .mini-ico { font-size: 1.15rem; }
   .map-mini { gap: 6px; }
+}
+
+/* ── Lumulutang na bintana ng pagpili ng daan ───────────────
+   Nakaharang ito sa buong screen, at sinasadya iyon. Dati'y maliit
+   na kontrol lang ito sa tabi ng zoom (.map-mini), at hindi ito
+   napapansin ng bisita: blangko ang mapa habang wala pang pinipili,
+   kaya akala niya sira ang kiosk. Dito, ang pagpili na ang mismong
+   harang — hindi na ito puwedeng malampasan. */
+.route-pick-back {
+  position: fixed;
+  inset: 0;
+  z-index: 9000; /* sa ibaba ng .k-overlay (99999) at ng keyboard */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(4,12,26,.74);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  animation: fadeIn .22s ease both;
+}
+.light-theme .route-pick-back { background: rgba(15,35,70,.42); }
+
+.route-pick {
+  width: 100%;
+  max-width: 720px;
+  max-height: 92vh;
+  overflow-y: auto;
+  padding: 34px 34px 26px;
+  border-radius: var(--ui-r-xl);
+  border: 1px solid var(--ui-line-2);
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  box-shadow: var(--ui-sh-3), 0 0 0 6px rgba(59,130,246,.12);
+  text-align: center;
+  animation: modalPop .4s cubic-bezier(.175,.885,.32,1.1) both;
+}
+
+.route-pick-head { margin-bottom: 26px; }
+.route-pick-eyebrow {
+  display: block;
+  margin-bottom: 8px;
+  font-size: .78rem; font-weight: 800;
+  letter-spacing: 2.2px; text-transform: uppercase;
+  color: var(--ui-accent);
+}
+.route-pick-title {
+  margin: 0 0 14px;
+  font-size: 2rem; font-weight: 900;
+  letter-spacing: -.5px; line-height: 1.15;
+  color: var(--ui-ink);
+}
+.route-pick-dest {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 9px;
+  margin: 0;
+  padding: 11px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--ui-line-2);
+  background: var(--ui-accent-sf);
+  color: var(--ui-ink-2);
+  font-size: 1.02rem; font-weight: 600;
+}
+.route-pick-dest strong { color: var(--ui-ink); font-weight: 900; }
+.route-pick-badge {
+  padding: 3px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--ui-line);
+  background: var(--ui-raise);
+  color: var(--ui-accent);
+  font-size: .76rem; font-weight: 900;
+  letter-spacing: .4px; text-transform: uppercase;
+}
+
+/* Isang malaking pindutan bawat paraan ng pag-akyat. Pantay-pantay
+   sila — walang isang mas mainam sa iba, iba lang ang sakto sa
+   bisita, kaya walang isa sa kanila ang pinapaganda nang higit. */
+.route-pick-opts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px;
+}
+.route-opt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 26px 16px 22px;
+  border-radius: var(--ui-r-lg);
+  border: 2px solid var(--ui-line-2);
+  background: var(--ui-raise);
+  color: var(--ui-ink);
+  cursor: pointer;
+  transition: border-color .18s ease, background .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.route-opt:hover, .route-opt:focus-visible {
+  border-color: var(--ui-accent);
+  background: var(--ui-accent-sf);
+  transform: translateY(-3px);
+  box-shadow: var(--ui-sh-2);
+  outline: none;
+}
+.route-opt:active { transform: translateY(0); }
+.route-opt-ico { font-size: 2.6rem; line-height: 1; }
+.route-opt-name {
+  font-size: 1.22rem; font-weight: 900;
+  letter-spacing: -.2px;
+}
+.route-opt-sub {
+  color: var(--ui-ink-2);
+  font-size: .86rem; font-weight: 600;
+  line-height: 1.35;
+}
+
+.route-pick-hint {
+  margin: 20px 0 0;
+  color: var(--ui-ink-2);
+  font-size: .96rem; font-weight: 700;
+}
+
+.route-pick-cancel {
+  margin-top: 18px;
+  padding: 13px 22px;
+  border-radius: var(--ui-r-lg);
+  border: 1px solid var(--ui-line);
+  background: transparent;
+  color: var(--ui-ink-2);
+  font-size: .94rem; font-weight: 800;
+  cursor: pointer;
+  transition: background .18s ease, color .18s ease, border-color .18s ease;
+}
+.route-pick-cancel:hover {
+  border-color: var(--ui-danger);
+  background: var(--ui-danger-sf);
+  color: var(--ui-danger);
+}
+
+/* Sa pandak o makitid na screen, nagpapayat ang bintana — ang tatlong
+   pindutan ang huling binibitawan, patong-patong sila kung kailangan. */
+@media (max-height: 720px), (max-width: 560px) {
+  .route-pick { padding: 24px 20px 20px; }
+  .route-pick-title { font-size: 1.55rem; }
+  .route-pick-head { margin-bottom: 18px; }
+  .route-opt { padding: 18px 12px 16px; }
+  .route-opt-ico { font-size: 2.1rem; }
+  .route-opt-name { font-size: 1.08rem; }
+  .route-pick-hint { margin-top: 14px; font-size: .88rem; }
 }
 
 /* ── Sinasabi ng kasalukuyang hakbang (nasa sidebar) ─────── */
@@ -2832,7 +2966,8 @@ button:active { transform: scale(.97); }
 *::-webkit-scrollbar-thumb:hover { background: rgba(96,165,250,.75); background-clip: content-box; }
 
 @media (prefers-reduced-motion: reduce) {
-  .office-row, .k-modal, .k-overlay, .map-screen-container { animation: none !important; }
+  .office-row, .k-modal, .k-overlay, .map-screen-container,
+  .route-pick, .route-pick-back { animation: none !important; }
 }
 
 /* ═══════════ 11. ADMIN PANEL ═══════════ */

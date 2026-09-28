@@ -867,9 +867,10 @@ export default function App() {
                   </div>
                 )}
 
-                {/* Nasa lumulutang na panel sa gilid ng mapa ang pagpili
-                    ng daan — nakatabi sa zoom, katapat ng mismong
-                    ruta. Tingnan ang .map-mini-stack sa ibaba. */}
+                {/* Nasa lumulutang na bintana sa gitna ng screen ang
+                    pagpili ng daan — tingnan ang .route-pick-back sa
+                    ibaba. Nandito lang ang detalye ng tanggapan, na
+                    mababasa pagkatapos pumili. */}
 
                 <div className="qr-card">
                   <span className="qr-title">📱 {lang === 'EN' ? 'Scan for live mobile map' : 'I-scan para sa live mobile map'}</span>
@@ -1031,52 +1032,10 @@ export default function App() {
 
         {/* ── Maliliit na kontrol sa gilid ng mapa ───────────────────
             Kasinlaki at kasinghugis ng zoom, nakapatong lang sa ilalim
-            nito. Ang mga pagpipilian ang nandito — ang mahabang teksto
-            ay nasa sidebar, kung saan may lugar para dito. */}
+            nito. Ang paglipat-lipat sa mga hakbang ng gabay ang nandito
+            — ang mahabang teksto ay nasa sidebar, kung saan may lugar
+            para dito. */}
         <div className="map-mini-stack">
-
-          {routeStep === 'choose-transport' && destinationData && (
-            <div className="map-mini">
-              <span className="mini-cap">{lang === 'EN' ? 'Route' : 'Daan'}</span>
-
-              <button
-                className="mini-btn"
-                onClick={() => { setSelectedOfficeKey('elevator-up'); setTransportMethod('elevator'); setRouteStep('go-to-transport'); }}
-              >
-                <span className="mini-ico">🛗</span>
-                <span className="mini-txt">Elevator</span>
-              </button>
-
-              {destinationData.floor === 2 && (
-                <button
-                  className="mini-btn"
-                  onClick={() => { setSelectedOfficeKey('elevator-up'); setTransportMethod('escalator'); setRouteStep('go-to-transport'); }}
-                >
-                  <span className="mini-ico">🪜</span>
-                  <span className="mini-txt">Escalator</span>
-                </button>
-              )}
-
-              <button
-                className="mini-btn"
-                onClick={() => { setSelectedOfficeKey('stairs-up'); setTransportMethod('stairs'); setRouteStep('go-to-transport'); }}
-              >
-                <span className="mini-ico">🚶</span>
-                <span className="mini-txt">Stairs</span>
-              </button>
-
-              <button
-                className="mini-x"
-                // Kasama ang napiling opisina sa binubura. Nakatago ang
-                // listahan hangga't may napili, kaya kung maiiwan ito,
-                // blangko ang sidebar pagkatapos kanselahin.
-                onClick={() => { setRouteStep('idle'); setDestinationData(null); setSelectedOfficeKey(null); }}
-                title={lang === 'EN' ? 'Cancel navigation' : 'Kanselahin'}
-              >
-                ✕
-              </button>
-            </div>
-          )}
 
           {guide && (
             <div className="map-mini">
@@ -1157,6 +1116,97 @@ export default function App() {
         )}
 
       </div>
+
+      {/* ── PAGPILI NG DAAN PAAKYAT ────────────────────────────────
+          Lumulutang na bintana sa gitna ng screen, hindi maliit na
+          kontrol sa gilid. May dahilan ito: noong nasa tabi ng zoom
+          pa ito, hindi napapansin ng bisita na may pipiliin pa siya —
+          blangko ang mapa habang hinihintay ang pagpili, at akala
+          niya sira ang kiosk. Dito, hindi ito puwedeng malampasan:
+          nakaharang ito sa mapa hangga't wala pang napipili.
+
+          Sadyang hindi nagsasara kapag napindot ang likuran — dalawa
+          lang ang paraan palabas: pumili ng daan, o pindutin ang
+          malinaw na pagkansela sa ilalim. */}
+      {routeStep === 'choose-transport' && destinationData && (
+        <div className="route-pick-back">
+          <div className="route-pick">
+
+            <div className="route-pick-head">
+              <span className="route-pick-eyebrow">
+                {lang === 'EN' ? 'One more step' : 'Isa na lang'}
+              </span>
+              <h2 className="route-pick-title">
+                {lang === 'EN' ? 'How would you like to go up?' : 'Paano po kayo aakyat?'}
+              </h2>
+              <p className="route-pick-dest">
+                {lang === 'EN' ? 'Going to' : 'Papunta sa'}{' '}
+                <strong>{destinationData.title}</strong>
+                <span className="route-pick-badge">
+                  {destinationData.badge || `Floor ${destinationData.floor}`}
+                </span>
+              </p>
+            </div>
+
+            <div className="route-pick-opts">
+              <button
+                className="route-opt"
+                onClick={() => { setSelectedOfficeKey('elevator-up'); setTransportMethod('elevator'); setRouteStep('go-to-transport'); }}
+              >
+                <span className="route-opt-ico">🛗</span>
+                <span className="route-opt-name">{lang === 'EN' ? 'Elevator' : 'Elevator'}</span>
+                <span className="route-opt-sub">
+                  {lang === 'EN'
+                    ? `Ride up to Floor ${destinationData.floor}`
+                    : `Sumakay paakyat sa Palapag ${destinationData.floor}`}
+                </span>
+              </button>
+
+              {destinationData.floor === 2 && (
+                <button
+                  className="route-opt"
+                  onClick={() => { setSelectedOfficeKey('elevator-up'); setTransportMethod('escalator'); setRouteStep('go-to-transport'); }}
+                >
+                  <span className="route-opt-ico">🪜</span>
+                  <span className="route-opt-name">{lang === 'EN' ? 'Escalator' : 'Escalator'}</span>
+                  <span className="route-opt-sub">
+                    {lang === 'EN' ? 'Glide up to Floor 2' : 'Paakyat sa Palapag 2'}
+                  </span>
+                </button>
+              )}
+
+              <button
+                className="route-opt"
+                onClick={() => { setSelectedOfficeKey('stairs-up'); setTransportMethod('stairs'); setRouteStep('go-to-transport'); }}
+              >
+                <span className="route-opt-ico">🚶</span>
+                <span className="route-opt-name">{lang === 'EN' ? 'Stairs' : 'Hagdan'}</span>
+                <span className="route-opt-sub">
+                  {lang === 'EN'
+                    ? `Walk up ${destinationData.floor - 1} ${destinationData.floor - 1 === 1 ? 'floor' : 'floors'}`
+                    : `Akyatin ang ${destinationData.floor - 1} palapag`}
+                </span>
+              </button>
+            </div>
+
+            <p className="route-pick-hint">
+              👆 {lang === 'EN'
+                ? 'Pick one and the route will be drawn on the map.'
+                : 'Pumili po at iguguhit na ang ruta sa mapa.'}
+            </p>
+
+            <button
+              className="route-pick-cancel"
+              // Kasama ang napiling opisina sa binubura. Nakatago ang
+              // listahan hangga't may napili, kaya kung maiiwan ito,
+              // blangko ang sidebar pagkatapos kanselahin.
+              onClick={() => { setRouteStep('idle'); setDestinationData(null); setSelectedOfficeKey(null); }}
+            >
+              ✕ {lang === 'EN' ? 'Never mind — back to the office list' : 'Hindi na — balik sa listahan'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {showAbout && (
         <div className="k-overlay" onClick={() => setShowAbout(false)}>
