@@ -485,7 +485,13 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
         </div>
       )}
 
-      {!isMobile && (
+      {/* Dating `!isMobile` lang ito — at ang `isMobile` ay sukat lang ng
+          screen. Ang tablet na nakahiga at ang laptop na pinagbuksan ng
+          QR link ay lumalagpas sa 1024, kaya lumalabas doon ang hanay ng
+          palapag: ganap na paglilibot sa gusali mula sa isang link na
+          isang ruta lang ang ipinangako. Sukat AT tanawin ang sinusuri
+          ngayon. */}
+      {!isMobile && !staticView && (
         <div className="bottom-floor-bar" style={{
             position: 'absolute', bottom: '30px', left: '50%', transform: 'translateX(-50%)',
             display: 'flex', gap: isTightBar ? '8px' : '12px', background: 'rgba(15, 23, 42, 0.85)',
