@@ -146,6 +146,34 @@ City Hall ang `888-9500`.
 
 ---
 
+## "About this Office" — ang paliwanag sa ilalim ng pangalan
+
+Ito ang lumalabas sa kiosk sa ilalim mismo ng pangalan ng tanggapan, bago
+pa ang oras at contact person. **Nakatago ang bahaging ito kapag walang
+laman ang description** — kaya apat na hall lang ang may ganito noon.
+
+Ang `supabase/office_about.sql` ang naglalagay nito sa **26 pang
+tanggapan** sa isang takbo. Supabase → SQL Editor → New query → Run.
+Ligtas itong ulit-ulitin. Nasa `src/lib/defaultOfficeData.js` din ang
+parehong teksto, bilang binhi kapag nalinis ang database.
+
+**Walang opisyal na pinagmulan ang mga sulat na ito.** Hindi sila hango
+sa papel ng lungsod — isinulat sila batay sa karaniwang tungkulin ng
+ganitong tanggapan sa isang LGU, hiniling noong 2026-10-05. Kaya sinadyang
+pangkalahatan ang bawat isa: ano ang hawak ng tanggapan, wala nang higit
+pa — walang bayad, bilang ng araw, o pangalan ng serbisyo, doon kasi mas
+madaling magkamali. Kapag may tunay nang paliwanag mula sa mismong
+tanggapan, iyon ang dapat manaig: puwede nang i-type sa Admin Panel.
+
+Hindi kasama ang mga **Comfort Room** at ang mga **UNDER CONSTRUCTION** na
+espasyo — hindi sila tanggapan, at "About this Office" ang nakasulat na
+pamagat sa kiosk. Nananatiling nakatago ang bahaging iyon para sa kanila.
+
+Hindi rin ginalaw ang **contact person ng Tolentino Hall at Cultural
+Hall** — kung ano ang nasa Admin Panel, iyon ang nananatili.
+
+---
+
 ## Tunog sa welcome screen video
 
 Hinaharangan ng lahat ng browser ang tunog hangga't walang pumipindot sa
