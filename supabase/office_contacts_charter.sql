@@ -16,6 +16,13 @@
 --
 -- Patakbuhin sa Supabase → SQL Editor → New query → Run. Ligtas itong
 -- ulit-ulitin.
+--
+-- ⛔ HINDI ITO ANG KASALUKUYANG SINUSUNOD. Noong 2026-10-05, ang
+-- office-info.pdf (483-93xx) ang pinili — nasa office_contacts_pdf.sql
+-- iyon, at binabawi niyon ang labintatlong numero sa ibaba. Huwag
+-- patakbuhin ang dalawa nang sabay: kung alin ang huli, iyon ang
+-- mananaig. Buksan ulit ito kapag napagtibay na ng City Hall ang
+-- 888-9500.
 -- ════════════════════════════════════════════════════════════════
 
 

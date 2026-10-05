@@ -117,16 +117,32 @@ Habang hindi pa ito napapatakbo, hindi masisira ang Admin Panel — nai-save
 pa rin ang lahat maliban sa telepono, at may paalala sa console. Ang
 lumalabas na numero sa kiosk ay ang nasa code pa rin.
 
-### Pagkatapos: mga numero mula sa Citizen's Charter 2025
+### Pagkatapos: ang buong listahan ng contact
 
-Ang `supabase/office_contacts_charter.sql` ang naglalagay ng numero at
-contact person mula sa opisyal na Citizen's Charter 2025 ng lungsod — sa
-labintatlong tanggapang **may katapat sa mapa** lang. **Patakbuhin ito
-pagkatapos ng `office_phones.sql`**, hindi bago.
+Ang `supabase/office_contacts_pdf.sql` ang naglalagay ng **contact person
+at telepono ng labinsiyam na tanggapan** sa isang takbo — ito ang kapalit
+ng manu-manong pag-type sa Admin Panel. **Patakbuhin ito pagkatapos ng
+`office_phones.sql`**, hindi bago. Ligtas itong ulit-ulitin.
 
-Basahin muna ang babala sa itaas ng file: `(046) 888-9500` + 3-digit na
-local ang nasa charter, samantalang `(046) 483-937x` ang dating nasa
-kiosk. Malaking pagbabago iyon, at hindi pa napagtitibay sa City Hall.
+Pinagmulan ang `office-info.pdf` (direktoryo kada palapag), at `(046)
+483-937x` ang numero roon.
+
+Dalawang tanggapan sa PDF ang hindi kasama — **Zoning Office** at
+**Character Office**. Wala silang silid sa mapa, kaya walang maituturo
+ang kiosk para sa kanila; kailangan munang maipuwesto sila bago sila
+bigyan ng contact card.
+
+#### Ang naunang bersyon: Citizen's Charter 2025
+
+Ang `supabase/office_contacts_charter.sql` ay ibang set ng numero —
+`(046) 888-9500` + 3-digit na local, mula sa opisyal na Citizen's Charter
+2025, sa labintatlong tanggapang may katapat sa mapa. **Huwag patakbuhin
+ang dalawa nang sabay**: magkabaligtad sila, at kung alin ang huling
+tumakbo, iyon ang mananaig.
+
+Napiling sundin ang PDF noong 2026-10-05, kaya ang `office_contacts_pdf.sql`
+ang patakbuhin. Buksan lang ulit ang charter file kapag napagtibay na ng
+City Hall ang `888-9500`.
 
 ---
 
