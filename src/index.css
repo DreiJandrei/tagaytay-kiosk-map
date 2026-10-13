@@ -870,6 +870,25 @@ img { max-width: 100%; }
   to   { box-shadow: 0 0 0 1px rgba(147,197,253,.9), 0 16px 42px rgba(59,130,246,.75); }
 }
 
+/* Lumalaki ang pangalan ng napiling kwarto — ito na ang tanda ng
+   paroroonan, kapalit ng dating lumulutang na "🎯" na label.
+   Hanggang 1.3× ng dating laki, PERO hanggang kasya lang sa kwarto: ang
+   kwarto mismo ang sukatan (container query — `cqw`/`cqh` ay porsyento
+   ng lapad at taas nito). Sa makikitid (PIO, guard, CR), nananatili ito
+   sa dating laki imbes na maputol. Lahat ng nakikitang kwarto ay may
+   tiyak na lapad at taas sa coordinateMapping, kaya ligtas ang `size`. */
+.room-node { container-type: size; }
+.room-label {
+  --label-base: .92rem;
+  transition: font-size .3s cubic-bezier(.16,1,.3,1);
+}
+.room-node[style*="0.75rem"] .room-label,
+.room-node[style*="0.8rem"] .room-label { --label-base: 1em; }
+.room-node.active-room .room-label {
+  font-size: clamp(var(--label-base), min(12cqw, 28cqh), calc(var(--label-base) * 1.3)) !important;
+  font-weight: 900 !important;
+}
+
 /* Lumalawak na singsing sa destinasyon */
 .active-room::after {
   content: '';
@@ -2784,40 +2803,75 @@ img { max-width: 100%; }
   cursor: pointer;
 }
 .kb-hide:hover { background: var(--ui-danger-sf); color: var(--ui-danger); }
-.kb-row { display: flex; justify-content: center; gap: 9px; width: 100%; }
+.kb-row {
+  display: flex; justify-content: center; gap: 9px;
+  width: 100%; max-width: 980px; margin: 0 auto;
+}
+/* Lumuluwag o kumikitid ayon sa lapad ng keyboard — hindi lumalampas sa
+   kahon kahit sa makitid na screen. */
 .kb-key {
-  width: 72px; height: 64px;
+  flex: 1 1 0; min-width: 0; max-width: 76px;
+  height: 64px;
   border-radius: var(--ui-r-md);
   border: 1px solid var(--ui-line);
   background: var(--ui-raise);
   color: var(--ui-ink);
   font-size: 1.25rem;
   font-weight: 900;
+  white-space: nowrap; overflow: hidden;
   cursor: pointer;
   transition: transform .12s ease, background .12s ease;
 }
 .kb-key:hover { background: var(--ui-raise-2); border-color: var(--ui-line-2); }
 .kb-key:active { transform: scale(.94); }
 .kb-key--space {
-  width: 460px;
+  flex: 6 1 0; max-width: 520px;
   background: linear-gradient(160deg, var(--ui-accent-2), #1E3A8A);
   border-color: var(--ui-accent);
   color: #FFFFFF;
 }
+.kb-key--back,
+.kb-key--enter,
+.kb-key--shift,
+.kb-key--clear { flex: 1.9 1 0; max-width: 160px; font-size: 1rem; }
 .kb-key--back {
-  width: 150px;
   background: var(--ui-gold-sf);
   border-color: var(--ui-gold);
   color: var(--ui-gold);
 }
+.kb-key--enter {
+  background: var(--ui-accent-sf);
+  border-color: var(--ui-accent);
+  color: var(--ui-accent);
+}
+.kb-key--shift.is-on {
+  background: var(--ui-accent-2);
+  border-color: var(--ui-accent);
+  color: #FFFFFF;
+}
 .kb-key--clear {
-  width: 120px;
   background: var(--ui-danger-sf);
   border-color: var(--ui-danger);
   color: var(--ui-danger);
 }
 
 /* ═══════════ 8. MODAL AT FORM ═══════════ */
+/* Babala sa admin login: ilang subok pa, o naka-lock. */
+.k-login-guard {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border-radius: var(--ui-r-sm);
+  border: 1px solid var(--ui-gold);
+  background: var(--ui-gold-sf);
+  color: var(--ui-gold);
+  font-size: .9rem; font-weight: 700; line-height: 1.4;
+  text-align: center;
+}
+.k-login-guard.is-locked {
+  border-color: var(--ui-danger);
+  background: var(--ui-danger-sf);
+  color: var(--ui-danger);
+}
 .k-overlay {
   position: fixed;
   inset: 0;

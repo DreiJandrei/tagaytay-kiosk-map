@@ -337,7 +337,6 @@ export default function MapScreen({
   // ==============================================================
   let destX = selectedOffice ? selectedOffice.targetX : null;
   let destY = selectedOffice ? selectedOffice.targetY : null;
-  let destTitle = selectedOffice ? selectedOffice.title : "";
 
   // ==============================================================
   // DYNAMIC KIOSK PIN PLACEMENT
@@ -410,7 +409,6 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
       finalPathData = "M 1045 822 L 1225 822 L 1225 885";
       destX = 1225;
       destY = 885;
-      destTitle = EN ? "Escalator to Upper Floors" : "Escalator paakyat";
   }
 
   if (selectedOffice && currentFloor !== 1 && finalPathData !== "") {
@@ -892,11 +890,9 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
             <span className="pulse-ring"></span>{kioskText}
           </div>
 
-          {selectedOffice && destX != null && (
-            <div className="node pin-destination" key={`dest-${selectedOfficeKey}-${destX}`} style={{ display: 'block', left: destX, top: destY, zIndex: 100 }}>
-              🎯 {destTitle}
-            </div>
-          )}
+          {/* Walang lumulutang na "🎯 pangalan" sa dulo ng ruta — natatakpan
+              nito ang mismong kwarto. Ang kwarto na ang nagsasabi: lumalaki
+              ang pangalan nito kapag napili (.active-room .room-label). */}
 
         </div>
       </div>

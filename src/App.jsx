@@ -103,6 +103,42 @@ function QrCard({ link, lang }) {
   );
 }
 
+// ── Bantay sa maling password ng admin ──────────────────────────
+// Gaya ng sa telepono: limang maling subok, tapos naka-lock nang ilang
+// minuto — at humahaba ang lock sa bawat ulit. Nasa localStorage para
+// hindi ito mabura ng pag-refresh ng pahina. Bumabalik sa simula kapag
+// tama na ang password. (Pandagdag lang ito: may sariling limitasyon din
+// ang Supabase sa dami ng login.)
+const LOGIN_GUARD_KEY = 'tagaytay-admin-login-guard';
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCK_MINUTES = [1, 5, 15, 30, 60];
+const FRESH_GUARD = { fails: 0, lockUntil: 0, level: 0 };
+
+const readLoginGuard = () => {
+  try {
+    const g = JSON.parse(localStorage.getItem(LOGIN_GUARD_KEY));
+    if (g && typeof g === 'object') {
+      return { fails: Number(g.fails) || 0, lockUntil: Number(g.lockUntil) || 0, level: Number(g.level) || 0 };
+    }
+  } catch { /* walang storage o sira ang laman — magsimula sa malinis */ }
+  return FRESH_GUARD;
+};
+
+const writeLoginGuard = (g) => {
+  try { localStorage.setItem(LOGIN_GUARD_KEY, JSON.stringify(g)); } catch { /* walang storage */ }
+};
+
+// Maling password ba talaga — o problema sa internet o sa Supabase?
+// Ang mali lang na password ang binibilang.
+const isWrongPassword = (error) =>
+  error?.code === 'invalid_credentials'
+  || /invalid login credentials/i.test(error?.message || '');
+
+const formatCountdown = (ms) => {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+};
+
 // Keyboard para sa mga auth modal. Hiwalay na component para ang pag-unmount
 // nito (pagsara ng modal) ang mag-reset ng "hidden" — kaya hindi na kailangan
 // ng useEffect na nagse-setState, na nagdudulot ng cascading renders.
@@ -144,6 +180,25 @@ export default function App() {
   const [selectedOfficeKey, setSelectedOfficeKey] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showKeyboard, setShowKeyboard] = useState(false);
+  // Shift ng keyboard sa paghahanap — isang titik lang ang malaki, gaya ng
+  // sa telepono. Hindi naman case-sensitive ang paghahanap; para lang ito
+  // kamukha ng karaniwang keyboard.
+  const [kbShift, setKbShift] = useState(false);
+
+  // Kusang nagtatago ang keyboard kapag may pinindot sa labas nito — sa
+  // mapa, sa header, kahit saan. Hindi kasama ang kahon ng paghahanap at
+  // ang listahan ng resulta: doon pa nagta-type o pumipili ang bisita
+  // (at kapag nawala ang listahan sa pagdampi pa lang, hindi na aabot ang
+  // pindot sa resulta).
+  useEffect(() => {
+    if (!showKeyboard) return;
+    const onPointerDown = (e) => {
+      if (e.target.closest?.('.kiosk-virtual-keyboard, .sb-search, .sb-panel')) return;
+      setShowKeyboard(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown, true);
+    return () => document.removeEventListener('pointerdown', onPointerDown, true);
+  }, [showKeyboard]);
 
   const [lang, setLang] = useState('EN');     
   const [textSize, setTextSize] = useState('normal'); 
@@ -161,6 +216,20 @@ export default function App() {
   const [recoveryPassword, setRecoveryPassword] = useState('');
 
   const [secretClicks, setSecretClicks] = useState(0);
+  const [loginGuard, setLoginGuard] = useState(readLoginGuard);
+  // Orasan ng countdown habang naka-lock. Itinatakda rin sa mga pindot,
+  // para sariwa agad ang bilang pagbukas ng login.
+  const [guardNow, setGuardNow] = useState(() => Date.now());
+  const loginLocked = loginGuard.lockUntil > guardNow;
+  const updateLoginGuard = (next) => { setLoginGuard(next); writeLoginGuard(next); };
+
+  // Countdown ng lock sa admin login — tumatakbo lang habang bukas ang
+  // login at naka-lock pa.
+  useEffect(() => {
+    if (!showAdminLogin || !loginLocked) return;
+    const id = setInterval(() => setGuardNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [showAdminLogin, loginLocked]);
   const [showAbout, setShowAbout] = useState(false); 
 
   const [routeStep, setRouteStep] = useState('idle');
@@ -408,6 +477,7 @@ export default function App() {
     // ito dapat umabot sa telepono ng kahit sinong nakakita ng QR.
     if (isVisitorView) return;
     if (secretClicks + 1 >= 5) {
+      setGuardNow(Date.now());
       setShowAdminLogin(true); 
       setSecretClicks(0); 
     } else { 
@@ -418,19 +488,34 @@ export default function App() {
 
   const handleAdminLogin = async (e) => {
     e.preventDefault(); 
+    // Naka-lock: hindi na ipinapadala sa Supabase.
+    if (loginGuard.lockUntil > Date.now()) return;
     setIsLoggingIn(true);
     
     try {
       await loginAdmin('tagaytaykiosk@gmail.com', adminPasswordInput);
+      updateLoginGuard(FRESH_GUARD);
       setShowAdminLogin(false);
       setAdminPasswordInput('');
       setShowPassword(false);
       setShowAdmin(true); 
     } catch (error) {
-      alert(lang === 'EN'
-        ? '❌ Access Denied: Incorrect Password or Network Error.'
-        : '❌ Hindi Makapasok: Maling password o may problema sa koneksyon.');
       setAdminPasswordInput('');
+      if (!isWrongPassword(error)) {
+        // Hindi ito binibilang — hindi kasalanan ng nagta-type ang internet.
+        alert(lang === 'EN'
+          ? '❌ Could not reach the server. Check the internet connection and try again.'
+          : '❌ Hindi maabot ang server. Tingnan ang koneksyon sa internet at subukan ulit.');
+        return;
+      }
+      const fails = loginGuard.fails + 1;
+      if (fails >= MAX_LOGIN_ATTEMPTS) {
+        const minutes = LOCK_MINUTES[Math.min(loginGuard.level, LOCK_MINUTES.length - 1)];
+        updateLoginGuard({ fails: 0, lockUntil: Date.now() + minutes * 60000, level: loginGuard.level + 1 });
+      } else {
+        updateLoginGuard({ ...loginGuard, fails });
+      }
+      setGuardNow(Date.now());
     } finally {
       setIsLoggingIn(false);
     }
@@ -627,7 +712,17 @@ export default function App() {
     if (key === 'BACKSPACE') setSearchQuery(prev => prev.slice(0, -1));
     else if (key === 'SPACE') setSearchQuery(prev => prev + ' ');
     else if (key === 'CLEAR') setSearchQuery('');
-    else setSearchQuery(prev => prev + key);
+    else if (key === 'SHIFT') setKbShift(v => !v);
+    else if (key === 'ENTER') {
+      // Enter = piliin ang unang resulta. Walang resulta? Itago na lang.
+      const first = filteredSearchOptions[0];
+      if (first) handleSearchSelect(first.key, first.floor);
+      else setShowKeyboard(false);
+    } else {
+      const isLetter = /^[A-Z]$/.test(key);
+      setSearchQuery(prev => prev + (isLetter && !kbShift ? key.toLowerCase() : key));
+      if (isLetter) setKbShift(false);
+    }
   };
 
   const selectedOffice = selectedOfficeKey ? liveOfficeDatabase[currentFloor]?.[selectedOfficeKey] : null;
@@ -842,13 +937,26 @@ export default function App() {
 
   const dateLabel = new Date().toLocaleDateString(lang === 'EN' ? 'en-PH' : 'fil-PH', { weekday: 'short', month: 'short', day: 'numeric' });
 
+  // Ayos ng karaniwang keyboard: Backspace sa dulo ng hanay ng numero,
+  // Enter sa dulo ng A–L, Shift sa simula ng Z–M.
   const keyboardRows = [
-    ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
+    ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'BACKSPACE'],
     ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
-    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', '-'],
-    ['Z', 'X', 'C', 'V', 'B', 'N', 'M', 'CLEAR', 'BACKSPACE'],
-    ['SPACE']
+    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'ENTER'],
+    ['SHIFT', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '-'],
+    ['CLEAR', 'SPACE']
   ];
+  const keyLabel = (key) => {
+    const EN = lang === 'EN';
+    switch (key) {
+      case 'BACKSPACE': return EN ? '⌫ Backspace' : '⌫ Bura';
+      case 'ENTER': return EN ? '⏎ Enter' : '⏎ Enter';
+      case 'SHIFT': return '⇧ Shift';
+      case 'SPACE': return EN ? 'Space' : 'Espasyo';
+      case 'CLEAR': return EN ? 'Clear' : 'Linis';
+      default: return /^[A-Z]$/.test(key) && !kbShift ? key.toLowerCase() : key;
+    }
+  };
 
   return (
     <div className={`map-screen-container ${theme}-theme`} style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -1297,13 +1405,12 @@ export default function App() {
                 {row.map((key) => {
                   const modifier = key === 'SPACE' ? ' kb-key--space'
                     : key === 'BACKSPACE' ? ' kb-key--back'
+                    : key === 'ENTER' ? ' kb-key--enter'
+                    : key === 'SHIFT' ? ` kb-key--shift${kbShift ? ' is-on' : ''}`
                     : key === 'CLEAR' ? ' kb-key--clear' : '';
                   return (
                     <button key={key} className={`kb-key${modifier}`} onClick={() => handleVirtualKeyPress(key)}>
-                      {key === 'BACKSPACE' ? (lang === 'EN' ? '⌫ Delete' : '⌫ Bura')
-                        : key === 'SPACE' ? (lang === 'EN' ? 'Space' : 'Espasyo')
-                        : key === 'CLEAR' ? (lang === 'EN' ? 'CLEAR' : 'LINIS')
-                        : key}
+                      {keyLabel(key)}
                     </button>
                   );
                 })}
@@ -1550,6 +1657,7 @@ export default function App() {
                   value={adminPasswordInput}
                   onChange={(e) => setAdminPasswordInput(e.target.value)}
                   placeholder={lang === 'EN' ? 'Enter password…' : 'Ilagay ang password…'}
+                  disabled={loginLocked}
                   autoFocus
                 />
                 <button
@@ -1564,6 +1672,21 @@ export default function App() {
                 </button>
               </div>
 
+              {/* Ilang subok pa, o gaano pa katagal ang lock. */}
+              {loginLocked ? (
+                <p className="k-login-guard is-locked" role="alert">
+                  🔒 {lang === 'EN'
+                    ? `Too many wrong passwords. Try again in ${formatCountdown(loginGuard.lockUntil - guardNow)}.`
+                    : `Sobrang daming maling password. Subukan ulit sa loob ng ${formatCountdown(loginGuard.lockUntil - guardNow)}.`}
+                </p>
+              ) : loginGuard.fails > 0 && (
+                <p className="k-login-guard" role="alert">
+                  ⚠️ {lang === 'EN'
+                    ? `Wrong password. ${MAX_LOGIN_ATTEMPTS - loginGuard.fails} ${MAX_LOGIN_ATTEMPTS - loginGuard.fails === 1 ? 'try' : 'tries'} left before it locks.`
+                    : `Mali ang password. ${MAX_LOGIN_ATTEMPTS - loginGuard.fails} subok na lang bago ma-lock.`}
+                </p>
+              )}
+
               <div className="k-btn-row" style={{ marginBottom: '14px' }}>
                 <button
                   type="button"
@@ -1572,10 +1695,10 @@ export default function App() {
                 >
                   {lang === 'EN' ? 'Cancel' : 'Kanselahin'}
                 </button>
-                <button type="submit" className="k-btn k-btn--primary" disabled={isLoggingIn}>
+                <button type="submit" className="k-btn k-btn--primary" disabled={isLoggingIn || loginLocked}>
                   {lang === 'EN'
-                    ? (isLoggingIn ? 'Checking…' : 'Login')
-                    : (isLoggingIn ? 'Sinusuri…' : 'Mag-login')}
+                    ? (isLoggingIn ? 'Checking…' : loginLocked ? 'Locked' : 'Login')
+                    : (isLoggingIn ? 'Sinusuri…' : loginLocked ? 'Naka-lock' : 'Mag-login')}
                 </button>
               </div>
 
