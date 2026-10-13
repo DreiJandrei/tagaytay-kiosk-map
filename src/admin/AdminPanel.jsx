@@ -965,9 +965,13 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   <p className="adm-hint">
                     {t(
                       'Announcement: Facebook posts and notices, shown in the card. Background: a '
-                      + 'city video like “Welcome to Tagaytay” that plays behind the title, always muted.',
+                      + 'city video like “Welcome to Tagaytay” that plays behind the title. Only one '
+                      + 'sound plays at a time — while an announcement video with sound is in the card, '
+                      + 'the background goes quiet.',
                       'Anunsyo: mga post at abiso mula sa FB, sa kard sa gilid. Background: video ng '
-                      + 'lungsod gaya ng “Welcome to Tagaytay”, tumutugtog sa likod ng pamagat at laging walang tunog.',
+                      + 'lungsod gaya ng “Welcome to Tagaytay”, tumutugtog sa likod ng pamagat. Iisang '
+                      + 'tunog lang ang lalabas — habang may anunsyong video na may tunog sa kard, '
+                      + 'tatahimik ang background.',
                     )}
                   </p>
                 </div>
@@ -1043,6 +1047,17 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                           + 'If the sound really matters, download the video and upload it here.',
                           'Hindi kayang buksan ang tunog ng Facebook embed — laging tahimik ito. '
                           + 'Kung kailangan talaga ng tunog, i-download ang video at i-upload dito.',
+                        )
+                      : videoForm.placement === 'background'
+                      ? t(
+                          'This is the background music. A round 🔊 button appears at the lower right of '
+                          + 'the welcome screen, so a visitor can turn it on or off. It goes quiet by '
+                          + 'itself while an announcement video with sound is in the card, and comes back '
+                          + 'after. If the browser blocks sound at first, one tap on that button is enough.',
+                          'Ito ang musika ng background. May bilog na 🔊 sa kanang ibaba ng welcome screen '
+                          + 'para mabuksan o mapatay ito ng bisita. Kusa itong tatahimik habang may '
+                          + 'anunsyong video na may tunog sa kard, at babalik pagkatapos. Kung haharangin '
+                          + 'ng browser ang tunog sa umpisa, isang pindot sa buton ay sapat na.',
                         )
                       : t(
                           'A round 🔊 button appears over the video on the welcome screen. '

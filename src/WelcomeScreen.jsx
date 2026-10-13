@@ -12,6 +12,9 @@ export default function WelcomeScreen({ onStart }) {
   // WelcomeVideo). State at hindi ref: kailangang mag-render ulit ang
   // video kapag handa na ang node na ito.
   const [videoHost, setVideoHost] = useState(null);
+  // May tunog ba ang anunsyong video na nasa kard ngayon? Kapag oo,
+  // tumatahimik ang background — iisang tunog lang ang lalabas.
+  const [sideHasSound, setSideHasSound] = useState(false);
 
   useEffect(() => {
     const fetchAnnouncement = async () => {
@@ -63,7 +66,9 @@ export default function WelcomeScreen({ onStart }) {
           buong screen. Nakapatong sa larawan ng City Hall — iyon ang
           lumalabas kapag walang naka-"Background" sa Admin Panel. */}
       <div className="welcome-video-host" ref={setVideoHost} aria-hidden="true" />
-      {videoHost && <WelcomeVideo placement="background" backgroundHost={videoHost} />}
+      {videoHost && (
+        <WelcomeVideo placement="background" backgroundHost={videoHost} yieldSound={sideHasSound} />
+      )}
       <div className="welcome-tint" aria-hidden="true" />
       <div className="welcome-vignette" aria-hidden="true" />
       <div className="welcome-glow" aria-hidden="true" />
@@ -117,7 +122,7 @@ export default function WelcomeScreen({ onStart }) {
         {/* Kanan: mga anunsyong video (naka-"Anunsyo" sa Admin Panel).
             Nagiging magkatabi ang hero at ang video kapag may laman ito. */}
         <div className="welcome-board-slot">
-          <WelcomeVideo placement="side" />
+          <WelcomeVideo placement="side" onSoundClaim={setSideHasSound} />
         </div>
 
         </div>

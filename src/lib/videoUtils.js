@@ -204,7 +204,7 @@ function facebookEmbedUrl(url) {
   return `https://www.facebook.com/plugins/video.php?${params.toString()}`;
 }
 
-function youtubeEmbedUrl(url, { loop, sound }) {
+function youtubeEmbedUrl(url, { loop, sound, jsApi }) {
   const id = getYouTubeId(url);
   if (!id) return '';
   const params = new URLSearchParams({
@@ -215,6 +215,8 @@ function youtubeEmbedUrl(url, { loop, sound }) {
     modestbranding: '1',
     playsinline: '1',
   });
+  // Para matanggap ng player ang mute/unMute na utos mula sa pahina.
+  if (jsApi) params.set('enablejsapi', '1');
   if (loop) {
     // Kailangan ng playlist=<id> para talagang umulit ang iisang video.
     params.set('loop', '1');
@@ -225,10 +227,10 @@ function youtubeEmbedUrl(url, { loop, sound }) {
 
 // Ibinabalik ang handang-ipasok na src para sa <iframe>. Blangko kung
 // hindi mabasa ang link — hindi na ipapakita ng player ang video na iyon.
-export function buildEmbedUrl(video, { loop = false, sound = false } = {}) {
+export function buildEmbedUrl(video, { loop = false, sound = false, jsApi = false } = {}) {
   if (!video) return '';
   const type = video.video_type || detectVideoType(video.source_url);
-  if (type === 'youtube') return youtubeEmbedUrl(video.source_url, { loop, sound });
+  if (type === 'youtube') return youtubeEmbedUrl(video.source_url, { loop, sound, jsApi });
   if (type === 'facebook') return facebookEmbedUrl(video.source_url);
   return '';
 }

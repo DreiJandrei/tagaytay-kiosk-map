@@ -1418,6 +1418,21 @@ img { max-width: 100%; }
   text-shadow: 0 2px 12px rgba(2,10,26,.95);
 }
 
+/* Bilog na 🔊 ng background na video — kanang ibaba, sa ibabaw ng
+   advisory. Kapareho ng buton ng kard; mas malaki lang nang kaunti
+   dahil nag-iisa ito sa gilid ng screen. */
+.welcome-bg-sound {
+  position: absolute; right: 32px; bottom: 32px; z-index: 7;
+  width: 60px; height: 60px; font-size: 1.5rem;
+  box-shadow: 0 10px 26px rgba(2,10,26,.55);
+  animation: fadeIn .8s ease both;
+}
+.welcome-screen:has(.announcement-bar) .welcome-bg-sound { bottom: 96px; }
+@media (max-height: 900px) {
+  .welcome-bg-sound { width: 50px; height: 50px; font-size: 1.25rem; right: 24px; bottom: 24px; }
+  .welcome-screen:has(.announcement-bar) .welcome-bg-sound { bottom: 82px; }
+}
+
 @keyframes rise { from { opacity:0; transform: translateY(26px) } to { opacity:1; transform: translateY(0) } }
 
 @media (max-width: 1024px) {

@@ -25,11 +25,17 @@ const signatureOf = (list) =>
 // Dalawang listahan, depende sa "Saan lalabas" ng bawat video sa Admin Panel:
 //   placement="side"       — ang kard sa gilid ng pamagat (mga anunsyo)
 //   placement="background" — buong screen sa likod ng welcome screen, sa
-//                            `backgroundHost`. Walang kard at laging walang
-//                            tunog: palamuti ito, at ang kard sa gilid ang
-//                            may-ari ng tunog.
+//                            `backgroundHost`. Walang kard; may sariling
+//                            bilog na 🔊 kapag may tunog ito.
 // Ang tala na wala pang `placement` (bago patakbuhin ang SQL) ay 'side'.
-export default function WelcomeVideo({ placement = 'side', backgroundHost = null }) {
+//
+// IISANG TUNOG LANG. Ang anunsyo sa gilid ang may karapatan: kapag video
+// na may tunog ang nasa kard, iniuulat iyon ng `onSoundClaim`, at ang
+// background ay tumatahimik habang `yieldSound`. Larawan, Facebook post, o
+// video na walang tunog ang nasa kard? Ang background na ang may tunog.
+export default function WelcomeVideo({
+  placement = 'side', backgroundHost = null, onSoundClaim, yieldSound = false,
+}) {
   const isBackground = placement === 'background' && !!backgroundHost;
   const [videos, setVideos] = useState([]);
   const [index, setIndex] = useState(0);
@@ -45,6 +51,7 @@ export default function WelcomeVideo({ placement = 'side', backgroundHost = null
   // ng paggalaw ay hindi dapat magpa-render ng buong kard.
   const [dragX, setDragX] = useState(0);
   const fileRef = useRef(null);
+  const iframeRef = useRef(null);
   const swipe = useRef({ id: null, x: 0, y: 0, active: false, moved: false });
 
   useEffect(() => {
@@ -101,9 +108,35 @@ export default function WelcomeVideo({ placement = 'side', backgroundHost = null
 
   // May tunog bang maaaring buksan — ito ang nagpapakita ng buton.
   // Tahimik ang larawan, kaya walang buton doon kahit anong nakatakda.
-  const soundAvailable = !isBackground && !!current?.has_sound && type !== 'facebook' && !isImage;
+  const soundAvailable = !!current?.has_sound && type !== 'facebook' && !isImage;
   const wantsSound = soundChoice !== null ? soundChoice : !!current?.has_sound;
-  const soundOn = soundAvailable && wantsSound && !soundBlocked;
+  // Gustong may tunog (ng admin o ng bisita), at hindi hinarang ng browser…
+  const soundWanted = soundAvailable && wantsSound && !soundBlocked;
+  // …at hindi nagpapaubaya sa anunsyo sa gilid.
+  const soundOn = soundWanted && !yieldSound;
+
+  // Ang kard sa gilid: "may tunog ang anunsyong ito" — kahit pinatay pa
+  // ng bisita ang 🔊. Ang anunsyo pa rin ang may-ari ng tunog habang
+  // nakalabas ito; hindi sasalit ang background sa pinatahimik na anunsyo.
+  useEffect(() => {
+    if (!isBackground) onSoundClaim?.(soundAvailable);
+  }, [isBackground, soundAvailable, onSoundClaim]);
+
+  // YouTube sa background: pinatatahimik at binubuksan sa utos sa player
+  // (postMessage), hindi sa pagpapalit ng link — kung hindi, magre-restart
+  // ang video tuwing nagpapalit ang anunsyo sa gilid.
+  const ytCommand = useCallback((muted) => {
+    const win = iframeRef.current?.contentWindow;
+    if (!win) return;
+    win.postMessage(JSON.stringify({ event: 'command', func: muted ? 'mute' : 'unMute', args: [] }), '*');
+  }, []);
+  const ytControlled = isBackground && type === 'youtube';
+  // Pinakabagong hatol, para sa mga utos na naantala (tingnan ang onLoad).
+  const soundOnRef = useRef(soundOn);
+  useEffect(() => {
+    soundOnRef.current = soundOn;
+    if (ytControlled) ytCommand(!soundOn);
+  }, [ytControlled, soundOn, ytCommand]);
 
   // Ang pagpindot mismo sa buton ay siyang pahintulot na hinihingi ng
   // browser, kaya sinusubukan ulit ang tunog tuwing may bagong pili.
@@ -212,7 +245,13 @@ export default function WelcomeVideo({ placement = 'side', backgroundHost = null
 
   const embedUrl = (type === 'file' || isImage)
     ? ''
-    : buildEmbedUrl(current, { loop: selfLoops, sound: soundOn });
+    : buildEmbedUrl(current, {
+        loop: selfLoops,
+        // Sa background na YouTube, ang `soundWanted` ang nasa link, at ang
+        // pagpapaubaya ay sa utos na ginagawa (tingnan ang ytCommand).
+        sound: ytControlled ? soundWanted : soundOn,
+        jsApi: ytControlled,
+      });
   const heading = (current.title || '').trim() || 'City Updates';
   const caption = (current.caption || '').trim();
   // Umaangkop ang kahon sa hugis ng video — kung hindi, puro itim na
@@ -247,7 +286,13 @@ export default function WelcomeVideo({ placement = 'side', backgroundHost = null
     ) : embedUrl ? (
       <iframe
         key={`${current.id}-${cycle}`}
+        ref={iframeRef}
         src={embedUrl}
+        // Matagal bago handang makinig ang YouTube player, kaya inuulit
+        // ang utos nang ilang beses pagka-load.
+        onLoad={ytControlled ? () => {
+          [300, 1200, 3000].forEach((ms) => setTimeout(() => ytCommand(!soundOnRef.current), ms));
+        } : undefined}
         title={heading}
         frameBorder="0"
         scrolling="no"
@@ -276,7 +321,25 @@ export default function WelcomeVideo({ placement = 'side', backgroundHost = null
       )
     : null;
 
-  if (isBackground) return backgroundLayer;
+  if (isBackground) {
+    return (
+      <>
+        {backgroundLayer}
+        {/* Bilog na 🔊 sa kanang ibaba. Wala ito habang nagpapaubaya sa
+            anunsyo — walang tunog na mapapatay o mabubuksan doon. */}
+        {backgroundLayer && soundAvailable && !yieldSound && (
+          <button
+            type="button"
+            className={`welcome-video-sound welcome-bg-sound${soundOn ? ' is-on' : ''}`}
+            onClick={toggleSound}
+            aria-label={soundOn ? 'Patayin ang tunog ng background' : 'Buksan ang tunog ng background'}
+          >
+            <span aria-hidden="true">{soundOn ? '🔊' : '🔇'}</span>
+          </button>
+        )}
+      </>
+    );
+  }
 
   return (
     // Buong kard ang tinatanggap ng hagod — pati pamagat, caption at
