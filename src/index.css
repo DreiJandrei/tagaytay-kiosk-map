@@ -196,7 +196,7 @@ img { max-width: 100%; }
 .requirements-box h3 { color: #D97706; margin-bottom: 10px; font-size: 1.2rem;}
 .requirements-box ul { padding-left: 20px; font-size: 1rem; line-height: 1.6; }
 
-.map-viewport { flex: 1; position: relative; overflow: hidden; perspective: 2000px; background-image: linear-gradient(var(--grid-color-map) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color-map) 1px, transparent 1px); background-size: 40px 40px; }
+.map-viewport { flex: 1; position: relative; overflow: hidden; background-image: linear-gradient(var(--grid-color-map) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color-map) 1px, transparent 1px); background-size: 40px 40px; }
 
 .floor-selector { 
     position: absolute; 
@@ -219,8 +219,15 @@ img { max-width: 100%; }
 .ui-action-btn, .floor-btn { padding: 12px 24px; border-radius: 10px; border: none; background: rgba(128,128,128,0.1); color: var(--text-header-map); font-weight: 800; cursor: pointer; transition: 0.2s; }
 .floor-btn.active { background: #4F46E5; color: white; }
 
-.map-canvas-container { width: 1400px; height: 1300px; position: absolute; transform-style: preserve-3d; z-index: 10; }
-.mock-map-graphic { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; }
+/* WALANG 3D SA MAPA. Dating may `perspective` ang .map-viewport at
+   `preserve-3d` ang canvas — kaya perspective matrix ang transform nito,
+   at hindi na matantiya ng Chrome ang laki ng zoom. Iginuguhit nito ang
+   mapa sa 1× at binabanat lang ang larawan: malabo ang teksto at ang mga
+   icon sa anumang zoom maliban sa 1×. Sa patag na 2D transform, muling
+   iginuguhit ng browser ang SVG at teksto sa tunay na laki — laging
+   matalas. Huwag nang ibalik ang perspective/preserve-3d/translate3d. */
+.map-canvas-container { width: 1400px; height: 1300px; position: absolute; z-index: 10; }
+.mock-map-graphic { width: 100%; height: 100%; position: relative; }
 .floor-plate { 
     position: absolute; 
     border-radius: 20px; 
@@ -237,7 +244,7 @@ img { max-width: 100%; }
     box-shadow: none !important; 
 }
 
-.room-node { position: absolute; display: flex; align-items: center; justify-content: center; border-radius: 12px; cursor: pointer; font-weight: 800; font-size: 1rem; text-align: center; padding: 15px; z-index: 10; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 20px rgba(0,0,0,0.2); transform-style: preserve-3d; transition: all 0.2s ease; backdrop-filter: blur(10px); }
+.room-node { position: absolute; display: flex; align-items: center; justify-content: center; border-radius: 12px; cursor: pointer; font-weight: 800; font-size: 1rem; text-align: center; padding: 15px; z-index: 10; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 20px rgba(0,0,0,0.2); transition: all 0.2s ease; backdrop-filter: blur(10px); }
 .room-node:hover { transform: translateY(-5px); filter: brightness(1.2); }
 
 .theme-amber { background: linear-gradient(135deg, #F59E0B, #B45309); color: white; }
@@ -283,7 +290,7 @@ img { max-width: 100%; }
 .light-theme .elevator-doors { background: #94A3B8; }
 .light-theme .parking-area { background: #F1F5F9; border-color: #CBD5E1; color: #0F172A; }
 
-.path-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 25; pointer-events: none; transform-style: preserve-3d; }
+.path-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 25; pointer-events: none; }
 
 .marching-route-line { fill: none; stroke: #EF4444; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 15; filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.6)); animation: routeMarch 0.6s linear infinite; }
 @keyframes routeMarch { to { stroke-dashoffset: -30; } }

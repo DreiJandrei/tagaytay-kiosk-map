@@ -311,31 +311,37 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
+  // Pagbabalik sa idle (welcome) screen at paglilinis ng lahat ng iniwan
+  // ng bisita. Iisa ito para sa 45-segundong timer at sa "Home" na buton
+  // sa header — pareho dapat ang malinis na sasalubong sa susunod.
+  const returnToIdle = () => {
+    setAppState('welcome');
+    setSelectedOfficeKey(null);
+    setSearchQuery("");
+    setShowKeyboard(false);
+    setRouteStep('idle');
+    setDestinationData(null);
+    // Kasama ang gabay sa nililinis. Kung maiiwan itong bukas nang
+    // umalis ang dating bisita, ang gabay pa rin niya ang sasalubong
+    // sa susunod na pipindot — kasama ang pangalan ng opisinang
+    // hinanap ng iba, sa halip na ang listahan ng palapag.
+    setGuide(null);
+    setShowAdmin(false);
+    setShowAdminLogin(false);
+    setAdminPasswordInput('');
+    setShowPassword(false);
+    setShowAbout(false);
+    setShowRecoveryModal(false);
+    setRecoveryPassword('');
+    setCurrentFloor(1);
+    logoutAdmin();
+  };
+
   useEffect(() => {
     let timeout;
     const resetTimer = () => {
       clearTimeout(timeout);
-      timeout = setTimeout(() => {
-        setAppState('welcome');
-        setSelectedOfficeKey(null);
-        setSearchQuery("");
-        setShowKeyboard(false);
-        setRouteStep('idle');
-        setDestinationData(null);
-        // Kasama ang gabay sa nililinis. Kung maiiwan itong bukas nang
-        // umalis ang dating bisita, ang gabay pa rin niya ang sasalubong
-        // sa susunod na pipindot — kasama ang pangalan ng opisinang
-        // hinanap ng iba, sa halip na ang listahan ng palapag.
-        setGuide(null);
-        setShowAdmin(false);
-        setShowAdminLogin(false);
-        setAdminPasswordInput('');
-        setShowPassword(false);
-        setShowAbout(false); 
-        setShowRecoveryModal(false); 
-        setRecoveryPassword('');
-        logoutAdmin(); 
-      }, 45000); 
+      timeout = setTimeout(returnToIdle, 45000);
     };
 
     // ITO ANG PINAKAMALAKING BUTAS NA NAHULI NG EVALUATION.
@@ -836,6 +842,19 @@ export default function App() {
         </div>
 
         <div className="hdr-tools">
+          {/* Pabalik sa idle screen. Sa kiosk lang — walang welcome screen
+              sa telepono ng bisita (tingnan ang timer sa itaas). */}
+          {!isVisitorView && (
+            <button
+              className="hdr-btn"
+              onClick={returnToIdle}
+              title={lang === 'EN' ? 'Back to the start screen' : 'Bumalik sa simula'}
+            >
+              <span className="hdr-btn-glyph">🏠</span>
+              <span className="hdr-btn-label">{lang === 'EN' ? 'Home' : 'Simula'}</span>
+            </button>
+          )}
+
           <button
             className="hdr-btn"
             onClick={() => setShowAbout(true)}

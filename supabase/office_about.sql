@@ -29,11 +29,12 @@
 -- ────────────────────────────────────────────────────────────────
 --   Tolentino Hall, Cultural Hall, Conference Hall, Wedding Hall
 --     — may paliwanag na sila, nasa office_heads.sql. Hindi ginalaw.
---   Lahat ng Comfort Room, at ang apat na UNDER CONSTRUCTION sa ika-4
---   palapag at ang isa sa ika-5
---     — hindi sila tanggapan. "About this Office" ang nakasulat na
---       pamagat sa kiosk, kaya mali itong basahin sa isang CR. Mas
---       malinis na manatiling nakatago ang bahaging iyon para sa kanila.
+--
+-- Wala nang iba. Lahat ng 41 espasyo sa mapa ay may paliwanag na
+-- pagkatapos nito — pati ang mga Comfort Room at ang mga UNDER
+-- CONSTRUCTION na wing. "About this Office" ang nakapirming pamagat sa
+-- kiosk kahit hindi tanggapan ang pinipindot; alamin lang kung saan
+-- iyon papalitan, nasa src/App.jsx ito (hanapin ang .office-about).
 -- ════════════════════════════════════════════════════════════════
 
 

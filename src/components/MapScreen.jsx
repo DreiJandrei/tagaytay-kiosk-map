@@ -24,6 +24,9 @@ export default function MapScreen({
   const viewportRef = useRef(null);
   const isDragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0 });
+  // Habang hinihila, pini-pinch, o ginugulong — walang transition, para
+  // dumikit ang mapa sa daliri. State ito (hindi ref) dahil binabasa sa render.
+  const [isGesturing, setIsGesturing] = useState(false);
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 1024;
 
@@ -198,6 +201,7 @@ export default function MapScreen({
   const handleDragStart = (clientX, clientY) => {
     if (isMobile || staticView) return;
     isDragging.current = true;
+    setIsGesturing(true);
     dragStart.current = { x: clientX - pan.x, y: clientY - pan.y };
   };
 
@@ -207,7 +211,106 @@ export default function MapScreen({
     setPan({ x: clientX - dragStart.current.x, y: clientY - dragStart.current.y });
   };
 
-  const handleDragEnd = () => { isDragging.current = false; };
+  const handleDragEnd = () => { isDragging.current = false; setIsGesturing(false); };
+
+  // ==============================================================
+  // PINCH / PAG-ZOOM SA DALIRI AT TRACKPAD
+  // Ang puntong nasa ilalim ng mga daliri (o ng cursor) ang nananatili
+  // sa lugar habang lumalaki o lumiliit ang mapa — gaya ng Google Maps.
+  // Nasa gitna ng canvas ang transform-origin, kaya ang punto p sa canvas
+  // ay nasa screen sa: pan + C + (p − C) × zoom, kung saan C ang gitna.
+  // ==============================================================
+  const MIN_ZOOM = 0.2;
+  const MAX_ZOOM = 2.5;
+  const clampZoom = (z) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z));
+  const pinch = useRef(null);
+  const wheelIdle = useRef(null);
+  // Huling zoom/pan, para sa wheel listener na nasa labas ng render.
+  const viewRef = useRef({ zoom, pan });
+  useEffect(() => { viewRef.current = { zoom, pan }; }, [zoom, pan]);
+
+  const toLocal = (clientX, clientY) => {
+    const r = viewportRef.current.getBoundingClientRect();
+    return { x: clientX - r.left, y: clientY - r.top };
+  };
+
+  // Bagong pan para manatili sa `screenPt` ang punto ng canvas na naroon
+  // noong `from` pa ang zoom at pan.
+  const panKeeping = (screenPt, from, nextZoom) => {
+    const px = CANVAS_W / 2 + (screenPt.x - from.pan.x - CANVAS_W / 2) / from.zoom;
+    const py = CANVAS_H / 2 + (screenPt.y - from.pan.y - CANVAS_H / 2) / from.zoom;
+    return {
+      x: screenPt.x - CANVAS_W / 2 - (px - CANVAS_W / 2) * nextZoom,
+      y: screenPt.y - CANVAS_H / 2 - (py - CANVAS_H / 2) * nextZoom,
+    };
+  };
+
+  const touchInfo = (touches) => {
+    const a = toLocal(touches[0].clientX, touches[0].clientY);
+    const b = toLocal(touches[1].clientX, touches[1].clientY);
+    return {
+      dist: Math.hypot(b.x - a.x, b.y - a.y) || 1,
+      mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
+    };
+  };
+
+  const handlePinchStart = (touches) => {
+    if (isMobile || staticView) return;
+    handleDragEnd();
+    const { dist, mid } = touchInfo(touches);
+    pinch.current = { dist, mid, zoom, pan };
+    setIsGesturing(true);
+  };
+
+  const handlePinchMove = (touches) => {
+    const start = pinch.current;
+    if (!start) return;
+    const { dist, mid } = touchInfo(touches);
+    const nextZoom = clampZoom(start.zoom * (dist / start.dist));
+    // Ang punto sa ilalim ng unang gitna ng mga daliri ay sumusunod sa
+    // bagong gitna — kaya puwede ring ihila ang mapa gamit ang dalawang daliri.
+    const fromStart = panKeeping(start.mid, start, nextZoom);
+    hasUserMoved.current = true;
+    setZoom(nextZoom);
+    setPan({ x: fromStart.x + (mid.x - start.mid.x), y: fromStart.y + (mid.y - start.mid.y) });
+  };
+
+  // Gulong ng mouse at pinch sa trackpad (ctrlKey + wheel sa Chrome).
+  // Sa addEventListener ito at hindi sa onWheel: passive ang onWheel ng
+  // React, kaya hindi mapipigilan ang pag-zoom ng buong pahina.
+  useEffect(() => {
+    const el = viewportRef.current;
+    if (!el || isMobile || staticView) return;
+    const onWheel = (e) => {
+      e.preventDefault();
+      const from = viewRef.current;
+      const factor = Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0015));
+      const nextZoom = clampZoom(from.zoom * factor);
+      if (nextZoom === from.zoom) return;
+      const nextPan = panKeeping(toLocal(e.clientX, e.clientY), from, nextZoom);
+      viewRef.current = { zoom: nextZoom, pan: nextPan };
+      hasUserMoved.current = true;
+      setIsGesturing(true);
+      clearTimeout(wheelIdle.current);
+      wheelIdle.current = setTimeout(() => setIsGesturing(false), 200);
+      setZoom(nextZoom);
+      setPan(nextPan);
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => {
+      el.removeEventListener('wheel', onWheel);
+      clearTimeout(wheelIdle.current);
+    };
+  }, [isMobile, staticView]);
+
+  // Mga buton na + at −: sa gitna ng nakikitang mapa sila nag-zo-zoom.
+  const zoomBy = (delta) => {
+    const size = measureViewport();
+    const nextZoom = clampZoom(zoom + delta);
+    hasUserMoved.current = true;
+    setPan(panKeeping({ x: size.w / 2, y: size.h / 2 }, { zoom, pan }, nextZoom));
+    setZoom(nextZoom);
+  };
 
   const resetView = () => {
     const next = computeDefaultView();
@@ -417,9 +520,11 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
       }
   }
 
+  // Patag na 2D transform — hindi translate3d. Tingnan ang paliwanag sa
+  // .map-canvas-container sa index.css kung bakit ito ang nagpapatalas.
   const mapTransformStyle = {
-    transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom})`,
-    transition: isDragging.current ? 'none' : 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
+    transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+    transition: isGesturing ? 'none' : 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
   };
 
   const exitBadgeStyle = (leftPos, topPos) => ({
@@ -447,7 +552,7 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
     <main
       ref={viewportRef}
       className="map-viewport"
-      style={{ flexGrow: 1, position: 'relative', overflow: 'hidden', cursor: staticView ? 'default' : (isDragging.current ? 'grabbing' : 'grab') }}
+      style={{ flexGrow: 1, position: 'relative', overflow: 'hidden', cursor: staticView ? 'default' : (isGesturing ? 'grabbing' : 'grab') }}
       onMouseDown={(e) => {
         if(!e.target.closest('.room-node') && !e.target.closest('.floor-selector') && !e.target.closest('.map-legend') && !e.target.closest('.bottom-floor-bar')) {
           handleDragStart(e.clientX, e.clientY);
@@ -456,31 +561,42 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
       onMouseMove={(e) => handleDragMove(e.clientX, e.clientY)}
       onMouseUp={handleDragEnd}
       onMouseLeave={handleDragEnd}
-      // Isang daliri lang ang naghihila. Dati'y `e.touches[0]` agad ito,
-      // kahit ilan ang nakadapo — kaya sa dalawang kamay, sinusundan pa
-      // rin ng mapa ang unang daliri habang sinusubukan ng Chrome na
-      // i-zoom, at parang nagwawala ang buong screen. Ang pangalawang
-      // daliri ay nagtatapos na ngayon ng paghila: iyon ang senyas na
-      // hindi na paghila ang ginagawa.
+      // Isang daliri = paghila. Dalawang daliri = pinch-zoom ng MAPA
+      // (hindi ng buong pahina — pinipigilan iyon ng kioskMode.js at ng
+      // touch-action sa index.css). Sa pangatlong daliri pataas, ang
+      // unang dalawa lang ang sinusundan.
       onTouchStart={(e) => {
-        if (e.touches.length > 1) { handleDragEnd(); return; }
+        if (e.touches.length >= 2) {
+          if (!pinch.current) handlePinchStart(e.touches);
+          return;
+        }
         if(!e.target.closest('.room-node') && !e.target.closest('.floor-selector') && !e.target.closest('.map-legend') && !e.target.closest('.bottom-floor-bar')) {
           handleDragStart(e.touches[0].clientX, e.touches[0].clientY);
         }
       }}
       onTouchMove={(e) => {
-        if (e.touches.length > 1) { handleDragEnd(); return; }
+        if (e.touches.length >= 2) { handlePinchMove(e.touches); return; }
+        if (pinch.current) return;
         handleDragMove(e.touches[0].clientX, e.touches[0].clientY);
       }}
-      onTouchEnd={handleDragEnd}
-      onTouchCancel={handleDragEnd}
+      onTouchEnd={(e) => {
+        if (pinch.current && e.touches.length < 2) {
+          // Tapos na ang pinch. Hindi itinutuloy sa paghila ang natirang
+          // daliri — kung hindi, tatalon ang mapa sa lumang posisyon.
+          pinch.current = null;
+          setIsGesturing(false);
+          return;
+        }
+        if (e.touches.length === 0) handleDragEnd();
+      }}
+      onTouchCancel={() => { pinch.current = null; handleDragEnd(); }}
     >
 
       {/* Walang kontrol sa naka-lock na tanawin — larawan lang ito. */}
       {!staticView && (
         <div className="floor-selector" style={{ position: 'absolute', top: 30, right: 30, zIndex: 10, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => { hasUserMoved.current = true; setZoom(z => Math.min(1.8, z + 0.12)); }}>➕</button>
-          <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => { hasUserMoved.current = true; setZoom(z => Math.max(0.2, z - 0.12)); }}>➖</button>
+          <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => zoomBy(0.15)}>➕</button>
+          <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => zoomBy(-0.15)}>➖</button>
           <button className="ui-action-btn reset-view-btn" style={{ height: '45px', fontSize: '1rem' }} onClick={resetView} title="Recenter map">⟲</button>
         </div>
       )}
@@ -519,10 +635,13 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
                 }}
               >
                 {/* Sa masikip, pinaikli — "6F" imbes na "6th Floor". Mas
-                    mabuting mabasa lahat kaysa maputol ang huli. */}
-                {isTightBar
-                  ? (floor === 1 ? 'GF' : `${floor}F`)
-                  : (floor === 1 ? 'GF / 1st' : `${floor}${floor === 2 ? 'nd' : floor === 3 ? 'rd' : 'th'} Floor`)}
+                    mabuting mabasa lahat kaysa maputol ang huli. Ang
+                    unang palapag ay "Ground" lang sa parehong laki. */}
+                {floor === 1
+                  ? 'Ground'
+                  : isTightBar
+                    ? `${floor}F`
+                    : `${floor}${floor === 2 ? 'nd' : floor === 3 ? 'rd' : 'th'} Floor`}
               </button>
             )
           })}
