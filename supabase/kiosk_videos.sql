@@ -23,6 +23,10 @@ create table if not exists public.kiosk_videos (
   -- Gusto bang may tunog. Tahimik pa rin hangga't walang unang pindot
   -- sa screen — patakaran ito ng browser, hindi kaya nitong laktawan.
   has_sound        boolean     not null default false,
+  -- Saan lalabas sa welcome screen:
+  --   'side'       — sa kard sa gilid (mga anunsyong video mula sa FB)
+  --   'background' — buong screen sa likod (hal. "Welcome to Tagaytay")
+  placement        text        not null default 'side',
   created_at       timestamptz not null default now(),
 
   constraint kiosk_videos_type_check
@@ -59,6 +63,20 @@ begin
   alter table public.kiosk_videos
     add constraint kiosk_videos_orientation_check
     check (orientation in ('landscape', 'portrait'));
+exception
+  when duplicate_object then null;
+end $$;
+
+-- Saan lalabas ang video: sa kard sa gilid, o buong screen sa likod.
+-- Lahat ng dati nang nakatala ay 'side' — doon sila lumalabas noon pa.
+alter table public.kiosk_videos
+  add column if not exists placement text not null default 'side';
+
+do $$
+begin
+  alter table public.kiosk_videos
+    add constraint kiosk_videos_placement_check
+    check (placement in ('side', 'background'));
 exception
   when duplicate_object then null;
 end $$;
@@ -108,3 +126,6 @@ create policy "kiosk_videos_admin_delete"
   for delete
   to authenticated
   using (true);
+
+-- Para makita agad ng API ang bagong hanay (placement).
+notify pgrst, 'reload schema';

@@ -1356,11 +1356,11 @@ img { max-width: 100%; }
 .advisory-tag { color: var(--k-300); margin-right: 16px; font-weight: 900; letter-spacing: 1px; }
 .advisory-dot { margin: 0 30px; color: var(--k-400); }
 
-/* ── Video bilang background ng welcome screen ─────────────────
-   Buong screen ang video, nasa likod ng tint. Ang pamagat at caption
-   nito ay nasa manipis na kard sa ilalim ng hero (.welcome-video-card.is-bg).
-   Walang video? Walang laman ang host — ang larawan ng City Hall pa rin
-   ang background, gaya ng dati. */
+/* ── Background na video ng welcome screen ─────────────────────
+   Ang mga video na naka-"Background" sa Admin Panel (hal. "Welcome to
+   Tagaytay"): buong screen, nasa likod ng tint, walang tunog. Ang kard
+   sa gilid ay para pa rin sa mga anunsyo. Walang background na video?
+   Walang laman ang host — ang larawan ng City Hall pa rin, gaya ng dati. */
 .welcome-video-host {
   position: absolute; inset: 0;
   overflow: hidden;
@@ -1416,53 +1416,6 @@ img { max-width: 100%; }
 .welcome-screen:has(.welcome-video-bg) .welcome-glow { opacity: .3; animation: none; }
 .welcome-screen:has(.welcome-video-bg) :is(.welcome-topbar, .welcome-republic, .welcome-tagline, .welcome-subprompt) {
   text-shadow: 0 2px 12px rgba(2,10,26,.95);
-}
-
-/* Ang naiwang kard: pamagat, caption, tunog at tuldok — walang frame. */
-.welcome-video-card.is-bg {
-  flex-shrink: 0;
-  width: 100%; max-width: 780px;
-  align-self: center;
-  gap: 6px; padding: 14px 24px;
-  background: rgba(7,18,35,.58);
-}
-.welcome-video-card.is-bg .welcome-video-head { padding-bottom: 0; border-bottom: 0; }
-.welcome-video-card.is-bg .welcome-video-head h2 { font-size: 1.2rem; }
-.welcome-video-card.is-bg .welcome-video-icon { font-size: 1.4rem; }
-.welcome-video-card.is-bg .welcome-video-sound { width: 46px; height: 46px; font-size: 1.15rem; }
-/* Tatlo na ang naghahati sa taas: hero, kard, at anunsyo. Sumusunod sa
-   taas ng screen ang laki ng hero (vh) — kasya sa 1080p na TV at sa
-   720p na laptop nang hindi nagpapatong ang hero at ang kard. */
-.welcome-main:has(.welcome-video-card.is-bg) .welcome-hero {
-  --h-seal: clamp(64px, 12vh, 170px);
-  --h-seal-img: calc(var(--h-seal) * .84);
-  --h-republic: clamp(.7rem, 1.5vh, 1.1rem);
-  --h-title: clamp(1.3rem, 4vh, 3.2rem);
-  --h-accent: clamp(2rem, 6.4vh, 5.2rem);
-  --h-tagline: clamp(.75rem, 1.6vh, 1.25rem);
-  --h-tagline-gap: clamp(10px, 2.6vh, 36px);
-  --h-prompt: clamp(.95rem, 2vh, 1.6rem);
-  --h-prompt-pad: clamp(9px, 1.6vh, 20px) clamp(24px, 3.6vw, 58px);
-  padding: 0;
-}
-/* Pandak na laptop, video sa background: ang palamuting guhit ang unang
-   isinusuko, at sumisikip ang mga puwang — ang mismong teksto ay hindi. */
-@media (max-height: 700px) {
-  .welcome-main:has(.welcome-video-card.is-bg) :is(.welcome-rule) { display: none; }
-  .welcome-main:has(.welcome-video-card.is-bg) .welcome-republic { margin: 8px 0 4px; }
-  .welcome-main:has(.welcome-video-card.is-bg) .welcome-title { margin-bottom: 10px; }
-  .welcome-main:has(.welcome-video-card.is-bg) .welcome-subprompt { margin-top: 6px; }
-  .welcome-main:has(.welcome-video-card.is-bg) .welcome-prompt-hand { font-size: 1.3rem; }
-}
-@media (max-height: 900px) {
-  .welcome-video-card.is-bg { padding: 10px 20px; }
-  .welcome-video-card.is-bg .welcome-video-head h2 { font-size: 1rem; }
-  .welcome-video-card.is-bg .welcome-video-sound { width: 40px; height: 40px; }
-}
-@media (max-height: 800px) {
-  .welcome-main:has(.welcome-video-card.is-bg) { gap: 10px; }
-  /* Nasa "1/2" na sa ulo ng kard ang posisyon — ang tuldok ang isinusuko. */
-  .welcome-video-card.is-bg .welcome-video-nav { display: none; }
 }
 
 @keyframes rise { from { opacity:0; transform: translateY(26px) } to { opacity:1; transform: translateY(0) } }

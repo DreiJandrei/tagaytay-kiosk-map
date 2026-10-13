@@ -12,11 +12,6 @@ export default function WelcomeScreen({ onStart }) {
   // WelcomeVideo). State at hindi ref: kailangang mag-render ulit ang
   // video kapag handa na ang node na ito.
   const [videoHost, setVideoHost] = useState(null);
-  // Kung saan ilalagay ang video — pinipili sa Admin Panel:
-  //   'side'       — kard sa kanan ng seal at pamagat (ang dati)
-  //   'background' — buong screen sa likod; pamagat at caption sa ilalim ng hero
-  const [videoPlacement, setVideoPlacement] = useState('side');
-  const isBackground = videoPlacement === 'background';
 
   useEffect(() => {
     const fetchAnnouncement = async () => {
@@ -27,7 +22,6 @@ export default function WelcomeScreen({ onStart }) {
           const parsed = JSON.parse(text);
           setAdvisory(parsed.advisory || "");
           setAnnouncement(parsed.announcement || "");
-          setVideoPlacement(parsed.videoPlacement === 'background' ? 'background' : 'side');
         } catch (e) {
           // Backward compatibility kung normal text lang ang nasa database
           setAdvisory(text);
@@ -65,11 +59,11 @@ export default function WelcomeScreen({ onStart }) {
         style={{ backgroundImage: `url(${cityhallBg})` }}
         aria-hidden="true"
       />
-      {/* Layer 1b: ang video ng lungsod, buong screen. Nakapatong sa
-          larawan ng City Hall — iyon ang lumalabas kapag walang video. */}
-      {isBackground && (
-        <div className="welcome-video-host" ref={setVideoHost} aria-hidden="true" />
-      )}
+      {/* Layer 1b: ang background na video (hal. "Welcome to Tagaytay"),
+          buong screen. Nakapatong sa larawan ng City Hall — iyon ang
+          lumalabas kapag walang naka-"Background" sa Admin Panel. */}
+      <div className="welcome-video-host" ref={setVideoHost} aria-hidden="true" />
+      {videoHost && <WelcomeVideo placement="background" backgroundHost={videoHost} />}
       <div className="welcome-tint" aria-hidden="true" />
       <div className="welcome-vignette" aria-hidden="true" />
       <div className="welcome-glow" aria-hidden="true" />
@@ -120,19 +114,13 @@ export default function WelcomeScreen({ onStart }) {
           <p className="welcome-subprompt">Pindutin ang screen upang magsimula</p>
         </div>
 
-        {/* Kanan: mga video ng lungsod (kapag 'side'). Nagiging magkatabi
-            ang hero at ang video kapag may laman ang slot na ito. */}
-        {!isBackground && (
-          <div className="welcome-board-slot">
-            <WelcomeVideo />
-          </div>
-        )}
-
+        {/* Kanan: mga anunsyong video (naka-"Anunsyo" sa Admin Panel).
+            Nagiging magkatabi ang hero at ang video kapag may laman ito. */}
+        <div className="welcome-board-slot">
+          <WelcomeVideo placement="side" />
         </div>
 
-        {/* Kapag 'background': nasa likod na ang mismong video. Dito
-            naiiwan ang pamagat at caption nito, sa ilalim ng hero. */}
-        {isBackground && videoHost && <WelcomeVideo backgroundHost={videoHost} />}
+        </div>
 
         {/* Ilalim: nakasentro ang opisyal na anunsyo sa ilalim ng hero at
             ng video — hindi na ito nakakabit sa kanang hanay. */}

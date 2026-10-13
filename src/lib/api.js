@@ -374,19 +374,27 @@ export const saveKioskVideo = async (video) => {
       is_active: video.is_active !== false,
       orientation: video.orientation === 'portrait' ? 'portrait' : 'landscape',
       has_sound: video.has_sound === true,
+      placement: video.placement === 'background' ? 'background' : 'side',
     };
 
-    if (video.id) {
-      const { data, error } = await supabase
-        .from('kiosk_videos').update(payload).eq('id', video.id).select().single();
-      if (error) throw error;
-      return data;
-    }
+    const write = (fields) => (video.id
+      ? supabase.from('kiosk_videos').update(fields).eq('id', video.id).select().single()
+      : supabase.from('kiosk_videos').insert([fields]).select().single());
 
-    const { data, error } = await supabase
-      .from('kiosk_videos').insert([payload]).select().single();
+    let { data, error } = await write(payload);
+
+    // Hindi pa napapatakbo ulit ang supabase/kiosk_videos.sql — wala pang
+    // hanay para sa `placement`. Ise-save pa rin ang lahat ng iba (lalabas
+    // ito sa gilid, gaya ng dati), at sasabihan ang admin.
+    let placementSkipped = false;
+    if (error && isMissingColumn(error, ['placement'])) {
+      /* eslint-disable-next-line no-unused-vars */
+      const { placement, ...withoutPlacement } = payload;
+      ({ data, error } = await write(withoutPlacement));
+      placementSkipped = !error;
+    }
     if (error) throw error;
-    return data;
+    return { ...data, placementSkipped };
   } catch (error) {
     console.error('Save Kiosk Video Error:', error);
     throw error;

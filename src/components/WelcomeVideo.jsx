@@ -22,12 +22,15 @@ const signatureOf = (list) =>
     v.duration_seconds, v.orientation, v.has_sound,
   ].join('~')).join('|');
 
-// `backgroundHost` — kapag may ibinigay na DOM node, doon (sa likod ng
-// buong welcome screen) iginuguhit ang mismong video, at ang kard na
-// naiiwan dito ay pamagat, caption, tunog at tuldok na lang. Kapag wala,
-// nasa loob ng kard ang video gaya ng dati.
-export default function WelcomeVideo({ backgroundHost = null }) {
-  const isBackground = !!backgroundHost;
+// Dalawang listahan, depende sa "Saan lalabas" ng bawat video sa Admin Panel:
+//   placement="side"       — ang kard sa gilid ng pamagat (mga anunsyo)
+//   placement="background" — buong screen sa likod ng welcome screen, sa
+//                            `backgroundHost`. Walang kard at laging walang
+//                            tunog: palamuti ito, at ang kard sa gilid ang
+//                            may-ari ng tunog.
+// Ang tala na wala pang `placement` (bago patakbuhin ang SQL) ay 'side'.
+export default function WelcomeVideo({ placement = 'side', backgroundHost = null }) {
+  const isBackground = placement === 'background' && !!backgroundHost;
   const [videos, setVideos] = useState([]);
   const [index, setIndex] = useState(0);
   const [cycle, setCycle] = useState(0);
@@ -48,15 +51,16 @@ export default function WelcomeVideo({ backgroundHost = null }) {
     let alive = true;
 
     const load = async () => {
-      const list = await getKioskVideos({ activeOnly: true });
+      const all = await getKioskVideos({ activeOnly: true });
       if (!alive) return;
+      const list = all.filter((v) => (v.placement === 'background' ? 'background' : 'side') === placement);
       setVideos((prev) => (signatureOf(prev) === signatureOf(list) ? prev : list));
     };
 
     load();
     const timer = setInterval(load, REFRESH_MS);
     return () => { alive = false; clearInterval(timer); };
-  }, []);
+  }, [placement]);
 
   // Isang hakbang pasulong o paurong. Sa pabalik, idinaragdag muna ang
   // haba bago ang modulo — kung hindi, negatibo ang lalabas na posisyon.
@@ -97,7 +101,7 @@ export default function WelcomeVideo({ backgroundHost = null }) {
 
   // May tunog bang maaaring buksan — ito ang nagpapakita ng buton.
   // Tahimik ang larawan, kaya walang buton doon kahit anong nakatakda.
-  const soundAvailable = !!current?.has_sound && type !== 'facebook' && !isImage;
+  const soundAvailable = !isBackground && !!current?.has_sound && type !== 'facebook' && !isImage;
   const wantsSound = soundChoice !== null ? soundChoice : !!current?.has_sound;
   const soundOn = soundAvailable && wantsSound && !soundBlocked;
 
@@ -272,15 +276,15 @@ export default function WelcomeVideo({ backgroundHost = null }) {
       )
     : null;
 
+  if (isBackground) return backgroundLayer;
+
   return (
     // Buong kard ang tinatanggap ng hagod — pati pamagat, caption at
     // tuldok. Click-through ang frame (`pointer-events: none`), kaya
     // dumadaan pababa rito ang bawat pindot sa mismong video.
-    <>
-    {backgroundLayer}
     <div
       className={
-        `welcome-video-card${isBackground ? ' is-bg' : ''}${portrait && !isBackground ? ' is-portrait' : ''}` +
+        `welcome-video-card${portrait ? ' is-portrait' : ''}` +
         `${swipeable ? ' is-swipeable' : ''}${dragX ? ' is-dragging' : ''}`
       }
       style={dragX ? { transform: `translateX(${dragX}px)` } : undefined}
@@ -308,11 +312,9 @@ export default function WelcomeVideo({ backgroundHost = null }) {
         )}
       </div>
 
-      {!isBackground && (
-        <div className={`welcome-video-frame${portrait ? ' is-portrait' : ''}`}>
-          {media}
-        </div>
-      )}
+      <div className={`welcome-video-frame${portrait ? ' is-portrait' : ''}`}>
+        {media}
+      </div>
 
       {caption && <p className="welcome-video-caption">{caption}</p>}
 
@@ -329,6 +331,5 @@ export default function WelcomeVideo({ backgroundHost = null }) {
         </div>
       )}
     </div>
-    </>
   );
 }

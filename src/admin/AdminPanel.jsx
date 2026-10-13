@@ -14,7 +14,7 @@ import {
 const BLANK_VIDEO = {
   id: null, title: '', caption: '', source_url: '',
   video_type: 'facebook', duration_seconds: 45, sort_order: 0, is_active: true,
-  orientation: 'landscape', has_sound: false,
+  orientation: 'landscape', has_sound: false, placement: 'side',
 };
 
 // Hangganan ng haba ng dalawang teksto sa welcome screen. Hindi ito basta
@@ -60,10 +60,6 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
 
   const [advisoryText, setAdvisoryText] = useState('');
   const [announcementText, setAnnouncementText] = useState('');
-  // Kung saan lalabas ang video sa welcome screen: 'side' (katabi ng seal
-  // at pamagat — ang dati) o 'background' (buong screen sa likod). Kasama
-  // ito sa iisang row ng advisory at announcement.
-  const [videoPlacement, setVideoPlacement] = useState('side');
 
   // Alin sa dalawang teksto ang binubuksan sa lumulutang na editor:
   // 'announcement', 'advisory', o null kapag sarado. Hiwalay ang draft sa
@@ -110,7 +106,6 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
         const parsed = JSON.parse(text);
         setAdvisoryText(parsed.advisory || '');
         setAnnouncementText(parsed.announcement || '');
-        setVideoPlacement(parsed.videoPlacement === 'background' ? 'background' : 'side');
       } catch (e) {
         setAdvisoryText(text);
       }
@@ -287,15 +282,28 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
 
     setIsSaving(true);
     try {
-      await saveKioskVideo(videoForm);
+      const saved = await saveKioskVideo(videoForm);
       await loadVideos();
       // Pagsasara ng editor: ang bagong row sa listahan — kasama ang
       // LIVE/OFF na pill — ang nagpapatunay na natanggap ang pagbabago.
       setVideoForm(null);
-      alert(t(
-        '🎬 Saved! It will show up on the welcome screen within a minute.',
-        '🎬 Nai-save na! Lalabas na ito sa welcome screen sa loob ng isang minuto.',
-      ));
+      if (saved?.placementSkipped) {
+        alert(t(
+          'Saved — BUT IT WILL STAY IN THE SIDE CARD.\n\n'
+          + 'The database has no column for "Where it shows" yet. Open Supabase → SQL Editor '
+          + '→ New query, paste all of supabase/kiosk_videos.sql, and Run. Then save this '
+          + 'video again.',
+          'NA-SAVE — PERO SA KARD SA GILID PA RIN ITO LALABAS.\n\n'
+          + 'Wala pang hanay para sa "Saan lalabas" sa database. Buksan ang Supabase → SQL '
+          + 'Editor → New query, i-paste ang buong supabase/kiosk_videos.sql, tapos Run. '
+          + 'Pagkatapos, i-save itong muli.',
+        ));
+      } else {
+        alert(t(
+          '🎬 Saved! It will show up on the welcome screen within a minute.',
+          '🎬 Nai-save na! Lalabas na ito sa welcome screen sa loob ng isang minuto.',
+        ));
+      }
     } catch (error) {
       alert(t(
         `❌ Failed to save video.\n\n${error.message || error}`,
@@ -465,25 +473,6 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     setAnnEditor(null);
   };
 
-  // Agad na sine-save pagkapili — walang hiwalay na Save na buton.
-  const handlePlacementChange = async (value) => {
-    const previous = videoPlacement;
-    setVideoPlacement(value);
-    try {
-      await updateAnnouncement(JSON.stringify({
-        advisory: advisoryText,
-        announcement: announcementText,
-        videoPlacement: value,
-      }));
-    } catch {
-      setVideoPlacement(previous);
-      alert(t(
-        'Could not save where the video goes. Check the internet connection.',
-        'Hindi na-save kung saan ilalagay ang video. Tingnan ang koneksyon sa internet.',
-      ));
-    }
-  };
-
   const handleSaveAnnouncement = async (e) => {
     e.preventDefault();
     // Iisang row lang sa database ang kinalalagyan ng dalawang teksto,
@@ -495,7 +484,6 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     const next = {
       advisory: annEditor === 'advisory' ? draft : advisoryText,
       announcement: annEditor === 'announcement' ? draft : announcementText,
-      videoPlacement,
     };
 
     setIsSaving(true);
@@ -694,8 +682,9 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
               {EN ? (
                 <>
                   3 · Paste the link of a <strong>public</strong> Facebook post or a YouTube video —
-                  or upload a video file or a <strong>picture</strong>. These play in turn beside the
-                  announcement board. A picture stays on screen for the number of
+                  or upload a video file or a <strong>picture</strong>. Each one shows either in the
+                  card beside the title, or as the full-screen background — pick it in
+                  <strong> “Where it shows”</strong>. A picture stays on screen for the number of
                   <strong> seconds you set</strong> below, then the next one comes up.
                   Up to <strong>{MAX_VIDEOS} items</strong> — past that, the wait before the first
                   one comes around again is too long.
@@ -703,32 +692,15 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
               ) : (
                 <>
                   3 · I-paste ang link ng <strong>public</strong> na Facebook post o YouTube video —
-                  o mag-upload ng video file o <strong>larawan</strong>. Salitan itong ipapalabas
-                  katabi ng announcement board. Ang larawan ay nananatili sa screen sa
+                  o mag-upload ng video file o <strong>larawan</strong>. Bawat isa ay lalabas sa kard
+                  sa gilid ng pamagat, o bilang background na buong screen — piliin sa
+                  <strong> “Saan lalabas”</strong>. Ang larawan ay nananatili sa screen sa
                   <strong> bilang ng segundong itinakda mo</strong> sa ibaba, tapos susunod na ang
                   kasunod. Hanggang <strong>{MAX_VIDEOS} na tala</strong> lang — sa sobra pa riyan,
                   masyado nang matagal bago maulit ang una.
                 </>
               )}
             </p>
-
-            <div>
-              <label className="k-label">{t('Where the video goes', 'Saan ilalagay ang video')}</label>
-              <select
-                className="k-select"
-                value={videoPlacement}
-                onChange={(e) => handlePlacementChange(e.target.value)}
-              >
-                <option value="side">{t('Beside the title (card on the right)', 'Sa gilid ng pamagat (kard sa kanan)')}</option>
-                <option value="background">{t('Full-screen background', 'Buong screen sa background')}</option>
-              </select>
-              <p className="adm-hint">
-                {t(
-                  'Saved right away. The welcome screen follows within a minute.',
-                  'Agad itong sine-save. Susunod ang welcome screen sa loob ng isang minuto.',
-                )}
-              </p>
-            </div>
 
             <div className="adm-vid-list">
                   {videos.length === 0 && (
@@ -754,6 +726,10 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                           {video.orientation === 'portrait'
                             ? t('portrait', 'patayo')
                             : t('landscape', 'pahiga')}
+                          {' · '}
+                          {video.placement === 'background'
+                            ? t('background', 'background')
+                            : t('side card', 'kard sa gilid')}
                         </span>
                       </span>
                       <span className={`adm-vid-pill${video.is_active ? ' is-on' : ''}`}>
@@ -974,6 +950,26 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                       onChange={(e) => setVideoField('sort_order', e.target.value)}
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="k-label">{t('Where it shows', 'Saan lalabas')}</label>
+                  <select
+                    className="k-select"
+                    value={videoForm.placement === 'background' ? 'background' : 'side'}
+                    onChange={(e) => setVideoField('placement', e.target.value)}
+                  >
+                    <option value="side">{t('Announcement — in the card beside the title', 'Anunsyo — sa kard sa gilid ng pamagat')}</option>
+                    <option value="background">{t('Background — full screen behind everything', 'Background — buong screen sa likod')}</option>
+                  </select>
+                  <p className="adm-hint">
+                    {t(
+                      'Announcement: Facebook posts and notices, shown in the card. Background: a '
+                      + 'city video like “Welcome to Tagaytay” that plays behind the title, always muted.',
+                      'Anunsyo: mga post at abiso mula sa FB, sa kard sa gilid. Background: video ng '
+                      + 'lungsod gaya ng “Welcome to Tagaytay”, tumutugtog sa likod ng pamagat at laging walang tunog.',
+                    )}
+                  </p>
                 </div>
 
                 <div>
