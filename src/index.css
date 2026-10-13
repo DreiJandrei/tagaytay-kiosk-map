@@ -3026,6 +3026,14 @@ img { max-width: 100%; }
   font-weight: 800;
   text-decoration: underline;
 }
+/* Nagpapahinga ang reset link: countdown, hindi link — walang guhit sa
+   ilalim, at hindi "wait" ang cursor (hindi ito naglo-load). */
+.k-btn--link:disabled {
+  opacity: 1; cursor: not-allowed;
+  text-decoration: none;
+  color: var(--ui-gold);
+  font-variant-numeric: tabular-nums;
+}
 .k-btn-row { display: flex; gap: 10px; }
 
 .k-field { margin-bottom: 18px; text-align: left; }

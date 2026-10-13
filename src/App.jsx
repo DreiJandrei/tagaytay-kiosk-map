@@ -134,9 +134,29 @@ const isWrongPassword = (error) =>
   error?.code === 'invalid_credentials'
   || /invalid login credentials/i.test(error?.message || '');
 
+// ── Pahinga ng "Forgot password" ─────────────────────────────────
+// May limitasyon ang Supabase sa dami ng email kada oras. Kapag naabot,
+// hindi nito sinasabi kung kailan puwede ulit — kaya isang oras ang
+// tantiya (kada oras ang bilang nila). Kung may eksaktong segundo sa
+// mensahe ("only request this after 47 seconds"), iyon ang sinusunod.
+const RESET_COOLDOWN_KEY = 'tagaytay-reset-cooldown';
+const RESET_LIMIT_WAIT_MS = 60 * 60 * 1000;
+// Pagkatapos ng matagumpay na padala — ang default na pagitan ng Supabase.
+const RESET_AFTER_SEND_MS = 60 * 1000;
+
+const readResetCooldown = () => {
+  try { return Number(localStorage.getItem(RESET_COOLDOWN_KEY)) || 0; } catch { return 0; }
+};
+const writeResetCooldown = (until) => {
+  try { localStorage.setItem(RESET_COOLDOWN_KEY, String(until)); } catch { /* walang storage */ }
+};
+
 const formatCountdown = (ms) => {
   const total = Math.max(0, Math.ceil(ms / 1000));
-  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const sec = String(total % 60).padStart(2, '0');
+  return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`;
 };
 
 // Keyboard para sa mga auth modal. Hiwalay na component para ang pag-unmount
@@ -221,15 +241,24 @@ export default function App() {
   // para sariwa agad ang bilang pagbukas ng login.
   const [guardNow, setGuardNow] = useState(() => Date.now());
   const loginLocked = loginGuard.lockUntil > guardNow;
+  const [resetCooldownUntil, setResetCooldownUntil] = useState(readResetCooldown);
+  const resetLocked = resetCooldownUntil > guardNow;
+  const startResetCooldown = (ms) => {
+    const until = Date.now() + ms;
+    setResetCooldownUntil(until);
+    writeResetCooldown(until);
+    setGuardNow(Date.now());
+    return until;
+  };
   const updateLoginGuard = (next) => { setLoginGuard(next); writeLoginGuard(next); };
 
-  // Countdown ng lock sa admin login — tumatakbo lang habang bukas ang
-  // login at naka-lock pa.
+  // Countdown ng lock sa admin login at ng pahinga ng reset — tumatakbo
+  // lang habang bukas ang login at may binibilang pa.
   useEffect(() => {
-    if (!showAdminLogin || !loginLocked) return;
+    if (!showAdminLogin || !(loginLocked || resetLocked)) return;
     const id = setInterval(() => setGuardNow(Date.now()), 1000);
     return () => clearInterval(id);
-  }, [showAdminLogin, loginLocked]);
+  }, [showAdminLogin, loginLocked, resetLocked]);
   const [showAbout, setShowAbout] = useState(false); 
 
   const [routeStep, setRouteStep] = useState('idle');
@@ -522,8 +551,11 @@ export default function App() {
   };
 
   const handleForgotPassword = async () => {
+    // Nagpapahinga pa: hindi na ipinapadala — lalo lang tatagal ang hintay.
+    if (resetCooldownUntil > Date.now()) return;
     try {
       await resetPasswordEmail('tagaytaykiosk@gmail.com');
+      startResetCooldown(RESET_AFTER_SEND_MS);
       alert(lang === 'EN'
         ? '✅ Recovery link sent to tagaytaykiosk@gmail.com!\n\nPlease check the Gmail inbox to set a new password.'
         : '✅ Naipadala ang recovery link sa tagaytaykiosk@gmail.com!\n\nTingnan ang Gmail inbox para maglagay ng bagong password.');
@@ -534,15 +566,20 @@ export default function App() {
       const isRateLimited = code === 'over_email_send_rate_limit' || error?.status === 429;
 
       if (isRateLimited) {
+        // Eksaktong segundo kung ibinigay; kung hindi, isang oras.
+        const seconds = Number((error?.message || '').match(/after (\d+) seconds?/i)?.[1]);
+        const until = startResetCooldown(seconds > 0 ? seconds * 1000 : RESET_LIMIT_WAIT_MS);
+        const at = new Date(until).toLocaleTimeString(lang === 'EN' ? 'en-PH' : 'fil-PH', { hour: 'numeric', minute: '2-digit' });
+        const wait = formatCountdown(until - Date.now());
         alert(lang === 'EN'
           ? '⏳ Too many reset requests.\n\n' +
-            'Supabase limits how many emails can be sent per hour, and that limit ' +
-            'has been reached. Wait about an hour before trying again.\n\n' +
-            '(Supabase: email rate limit exceeded)'
+            'Supabase limits how many emails can be sent, and that limit has been reached.\n\n' +
+            `You can try again in ${wait} (around ${at}). The countdown is shown on the ` +
+            '"Forgot password" button.'
           : '⏳ Sobrang dami nang reset request.\n\n' +
-            'May limitasyon ang Supabase sa dami ng email na maipapadala kada oras, ' +
-            'at naabot na ito. Maghintay ng mga isang oras bago subukan ulit.\n\n' +
-            '(Supabase: email rate limit exceeded)'
+            'May limitasyon ang Supabase sa dami ng email na maipapadala, at naabot na ito.\n\n' +
+            `Puwede ulit pagkalipas ng ${wait} (bandang ${at}). Makikita ang countdown sa ` +
+            '"Forgot password" na buton.'
         );
         return;
       }
@@ -1702,8 +1739,12 @@ export default function App() {
                 </button>
               </div>
 
-              <button type="button" className="k-btn k-btn--link" onClick={handleForgotPassword}>
-                {lang === 'EN'
+              <button type="button" className="k-btn k-btn--link" onClick={handleForgotPassword} disabled={resetLocked}>
+                {resetLocked
+                  ? (lang === 'EN'
+                    ? `⏳ Reset link: try again in ${formatCountdown(resetCooldownUntil - guardNow)}`
+                    : `⏳ Reset link: puwede ulit sa loob ng ${formatCountdown(resetCooldownUntil - guardNow)}`)
+                  : lang === 'EN'
                   ? 'Forgot password? Send reset link'
                   : 'Nakalimutan ang password? Magpadala ng reset link'}
               </button>
