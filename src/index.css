@@ -985,18 +985,15 @@ img { max-width: 100%; }
    ang mga variable na ito lang ang pinapalitan — hindi na kailangang
    ulitin ang bawat panuntunan sa ibaba. */
 .welcome-hero {
-  /* Sumusunod sa taas ng screen (vh): ganito pa rin ang laki sa 1080p na
-     TV ng kiosk, pero umuurong sa pandak na laptop para hindi pumatong
-     ang hero sa anunsyo sa ilalim. */
-  --h-seal: clamp(90px, 17.6vh, 190px);
-  --h-seal-img: calc(var(--h-seal) * .84);
-  --h-republic: clamp(.75rem, 1.7vh, 1.15rem);
-  --h-title: clamp(1.6rem, 5vh, 3.4rem);
-  --h-accent: clamp(2.5rem, 8.3vh, 5.6rem);
-  --h-tagline: clamp(.8rem, 2vh, 1.35rem);
-  --h-tagline-gap: clamp(14px, 3.9vh, 42px);
-  --h-prompt: clamp(1rem, 2.5vh, 1.7rem);
-  --h-prompt-pad: clamp(11px, 2vh, 22px) clamp(28px, 3.8vw, 62px);
+  --h-seal: 190px;
+  --h-seal-img: 160px;
+  --h-republic: 1.15rem;
+  --h-title: 3.4rem;
+  --h-accent: 5.6rem;
+  --h-tagline: 1.35rem;
+  --h-tagline-gap: 42px;
+  --h-prompt: 1.7rem;
+  --h-prompt-pad: 22px 62px;
 
   flex: 1; min-width: 0;
   display: flex; flex-direction: column;
@@ -1359,114 +1356,11 @@ img { max-width: 100%; }
 .advisory-tag { color: var(--k-300); margin-right: 16px; font-weight: 900; letter-spacing: 1px; }
 .advisory-dot { margin: 0 30px; color: var(--k-400); }
 
-/* ══ Welcome screen: tatlong anyo ═══════════════════════════════
-   Ang WelcomeVideo ang nagsasabi kung alin, batay sa tumutugtog:
-     .layout-none        walang media — hero sa gitna, anunsyo sa ilalim
-     .layout-center      larawan o patayong video — hero sa KALIWA,
-                         media sa GITNA, anunsyo sa KANAN
-     .layout-fullscreen  pahigang video — buong screen sa likod; wala ang
-                         hero at anunsyo
-   Sa center at fullscreen, ang "Touch the screen to start" ay nasa
-   .welcome-dock: nakapatong sa gitnang ibaba, sa ibabaw ng advisory. */
-.welcome-screen {
-  --dock-bottom: 28px;    /* layo ng dock mula sa ibaba ng screen */
-  --dock-h: 132px;        /* taas ng prompt + subprompt sa dock */
-  --top-reserve: 104px;   /* padding sa itaas + topbar */
-  --card-chrome: 150px;   /* ulo, caption at tuldok ng kard sa gitna */
-  /* Ang matitirang taas para sa mismong larawan o video sa gitna. */
-  --stage-h: calc(100vh - var(--top-reserve) - var(--dock-bottom) - var(--dock-h) - var(--card-chrome));
-}
-.welcome-screen.has-advisory { --dock-bottom: 86px; }
-@media (max-height: 900px) {
-  .welcome-screen { --dock-h: 104px; --top-reserve: 72px; --card-chrome: 112px; }
-}
-
-.welcome-prompt-group { display: flex; flex-direction: column; align-items: center; }
-/* Mga pinagguguhitan ng WelcomeVideo. `contents`: ang kard mismo ang
-   nagiging bahagi ng hanay, hindi ang balot nito. */
-.welcome-center-host,
-.welcome-dock-host { display: contents; }
-
-/* ── Dock: ang prompt na nakapatong sa ibaba ── */
-.welcome-dock {
-  position: absolute; left: 0; right: 0; bottom: var(--dock-bottom);
-  z-index: 6;
-  display: flex; flex-direction: column; align-items: center; gap: 14px;
-  padding: 0 24px;
-  --h-prompt: clamp(1rem, 2.3vh, 1.6rem);
-  --h-prompt-pad: clamp(11px, 1.8vh, 20px) clamp(28px, 3.6vw, 58px);
-}
-.layout-none .welcome-dock { display: none; }
-.welcome-dock .welcome-subprompt {
-  margin-top: 10px;
-  text-shadow: 0 2px 10px rgba(2,10,26,.95);
-}
-/* May puwang sa ilalim ng nilalaman para sa dock — hindi ito natatakpan. */
-.layout-center .welcome-content { padding-bottom: calc(var(--dock-bottom) + var(--dock-h)); }
-
-/* ── Center: hero | media | anunsyo ── */
-.layout-center .welcome-columns {
-  flex-direction: row;
-  align-items: center; justify-content: center;
-  gap: clamp(24px, 3vw, 56px);
-}
-/* Walang anunsyo? May bakanteng kanan pa rin, para nasa gitna ang media. */
-.layout-center .welcome-columns:not(:has(.welcome-board))::after {
-  content: ''; flex: 1 1 0;
-}
-.layout-center .welcome-hero {
-  flex: 1 1 0; min-width: 0; padding: 0;
-  --h-seal: clamp(76px, 15vh, 170px);
-  --h-republic: clamp(.68rem, min(1.5vh, .9vw), 1.05rem);
-  --h-title: clamp(1.2rem, min(4.2vh, 2.3vw), 3rem);
-  --h-accent: clamp(1.9rem, min(7vh, 4vw), 5rem);
-  --h-tagline: clamp(.68rem, min(1.7vh, .95vw), 1.2rem);
-  --h-tagline-gap: 0px;
-}
-.layout-center .welcome-republic { letter-spacing: .35em; }
-.layout-center .welcome-tagline { letter-spacing: .2em; }
-.welcome-board.is-side {
-  flex: 1 1 0; min-width: 0;
-  max-width: 520px; max-height: 100%;
-  padding: 22px 26px;
-}
-.welcome-board.is-side .welcome-board-head h2 { font-size: clamp(1rem, 1.6vw, 1.4rem); }
-.welcome-board.is-side .welcome-board-body {
-  font-size: clamp(.9rem, 1.1vw, 1.1rem);
-  -webkit-line-clamp: 10; line-clamp: 10;
-}
-
-/* Ang kard sa gitna — kasinlapad ng larawan o video, hindi ng caption. */
-.welcome-video-card.is-center {
-  flex: 0 0 auto; align-self: center;
-  width: auto; min-width: 340px; max-width: 46vw;
-  gap: 10px; padding: 14px 16px;
-}
-.welcome-video-card.is-center :is(.welcome-video-head, .welcome-video-caption, .welcome-video-nav) {
-  width: 0; min-width: 100%;
-}
-.welcome-video-card.is-center .welcome-video-head { padding-bottom: 10px; }
-.welcome-video-card.is-center .welcome-video-head h2 { font-size: 1.1rem; }
-.welcome-video-card.is-center .welcome-video-hint { display: none; }
-.welcome-video-card.is-center .welcome-video-frame.is-portrait {
-  aspect-ratio: 9 / 16;
-  height: var(--stage-h); width: auto;
-}
-/* Larawan: sariling hugis nito ang sinusunod — parisukat man o pahiga. */
-.welcome-video-card.is-center .welcome-video-frame.is-image {
-  aspect-ratio: auto; height: auto; width: auto;
-  background: transparent; border: 0;
-  display: flex; justify-content: center;
-}
-.welcome-video-card.is-center .welcome-video-frame.is-image img {
-  position: static; display: block;
-  height: var(--stage-h); width: auto;
-  max-width: calc(46vw - 34px);
-  object-fit: contain; background: transparent;
-  border-radius: 12px;
-}
-
-/* ── Fullscreen: pahigang video sa buong screen ── */
+/* ── Video bilang background ng welcome screen ─────────────────
+   Buong screen ang video, nasa likod ng tint. Ang pamagat at caption
+   nito ay nasa manipis na kard sa ilalim ng hero (.welcome-video-card.is-bg).
+   Walang video? Walang laman ang host — ang larawan ng City Hall pa rin
+   ang background, gaya ng dati. */
 .welcome-video-host {
   position: absolute; inset: 0;
   overflow: hidden;
@@ -1479,10 +1373,23 @@ img { max-width: 100%; }
   background: #04101F;
   animation: fadeIn 1.2s ease both;
 }
-.welcome-video-bg video {
+/* Patayong video (Reels): ang `cover` ay gugupit ng halos lahat nito,
+   kaya buo itong ipinapakita sa gitna at sumisilip sa gilid ang City Hall. */
+.welcome-video-bg.is-portrait { background: transparent; }
+.welcome-video-bg video,
+.welcome-video-bg img {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
   object-fit: cover;
+}
+.welcome-video-bg.is-portrait video { object-fit: contain; }
+/* Ang larawan ay madalas na anunsyo na may teksto sa gilid — buo ito,
+   at ang malabong kopya nito ang pumupuno sa paligid. */
+.welcome-video-bg.is-image img { object-fit: contain; }
+.welcome-video-bg.is-image::before {
+  content: ''; position: absolute; inset: -40px;
+  background: var(--bg-img) center / cover no-repeat;
+  filter: blur(32px) brightness(.65);
 }
 /* Walang `object-fit` ang iframe. Pinalalaki ito hanggang matakpan ang
    buong screen sa 16:9, at nakasentro — ito ang `cover` ng iframe. */
@@ -1493,50 +1400,69 @@ img { max-width: 100%; }
   height: max(100vh, 56.25vw);
   border: 0;
 }
-.layout-fullscreen .welcome-main { display: none; }
-/* Manipis na tint — ang video ang bida. Madilim lang sa itaas (petsa) at
-   sa ibaba (pamagat at prompt). */
-.layout-fullscreen .welcome-tint {
+.welcome-video-bg.is-portrait iframe { width: 56.25vh; height: 100vh; }
+
+/* Mas manipis na tint kapag may video — makikita ito, pero nababasa pa
+   rin ang hero. Mas madilim sa itaas at ibaba kung saan may teksto. */
+.welcome-screen:has(.welcome-video-bg) .welcome-tint {
   background: linear-gradient(180deg,
-    rgba(4,14,32,.55) 0%, rgba(4,14,32,.12) 22%,
-    rgba(4,14,32,.12) 52%, rgba(3,10,22,.86) 100%);
+    rgba(4,14,32,.66) 0%, rgba(4,14,32,.40) 40%,
+    rgba(4,14,32,.48) 65%, rgba(3,10,22,.82) 100%);
 }
-.layout-fullscreen .welcome-vignette {
-  background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(3,10,22,.6) 100%);
+.welcome-screen:has(.welcome-video-bg) .welcome-vignette {
+  background: radial-gradient(ellipse at 50% 42%,
+    rgba(3,10,22,.38) 0%, transparent 48%, rgba(3,10,22,.72) 100%);
 }
-.layout-fullscreen .welcome-glow { display: none; }
-.layout-fullscreen .welcome-topbar { text-shadow: 0 2px 12px rgba(2,10,26,.95); }
-/* Pamagat at caption ng video, sa ibabaw ng prompt. */
-.welcome-video-card.is-chip {
-  width: min(760px, 100%);
-  gap: 6px; padding: 12px 22px;
-  background: rgba(7,18,35,.6);
-}
-.welcome-video-card.is-chip .welcome-video-head { padding-bottom: 0; border-bottom: 0; }
-.welcome-video-card.is-chip .welcome-video-head h2 { font-size: 1.15rem; }
-.welcome-video-card.is-chip .welcome-video-icon { font-size: 1.35rem; }
-.welcome-video-card.is-chip .welcome-video-sound { width: 44px; height: 44px; font-size: 1.1rem; }
-.welcome-video-card.is-chip .welcome-video-hint { display: none; }
-
-@media (max-height: 900px) {
-  .welcome-video-card.is-center { padding: 10px 14px; gap: 8px; }
-  .welcome-video-card.is-center .welcome-video-head { padding-bottom: 6px; }
-  .welcome-video-card.is-center .welcome-video-head h2,
-  .welcome-video-card.is-chip .welcome-video-head h2 { font-size: .98rem; }
-  .welcome-video-card.is-center .welcome-video-sound,
-  .welcome-video-card.is-chip .welcome-video-sound { width: 38px; height: 38px; font-size: 1rem; }
-  .welcome-video-card.is-chip { padding: 8px 18px; }
-  .welcome-dock { gap: 10px; }
+.welcome-screen:has(.welcome-video-bg) .welcome-glow { opacity: .3; animation: none; }
+.welcome-screen:has(.welcome-video-bg) :is(.welcome-topbar, .welcome-republic, .welcome-tagline, .welcome-subprompt) {
+  text-shadow: 0 2px 12px rgba(2,10,26,.95);
 }
 
-/* Pandak na laptop: ang palamuting guhit ang unang isinusuko, at
-   sumisikip ang mga puwang — ang mismong teksto ay hindi. */
+/* Ang naiwang kard: pamagat, caption, tunog at tuldok — walang frame. */
+.welcome-video-card.is-bg {
+  flex-shrink: 0;
+  width: 100%; max-width: 780px;
+  align-self: center;
+  gap: 6px; padding: 14px 24px;
+  background: rgba(7,18,35,.58);
+}
+.welcome-video-card.is-bg .welcome-video-head { padding-bottom: 0; border-bottom: 0; }
+.welcome-video-card.is-bg .welcome-video-head h2 { font-size: 1.2rem; }
+.welcome-video-card.is-bg .welcome-video-icon { font-size: 1.4rem; }
+.welcome-video-card.is-bg .welcome-video-sound { width: 46px; height: 46px; font-size: 1.15rem; }
+/* Tatlo na ang naghahati sa taas: hero, kard, at anunsyo. Sumusunod sa
+   taas ng screen ang laki ng hero (vh) — kasya sa 1080p na TV at sa
+   720p na laptop nang hindi nagpapatong ang hero at ang kard. */
+.welcome-main:has(.welcome-video-card.is-bg) .welcome-hero {
+  --h-seal: clamp(64px, 12vh, 170px);
+  --h-seal-img: calc(var(--h-seal) * .84);
+  --h-republic: clamp(.7rem, 1.5vh, 1.1rem);
+  --h-title: clamp(1.3rem, 4vh, 3.2rem);
+  --h-accent: clamp(2rem, 6.4vh, 5.2rem);
+  --h-tagline: clamp(.75rem, 1.6vh, 1.25rem);
+  --h-tagline-gap: clamp(10px, 2.6vh, 36px);
+  --h-prompt: clamp(.95rem, 2vh, 1.6rem);
+  --h-prompt-pad: clamp(9px, 1.6vh, 20px) clamp(24px, 3.6vw, 58px);
+  padding: 0;
+}
+/* Pandak na laptop, video sa background: ang palamuting guhit ang unang
+   isinusuko, at sumisikip ang mga puwang — ang mismong teksto ay hindi. */
 @media (max-height: 700px) {
-  .welcome-rule { display: none; }
-  .welcome-republic { margin: 8px 0 4px; }
-  .welcome-title { margin-bottom: 10px; }
-  .welcome-subprompt { margin-top: 6px; }
-  .welcome-prompt-hand { font-size: 1.3rem; }
+  .welcome-main:has(.welcome-video-card.is-bg) :is(.welcome-rule) { display: none; }
+  .welcome-main:has(.welcome-video-card.is-bg) .welcome-republic { margin: 8px 0 4px; }
+  .welcome-main:has(.welcome-video-card.is-bg) .welcome-title { margin-bottom: 10px; }
+  .welcome-main:has(.welcome-video-card.is-bg) .welcome-subprompt { margin-top: 6px; }
+  .welcome-main:has(.welcome-video-card.is-bg) .welcome-prompt-hand { font-size: 1.3rem; }
+}
+@media (max-height: 900px) {
+  .welcome-video-card.is-bg { padding: 10px 20px; }
+  .welcome-video-card.is-bg .welcome-video-head h2 { font-size: 1rem; }
+  .welcome-video-card.is-bg .welcome-video-sound { width: 40px; height: 40px; }
+}
+@media (max-height: 800px) {
+  .welcome-main:has(.welcome-video-card.is-bg) { gap: 10px; }
+  /* Nasa "1/2" na sa ulo ng kard ang posisyon — ang tuldok ang isinusuko. */
+  .welcome-video-card.is-bg .welcome-video-nav { display: none; }
 }
 
 @keyframes rise { from { opacity:0; transform: translateY(26px) } to { opacity:1; transform: translateY(0) } }

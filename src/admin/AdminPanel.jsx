@@ -60,6 +60,10 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
 
   const [advisoryText, setAdvisoryText] = useState('');
   const [announcementText, setAnnouncementText] = useState('');
+  // Kung saan lalabas ang video sa welcome screen: 'side' (katabi ng seal
+  // at pamagat — ang dati) o 'background' (buong screen sa likod). Kasama
+  // ito sa iisang row ng advisory at announcement.
+  const [videoPlacement, setVideoPlacement] = useState('side');
 
   // Alin sa dalawang teksto ang binubuksan sa lumulutang na editor:
   // 'announcement', 'advisory', o null kapag sarado. Hiwalay ang draft sa
@@ -106,6 +110,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
         const parsed = JSON.parse(text);
         setAdvisoryText(parsed.advisory || '');
         setAnnouncementText(parsed.announcement || '');
+        setVideoPlacement(parsed.videoPlacement === 'background' ? 'background' : 'side');
       } catch (e) {
         setAdvisoryText(text);
       }
@@ -460,6 +465,25 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     setAnnEditor(null);
   };
 
+  // Agad na sine-save pagkapili — walang hiwalay na Save na buton.
+  const handlePlacementChange = async (value) => {
+    const previous = videoPlacement;
+    setVideoPlacement(value);
+    try {
+      await updateAnnouncement(JSON.stringify({
+        advisory: advisoryText,
+        announcement: announcementText,
+        videoPlacement: value,
+      }));
+    } catch {
+      setVideoPlacement(previous);
+      alert(t(
+        'Could not save where the video goes. Check the internet connection.',
+        'Hindi na-save kung saan ilalagay ang video. Tingnan ang koneksyon sa internet.',
+      ));
+    }
+  };
+
   const handleSaveAnnouncement = async (e) => {
     e.preventDefault();
     // Iisang row lang sa database ang kinalalagyan ng dalawang teksto,
@@ -471,6 +495,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     const next = {
       advisory: annEditor === 'advisory' ? draft : advisoryText,
       announcement: annEditor === 'announcement' ? draft : announcementText,
+      videoPlacement,
     };
 
     setIsSaving(true);
@@ -686,6 +711,24 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                 </>
               )}
             </p>
+
+            <div>
+              <label className="k-label">{t('Where the video goes', 'Saan ilalagay ang video')}</label>
+              <select
+                className="k-select"
+                value={videoPlacement}
+                onChange={(e) => handlePlacementChange(e.target.value)}
+              >
+                <option value="side">{t('Beside the title (card on the right)', 'Sa gilid ng pamagat (kard sa kanan)')}</option>
+                <option value="background">{t('Full-screen background', 'Buong screen sa background')}</option>
+              </select>
+              <p className="adm-hint">
+                {t(
+                  'Saved right away. The welcome screen follows within a minute.',
+                  'Agad itong sine-save. Susunod ang welcome screen sa loob ng isang minuto.',
+                )}
+              </p>
+            </div>
 
             <div className="adm-vid-list">
                   {videos.length === 0 && (

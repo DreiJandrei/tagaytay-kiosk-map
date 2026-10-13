@@ -22,18 +22,12 @@ const signatureOf = (list) =>
     v.duration_seconds, v.orientation, v.has_sound,
   ].join('~')).join('|');
 
-// ── Dalawang anyo, depende sa kung ano ang tumutugtog ──────────
-//   'center'     — larawan, o patayong video (Reels/Shorts). Nasa GITNA
-//                  ng screen ang kard; nasa kaliwa ang seal at pamagat,
-//                  nasa kanan ang anunsyo.
-//   'fullscreen' — pahigang video. Buong screen sa likod; pamagat at
-//                  caption na lang ang naiiwan, sa ibabaw ng "Touch the
-//                  screen to start".
-//   'none'       — walang maipapakita; ang dating welcome screen.
-// Ang WelcomeScreen ang nag-aayos ng paligid — sinasabi lang dito kung
-// alin (`onLayoutChange`). Ang `hosts` ay ang tatlong lugar sa screen na
-// pinagguguhitan: likod (background), gitna (center), at ibaba (dock).
-export default function WelcomeVideo({ hosts, onLayoutChange }) {
+// `backgroundHost` — kapag may ibinigay na DOM node, doon (sa likod ng
+// buong welcome screen) iginuguhit ang mismong video, at ang kard na
+// naiiwan dito ay pamagat, caption, tunog at tuldok na lang. Kapag wala,
+// nasa loob ng kard ang video gaya ng dati.
+export default function WelcomeVideo({ backgroundHost = null }) {
+  const isBackground = !!backgroundHost;
   const [videos, setVideos] = useState([]);
   const [index, setIndex] = useState(0);
   const [cycle, setCycle] = useState(0);
@@ -84,7 +78,6 @@ export default function WelcomeVideo({ hosts, onLayoutChange }) {
   const type = current ? (current.video_type || detectVideoType(current.source_url)) : '';
 
   const isImage = type === 'image';
-  const portrait = current?.orientation === 'portrait';
   // Ang .mp4 at YouTube ay kayang umulit nang kusa kapag iisa lang ang
   // video; ang Facebook plugin ay walang loop kaya ini-remount ito. Ang
   // nag-iisang larawan ay wala namang dulo — nakatitig lang ito, kaya
@@ -211,20 +204,16 @@ export default function WelcomeVideo({ hosts, onLayoutChange }) {
     }
   }, [current, cycle, soundOn]);
 
-  const embedUrl = (!current || type === 'file' || isImage)
+  if (!current) return null;
+
+  const embedUrl = (type === 'file' || isImage)
     ? ''
     : buildEmbedUrl(current, { loop: selfLoops, sound: soundOn });
-  // Sirang link: walang ipapakita, kaya ang dating welcome screen ang
-  // lalabas habang hinihintay ang susunod sa listahan.
-  const playable = !!current && (isImage || type === 'file' || !!embedUrl);
-  const layout = !playable ? 'none' : (isImage || portrait) ? 'center' : 'fullscreen';
-
-  useEffect(() => { onLayoutChange?.(layout); }, [layout, onLayoutChange]);
-
-  if (!playable) return null;
-
   const heading = (current.title || '').trim() || 'City Updates';
   const caption = (current.caption || '').trim();
+  // Umaangkop ang kahon sa hugis ng video — kung hindi, puro itim na
+  // gilid ang makikita sa Reels.
+  const portrait = current.orientation === 'portrait';
 
   const media = isImage ? (
       // Walang key na kasama ang `cycle` dito: sa larawan, ang
@@ -251,7 +240,7 @@ export default function WelcomeVideo({ hosts, onLayoutChange }) {
         onEnded={single ? undefined : advance}
         onError={advance}
       />
-    ) : (
+    ) : embedUrl ? (
       <iframe
         key={`${current.id}-${cycle}`}
         src={embedUrl}
@@ -260,92 +249,86 @@ export default function WelcomeVideo({ hosts, onLayoutChange }) {
         scrolling="no"
         allow="autoplay; encrypted-media; picture-in-picture; web-share"
       />
+    ) : (
+      <div className="welcome-video-fallback">
+        <span>⚠️</span>
+        <p>Hindi mabasa ang video link.</p>
+      </div>
     );
 
-  // Ulo ng kard: pamagat, tunog, at kung pang-ilan.
-  const head = (
-    <div className="welcome-video-head">
-      <span className="welcome-video-icon">{isImage ? '🖼️' : '🎬'}</span>
-      <h2>{heading}</h2>
-      {soundAvailable && (
-        <button
-          type="button"
-          className={`welcome-video-sound${soundOn ? ' is-on' : ''}`}
-          onClick={toggleSound}
-          aria-label={soundOn ? 'Patayin ang tunog' : 'Buksan ang tunog'}
+  // Sa background, walang babala ng sirang link — ang larawan ng City
+  // Hall na lang ang maiiwan sa likod, na mas maayos tingnan.
+  const backgroundLayer = isBackground && (isImage || type === 'file' || embedUrl)
+    ? createPortal(
+        <div
+          className={`welcome-video-bg is-${isImage ? 'image' : type === 'file' ? 'file' : 'embed'}${portrait ? ' is-portrait' : ''}`}
+          // Larawan lang ang may malabong kopya sa likod — sa video, doble
+          // ang pagtugtog kapag ganoon, at sa iframe, imposible.
+          style={isImage ? { '--bg-img': `url("${current.source_url}")` } : undefined}
         >
-          <span aria-hidden="true">{soundOn ? '🔊' : '🔇'}</span>
-        </button>
-      )}
-      {videos.length > 1 && (
-        <span className="welcome-video-count">{position + 1}/{videos.length}</span>
-      )}
-    </div>
-  );
+          {media}
+        </div>,
+        backgroundHost,
+      )
+    : null;
 
-  const nav = swipeable && (
-    <div className="welcome-video-nav" aria-hidden="true">
-      <div className="welcome-video-dots">
-        {videos.map((v, i) => (
-          <span key={v.id} className={i === position ? 'is-on' : ''} />
-        ))}
+  return (
+    // Buong kard ang tinatanggap ng hagod — pati pamagat, caption at
+    // tuldok. Click-through ang frame (`pointer-events: none`), kaya
+    // dumadaan pababa rito ang bawat pindot sa mismong video.
+    <>
+    {backgroundLayer}
+    <div
+      className={
+        `welcome-video-card${isBackground ? ' is-bg' : ''}${portrait && !isBackground ? ' is-portrait' : ''}` +
+        `${swipeable ? ' is-swipeable' : ''}${dragX ? ' is-dragging' : ''}`
+      }
+      style={dragX ? { transform: `translateX(${dragX}px)` } : undefined}
+      onPointerDown={swipeable ? onPointerDown : undefined}
+      onPointerMove={swipeable ? onPointerMove : undefined}
+      onPointerUp={swipeable ? onPointerUp : undefined}
+      onPointerCancel={swipeable ? endSwipe : undefined}
+      onClickCapture={swipeable ? onClickCapture : undefined}
+    >
+      <div className="welcome-video-head">
+        <span className="welcome-video-icon">{isImage ? '🖼️' : '🎬'}</span>
+        <h2>{heading}</h2>
+        {soundAvailable && (
+          <button
+            type="button"
+            className={`welcome-video-sound${soundOn ? ' is-on' : ''}`}
+            onClick={toggleSound}
+            aria-label={soundOn ? 'Patayin ang tunog' : 'Buksan ang tunog'}
+          >
+            <span aria-hidden="true">{soundOn ? '🔊' : '🔇'}</span>
+          </button>
+        )}
+        {videos.length > 1 && (
+          <span className="welcome-video-count">{position + 1}/{videos.length}</span>
+        )}
       </div>
-      {/* Walang nakakaalam na puwedeng ihagod kung walang magsasabi.
-          Sa kiosk, ang hindi sinabi ay hindi nagagamit. */}
-      <span className="welcome-video-hint">‹ I-swipe para sa iba ›</span>
-    </div>
-  );
 
-  // Buong kard ang tinatanggap ng hagod — pati pamagat, caption at
-  // tuldok. Click-through ang frame (`pointer-events: none`), kaya
-  // dumadaan pababa rito ang bawat pindot sa mismong video.
-  const cardClass = (variant) =>
-    `welcome-video-card is-${variant}${portrait ? ' is-portrait' : ''}${isImage ? ' is-image' : ''}` +
-    `${swipeable ? ' is-swipeable' : ''}${dragX ? ' is-dragging' : ''}`;
-  const dragStyle = dragX ? { transform: `translateX(${dragX}px)` } : undefined;
-
-  if (layout === 'center') {
-    return createPortal(
-      <div
-        className={cardClass('center')}
-        style={dragStyle}
-        onPointerDown={swipeable ? onPointerDown : undefined}
-        onPointerMove={swipeable ? onPointerMove : undefined}
-        onPointerUp={swipeable ? onPointerUp : undefined}
-        onPointerCancel={swipeable ? endSwipe : undefined}
-        onClickCapture={swipeable ? onClickCapture : undefined}
-      >
-        {head}
-        <div className={`welcome-video-frame${portrait ? ' is-portrait' : ''}${isImage ? ' is-image' : ''}`}>
+      {!isBackground && (
+        <div className={`welcome-video-frame${portrait ? ' is-portrait' : ''}`}>
           {media}
         </div>
-        {caption && <p className="welcome-video-caption">{caption}</p>}
-        {nav}
-      </div>,
-      hosts.center,
-    );
-  }
-
-  // 'fullscreen': ang video sa likod, ang pamagat at caption sa ibaba.
-  return (
-    <>
-      {createPortal(<div className="welcome-video-bg">{media}</div>, hosts.background)}
-      {createPortal(
-        <div
-          className={cardClass('chip')}
-          style={dragStyle}
-          onPointerDown={swipeable ? onPointerDown : undefined}
-          onPointerMove={swipeable ? onPointerMove : undefined}
-          onPointerUp={swipeable ? onPointerUp : undefined}
-          onPointerCancel={swipeable ? endSwipe : undefined}
-          onClickCapture={swipeable ? onClickCapture : undefined}
-        >
-          {head}
-          {caption && <p className="welcome-video-caption">{caption}</p>}
-          {nav}
-        </div>,
-        hosts.dock,
       )}
+
+      {caption && <p className="welcome-video-caption">{caption}</p>}
+
+      {swipeable && (
+        <div className="welcome-video-nav" aria-hidden="true">
+          <div className="welcome-video-dots">
+            {videos.map((v, i) => (
+              <span key={v.id} className={i === position ? 'is-on' : ''} />
+            ))}
+          </div>
+          {/* Walang nakakaalam na puwedeng ihagod kung walang magsasabi.
+              Sa kiosk, ang hindi sinabi ay hindi nagagamit. */}
+          <span className="welcome-video-hint">‹ I-swipe para sa iba ›</span>
+        </div>
+      )}
+    </div>
     </>
   );
 }
