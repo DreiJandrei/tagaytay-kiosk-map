@@ -985,15 +985,18 @@ img { max-width: 100%; }
    ang mga variable na ito lang ang pinapalitan — hindi na kailangang
    ulitin ang bawat panuntunan sa ibaba. */
 .welcome-hero {
-  --h-seal: 190px;
-  --h-seal-img: 160px;
-  --h-republic: 1.15rem;
-  --h-title: 3.4rem;
-  --h-accent: 5.6rem;
-  --h-tagline: 1.35rem;
-  --h-tagline-gap: 42px;
-  --h-prompt: 1.7rem;
-  --h-prompt-pad: 22px 62px;
+  /* Sumusunod sa taas ng screen (vh): ganito pa rin ang laki sa 1080p na
+     TV ng kiosk, pero umuurong sa pandak na laptop para hindi pumatong
+     ang hero sa anunsyo sa ilalim. */
+  --h-seal: clamp(90px, 17.6vh, 190px);
+  --h-seal-img: calc(var(--h-seal) * .84);
+  --h-republic: clamp(.75rem, 1.7vh, 1.15rem);
+  --h-title: clamp(1.6rem, 5vh, 3.4rem);
+  --h-accent: clamp(2.5rem, 8.3vh, 5.6rem);
+  --h-tagline: clamp(.8rem, 2vh, 1.35rem);
+  --h-tagline-gap: clamp(14px, 3.9vh, 42px);
+  --h-prompt: clamp(1rem, 2.5vh, 1.7rem);
+  --h-prompt-pad: clamp(11px, 2vh, 22px) clamp(28px, 3.8vw, 62px);
 
   flex: 1; min-width: 0;
   display: flex; flex-direction: column;
@@ -1355,6 +1358,114 @@ img { max-width: 100%; }
 }
 .advisory-tag { color: var(--k-300); margin-right: 16px; font-weight: 900; letter-spacing: 1px; }
 .advisory-dot { margin: 0 30px; color: var(--k-400); }
+
+/* ── Video bilang background ng welcome screen ─────────────────
+   Buong screen ang video, nasa likod ng tint. Ang pamagat at caption
+   nito ay nasa manipis na kard sa ilalim ng hero (.welcome-video-card.is-bg).
+   Walang video? Walang laman ang host — ang larawan ng City Hall pa rin
+   ang background, gaya ng dati. */
+.welcome-video-host {
+  position: absolute; inset: 0;
+  overflow: hidden;
+  /* Ang pindot kahit saan ay pagsisimula pa rin ng kiosk — hindi ito
+     sinasalo ng iframe ng YouTube o Facebook. */
+  pointer-events: none;
+}
+.welcome-video-bg {
+  position: absolute; inset: 0;
+  background: #04101F;
+  animation: fadeIn 1.2s ease both;
+}
+/* Patayong video (Reels): ang `cover` ay gugupit ng halos lahat nito,
+   kaya buo itong ipinapakita sa gitna at sumisilip sa gilid ang City Hall. */
+.welcome-video-bg.is-portrait { background: transparent; }
+.welcome-video-bg video,
+.welcome-video-bg img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+.welcome-video-bg.is-portrait video { object-fit: contain; }
+/* Ang larawan ay madalas na anunsyo na may teksto sa gilid — buo ito,
+   at ang malabong kopya nito ang pumupuno sa paligid. */
+.welcome-video-bg.is-image img { object-fit: contain; }
+.welcome-video-bg.is-image::before {
+  content: ''; position: absolute; inset: -40px;
+  background: var(--bg-img) center / cover no-repeat;
+  filter: blur(32px) brightness(.65);
+}
+/* Walang `object-fit` ang iframe. Pinalalaki ito hanggang matakpan ang
+   buong screen sa 16:9, at nakasentro — ito ang `cover` ng iframe. */
+.welcome-video-bg iframe {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: max(100vw, 177.78vh);
+  height: max(100vh, 56.25vw);
+  border: 0;
+}
+.welcome-video-bg.is-portrait iframe { width: 56.25vh; height: 100vh; }
+
+/* Mas manipis na tint kapag may video — makikita ito, pero nababasa pa
+   rin ang hero. Mas madilim sa itaas at ibaba kung saan may teksto. */
+.welcome-screen:has(.welcome-video-bg) .welcome-tint {
+  background: linear-gradient(180deg,
+    rgba(4,14,32,.66) 0%, rgba(4,14,32,.40) 40%,
+    rgba(4,14,32,.48) 65%, rgba(3,10,22,.82) 100%);
+}
+.welcome-screen:has(.welcome-video-bg) .welcome-vignette {
+  background: radial-gradient(ellipse at 50% 42%,
+    rgba(3,10,22,.38) 0%, transparent 48%, rgba(3,10,22,.72) 100%);
+}
+.welcome-screen:has(.welcome-video-bg) .welcome-glow { opacity: .3; animation: none; }
+.welcome-screen:has(.welcome-video-bg) :is(.welcome-topbar, .welcome-republic, .welcome-tagline, .welcome-subprompt) {
+  text-shadow: 0 2px 12px rgba(2,10,26,.95);
+}
+
+/* Ang naiwang kard: pamagat, caption, tunog at tuldok — walang frame. */
+.welcome-video-card.is-bg {
+  flex-shrink: 0;
+  width: 100%; max-width: 780px;
+  align-self: center;
+  gap: 6px; padding: 14px 24px;
+  background: rgba(7,18,35,.58);
+}
+.welcome-video-card.is-bg .welcome-video-head { padding-bottom: 0; border-bottom: 0; }
+.welcome-video-card.is-bg .welcome-video-head h2 { font-size: 1.2rem; }
+.welcome-video-card.is-bg .welcome-video-icon { font-size: 1.4rem; }
+.welcome-video-card.is-bg .welcome-video-sound { width: 46px; height: 46px; font-size: 1.15rem; }
+/* Tatlo na ang naghahati sa taas: hero, kard, at anunsyo. Sumusunod sa
+   taas ng screen ang laki ng hero (vh) — kasya sa 1080p na TV at sa
+   720p na laptop nang hindi nagpapatong ang hero at ang kard. */
+.welcome-main:has(.welcome-video-card.is-bg) .welcome-hero {
+  --h-seal: clamp(64px, 12vh, 170px);
+  --h-republic: clamp(.7rem, 1.5vh, 1.1rem);
+  --h-title: clamp(1.3rem, 4vh, 3.2rem);
+  --h-accent: clamp(2rem, 6.4vh, 5.2rem);
+  --h-tagline: clamp(.75rem, 1.6vh, 1.25rem);
+  --h-tagline-gap: clamp(10px, 2.6vh, 36px);
+  --h-prompt: clamp(.95rem, 2vh, 1.6rem);
+  --h-prompt-pad: clamp(9px, 1.6vh, 20px) clamp(24px, 3.6vw, 58px);
+  padding: 0;
+}
+/* Pandak na laptop: ang palamuting guhit ang unang isinusuko, at
+   sumisikip ang mga puwang — ang mismong teksto ay hindi. */
+@media (max-height: 700px) {
+  .welcome-rule { display: none; }
+  .welcome-republic { margin: 8px 0 4px; }
+  .welcome-title { margin-bottom: 10px; }
+  .welcome-subprompt { margin-top: 6px; }
+  .welcome-prompt-hand { font-size: 1.3rem; }
+}
+@media (max-height: 900px) {
+  .welcome-video-card.is-bg { padding: 10px 20px; }
+  .welcome-video-card.is-bg .welcome-video-head h2 { font-size: 1rem; }
+  .welcome-video-card.is-bg .welcome-video-sound { width: 40px; height: 40px; }
+}
+@media (max-height: 800px) {
+  .welcome-main:has(.welcome-video-card.is-bg) { gap: 10px; }
+  /* Nasa "1/2" na sa ulo ng kard ang posisyon — ang tuldok ang isinusuko. */
+  .welcome-video-card.is-bg .welcome-video-nav { display: none; }
+}
 
 @keyframes rise { from { opacity:0; transform: translateY(26px) } to { opacity:1; transform: translateY(0) } }
 

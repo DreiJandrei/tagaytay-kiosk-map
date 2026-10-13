@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { getKioskVideos } from '../lib/api';
 import { buildEmbedUrl, detectVideoType } from '../lib/videoUtils';
 
@@ -21,7 +22,12 @@ const signatureOf = (list) =>
     v.duration_seconds, v.orientation, v.has_sound,
   ].join('~')).join('|');
 
-export default function WelcomeVideo() {
+// `backgroundHost` — kapag may ibinigay na DOM node, doon (sa likod ng
+// buong welcome screen) iginuguhit ang mismong video, at ang kard na
+// naiiwan dito ay pamagat, caption, tunog at tuldok na lang. Kapag wala,
+// nasa loob ng kard ang video gaya ng dati.
+export default function WelcomeVideo({ backgroundHost = null }) {
+  const isBackground = !!backgroundHost;
   const [videos, setVideos] = useState([]);
   const [index, setIndex] = useState(0);
   const [cycle, setCycle] = useState(0);
@@ -209,13 +215,72 @@ export default function WelcomeVideo() {
   // gilid ang makikita sa Reels.
   const portrait = current.orientation === 'portrait';
 
+  const media = isImage ? (
+      // Walang key na kasama ang `cycle` dito: sa larawan, ang
+      // pagpapalit ng key ay pagbura at paggawa ulit ng parehong
+      // larawan — kumukurap lang ang screen, walang napapala.
+      <img
+        key={current.id}
+        src={current.source_url}
+        alt={heading}
+        // Kapag sira ang link ng larawan at iisa lang ang nakatala,
+        // hindi puwedeng lumipat — ang paglipat ay babalik din dito
+        // at mauuwi sa walang hintong ikot.
+        onError={single ? undefined : advance}
+      />
+    ) : type === 'file' ? (
+      <video
+        key={`${current.id}-${cycle}`}
+        ref={fileRef}
+        src={current.source_url}
+        autoPlay
+        muted
+        playsInline
+        loop={single}
+        onEnded={single ? undefined : advance}
+        onError={advance}
+      />
+    ) : embedUrl ? (
+      <iframe
+        key={`${current.id}-${cycle}`}
+        src={embedUrl}
+        title={heading}
+        frameBorder="0"
+        scrolling="no"
+        allow="autoplay; encrypted-media; picture-in-picture; web-share"
+      />
+    ) : (
+      <div className="welcome-video-fallback">
+        <span>⚠️</span>
+        <p>Hindi mabasa ang video link.</p>
+      </div>
+    );
+
+  // Sa background, walang babala ng sirang link — ang larawan ng City
+  // Hall na lang ang maiiwan sa likod, na mas maayos tingnan.
+  const backgroundLayer = isBackground && (isImage || type === 'file' || embedUrl)
+    ? createPortal(
+        <div
+          className={`welcome-video-bg is-${isImage ? 'image' : type === 'file' ? 'file' : 'embed'}${portrait ? ' is-portrait' : ''}`}
+          // Larawan lang ang may malabong kopya sa likod — sa video, doble
+          // ang pagtugtog kapag ganoon, at sa iframe, imposible.
+          style={isImage ? { '--bg-img': `url("${current.source_url}")` } : undefined}
+        >
+          {media}
+        </div>,
+        backgroundHost,
+      )
+    : null;
+
   return (
     // Buong kard ang tinatanggap ng hagod — pati pamagat, caption at
     // tuldok. Click-through ang frame (`pointer-events: none`), kaya
     // dumadaan pababa rito ang bawat pindot sa mismong video.
+    <>
+    {backgroundLayer}
     <div
       className={
-        `welcome-video-card${portrait ? ' is-portrait' : ''}` +
+        `welcome-video-card${isBackground ? ' is-bg' : ''}${portrait && !isBackground ? ' is-portrait' : ''}` +
         `${swipeable ? ' is-swipeable' : ''}${dragX ? ' is-dragging' : ''}`
       }
       style={dragX ? { transform: `translateX(${dragX}px)` } : undefined}
@@ -243,48 +308,11 @@ export default function WelcomeVideo() {
         )}
       </div>
 
-      <div className={`welcome-video-frame${portrait ? ' is-portrait' : ''}`}>
-        {isImage ? (
-          // Walang key na kasama ang `cycle` dito: sa larawan, ang
-          // pagpapalit ng key ay pagbura at paggawa ulit ng parehong
-          // larawan — kumukurap lang ang screen, walang napapala.
-          <img
-            key={current.id}
-            src={current.source_url}
-            alt={heading}
-            // Kapag sira ang link ng larawan at iisa lang ang nakatala,
-            // hindi puwedeng lumipat — ang paglipat ay babalik din dito
-            // at mauuwi sa walang hintong ikot.
-            onError={single ? undefined : advance}
-          />
-        ) : type === 'file' ? (
-          <video
-            key={`${current.id}-${cycle}`}
-            ref={fileRef}
-            src={current.source_url}
-            autoPlay
-            muted
-            playsInline
-            loop={single}
-            onEnded={single ? undefined : advance}
-            onError={advance}
-          />
-        ) : embedUrl ? (
-          <iframe
-            key={`${current.id}-${cycle}`}
-            src={embedUrl}
-            title={heading}
-            frameBorder="0"
-            scrolling="no"
-            allow="autoplay; encrypted-media; picture-in-picture; web-share"
-          />
-        ) : (
-          <div className="welcome-video-fallback">
-            <span>⚠️</span>
-            <p>Hindi mabasa ang video link.</p>
-          </div>
-        )}
-      </div>
+      {!isBackground && (
+        <div className={`welcome-video-frame${portrait ? ' is-portrait' : ''}`}>
+          {media}
+        </div>
+      )}
 
       {caption && <p className="welcome-video-caption">{caption}</p>}
 
@@ -301,5 +329,6 @@ export default function WelcomeVideo() {
         </div>
       )}
     </div>
+    </>
   );
 }

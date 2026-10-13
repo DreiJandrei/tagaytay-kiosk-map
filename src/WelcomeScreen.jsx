@@ -8,6 +8,10 @@ export default function WelcomeScreen({ onStart }) {
   const [advisory, setAdvisory] = useState("");
   const [announcement, setAnnouncement] = useState("");
   const [now, setNow] = useState(new Date());
+  // Ang layer sa likod na pinagguguhitan ng video (tingnan ang
+  // WelcomeVideo). State at hindi ref: kailangang mag-render ulit ang
+  // video kapag handa na ang node na ito.
+  const [videoHost, setVideoHost] = useState(null);
 
   useEffect(() => {
     const fetchAnnouncement = async () => {
@@ -55,6 +59,9 @@ export default function WelcomeScreen({ onStart }) {
         style={{ backgroundImage: `url(${cityhallBg})` }}
         aria-hidden="true"
       />
+      {/* Layer 1b: ang video ng lungsod, buong screen. Nakapatong sa
+          larawan ng City Hall — iyon ang lumalabas kapag walang video. */}
+      <div className="welcome-video-host" ref={setVideoHost} aria-hidden="true" />
       <div className="welcome-tint" aria-hidden="true" />
       <div className="welcome-vignette" aria-hidden="true" />
       <div className="welcome-glow" aria-hidden="true" />
@@ -73,9 +80,6 @@ export default function WelcomeScreen({ onStart }) {
             anunsyo na nakasentro sa ilalim ng dalawa. */}
         <div className="welcome-main">
 
-        {/* Nagiging magkatabi ang hero at ang video kapag may laman ang
-            board slot — doon kasi may sobrang espasyo, at ang
-            pagpapatong-patong pababa ang dahilan ng pag-apaw. */}
         <div className="welcome-columns">
 
         {/* Seal, pamagat, at prompt */}
@@ -108,12 +112,11 @@ export default function WelcomeScreen({ onStart }) {
           <p className="welcome-subprompt">Pindutin ang screen upang magsimula</p>
         </div>
 
-        {/* Kanan: mga video ng lungsod */}
-        <div className="welcome-board-slot">
-          <WelcomeVideo />
         </div>
 
-        </div>
+        {/* Nasa likod na ang mismong video. Dito naiiwan ang pamagat at
+            caption nito, sa ilalim ng hero. */}
+        {videoHost && <WelcomeVideo backgroundHost={videoHost} />}
 
         {/* Ilalim: nakasentro ang opisyal na anunsyo sa ilalim ng hero at
             ng video — hindi na ito nakakabit sa kanang hanay. */}
