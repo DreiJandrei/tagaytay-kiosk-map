@@ -9,12 +9,16 @@ import { supabase } from './supabase';
 // malunod dito.
 //   42703    — ang sagot ng Postgres sa hanay na wala
 //   PGRST204 — ang sagot ng PostgREST kapag hindi nito kilala ang hanay
-const isMissingPhoneColumn = (error) => {
+const isMissingColumn = (error, names) => {
   const code = error?.code;
   if (code !== '42703' && code !== 'PGRST204') return false;
   const haystack = `${error?.message || ''} ${error?.details || ''}`.toLowerCase();
-  return haystack.includes('phone') || haystack.includes('local');
+  return names.some((n) => haystack.includes(n));
 };
+const isMissingPhoneColumn = (error) => isMissingColumn(error, ['phone', 'local']);
+
+// Ganoon din para sa Tagalog na paliwanag — supabase/office_about_tl.sql.
+const isMissingDescriptionTlColumn = (error) => isMissingColumn(error, ['description_tl']);
 
 // ==============================================================
 // 1. SUPABASE AUTHENTICATION
@@ -184,6 +188,13 @@ export const getAllOffices = async () => {
         office.local = safeDetails.local;
       }
 
+      // Tagalog na paliwanag — parehong basa ng telepono sa itaas. Ang
+      // NULL (hindi pa nagagalaw, o wala pang hanay) ay hindi isinasama,
+      // kaya ang salin sa defaultOfficeData.js ang lumalabas.
+      if (safeDetails?.description_tl !== null && safeDetails?.description_tl !== undefined) {
+        office.descriptionTl = safeDetails.description_tl;
+      }
+
       structuredData[row.floor][row.office_key] = office;
     });
     return structuredData;
@@ -216,6 +227,7 @@ export const updateOffice = async (officeKey, updates) => {
       head: updates.head,
       hours: updates.hours,
       description: updates.description,
+      description_tl: updates.descriptionTl ?? '',
       status: updates.status,
       requirements: updates.requirements,
       phone: updates.phone ?? '',
@@ -226,8 +238,10 @@ export const updateOffice = async (officeKey, updates) => {
       ? supabase.from('office_details').update(fields).eq('office_key', officeKey)
       : supabase.from('office_details').insert({ office_key: officeKey, ...fields }));
 
-    let { error: err2 } = await writeDetails(detailFields);
+    let fields = detailFields;
+    let { error: err2 } = await writeDetails(fields);
     let phoneSkipped = false;
+    let descriptionTlSkipped = false;
 
     // Kapag hindi pa napatakbo ang supabase/office_phones.sql, wala pang
     // hanay para sa telepono — at tatanggihan ng database ang BUONG
@@ -244,19 +258,37 @@ export const updateOffice = async (officeKey, updates) => {
     // TV ng kiosk. Kaya para sa nag-e-edit, mukhang tahimik na hindi
     // pumapasok ang numero: "na-save" naman daw, pero hindi nagbabago.
     // Ang `phoneSkipped` ang nagpapaabot niyon sa tumawag.
-    if (err2 && isMissingPhoneColumn(err2)) {
-      console.warn(
-        'Wala pang hanay na phone/local ang office_details — na-save ang '
-        + 'lahat maliban sa telepono. Patakbuhin ang supabase/office_phones.sql.',
-      );
-      /* eslint-disable-next-line no-unused-vars */
-      const { phone, local, ...withoutPhone } = detailFields;
-      ({ error: err2 } = await writeDetails(withoutPhone));
-      phoneSkipped = !err2;
+    //
+    // Ganoon din ang Tagalog na paliwanag (supabase/office_about_tl.sql).
+    // Isa-isang hanay lang ang nirereklamo ng database bawat tanggi, kaya
+    // dalawang beses itong puwedeng umikot kapag parehong wala pa.
+    for (let attempt = 0; err2 && attempt < 2; attempt++) {
+      if (!phoneSkipped && isMissingPhoneColumn(err2)) {
+        console.warn(
+          'Wala pang hanay na phone/local ang office_details — na-save ang '
+          + 'lahat maliban sa telepono. Patakbuhin ang supabase/office_phones.sql.',
+        );
+        /* eslint-disable-next-line no-unused-vars */
+        const { phone, local, ...rest } = fields;
+        fields = rest;
+        phoneSkipped = true;
+      } else if (!descriptionTlSkipped && isMissingDescriptionTlColumn(err2)) {
+        console.warn(
+          'Wala pang hanay na description_tl ang office_details — na-save ang '
+          + 'lahat maliban sa Tagalog na paliwanag. Patakbuhin ang supabase/office_about_tl.sql.',
+        );
+        /* eslint-disable-next-line no-unused-vars */
+        const { description_tl, ...rest } = fields;
+        fields = rest;
+        descriptionTlSkipped = true;
+      } else {
+        break;
+      }
+      ({ error: err2 } = await writeDetails(fields));
     }
     if (err2) throw err2;
 
-    return { success: true, phoneSkipped };
+    return { success: true, phoneSkipped, descriptionTlSkipped };
   } catch (error) { 
     console.error(`Error updating office ${officeKey}:`, error); 
     throw error; 

@@ -89,6 +89,10 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
   const [formHours, setFormHours] = useState('');
   const [formHead, setFormHead] = useState('');
   const [formDescription, setFormDescription] = useState('');
+  // Tagalog na bersyon ng paliwanag. Iisang kahon lang sa form: ang wika
+  // ng panel ang nagsasabi kung alin ang ine-edit, at pareho silang
+  // sine-save — kaya hindi nawawala ang nai-type kapag nagpalit ng wika.
+  const [formDescriptionTl, setFormDescriptionTl] = useState('');
   const [formRequirements, setFormRequirements] = useState('');
   const [formCssClass, setFormCssClass] = useState('');
   const [formStatus, setFormStatus] = useState('Available');
@@ -342,6 +346,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
       setFormHours(currentOffice.hours || '');
       setFormHead(currentOffice.head || '');
       setFormDescription(currentOffice.description || '');
+      setFormDescriptionTl(currentOffice.descriptionTl || '');
       setFormCssClass(currentOffice.cssClass || '');
       setFormStatus(currentOffice.status || 'Available');
       // Kahit nasa code pa ang numero (hindi pa nagagalaw ang hanay sa
@@ -375,6 +380,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
         hours: formHours,
         head: formHead,
         description: formDescription,
+        descriptionTl: formDescriptionTl,
         badge: currentOffice?.badge || '',
         requirements: requirementsArray,
         cssClass: formCssClass,
@@ -387,7 +393,20 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
       // Hindi puwedeng "nai-save na" kapag may naiwan. Mahirap nang
       // hanapin ang dahilan kung bakit hindi nagbabago ang numero sa
       // kiosk; huwag na itong pataguin sa isang masayang mensahe.
-      if (result?.phoneSkipped) {
+      if (result?.descriptionTlSkipped) {
+        alert(t(
+          'Saved — BUT NOT THE TAGALOG DESCRIPTION.\n\n'
+          + 'The database has no column for it yet. Open Supabase → SQL Editor '
+          + '→ New query, paste all of supabase/office_about_tl.sql, and Run. '
+          + 'Then save this office again.\n\n'
+          + 'Everything else was saved.',
+          'NA-SAVE — PERO HINDI ANG TAGALOG NA PALIWANAG.\n\n'
+          + 'Wala pang hanay para doon sa database. Buksan ang Supabase → SQL '
+          + 'Editor → New query, i-paste ang buong supabase/office_about_tl.sql, '
+          + 'tapos Run. Pagkatapos, i-save itong muli.\n\n'
+          + 'Ang lahat ng iba ay na-save naman.',
+        ));
+      } else if (result?.phoneSkipped) {
         alert(t(
           'Saved — BUT NOT THE PHONE NUMBER.\n\n'
           + 'The database has no column for it yet. Open Supabase → SQL Editor '
@@ -1173,7 +1192,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                       {/* Ang `value` ay nananatiling Ingles — iyon ang nasa
                           database. Ang label lang ang nagsasalin. */}
                       <select className="k-select" value={formStatus} onChange={(e) => setFormStatus(e.target.value)}>
-                        <option value="Available">🟢 {t('Available', 'Bukas')}</option>
+                        <option value="Available">🟢 {t('Available', 'Maaaring Kausapin')}</option>
                         <option value="In a Meeting">🔴 {t('In a Meeting', 'May Pulong')}</option>
                         <option value="Out of Office">🟡 {t('Out of Office', 'Wala sa Opisina')}</option>
                       </select>
@@ -1224,17 +1243,23 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
 
                   <div className="adm-grow">
                     <label className="k-label">
-                      {t('Office Description / Info', 'Paglalarawan / Impormasyon ng Tanggapan')}
+                      {t('Office Description / Info — English', 'Paglalarawan / Impormasyon ng Tanggapan — Tagalog')}
                     </label>
                     <textarea
                       className="k-textarea"
-                      value={formDescription}
-                      onChange={(e) => setFormDescription(e.target.value)}
+                      value={EN ? formDescription : formDescriptionTl}
+                      onChange={(e) => (EN ? setFormDescription : setFormDescriptionTl)(e.target.value)}
                       placeholder={t(
                         'Short information about what this office does…',
-                        'Maikling paliwanag tungkol sa ginagawa ng tanggapang ito…',
+                        'Maikling paliwanag sa Tagalog tungkol sa ginagawa ng tanggapang ito…',
                       )}
                     />
+                    <p className="adm-hint">
+                      {t(
+                        'This is what the kiosk shows in English. To edit the Tagalog version, switch this panel to Tagalog — both are saved together.',
+                        'Ito ang lumalabas sa kiosk kapag naka-Tagalog. Kapag blangko, ang Ingles na bersyon ang ipapakita. Para i-edit ang Ingles, ilipat ang panel sa English — sabay silang sine-save.',
+                      )}
+                    </p>
                   </div>
 
                   <button type="submit" className="k-btn k-btn--primary" disabled={isSaving}>

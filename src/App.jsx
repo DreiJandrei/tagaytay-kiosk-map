@@ -16,6 +16,7 @@ import { coordinateMapping, mergeOfficeData } from './lib/coordinateMapping';
 import { defaultOfficeData } from './lib/defaultOfficeData';
 import { isRecoveryLink } from './lib/recoveryFlag';
 import { buildVisitorLink, readVisitorLink } from './lib/visitorLink';
+import { floorName, localizeBadge, localizeHours, officeDescription } from './lib/i18n';
 
 // Isang pinagmumulan ng estado ng opisina: kulay, salin, at hugis ng pill.
 const statusPresets = {
@@ -63,11 +64,11 @@ function OfficeMeta({ office, lang }) {
       </p>
 
       {hasText(office.hours) && (
-        <p className="meta-row">🕒 <strong>{lang === 'EN' ? 'Hours' : 'Oras'}</strong> {office.hours}</p>
+        <p className="meta-row">🕒 <strong>{lang === 'EN' ? 'Hours' : 'Oras'}</strong> {localizeHours(office.hours, lang)}</p>
       )}
 
       {hasText(office.head) && (
-        <p className="meta-row">👤 <strong>Contact Person</strong> {office.head}</p>
+        <p className="meta-row">👤 <strong>{lang === 'EN' ? 'Contact Person' : 'Kausapin'}</strong> {office.head}</p>
       )}
 
       {hasText(office.phone) && (
@@ -668,7 +669,7 @@ export default function App() {
           officeKey: isLast ? officeKey : null,
           icon: isLast ? '🎯' : '🚶',
           title: isLast
-            ? `Floor ${f} — ${office.title}`
+            ? `${floorName(f, lang)} — ${office.title}`
             : (EN ? `Floor ${f} — keep climbing` : `Palapag ${f} — akyat pa`),
           body: isLast
             ? (EN ? 'You have arrived. Follow the line to the door.' : 'Narito na po. Sundan ang linya papunta sa pinto.')
@@ -682,7 +683,7 @@ export default function App() {
         floor,
         officeKey,
         icon: '🎯',
-        title: `Floor ${floor} — ${office.title}`,
+        title: `${floorName(floor, lang)} — ${office.title}`,
         body: EN
           ? `Get off at Floor ${floor}, then follow the line to the door.`
           : `Bumaba po sa Palapag ${floor}, tapos sundan ang linya papunta sa pinto.`,
@@ -816,7 +817,7 @@ export default function App() {
   const isDarkMode = theme === 'dark';
   const isLarge = textSize === 'large';
 
-  const dateLabel = new Date().toLocaleDateString('en-PH', { weekday: 'short', month: 'short', day: 'numeric' });
+  const dateLabel = new Date().toLocaleDateString(lang === 'EN' ? 'en-PH' : 'fil-PH', { weekday: 'short', month: 'short', day: 'numeric' });
 
   const keyboardRows = [
     ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
@@ -896,7 +897,9 @@ export default function App() {
             onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
           >
             <span className="hdr-btn-glyph">{isDarkMode ? '☀️' : '🌙'}</span>
-            <span className="hdr-btn-label">{isDarkMode ? 'Light' : 'Dark'}</span>
+            <span className="hdr-btn-label">
+              {lang === 'EN' ? (isDarkMode ? 'Light' : 'Dark') : (isDarkMode ? 'Maliwanag' : 'Madilim')}
+            </span>
           </button>
 
           <span className="hdr-sep" />
@@ -945,7 +948,7 @@ export default function App() {
                     className="result-row"
                     onClick={() => handleSearchSelect(officeItem.key, officeItem.floor)}
                   >
-                    <span className="result-badge">📍 {officeItem.badge}</span>
+                    <span className="result-badge">📍 {localizeBadge(officeItem.badge, lang)}</span>
                     <span className="result-title">{officeItem.title}</span>
                   </div>
                 ))}
@@ -963,7 +966,7 @@ export default function App() {
                     className="result-row"
                     onClick={() => handleSearchSelect(officeItem.key, officeItem.floor)}
                   >
-                    <span className="result-badge">📍 {officeItem.badge} • 🔍 {officeItem.searchCount || 0}</span>
+                    <span className="result-badge">📍 {localizeBadge(officeItem.badge, lang)} • 🔍 {officeItem.searchCount || 0}</span>
                     <span className="result-title">{officeItem.title}</span>
                   </div>
                 ))}
@@ -998,7 +1001,7 @@ export default function App() {
                         className="office-row"
                         onClick={() => handleSelectOffice(key, currentFloor)}
                       >
-                        <span className="office-row-badge">{office.badge || `F${currentFloor}`}</span>
+                        <span className="office-row-badge">{localizeBadge(office.badge, lang) || `F${currentFloor}`}</span>
                         <span className="office-row-title">{office.title}</span>
                       </button>
                     ))
@@ -1017,16 +1020,16 @@ export default function App() {
                 <div className="destination-card">
                   <p className="label">{lang === 'EN' ? 'Destination' : 'Paroroonan'}</p>
                   <h1 className="office-title">{destinationData.title}</h1>
-                  <span className="floor-badge">{destinationData.badge || `Floor ${destinationData.floor}`}</span>
+                  <span className="floor-badge">{localizeBadge(destinationData.badge, lang) || floorName(destinationData.floor, lang)}</span>
                 </div>
 
                 {/* Sunod agad sa pangalan: ano ang ginagawa ng tanggapang
                     ito. Iyon ang unang tanong ng bisita — nauuna pa ito sa
                     oras at pinuno, kaya nasa itaas ito ng .office-meta. */}
-                {hasText(destinationData.description) && (
+                {hasText(officeDescription(destinationData, lang)) && (
                   <div className="office-about">
                     <strong>ℹ️ {lang === 'EN' ? 'About this Office' : 'Tungkol sa Opisina'}</strong>
-                    <div className="office-about-body">{destinationData.description}</div>
+                    <div className="office-about-body">{officeDescription(destinationData, lang)}</div>
                   </div>
                 )}
 
@@ -1056,15 +1059,21 @@ export default function App() {
                   <h2>{lang === 'EN' ? 'Showing route on the Ground Floor' : 'Ipinapakita ang ruta sa Ground Floor'}</h2>
                   <p>
                     {lang === 'EN' ? 'Please proceed to the ' : 'Pumunta po sa '}
-                    {transportMethod === 'elevator' ? 'Elevator' : transportMethod === 'escalator' ? 'Escalator' : 'Stairs'}.
+                    {transportMethod === 'elevator' ? 'Elevator' : transportMethod === 'escalator' ? 'Escalator' : (lang === 'EN' ? 'Stairs' : 'Hagdan')}.
                   </p>
                 </div>
                 <div className="route-status-step">
-                  ⏳ {transportMethod === 'elevator'
-                        ? `Going up to Floor ${destinationData.floor}…`
-                        : transportMethod === 'escalator'
-                          ? 'Taking the escalator to Floor 2…'
-                          : 'Walking to the stairs…'}
+                  ⏳ {lang === 'EN'
+                        ? (transportMethod === 'elevator'
+                          ? `Going up to Floor ${destinationData.floor}…`
+                          : transportMethod === 'escalator'
+                            ? 'Taking the escalator to Floor 2…'
+                            : 'Walking to the stairs…')
+                        : (transportMethod === 'elevator'
+                          ? `Paakyat sa Palapag ${destinationData.floor}…`
+                          : transportMethod === 'escalator'
+                            ? 'Sumasakay sa escalator papuntang Palapag 2…'
+                            : 'Naglalakad papunta sa hagdan…')}
                 </div>
               </div>
             )}
@@ -1076,7 +1085,7 @@ export default function App() {
                   <h2>{lang === 'EN' ? 'Climbing stairs…' : 'Umaakyat sa hagdan…'}</h2>
                   <p>{lang === 'EN' ? `Currently passing Floor ${currentFloor}` : `Kasalukuyang nasa Palapag ${currentFloor}`}</p>
                 </div>
-                <div className="route-status-step">🎯 Target: Floor {destinationData.floor}</div>
+                <div className="route-status-step">🎯 {lang === 'EN' ? 'Target' : 'Papunta sa'}: {floorName(destinationData.floor, lang)}</div>
               </div>
             )}
 
@@ -1092,7 +1101,7 @@ export default function App() {
                     <p className="label">{lang === 'EN' ? 'Destination' : 'Paroroonan'}</p>
                     <h1 className="office-title">{guideDestination.title}</h1>
                     <span className="floor-badge">
-                      {guideDestination.badge || `Floor ${guide.backTo.floor}`}
+                      {localizeBadge(guideDestination.badge, lang) || floorName(guide.backTo.floor, lang)}
                     </span>
                   </div>
                 )}
@@ -1142,15 +1151,15 @@ export default function App() {
                 <div className="destination-card">
                   <p className="label">{lang === 'EN' ? 'Destination' : 'Paroroonan'}</p>
                   <h1 className="office-title">{selectedOffice.title}</h1>
-                  <span className="floor-badge">{selectedOffice.badge}</span>
+                  <span className="floor-badge">{localizeBadge(selectedOffice.badge, lang)}</span>
                 </div>
 
                 {/* Tingnan ang nasa itaas: sunod sa pangalan ang paliwanag
                     tungkol sa tanggapan, bago ang estado at oras. */}
-                {hasText(selectedOffice.description) && (
+                {hasText(officeDescription(selectedOffice, lang)) && (
                   <div className="office-about">
                     <strong>ℹ️ {lang === 'EN' ? 'About this Office' : 'Tungkol sa Opisina'}</strong>
-                    <div className="office-about-body">{selectedOffice.description}</div>
+                    <div className="office-about-body">{officeDescription(selectedOffice, lang)}</div>
                   </div>
                 )}
 
@@ -1192,6 +1201,7 @@ export default function App() {
           transportMethod={transportMethod}
           routeStep={routeStep}
           kioskLabel={guideKioskLabel}
+          lang={lang}
           // Ang `route` sa URL ay galing lang sa QR na na-scan ng bisita —
           // hindi ito kailanman nilalagay ng kiosk sa sarili nitong URL.
           // Kaya ito ang malinaw na senyas na nasa telepono na ito, at
@@ -1254,8 +1264,10 @@ export default function App() {
 
         {isVisitorView && (
           <div className="screenshot-hint">
-            <strong>📸 Take a screenshot</strong>
-            <span>Session expires when the screen is locked or idle.</span>
+            <strong>📸 {lang === 'EN' ? 'Take a screenshot' : 'Mag-screenshot'}</strong>
+            <span>{lang === 'EN'
+              ? 'Session expires when the screen is locked or idle.'
+              : 'Mawawala ang session kapag na-lock o hindi ginalaw ang screen.'}</span>
           </div>
         )}
 
@@ -1275,7 +1287,10 @@ export default function App() {
                     : key === 'CLEAR' ? ' kb-key--clear' : '';
                   return (
                     <button key={key} className={`kb-key${modifier}`} onClick={() => handleVirtualKeyPress(key)}>
-                      {key === 'BACKSPACE' ? '⌫ Delete' : (key === 'SPACE' ? 'Space' : key)}
+                      {key === 'BACKSPACE' ? (lang === 'EN' ? '⌫ Delete' : '⌫ Bura')
+                        : key === 'SPACE' ? (lang === 'EN' ? 'Space' : 'Espasyo')
+                        : key === 'CLEAR' ? (lang === 'EN' ? 'CLEAR' : 'LINIS')
+                        : key}
                     </button>
                   );
                 })}
@@ -1312,7 +1327,7 @@ export default function App() {
                 {lang === 'EN' ? 'Going to' : 'Papunta sa'}{' '}
                 <strong>{destinationData.title}</strong>
                 <span className="route-pick-badge">
-                  {destinationData.badge || `Floor ${destinationData.floor}`}
+                  {localizeBadge(destinationData.badge, lang) || floorName(destinationData.floor, lang)}
                 </span>
               </p>
             </div>
@@ -1384,20 +1399,32 @@ export default function App() {
             <div className="k-modal-head">
               <div>
                 <span className="k-modal-eyebrow">Tagaytay City Hall</span>
-                <h2 className="k-modal-title">About the Kiosk</h2>
+                <h2 className="k-modal-title">{lang === 'EN' ? 'About the Kiosk' : 'Tungkol sa Kiosk'}</h2>
               </div>
               <button className="k-close" onClick={() => setShowAbout(false)}>✕</button>
             </div>
 
             <p className="k-modal-text k-modal-text--justify">
-              This Interactive Directory Kiosk was developed by 4th-year Bachelor of Science in
-              Information Technology (BSIT) students from the City College of Tagaytay. Our goal is
-              to enhance public service by providing an accessible, easy-to-use digital mapping
-              system that helps citizens seamlessly locate offices and navigate the City Hall.
+              {lang === 'EN' ? (
+                <>
+                  This Interactive Directory Kiosk was developed by 4th-year Bachelor of Science in
+                  Information Technology (BSIT) students from the City College of Tagaytay. Our goal is
+                  to enhance public service by providing an accessible, easy-to-use digital mapping
+                  system that helps citizens seamlessly locate offices and navigate the City Hall.
+                </>
+              ) : (
+                <>
+                  Ang Interaktibong Directory Kiosk na ito ay binuo ng mga mag-aaral sa ika-4 na taon
+                  ng Bachelor of Science in Information Technology (BSIT) mula sa City College of
+                  Tagaytay. Layunin naming mapabuti ang serbisyo publiko sa pamamagitan ng isang
+                  madaling gamitin na digital na mapa na tumutulong sa mga mamamayan na mabilis
+                  mahanap ang mga tanggapan at makapaglibot sa City Hall.
+                </>
+              )}
             </p>
 
             <div className="k-roster">
-              <h3 className="k-roster-title">The Development Team</h3>
+              <h3 className="k-roster-title">{lang === 'EN' ? 'The Development Team' : 'Ang Bumuo ng Kiosk'}</h3>
 
               <div className="k-roster-row">
                 <span className="k-roster-name">Franz Jandrei Valderama</span>

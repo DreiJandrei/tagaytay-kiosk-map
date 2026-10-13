@@ -18,8 +18,10 @@ export default function MapScreen({
   // na-scan ang QR. Larawan lang ito ng palapag at ng ruta — walang
   // mahihila, walang mapapalaki, at walang mapipindot na kwarto. Hindi
   // ito para sa kiosk mismo.
-  staticView = false
+  staticView = false,
+  lang = 'EN'
 }) {
+  const EN = lang === 'EN';
  const pathRef = useRef(null);
   const viewportRef = useRef(null);
   const isDragging = useRef(false);
@@ -346,14 +348,16 @@ export default function MapScreen({
   if (currentFloor === 1) {
       // Katapat ng pulang "Map" block sa floor plan — sa loob ng lobby,
       // kaliwa ng escalator. Dito nagsisimula lahat ng ruta sa 1st floor.
-      kioskText = "🔴 YOU ARE HERE (Map Kiosk)";
+      kioskText = EN ? "🔴 YOU ARE HERE (Map Kiosk)" : "🔴 NARITO KAYO (Map Kiosk)";
       kioskStyle = { left: 1045, top: 822, display: 'block' };
   } else if (selectedOfficeKey || routeStep !== 'idle') {
       kioskStyle = { display: 'block' };
       const isClimbing = routeStep === 'climbing-stairs';
 
       if (transportMethod === 'stairs') {
-          kioskText = isClimbing ? "⬆️ CLIMBING STAIRS..." : "🚶‍♂️ ARRIVED VIA STAIRS";
+          kioskText = isClimbing
+            ? (EN ? "⬆️ CLIMBING STAIRS..." : "⬆️ UMAAKYAT SA HAGDAN...")
+            : (EN ? "🚶‍♂️ ARRIVED VIA STAIRS" : "🚶‍♂️ DUMATING SA HAGDAN");
           if (currentFloor === 2) kioskStyle = { left: 220, top: 420 };
           else if (currentFloor >= 3 && currentFloor <= 5) kioskStyle = { left: 240, top: 720 };
           // Iisa ang plano ng 6th at 7th Floor, kaya iisa rin ang
@@ -361,7 +365,7 @@ export default function MapScreen({
           else if (currentFloor >= 6) kioskStyle = { left: 650, top: 580 };
       }
       else if (transportMethod === 'escalator') {
-          kioskText = "🪜 ARRIVED VIA ESCALATOR";
+          kioskText = EN ? "🪜 ARRIVED VIA ESCALATOR" : "🪜 DUMATING SA ESCALATOR";
           if (currentFloor === 2) kioskStyle = { left: 575, top: 670 };
           // Walang naka-mapa na escalator sa 3rd pataas — gamitin ang
           // posisyon ng elevator para hindi mawala sa (0,0) ang pin.
@@ -369,7 +373,7 @@ export default function MapScreen({
           else if (currentFloor >= 6) kioskStyle = { left: 620, top: 350 };
       }
       else {
-          kioskText = "🛗 ARRIVED VIA ELEVATOR";
+          kioskText = EN ? "🛗 ARRIVED VIA ELEVATOR" : "🛗 DUMATING SA ELEVATOR";
           if (currentFloor === 2) kioskStyle = { left: 820, top: 460 };
           else if (currentFloor >= 3 && currentFloor <= 5) kioskStyle = { left: 600, top: 410 };
           else if (currentFloor >= 6) kioskStyle = { left: 620, top: 350 };
@@ -406,7 +410,7 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
       finalPathData = "M 1045 822 L 1225 822 L 1225 885";
       destX = 1225;
       destY = 885;
-      destTitle = "Escalator to Upper Floors";
+      destTitle = EN ? "Escalator to Upper Floors" : "Escalator paakyat";
   }
 
   if (selectedOffice && currentFloor !== 1 && finalPathData !== "") {
@@ -597,7 +601,7 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
         <div className="floor-selector" style={{ position: 'absolute', top: 30, right: 30, zIndex: 10, display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => zoomBy(0.15)}>➕</button>
           <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => zoomBy(-0.15)}>➖</button>
-          <button className="ui-action-btn reset-view-btn" style={{ height: '45px', fontSize: '1rem' }} onClick={resetView} title="Recenter map">⟲</button>
+          <button className="ui-action-btn reset-view-btn" style={{ height: '45px', fontSize: '1rem' }} onClick={resetView} title={EN ? 'Recenter map' : 'Ibalik sa gitna ang mapa'}>⟲</button>
         </div>
       )}
 
@@ -641,7 +645,9 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
                   ? 'Ground'
                   : isTightBar
                     ? `${floor}F`
-                    : `${floor}${floor === 2 ? 'nd' : floor === 3 ? 'rd' : 'th'} Floor`}
+                    : EN
+                      ? `${floor}${floor === 2 ? 'nd' : floor === 3 ? 'rd' : 'th'} Floor`
+                      : `Ika-${floor} Palapag`}
               </button>
             )
           })}
@@ -757,11 +763,11 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
               <div className="structural-element garden-area" style={{ width: '400px', height: '220px', left: '350px', top: '730px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
                   <div style={{ fontSize: '2.2rem', display: 'flex', gap: '15px', justifyContent: 'center' }}>🌿 🪴 🌴</div>
-                  <div style={{ textAlign: 'center', fontWeight: '800', marginTop: '10px' }}>Atrium Garden</div>
+                  <div style={{ textAlign: 'center', fontWeight: '800', marginTop: '10px' }}>{EN ? 'Atrium Garden' : 'Hardin ng Atrium'}</div>
                 </div>
               </div>
               <div className="structural-element stairs-block" style={{ width: '255px', height: '100px', left: '370px', top: '585px' }}>
-                <div className="stair-lines"></div><span className="stair-label">Stairs ▶</span>
+                <div className="stair-lines"></div><span className="stair-label">{EN ? 'Stairs' : 'Hagdan'} ▶</span>
               </div>
               {/* Elevator: nasa ibaba ang pinto. May 60px na pasilyo (y 790-850)
                   sa pagitan nito at ng escalator para may daanan ang ruta. */}
@@ -785,7 +791,7 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
               <div className="structural-element parking-area" style={{ width: '240px', height: '150px', left: '20px', top: '730px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
                   <div style={{ fontSize: '2rem' }}>🅿️ 🚗</div>
-                  <div style={{ textAlign: 'center', fontWeight: '800', marginTop: '8px' }}>Parking Area</div>
+                  <div style={{ textAlign: 'center', fontWeight: '800', marginTop: '8px' }}>{EN ? 'Parking Area' : 'Paradahan'}</div>
                 </div>
               </div>
 
@@ -795,15 +801,15 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
                   pagguhit ng pader sa buong mapa. */}
 
               <div className="exit-badge" style={exitBadgeStyle(1262, 730)}>FIRE EXIT</div>
-              <div className="exit-badge" style={exitBadgeStyle(1080, 968)}>EXIT</div>
-              <div className="exit-badge entrance-badge" style={exitBadgeStyle(1150, 968)}>ENTRANCE</div>
+              <div className="exit-badge" style={exitBadgeStyle(1080, 968)}>{EN ? 'EXIT' : 'LABASAN'}</div>
+              <div className="exit-badge entrance-badge" style={exitBadgeStyle(EN ? 1150 : 1160, 968)}>{EN ? 'ENTRANCE' : 'PASUKAN'}</div>
             </>
           )}
           
           {currentFloor === 2 && (
             <>
-              <div className="structural-element stairs-block" style={{ width: 150, height: 80, left: 150, top: 380, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">Stairs ▼</span></div>
-              <div className="structural-element stairs-block" style={{ width: 100, height: 80, left: 100, top: 810, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">Stairs ↗</span></div>
+              <div className="structural-element stairs-block" style={{ width: 150, height: 80, left: 150, top: 380, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">{EN ? 'Stairs' : 'Hagdan'} ▼</span></div>
+              <div className="structural-element stairs-block" style={{ width: 100, height: 80, left: 100, top: 810, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">{EN ? 'Stairs' : 'Hagdan'} ↗</span></div>
               <div className="structural-element escalator-block" style={{ width: 150, height: 60, left: 500, top: 590, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="escalator-lines"></div><span className="escalator-label">Escalator ▼</span></div>
               <div style={{ position: 'absolute', width: 40, height: 30, left: 800, top: 460, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
               <div style={{ position: 'absolute', width: 40, height: 30, left: 850, top: 460, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
@@ -814,8 +820,8 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
           
           {(currentFloor >= 3 && currentFloor <= 5) && (
             <>
-              <div className="structural-element stairs-block" style={{ width: 80, height: 80, left: 200, top: 680, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">Stairs ↙</span></div>
-              <div className="structural-element stairs-block" style={{ width: 80, height: 80, left: 280, top: 740, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">Stairs ↗</span></div>
+              <div className="structural-element stairs-block" style={{ width: 80, height: 80, left: 200, top: 680, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">{EN ? 'Stairs' : 'Hagdan'} ↙</span></div>
+              <div className="structural-element stairs-block" style={{ width: 80, height: 80, left: 280, top: 740, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">{EN ? 'Stairs' : 'Hagdan'} ↗</span></div>
               <div style={{ position: 'absolute', width: 40, height: 30, left: 560, top: 410, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
               <div style={{ position: 'absolute', width: 40, height: 30, left: 640, top: 410, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
               {/* Walang escalator sa 3rd hanggang 5th Floor. Hanggang 2nd
@@ -833,7 +839,7 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
             <>
               <div style={{ position: 'absolute', width: 50, height: 40, left: 570, top: 350, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
               <div style={{ position: 'absolute', width: 50, height: 40, left: 680, top: 350, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
-              <div className="structural-element stairs-block" style={{ width: 200, height: 60, left: 550, top: 550, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">Stairs ↙ ↗</span></div>
+              <div className="structural-element stairs-block" style={{ width: 200, height: 60, left: 550, top: 550, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">{EN ? 'Stairs' : 'Hagdan'} ↙ ↗</span></div>
 
               <div className="exit-badge" style={exitBadgeStyle(765, 435)}>FIRE EXIT</div>
             </>

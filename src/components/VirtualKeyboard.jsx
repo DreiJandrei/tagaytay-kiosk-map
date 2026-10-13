@@ -260,9 +260,9 @@ export default function VirtualKeyboard({ scopeRef, onClose, lang = 'EN' }) {
         >
           {symbols ? 'ABC' : '?123'}
         </button>
-        <button type="button" className="vkb-key vkb-key--space" onClick={() => press('SPACE')}>Space</button>
+        <button type="button" className="vkb-key vkb-key--space" onClick={() => press('SPACE')}>{lang === 'EN' ? 'Space' : 'Espasyo'}</button>
         <button type="button" className="vkb-key vkb-key--mod" onClick={() => press('ENTER')}>⏎ Enter</button>
-        <button type="button" className="vkb-key vkb-key--clear" onClick={() => press('CLEAR')}>Clear</button>
+        <button type="button" className="vkb-key vkb-key--clear" onClick={() => press('CLEAR')}>{lang === 'EN' ? 'Clear' : 'Linis'}</button>
       </div>
     </div>
   );
