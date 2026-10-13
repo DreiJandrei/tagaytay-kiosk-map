@@ -80,6 +80,29 @@ function OfficeMeta({ office, lang }) {
   );
 }
 
+// ── QR papunta sa telepono ───────────────────────────────────────
+// May hakbang-hakbang sa ilalim: hindi lahat ng bumibisita sa City Hall
+// ay nakagamit na ng QR. Iisang component para sa pagpili ng daan at sa
+// pagdating — pareho dapat ang nababasa sa dalawa.
+function QrCard({ link, lang }) {
+  const EN = lang === 'EN';
+  const steps = EN
+    ? ['Open the camera on your phone.', 'Point it at this QR code and hold still.', 'Tap the link that pops up — the map opens.']
+    : ['Buksan ang camera ng inyong phone.', 'Itutok sa QR code na ito at huwag gumalaw.', 'Pindutin ang link na lalabas — bubukas ang mapa.'];
+  return (
+    <div className="qr-card">
+      <span className="qr-title">📱 {EN ? 'Scan for live mobile map' : 'I-scan para sa live mobile map'}</span>
+      <div className="qr-frame">
+        <QRCodeSVG value={link} size={130} bgColor={"#ffffff"} fgColor={"#0F172A"} />
+      </div>
+      <ol className="qr-steps">
+        {steps.map((step) => <li key={step}>{step}</li>)}
+      </ol>
+      <span className="qr-note">{EN ? 'The directions continue on your phone.' : 'Magpapatuloy ang direksyon sa iyong phone.'}</span>
+    </div>
+  );
+}
+
 // Keyboard para sa mga auth modal. Hiwalay na component para ang pag-unmount
 // nito (pagsara ng modal) ang mag-reset ng "hidden" — kaya hindi na kailangan
 // ng useEffect na nagse-setState, na nagdudulot ng cascading renders.
@@ -881,9 +904,11 @@ export default function App() {
               <span className="glyph-a-lg">A</span>
             </span>
             <span className="hdr-btn-label">
+              {/* Pandiwa — ang sinasabi ay ang MANGYAYARI kapag pinindot,
+                  hindi ang kasalukuyang laki. */}
               {lang === 'EN'
-                ? (isLarge ? 'Normal Text' : 'Bigger Text')
-                : (isLarge ? 'Normal' : 'Palakihin')}
+                ? (isLarge ? 'Reset to Normal' : 'Make Text Bigger')
+                : (isLarge ? 'Ibalik sa Normal' : 'Palakihin ang Teksto')}
             </span>
           </button>
 
@@ -1042,13 +1067,7 @@ export default function App() {
                     ibaba. Nandito lang ang detalye ng tanggapan, na
                     mababasa pagkatapos pumili. */}
 
-                <div className="qr-card">
-                  <span className="qr-title">📱 {lang === 'EN' ? 'Scan for live mobile map' : 'I-scan para sa live mobile map'}</span>
-                  <div className="qr-frame">
-                    <QRCodeSVG value={destinationQrLink} size={130} bgColor={"#ffffff"} fgColor={"#0F172A"} />
-                  </div>
-                  <span className="qr-note">{lang === 'EN' ? 'The directions continue on your phone.' : 'Magpapatuloy ang direksyon sa iyong phone.'}</span>
-                </div>
+                <QrCard link={destinationQrLink} lang={lang} />
               </div>
             )}
 
@@ -1179,13 +1198,7 @@ export default function App() {
                     phone na mismo — at bawat bagong QR ay bagong link
                     na mabubuhay pang labinlimang minuto. */}
                 {!isVisitorView && (
-                  <div className="qr-card">
-                    <span className="qr-title">📱 {lang === 'EN' ? 'Scan for live mobile map' : 'I-scan para sa live mobile map'}</span>
-                    <div className="qr-frame">
-                      <QRCodeSVG value={arrivedQrLink} size={130} bgColor={"#ffffff"} fgColor={"#0F172A"} />
-                    </div>
-                    <span className="qr-note">{lang === 'EN' ? 'The directions continue on your phone.' : 'Magpapatuloy ang direksyon sa iyong phone.'}</span>
-                  </div>
+                  <QrCard link={arrivedQrLink} lang={lang} />
                 )}
               </div>
             )}
