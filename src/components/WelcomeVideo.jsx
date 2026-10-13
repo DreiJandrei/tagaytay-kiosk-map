@@ -29,12 +29,21 @@ const signatureOf = (list) =>
 //                            bilog na 🔊 kapag may tunog ito.
 // Ang tala na wala pang `placement` (bago patakbuhin ang SQL) ay 'side'.
 //
-// IISANG TUNOG LANG. Ang anunsyo sa gilid ang may karapatan: kapag video
-// na may tunog ang nasa kard, iniuulat iyon ng `onSoundClaim`, at ang
-// background ay tumatahimik habang `yieldSound`. Larawan, Facebook post, o
-// video na walang tunog ang nasa kard? Ang background na ang may tunog.
+// IISANG TUNOG LANG. Ang WelcomeScreen ang humahawak kung kanino ang tunog:
+//   • Ang kard sa gilid ay tumutunog lang kapag siya ang may-ari
+//     (`isOwner`), at iniuulat nito kung TALAGANG tumutunog siya
+//     (`onAudibleChange`) — hindi lang kung may tunog ang video. Ang
+//     hinarang ng browser o pinatay ng bisita ay hindi tumutunog.
+//   • Ang background ay tumatahimik habang tumutunog ang kard
+//     (`otherAudible`), at tumutunog kapag tahimik ito.
+//   • Ang pindot sa alinmang 🔊 ay pag-angkin ng tunog (`onClaimSound`):
+//     ang binuksan ang tumutunog, ang isa ay tumatahimik.
+//   • Bagong anunsyo sa kard (`onItemChange`) — balik sa anunsyo ang
+//     tunog. Siya ang inuuna.
 export default function WelcomeVideo({
-  placement = 'side', backgroundHost = null, onSoundClaim, yieldSound = false,
+  placement = 'side', backgroundHost = null,
+  isOwner = true, otherAudible = false,
+  onAudibleChange, onClaimSound, onItemChange,
 }) {
   const isBackground = placement === 'background' && !!backgroundHost;
   const [videos, setVideos] = useState([]);
@@ -108,19 +117,28 @@ export default function WelcomeVideo({
 
   // May tunog bang maaaring buksan — ito ang nagpapakita ng buton.
   // Tahimik ang larawan, kaya walang buton doon kahit anong nakatakda.
-  const soundAvailable = !!current?.has_sound && type !== 'facebook' && !isImage;
+  // Sa background, laging may 🔊 ang video na kayang tumunog (mp4 at
+  // YouTube) — ang "may tunog" ng admin ang nagsasabi lang kung bukas ito
+  // sa umpisa. Sa kard, ang admin pa rin ang nagpapasya kung may buton.
+  const soundAvailable = isBackground
+    ? (type === 'file' || type === 'youtube')
+    : !!current?.has_sound && type !== 'facebook' && !isImage;
   const wantsSound = soundChoice !== null ? soundChoice : !!current?.has_sound;
   // Gustong may tunog (ng admin o ng bisita), at hindi hinarang ng browser…
   const soundWanted = soundAvailable && wantsSound && !soundBlocked;
-  // …at hindi nagpapaubaya sa anunsyo sa gilid.
-  const soundOn = soundWanted && !yieldSound;
+  // …at siya ang dapat tumunog ngayon (tingnan ang IISANG TUNOG sa itaas).
+  const soundOn = soundWanted && (isBackground ? !otherAudible : isOwner);
 
-  // Ang kard sa gilid: "may tunog ang anunsyong ito" — kahit pinatay pa
-  // ng bisita ang 🔊. Ang anunsyo pa rin ang may-ari ng tunog habang
-  // nakalabas ito; hindi sasalit ang background sa pinatahimik na anunsyo.
+  // Ang kard: iniuulat kung talagang tumutunog siya ngayon.
   useEffect(() => {
-    if (!isBackground) onSoundClaim?.(soundAvailable);
-  }, [isBackground, soundAvailable, onSoundClaim]);
+    if (!isBackground) onAudibleChange?.(soundOn);
+  }, [isBackground, soundOn, onAudibleChange]);
+
+  // Ang kard: bagong anunsyo — siya ulit ang uunahin sa tunog.
+  const currentId = current?.id;
+  useEffect(() => {
+    if (!isBackground && currentId != null) onItemChange?.();
+  }, [isBackground, currentId, cycle, onItemChange]);
 
   // YouTube sa background: pinatatahimik at binubuksan sa utos sa player
   // (postMessage), hindi sa pagpapalit ng link — kung hindi, magre-restart
@@ -145,7 +163,11 @@ export default function WelcomeVideo({
     // ng kiosk. Dito huminto ang pindot — tunog lang ang inaayos nito.
     e.stopPropagation();
     setSoundBlocked(false);
-    setSoundChoice(!wantsSound);
+    // Ang nakikita ang binabaligtad, hindi ang nakatakda: ang background na
+    // nagpapaubaya ay 🔇 sa mata kahit "gusto" pa nito ng tunog.
+    const next = !soundOn;
+    setSoundChoice(next);
+    onClaimSound?.(next);
   };
 
   // ── Swipe ────────────────────────────────────────────────────
@@ -325,9 +347,10 @@ export default function WelcomeVideo({
     return (
       <>
         {backgroundLayer}
-        {/* Bilog na 🔊 sa kanang ibaba. Wala ito habang nagpapaubaya sa
-            anunsyo — walang tunog na mapapatay o mabubuksan doon. */}
-        {backgroundLayer && soundAvailable && !yieldSound && (
+        {/* Bilog na 🔊 sa kanang ibaba — laging nandito kapag kayang
+            tumunog ang background. 🔇 habang tumutunog ang anunsyo;
+            ang pindot dito ay paglipat ng tunog sa background. */}
+        {backgroundLayer && soundAvailable && (
           <button
             type="button"
             className={`welcome-video-sound welcome-bg-sound${soundOn ? ' is-on' : ''}`}

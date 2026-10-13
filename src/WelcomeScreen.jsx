@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import tagaytaySeal from './assets/tagaytay-seal.jpg';
 import cityhallBg from './assets/cityhall.jpg';
 import WelcomeVideo from './components/WelcomeVideo';
@@ -12,9 +12,14 @@ export default function WelcomeScreen({ onStart }) {
   // WelcomeVideo). State at hindi ref: kailangang mag-render ulit ang
   // video kapag handa na ang node na ito.
   const [videoHost, setVideoHost] = useState(null);
-  // May tunog ba ang anunsyong video na nasa kard ngayon? Kapag oo,
-  // tumatahimik ang background — iisang tunog lang ang lalabas.
-  const [sideHasSound, setSideHasSound] = useState(false);
+  // Iisang tunog lang (tingnan ang WelcomeVideo). Kanino ang tunog ngayon —
+  // ang anunsyo sa kard ('side') o ang background — at kung talagang
+  // tumutunog ang kard.
+  const [soundOwner, setSoundOwner] = useState('side');
+  const [sideAudible, setSideAudible] = useState(false);
+  const claimForSide = useCallback((on) => { if (on) setSoundOwner('side'); }, []);
+  const claimForBackground = useCallback((on) => setSoundOwner(on ? 'background' : 'side'), []);
+  const backToSide = useCallback(() => setSoundOwner('side'), []);
 
   useEffect(() => {
     const fetchAnnouncement = async () => {
@@ -67,7 +72,12 @@ export default function WelcomeScreen({ onStart }) {
           lumalabas kapag walang naka-"Background" sa Admin Panel. */}
       <div className="welcome-video-host" ref={setVideoHost} aria-hidden="true" />
       {videoHost && (
-        <WelcomeVideo placement="background" backgroundHost={videoHost} yieldSound={sideHasSound} />
+        <WelcomeVideo
+          placement="background"
+          backgroundHost={videoHost}
+          otherAudible={sideAudible}
+          onClaimSound={claimForBackground}
+        />
       )}
       <div className="welcome-tint" aria-hidden="true" />
       <div className="welcome-vignette" aria-hidden="true" />
@@ -122,7 +132,13 @@ export default function WelcomeScreen({ onStart }) {
         {/* Kanan: mga anunsyong video (naka-"Anunsyo" sa Admin Panel).
             Nagiging magkatabi ang hero at ang video kapag may laman ito. */}
         <div className="welcome-board-slot">
-          <WelcomeVideo placement="side" onSoundClaim={setSideHasSound} />
+          <WelcomeVideo
+            placement="side"
+            isOwner={soundOwner === 'side'}
+            onAudibleChange={setSideAudible}
+            onClaimSound={claimForSide}
+            onItemChange={backToSide}
+          />
         </div>
 
         </div>

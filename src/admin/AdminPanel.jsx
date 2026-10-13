@@ -1050,14 +1050,16 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                         )
                       : videoForm.placement === 'background'
                       ? t(
-                          'This is the background music. A round 🔊 button appears at the lower right of '
-                          + 'the welcome screen, so a visitor can turn it on or off. It goes quiet by '
-                          + 'itself while an announcement video with sound is in the card, and comes back '
-                          + 'after. If the browser blocks sound at first, one tap on that button is enough.',
-                          'Ito ang musika ng background. May bilog na 🔊 sa kanang ibaba ng welcome screen '
-                          + 'para mabuksan o mapatay ito ng bisita. Kusa itong tatahimik habang may '
-                          + 'anunsyong video na may tunog sa kard, at babalik pagkatapos. Kung haharangin '
-                          + 'ng browser ang tunog sa umpisa, isang pindot sa buton ay sapat na.',
+                          'Checked = the background music starts ON. Either way, a round 🔊 button is '
+                          + 'always at the lower right of the welcome screen to turn it on or off. Only '
+                          + 'one sound plays at a time: while the announcement video in the card is '
+                          + 'playing sound, the background is quiet — tap the background 🔊 to switch to '
+                          + 'it. If the browser blocks sound at first, one tap on that button is enough.',
+                          'Naka-check = bukas ang musika ng background sa umpisa. Alinman dito, laging may '
+                          + 'bilog na 🔊 sa kanang ibaba ng welcome screen para buksan o patayin ito. Iisang '
+                          + 'tunog lang ang lalabas: habang tumutunog ang anunsyong video sa kard, tahimik '
+                          + 'ang background — pindutin ang 🔊 ng background para ito ang tumunog. Kung '
+                          + 'haharangin ng browser ang tunog sa umpisa, isang pindot sa buton ay sapat na.',
                         )
                       : t(
                           'A round 🔊 button appears over the video on the welcome screen. '
