@@ -43,7 +43,7 @@ const signatureOf = (list) =>
 export default function WelcomeVideo({
   placement = 'side', backgroundHost = null,
   isOwner = true, otherAudible = false,
-  onAudibleChange, onClaimSound, onItemChange,
+  onAudibleChange, onClaimSound, onItemChange, onShapeChange,
 }) {
   const isBackground = placement === 'background' && !!backgroundHost;
   const [videos, setVideos] = useState([]);
@@ -59,6 +59,10 @@ export default function WelcomeVideo({
   // nakikita. Ang pinagmulan at hatol ng galaw ay nasa ref: bawat pixel
   // ng paggalaw ay hindi dapat magpa-render ng buong kard.
   const [dragX, setDragX] = useState(0);
+  // Tunay na hugis ng larawan o .mp4, nasukat pagka-load. Madalas na
+  // nakaiwan sa "landscape" ang setting ng isang poster na patayo — kaya
+  // may malapad na itim na gilid. Ang nasukat ang sinusunod.
+  const [measured, setMeasured] = useState({});
   const fileRef = useRef(null);
   const iframeRef = useRef(null);
   const swipe = useRef({ id: null, x: 0, y: 0, active: false, moved: false });
@@ -98,6 +102,24 @@ export default function WelcomeVideo({
   const type = current ? (current.video_type || detectVideoType(current.source_url)) : '';
 
   const isImage = type === 'image';
+
+  // Umaangkop ang kahon sa hugis ng video — kung hindi, puro itim na
+  // gilid ang makikita sa Reels.
+  const shapeKey = current ? `${current.id}|${current.source_url}` : '';
+  const portrait = shapeKey in measured
+    ? measured[shapeKey]
+    : current?.orientation === 'portrait';
+  const measure = (w, h) => {
+    if (!w || !h) return;
+    const tall = h > w;
+    setMeasured((m) => (m[shapeKey] === tall ? m : { ...m, [shapeKey]: tall }));
+  };
+
+  // Sinasabi sa welcome screen kung patayo ang kard sa gilid — doon
+  // nagpapasya kung itatabi ito sa kanang dulo nang buong taas.
+  useEffect(() => {
+    if (!isBackground) onShapeChange?.(!!current && portrait);
+  }, [isBackground, current, portrait, onShapeChange]);
   // Ang .mp4 at YouTube ay kayang umulit nang kusa kapag iisa lang ang
   // video; ang Facebook plugin ay walang loop kaya ini-remount ito. Ang
   // nag-iisang larawan ay wala namang dulo — nakatitig lang ito, kaya
@@ -276,9 +298,6 @@ export default function WelcomeVideo({
       });
   const heading = (current.title || '').trim() || 'City Updates';
   const caption = (current.caption || '').trim();
-  // Umaangkop ang kahon sa hugis ng video — kung hindi, puro itim na
-  // gilid ang makikita sa Reels.
-  const portrait = current.orientation === 'portrait';
 
   const media = isImage ? (
       // Walang key na kasama ang `cycle` dito: sa larawan, ang
@@ -288,6 +307,7 @@ export default function WelcomeVideo({
         key={current.id}
         src={current.source_url}
         alt={heading}
+        onLoad={(e) => measure(e.currentTarget.naturalWidth, e.currentTarget.naturalHeight)}
         // Kapag sira ang link ng larawan at iisa lang ang nakatala,
         // hindi puwedeng lumipat — ang paglipat ay babalik din dito
         // at mauuwi sa walang hintong ikot.
@@ -302,6 +322,7 @@ export default function WelcomeVideo({
         muted
         playsInline
         loop={single}
+        onLoadedMetadata={(e) => measure(e.currentTarget.videoWidth, e.currentTarget.videoHeight)}
         onEnded={single ? undefined : advance}
         onError={advance}
       />

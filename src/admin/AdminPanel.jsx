@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import VirtualKeyboard from '../components/VirtualKeyboard';
 import {
   updateOffice, getAnnouncement, updateAnnouncement, changeAdminPassword, logoutAdmin,
-  getKioskVideos, saveKioskVideo, deleteKioskVideo,
+  getKioskVideos, saveKioskVideo, deleteKioskVideo, placeKioskVideo,
   uploadKioskVideoFile, deleteKioskVideoFile, isUploadedFile,
 } from '../lib/api';
 import {
@@ -140,7 +140,11 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
         + 'Burahin muna ang isa sa listahan bago magdagdag ng bago.',
       ));
     }
-    const next = video ? { ...video } : { ...BLANK_VIDEO, sort_order: videos.length };
+    // `position` ang numerong nakikita ng admin sa listahan (1 = una).
+    // Ang bago ay nasa dulo, maliban kung baguhin.
+    const next = video
+      ? { ...video, position: videos.findIndex((v) => v.id === video.id) + 1 }
+      : { ...BLANK_VIDEO, sort_order: videos.length, position: videos.length + 1 };
     setVideoForm(next);
     setVideoSnapshot(JSON.stringify(next));
     setVideoTypeTouched(!!video);
@@ -283,6 +287,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     setIsSaving(true);
     try {
       const saved = await saveKioskVideo(videoForm);
+      // Isinisingit sa napiling puwesto; umuusog ang iba nang kusa.
+      await placeKioskVideo(saved.id, videoForm.position);
       await loadVideos();
       // Pagsasara ng editor: ang bagong row sa listahan — kasama ang
       // LIVE/OFF na pill — ang nagpapatunay na natanggap ang pagbabago.
@@ -941,14 +947,22 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   </div>
                   <div>
                     <label className="k-label">
-                      {t('Order (lower shows first)', 'Order (mas mababa, mas nauna)')}
+                      {t('Position on the list (1 = first)', 'Puwesto sa listahan (1 = una)')}
                     </label>
                     <input
                       type="number"
                       className="k-input"
-                      value={videoForm.sort_order}
-                      onChange={(e) => setVideoField('sort_order', e.target.value)}
+                      min={1}
+                      max={videos.length + (videoForm.id ? 0 : 1)}
+                      value={videoForm.position}
+                      onChange={(e) => setVideoField('position', e.target.value)}
                     />
+                    <p className="adm-hint">
+                      {t(
+                        'The others move down on their own — no need to edit them.',
+                        'Kusang uusog ang iba — hindi na kailangang i-edit sila.',
+                      )}
+                    </p>
                   </div>
                 </div>
 

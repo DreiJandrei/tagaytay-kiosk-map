@@ -401,6 +401,39 @@ export const saveKioskVideo = async (video) => {
   }
 };
 
+// Inilalagay ang isang video sa posisyong pinili ng admin (1 = una), at
+// kusang umuusog ang lahat ng iba. Hindi na kailangang i-edit isa-isa ang
+// iba para lang makasingit: ang bagong pang-2 ay itinutulak ang dating
+// pang-2 sa pang-3, at iba pa. Pagkatapos nito, laging 0, 1, 2… ang
+// sort_order — walang dobleng numero, walang puwang.
+export const placeKioskVideo = async (id, position) => {
+  const { data, error } = await supabase
+    .from('kiosk_videos')
+    .select('id, sort_order')
+    .order('sort_order', { ascending: true })
+    .order('id', { ascending: true });
+  if (error) throw error;
+
+  const rows = data || [];
+  const others = rows.filter((r) => r.id !== id);
+  const at = Math.min(others.length, Math.max(0, (Number(position) || 1) - 1));
+  const ordered = [...others.slice(0, at), { id }, ...others.slice(at)];
+
+  // Ang nagbago lang ang isinusulat.
+  const before = new Map(rows.map((r) => [r.id, r.sort_order]));
+  const changes = ordered
+    .map((r, i) => ({ id: r.id, sort_order: i }))
+    .filter((r) => before.get(r.id) !== r.sort_order);
+
+  for (const r of changes) {
+    const { error: updateError } = await supabase
+      .from('kiosk_videos')
+      .update({ sort_order: r.sort_order })
+      .eq('id', r.id);
+    if (updateError) throw updateError;
+  }
+};
+
 // ==============================================================
 // 8. VIDEO / PICTURE FILE UPLOAD (SUPABASE STORAGE)
 // ==============================================================

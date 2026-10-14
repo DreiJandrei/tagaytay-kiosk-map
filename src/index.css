@@ -1020,8 +1020,13 @@ img { max-width: 100%; }
   text-align: center; padding: 20px 0;
 }
 /* Mas malaki ang bahagi ng video kaysa sa hero — ito ang unang
-   nakakaagaw ng pansin sa kiosk. */
-.welcome-columns:has(.welcome-board-slot > *) .welcome-hero {
+   nakakaagaw ng pansin sa kiosk.
+
+   Pareho rin ang laki kapag may opisyal na anunsyo sa ilalim, kahit
+   walang video sa gilid. Dati'y lumalaki ang hero pagkatanggal ng
+   video, at natatakpan ng anunsyo ang "Touch the screen to start". */
+.welcome-columns:has(.welcome-board-slot > *) .welcome-hero,
+.welcome-main:has(.welcome-board) .welcome-hero {
   flex: 4 1 0;
   --h-seal: 128px;
   --h-seal-img: 108px;
@@ -1329,7 +1334,8 @@ img { max-width: 100%; }
   .welcome-time { font-size: 1.2rem; }
 
   .welcome-columns:has(.welcome-board-slot > *) { gap: 30px; }
-  .welcome-columns:has(.welcome-board-slot > *) .welcome-hero {
+  .welcome-columns:has(.welcome-board-slot > *) .welcome-hero,
+  .welcome-main:has(.welcome-board) .welcome-hero {
     --h-seal: 96px;
     --h-seal-img: 80px;
     --h-republic: .78rem;
@@ -1366,6 +1372,73 @@ img { max-width: 100%; }
   .welcome-board-head h2 { font-size: 1.15rem; }
   .welcome-board-icon { font-size: 1.4rem; }
   .welcome-board-body { font-size: .95rem; -webkit-line-clamp: 2; line-clamp: 2; }
+}
+
+/* ── Patayong anunsyo sa kanang dulo ───────────────────────────
+   Poster o Reels sa kard sa gilid: buong taas ito ng screen, nakadikit
+   sa kanang dulo — hindi na maliit na kahong may malapad na itim na
+   gilid. Sa natitirang lapad sa kaliwa ang petsa, ang hero, ang
+   opisyal na anunsyo, at pati ang background na video.
+
+   Ang lapad ng kard ay kinukuha sa taas nito (9:16). Ang --strip-chrome
+   ay tantiya ng ulo, tuldok at padding ng kard; kapag sumobra o kumulang
+   ito, manipis na itim na gilid lang ang epekto, hindi naputol na poster.
+
+   Sa nakatayong screen lang (mas malapad kaysa mataas) — sa makitid,
+   ang dating ayos pa rin. */
+@media (min-aspect-ratio: 1/1) {
+  .welcome-screen.has-side-portrait {
+    --strip-top: 28px;
+    --strip-bottom: 32px;
+    --strip-right: 32px;
+    --strip-chrome: 190px;
+    --strip-w: min(40vw, calc(
+      (100vh - var(--strip-top) - var(--strip-bottom) - var(--strip-chrome)) * 9 / 16
+      + var(--vid-pad) * 2 + 2px));
+  }
+  /* Iniiwasan ang gumagalaw na advisory sa ilalim. */
+  .welcome-screen.has-side-portrait:has(.announcement-bar) { --strip-bottom: 92px; }
+
+  .welcome-screen.has-side-portrait .welcome-content {
+    padding-right: calc(var(--strip-w) + var(--strip-right) + 32px);
+  }
+  .welcome-screen.has-side-portrait .welcome-board-slot {
+    position: absolute; z-index: 2;
+    top: var(--strip-top); bottom: var(--strip-bottom); right: var(--strip-right);
+    width: var(--strip-w);
+    flex: none; max-width: none; max-height: none;
+  }
+  .welcome-screen.has-side-portrait .welcome-video-card.is-portrait {
+    width: 100%; height: 100%;
+    box-sizing: border-box;
+    align-self: stretch;
+  }
+  .welcome-screen.has-side-portrait .welcome-video-frame.is-portrait {
+    flex: 1 1 0; min-height: 0;
+    width: 100%; height: auto;
+    aspect-ratio: auto;
+  }
+
+  /* Ang background na video ay sa kaliwang bahagi na lang, at dahan-
+     dahang naglalaho papunta sa kard — walang matigas na guhit. */
+  .welcome-screen.has-side-portrait .welcome-video-host {
+    right: calc(var(--strip-w) + var(--strip-right));
+    -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent 100%);
+    mask-image: linear-gradient(90deg, #000 88%, transparent 100%);
+  }
+  /* Ang 🔊 ng background ay lumilipat sa kaliwa ng kard. */
+  .welcome-screen.has-side-portrait .welcome-bg-sound {
+    right: calc(var(--strip-w) + var(--strip-right) + 20px);
+  }
+}
+@media (min-aspect-ratio: 1/1) and (max-height: 900px) {
+  .welcome-screen.has-side-portrait {
+    --strip-top: 18px;
+    --strip-bottom: 22px;
+    --strip-right: 24px;
+    --strip-chrome: 150px;
+  }
+  .welcome-screen.has-side-portrait:has(.announcement-bar) { --strip-bottom: 74px; }
 }
 
 .announcement-bar {

@@ -20,6 +20,9 @@ export default function WelcomeScreen({ onStart }) {
   const claimForSide = useCallback((on) => { if (on) setSoundOwner('side'); }, []);
   const claimForBackground = useCallback((on) => setSoundOwner(on ? 'background' : 'side'), []);
   const backToSide = useCallback(() => setSoundOwner('side'), []);
+  // Patayo ba ang nasa kard ngayon (poster, Reels). Kapag oo, buong taas
+  // ito sa kanang dulo ng screen, at sa natitirang lapad ang lahat ng iba.
+  const [sidePortrait, setSidePortrait] = useState(false);
 
   useEffect(() => {
     const fetchAnnouncement = async () => {
@@ -59,7 +62,7 @@ export default function WelcomeScreen({ onStart }) {
   });
 
   return (
-    <div className="welcome-screen" onClick={onStart}>
+    <div className={`welcome-screen${sidePortrait ? ' has-side-portrait' : ''}`} onClick={onStart}>
 
       {/* Layer 1: dahan-dahang gumagalaw na larawan ng City Hall */}
       <div
@@ -138,6 +141,7 @@ export default function WelcomeScreen({ onStart }) {
             onAudibleChange={setSideAudible}
             onClaimSound={claimForSide}
             onItemChange={backToSide}
+            onShapeChange={setSidePortrait}
           />
         </div>
 
