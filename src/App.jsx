@@ -804,44 +804,55 @@ export default function App() {
   const buildGuideSteps = (officeKey, office, floor, method) => {
     const EN = lang === 'EN';
     const ride = method === 'elevator' ? 'Elevator' : method === 'escalator' ? 'Escalator' : 'Stairs';
+    const rideTL = ride === 'Stairs' ? 'Hagdan' : ride;
+    // Maikling utos ang pamagat ng bawat hakbang — "Start here", "Take
+    // the stairs", "Arrive at …" — para mabasa agad mula sa malayo. Nasa
+    // `body` ang mas mahabang paliwanag.
     const steps = [{
       floor: 1,
       officeKey: method === 'stairs' ? 'stairs-up' : 'elevator-up',
-      icon: '🔴',
-      title: EN ? 'Ground Floor — start here' : 'Ground Floor — dito magsimula',
+      icon: '📍',
+      title: EN ? 'Start here' : 'Dito magsimula',
       body: EN
-        ? `You are at the map kiosk. Follow the line to the ${ride}.`
-        : `Nasa map kiosk po kayo. Sundan ang linya papunta sa ${ride === 'Stairs' ? 'Hagdan' : ride}.`,
+        ? `You are at the map kiosk on the Ground Floor. Follow the line to the ${ride}.`
+        : `Nasa map kiosk po kayo sa Ground Floor. Sundan ang linya papunta sa ${rideTL}.`,
     }];
+
+    const arrive = {
+      icon: '🎯',
+      title: EN ? `Arrive at ${office.title}` : `Dumating sa ${office.title}`,
+    };
 
     if (method === 'stairs') {
       // Isang hakbang bawat palapag na aakyatin — ito ang talagang
       // dinaraanan ng naglalakad.
       for (let f = 2; f <= floor; f++) {
         const isLast = f === floor;
-        steps.push({
+        steps.push(isLast ? {
           floor: f,
-          officeKey: isLast ? officeKey : null,
-          icon: isLast ? '🎯' : '🚶',
-          title: isLast
-            ? `${floorName(f, lang)} — ${office.title}`
-            : (EN ? `Floor ${f} — keep climbing` : `Palapag ${f} — akyat pa`),
-          body: isLast
-            ? (EN ? 'You have arrived. Follow the line to the door.' : 'Narito na po. Sundan ang linya papunta sa pinto.')
-            : (EN
-              ? 'You pass this floor. The stairs continue up from the same spot.'
-              : 'Dadaanan po ninyo ang palapag na ito. Dito rin nagpapatuloy paakyat ang hagdan.'),
+          officeKey,
+          ...arrive,
+          body: EN
+            ? `You are on Floor ${f}. Follow the line to the door.`
+            : `Nasa Palapag ${f} na po kayo. Sundan ang linya papunta sa pinto.`,
+        } : {
+          floor: f,
+          officeKey: null,
+          icon: '🚶',
+          title: EN ? 'Take the stairs up' : 'Umakyat sa hagdan',
+          body: EN
+            ? `You pass Floor ${f}. Keep climbing — the stairs continue up from the same spot.`
+            : `Dadaanan po ninyo ang Palapag ${f}. Tuloy lang paakyat — dito rin nagpapatuloy ang hagdan.`,
         });
       }
     } else {
       steps.push({
         floor,
         officeKey,
-        icon: '🎯',
-        title: `${floorName(floor, lang)} — ${office.title}`,
+        ...arrive,
         body: EN
-          ? `Get off at Floor ${floor}, then follow the line to the door.`
-          : `Bumaba po sa Palapag ${floor}, tapos sundan ang linya papunta sa pinto.`,
+          ? `Take the ${ride} to Floor ${floor}, then follow the line to the door.`
+          : `Sumakay sa ${rideTL} hanggang Palapag ${floor}, tapos sundan ang linya papunta sa pinto.`,
       });
     }
 
@@ -852,14 +863,15 @@ export default function App() {
     if (isVisitorView) return;
     if (!selectedOfficeKey || !selectedOffice || currentFloor <= 1) return;
     const steps = buildGuideSteps(selectedOfficeKey, selectedOffice, currentFloor, transportMethod);
-    // Ang huling hakbang ang kinalalagyan na ngayon ng bumibisita, kaya
-    // doon nagbubukas — pabalik ang tingin, hindi pasimula ulit.
-    const startIndex = steps.length - 1;
+    // Nagsisimula sa "Start here" sa Ground Floor, tapos Next nang Next
+    // hanggang sa pinto — ganito binabasa ang direksyon.
     setGuide({
       steps,
-      index: startIndex,
+      index: 0,
       backTo: { floor: currentFloor, officeKey: selectedOfficeKey },
     });
+    setCurrentFloor(steps[0].floor);
+    setSelectedOfficeKey(steps[0].officeKey);
   };
 
   const goToGuideStep = (index) => {
@@ -994,6 +1006,85 @@ export default function App() {
       default: return /^[A-Z]$/.test(key) && !kbShift ? key.toLowerCase() : key;
     }
   };
+
+  // ── STEP-BY-STEP SA IBABAW NG MAPA ───────────────────────────
+  // Nasa itaas-kaliwa ng mapa, lumulutang gaya ng zoom. Dati'y maliit
+  // na pindutan ito sa sidebar at makitid na hanay sa ilalim ng zoom —
+  // hindi napapansin, at hiwalay pa ang numero sa sinasabi ng hakbang.
+  // Ngayon, iisang kard: nasaang hakbang, ano ang gagawin, at
+  // Previous/Next.
+  //
+  // Sa kiosk lang, at sa mga opisinang nasa itaas lang — sa ground
+  // floor, walang palapag na dadaanan.
+  const canOpenGuide = !isVisitorView && !guide && selectedOffice && currentFloor > 1
+    && (routeStep === 'arrived'
+      || (routeStep === 'idle' && selectedOfficeKey && selectedOfficeKey !== 'elevator-up' && selectedOfficeKey !== 'stairs-up'));
+  const isLastGuideStep = guide && guide.index === guide.steps.length - 1;
+
+  const guideOverlay = guide ? (
+    <div className="map-guide">
+      <div className="map-guide-head">
+        <span className="map-guide-cap">
+          🧭 {lang === 'EN'
+            ? `Step ${guide.index + 1} of ${guide.steps.length}`
+            : `Hakbang ${guide.index + 1} ng ${guide.steps.length}`}
+        </span>
+        <button className="map-guide-x" onClick={closeGuide} title={lang === 'EN' ? 'Close' : 'Isara'}>✕</button>
+      </div>
+
+      {/* Isang pindutan bawat palapag na dadaanan. Mapipindot ang
+          kahit alin — pagbalik sa isang palapag nang hindi paulit-ulit
+          ang pag-atras. */}
+      <div className="map-guide-steps">
+        {guide.steps.map((s, i) => (
+          <button
+            key={`${s.floor}-${i}`}
+            className={`map-guide-step${i === guide.index ? ' is-now' : ''}${i < guide.index ? ' is-done' : ''}`}
+            onClick={() => goToGuideStep(i)}
+            title={s.title}
+          >
+            {s.floor === 1 ? 'GF' : s.floor}
+          </button>
+        ))}
+      </div>
+
+      <div className="map-guide-now" key={guide.index}>
+        <span className="map-guide-icon">{guideStep.icon}</span>
+        <div className="map-guide-text">
+          <span className="map-guide-floor">{floorName(guideStep.floor, lang)}</span>
+          <h3>{guideStep.title}</h3>
+          <p>{guideStep.body}</p>
+        </div>
+      </div>
+
+      <div className="map-guide-nav">
+        <button
+          className="map-guide-btn"
+          disabled={guide.index === 0}
+          onClick={() => goToGuideStep(guide.index - 1)}
+        >
+          ◀ {lang === 'EN' ? 'Previous' : 'Bumalik'}
+        </button>
+        {isLastGuideStep ? (
+          <button className="map-guide-btn is-primary" onClick={closeGuide}>
+            ✓ {lang === 'EN' ? 'Done' : 'Tapos na'}
+          </button>
+        ) : (
+          <button className="map-guide-btn is-primary" onClick={() => goToGuideStep(guide.index + 1)}>
+            {lang === 'EN' ? 'Next' : 'Susunod'} ▶
+          </button>
+        )}
+      </div>
+    </div>
+  ) : canOpenGuide ? (
+    <button className="map-guide-open" onClick={openGuide}>
+      <span className="map-guide-open-ico">🧭</span>
+      <span className="map-guide-open-text">
+        <strong>{lang === 'EN' ? 'Step-by-step directions' : 'Hakbang-hakbang na direksyon'}</strong>
+        <small>{lang === 'EN' ? 'See the way floor by floor' : 'Tingnan ang daan bawat palapag'}</small>
+      </span>
+    </button>
+  ) : null;
 
   return (
     <div className={`map-screen-container ${theme}-theme`} style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -1253,8 +1344,8 @@ export default function App() {
               </div>
             )}
 
-            {/* Nasa lumulutang na panel sa gilid ng mapa ang mismong
-                gabay (tingnan ang .map-mini-stack). Dito naiiwan ang
+            {/* Nasa lumulutang na kard sa itaas-kaliwa ng mapa ang mismong
+                gabay (tingnan ang guideOverlay). Dito naiiwan ang
                 paalala kung saan pupunta — nagpapalit-palit kasi ang
                 napipili habang binabalikan ang mga palapag, kaya ang
                 pinanggalingang tunguhin ang ipinapakita, hindi iyon. */}
@@ -1269,15 +1360,6 @@ export default function App() {
                     </span>
                   </div>
                 )}
-
-                {/* Ang bilang at ang pagpili ay nasa maliit na kontrol sa
-                    tabi ng zoom. Ang sinasabi ng hakbang ay nandito —
-                    dito lang kasi may sapat na lapad para mabasa ito. */}
-                <div className="guide-now">
-                  <span className="guide-now-icon">{guide.steps[guide.index].icon}</span>
-                  <h2>{guide.steps[guide.index].title}</h2>
-                  <p>{guide.steps[guide.index].body}</p>
-                </div>
 
                 <button className="guide-done" onClick={closeGuide}>
                   ✓ {lang === 'EN' ? 'Done — back to the office' : 'Tapos na — balik sa opisina'}
@@ -1301,14 +1383,6 @@ export default function App() {
                     >
                       ⬅️ {lang === 'EN' ? `Floor ${currentFloor} list` : `Palapag ${currentFloor}`}
                     </button>
-
-                    {/* Sa mga opisinang nasa itaas lang may dinaanang palapag
-                        na puwedeng balikan. Sa ground floor, walang laman ito. */}
-                    {currentFloor > 1 && (
-                      <button className="guide-open-btn" onClick={openGuide}>
-                        🧭 {lang === 'EN' ? 'Step-by-step' : 'Hakbang-hakbang'}
-                      </button>
-                    )}
                   </div>
                 )}
 
@@ -1365,60 +1439,8 @@ export default function App() {
           // Kaya ito ang malinaw na senyas na nasa telepono na ito, at
           // larawan lang ng palapag ang dapat lumabas doon.
           staticView={isVisitorView}
+          overlay={guideOverlay}
         />
-
-        {/* ── Maliliit na kontrol sa gilid ng mapa ───────────────────
-            Kasinlaki at kasinghugis ng zoom, nakapatong lang sa ilalim
-            nito. Ang paglipat-lipat sa mga hakbang ng gabay ang nandito
-            — ang mahabang teksto ay nasa sidebar, kung saan may lugar
-            para dito. */}
-        <div className="map-mini-stack">
-
-          {guide && (
-            <div className="map-mini">
-              <span className="mini-cap">{guide.index + 1}/{guide.steps.length}</span>
-
-              {/* Isang pindutan bawat palapag na dadaanan. Mapipindot ang
-                  kahit alin — ito ang pagbalik sa isang palapag nang
-                  hindi paulit-ulit ang pag-atras. */}
-              <div className="mini-steps">
-                {guide.steps.map((s, i) => (
-                  <button
-                    key={`${s.floor}-${i}`}
-                    className={`mini-step${i === guide.index ? ' is-now' : ''}${i < guide.index ? ' is-done' : ''}`}
-                    onClick={() => goToGuideStep(i)}
-                    title={s.title}
-                  >
-                    {s.floor === 1 ? 'GF' : s.floor}
-                  </button>
-                ))}
-              </div>
-
-              <div className="mini-nav">
-                <button
-                  className="mini-nav-btn"
-                  disabled={guide.index === 0}
-                  onClick={() => goToGuideStep(guide.index - 1)}
-                  title={lang === 'EN' ? 'Previous' : 'Bumalik'}
-                >
-                  ⬅
-                </button>
-                <button
-                  className="mini-nav-btn"
-                  disabled={guide.index === guide.steps.length - 1}
-                  onClick={() => goToGuideStep(guide.index + 1)}
-                  title={lang === 'EN' ? 'Next' : 'Susunod'}
-                >
-                  ➡
-                </button>
-              </div>
-
-              <button className="mini-x" onClick={closeGuide} title={lang === 'EN' ? 'Done' : 'Tapos na'}>
-                ✕
-              </button>
-            </div>
-          )}
-        </div>
 
         {isVisitorView && (
           <div className="screenshot-hint">

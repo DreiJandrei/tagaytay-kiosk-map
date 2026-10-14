@@ -19,6 +19,9 @@ export default function MapScreen({
   // mahihila, walang mapapalaki, at walang mapipindot na kwarto. Hindi
   // ito para sa kiosk mismo.
   staticView = false,
+  // Lumulutang na laman sa itaas-kaliwa ng mapa — dito nakalagay ang
+  // step-by-step na gabay, kung saan agad itong nakikita.
+  overlay = null,
   lang = 'EN'
 }) {
   const EN = lang === 'EN';
@@ -600,6 +603,18 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
           <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => zoomBy(0.15)}>➕</button>
           <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => zoomBy(-0.15)}>➖</button>
           <button className="ui-action-btn reset-view-btn" style={{ height: '45px', fontSize: '1rem' }} onClick={resetView} title={EN ? 'Recenter map' : 'Ibalik sa gitna ang mapa'}>⟲</button>
+        </div>
+      )}
+
+      {/* Hindi dapat humila ng mapa ang pindot dito — kontrol ito, hindi
+          bahagi ng palapag. */}
+      {overlay && (
+        <div
+          className="map-overlay"
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+        >
+          {overlay}
         </div>
       )}
 
