@@ -63,6 +63,11 @@ export default function WelcomeVideo({
   // nakaiwan sa "landscape" ang setting ng isang poster na patayo — kaya
   // may malapad na itim na gilid. Ang nasukat ang sinusunod.
   const [measured, setMeasured] = useState({});
+  const shapeKeyOf = (v) => `${v.id}|${v.source_url}`;
+  // Sa background, inaalis din ang nasukat na patayo kahit "landscape" ang
+  // nakatakda — buong screen ito, kaya puro itim na gilid ang lalabas.
+  // Kapag wala nang natira, ang larawan ng City Hall ang maiiwan.
+  const shown = isBackground ? videos.filter((v) => measured[shapeKeyOf(v)] !== true) : videos;
   const fileRef = useRef(null);
   const iframeRef = useRef(null);
   const swipe = useRef({ id: null, x: 0, y: 0, active: false, moved: false });
@@ -73,7 +78,10 @@ export default function WelcomeVideo({
     const load = async () => {
       const all = await getKioskVideos({ activeOnly: true });
       if (!alive) return;
-      const list = all.filter((v) => (v.placement === 'background' ? 'background' : 'side') === placement);
+      const list = all.filter((v) => (v.placement === 'background' ? 'background' : 'side') === placement
+        // Landscape lang ang background. Hinaharang na ito ng Admin Panel,
+        // pero may mga tala na nauna pa roon.
+        && !(placement === 'background' && v.orientation === 'portrait'));
       setVideos((prev) => (signatureOf(prev) === signatureOf(list) ? prev : list));
     };
 
@@ -86,26 +94,26 @@ export default function WelcomeVideo({
   // haba bago ang modulo — kung hindi, negatibo ang lalabas na posisyon.
   const step = useCallback((delta) => {
     setIndex((i) => {
-      const len = videos.length || 1;
+      const len = shown.length || 1;
       return ((i + delta) % len + len) % len;
     });
     setCycle((c) => c + 1);
-  }, [videos.length]);
+  }, [shown.length]);
 
   const advance = useCallback(() => step(1), [step]);
 
   // Kinakalkula — hindi iniimbak — ang tunay na posisyon, para hindi
   // sumabog kapag may binurang video habang tumatakbo ang kiosk.
-  const position = videos.length ? index % videos.length : 0;
-  const current = videos[position];
-  const single = videos.length === 1;
+  const position = shown.length ? index % shown.length : 0;
+  const current = shown[position];
+  const single = shown.length === 1;
   const type = current ? (current.video_type || detectVideoType(current.source_url)) : '';
 
   const isImage = type === 'image';
 
   // Umaangkop ang kahon sa hugis ng video — kung hindi, puro itim na
   // gilid ang makikita sa Reels.
-  const shapeKey = current ? `${current.id}|${current.source_url}` : '';
+  const shapeKey = current ? shapeKeyOf(current) : '';
   const portrait = shapeKey in measured
     ? measured[shapeKey]
     : current?.orientation === 'portrait';
@@ -196,7 +204,7 @@ export default function WelcomeVideo({
   // Hindi na kailangang hintayin ang orasan: puwedeng ihagod pakaliwa
   // para sa susunod, pakanan para sa nakaraan. Iisa lang ang video?
   // Wala namang lilipatan, kaya patay ang buong galaw na ito.
-  const swipeable = videos.length > 1;
+  const swipeable = shown.length > 1;
 
   const endSwipe = () => {
     swipe.current.active = false;
@@ -414,8 +422,8 @@ export default function WelcomeVideo({
             <span aria-hidden="true">{soundOn ? '🔊' : '🔇'}</span>
           </button>
         )}
-        {videos.length > 1 && (
-          <span className="welcome-video-count">{position + 1}/{videos.length}</span>
+        {shown.length > 1 && (
+          <span className="welcome-video-count">{position + 1}/{shown.length}</span>
         )}
       </div>
 
@@ -428,7 +436,7 @@ export default function WelcomeVideo({
       {swipeable && (
         <div className="welcome-video-nav" aria-hidden="true">
           <div className="welcome-video-dots">
-            {videos.map((v, i) => (
+            {shown.map((v, i) => (
               <span key={v.id} className={i === position ? 'is-on' : ''} />
             ))}
           </div>

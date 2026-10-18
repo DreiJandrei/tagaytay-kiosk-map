@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import VirtualKeyboard from '../components/VirtualKeyboard';
 import {
-  updateOffice, getAnnouncement, updateAnnouncement, changeAdminPassword, logoutAdmin,
+  updateOffice, getAnnouncement, patchKioskSettings, changeAdminPassword, logoutAdmin,
+  getElevatorStatus, setElevatorStatus,
   getKioskVideos, saveKioskVideo, deleteKioskVideo, placeKioskVideo,
   uploadKioskVideoFile, deleteKioskVideoFile, isUploadedFile,
 } from '../lib/api';
@@ -28,6 +29,13 @@ const TEXT_LIMITS = { announcement: 300, advisory: 150 };
 // screen, kaya ang bawat dagdag ay dagdag hintay bago maulit ang una —
 // sa lima pa lang, mahigit tatlong minuto na ang buong ikot.
 const MAX_VIDEOS = 5;
+
+// Buong screen ang background, kaya landscape lang ang puwede roon — ang
+// patayo ay puro itim na gilid. Dalawang senyas ang tinitingnan: ang
+// nakatakdang hugis, at ang nasukat mula sa na-upload na file
+// (`measured_portrait`), na hindi malulusutan sa pagpalit ng dropdown.
+const isPortraitBackground = (v) =>
+  !!v && v.placement === 'background' && (v.orientation === 'portrait' || v.measured_portrait === true);
 
 export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang = 'EN', setLang }) {
   // Iisang switch lang ang wika ng buong kiosk — ang header toggle. Dito
@@ -67,6 +75,12 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
   // pagtago ng nabago na.
   const [annEditor, setAnnEditor] = useState(null);
   const [annDraft, setAnnDraft] = useState('');
+
+  // Ang nakatala sa database (`elevatorSaved`) at ang pinipili pa lang
+  // (`elevatorDraft`). Hiwalay sila para malinaw kung may hindi pa nase-save.
+  // `null` habang binabasa pa — para hindi magmukhang "gumagana" ang sira.
+  const [elevatorSaved, setElevatorSaved] = useState(null);
+  const [elevatorDraft, setElevatorDraft] = useState(null);
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -112,6 +126,39 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     };
     fetchAdminData();
   }, []);
+
+  useEffect(() => {
+    getElevatorStatus().then((status) => {
+      setElevatorSaved(status);
+      setElevatorDraft(status);
+    });
+  }, []);
+
+  const handleSaveElevator = async (e) => {
+    e.preventDefault();
+    if (!elevatorDraft) return;
+    setIsSaving(true);
+    try {
+      const status = await setElevatorStatus(elevatorDraft);
+      setElevatorSaved(status);
+      alert(status === 'available'
+        ? t(
+            '✅ Saved! The elevator is back as a choice on the kiosk within a minute.',
+            '✅ Nai-save na! Mapipili na ulit ang elevator sa kiosk sa loob ng isang minuto.',
+          )
+        : t(
+            '✅ Saved! Within a minute the kiosk will stop sending visitors to the elevator '
+            + 'and point them to the stairs instead.',
+            '✅ Nai-save na! Sa loob ng isang minuto, hindi na ituturo ng kiosk ang elevator — '
+            + 'sa hagdan na papupuntahin ang mga bisita.',
+          ));
+    } catch (error) {
+      alert(t(
+        `❌ The elevator status was not saved.\n\n${error.message || error}`,
+        `❌ Hindi na-save ang kalagayan ng elevator.\n\n${error.message || error}`,
+      ));
+    } finally { setIsSaving(false); }
+  };
 
   const loadVideos = async () => {
     const list = await getKioskVideos();
@@ -174,6 +221,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
       // Sinusuri ang orihinal na `url`, hindi ang `cleaned` — nabubura
       // ng normalize ang /reel/ kaya doon lang makikita ang senyas.
       orientation: looksLikeReel(url) ? 'portrait' : f.orientation,
+      // Bagong pinagmulan — hindi na para rito ang sukat ng dating file.
+      measured_portrait: false,
     }));
   };
 
@@ -216,6 +265,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
         source_url: publicUrl,
         video_type: image ? 'image' : 'file',
         orientation: meta && meta.height > meta.width ? 'portrait' : f.orientation,
+        measured_portrait: !!meta && meta.height > meta.width,
         duration_seconds: (!image && meta?.duration)
           ? Math.min(600, Math.max(5, Math.round(meta.duration)))
           : f.duration_seconds,
@@ -283,6 +333,17 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
 
     const problem = validateVideoUrl(videoForm.source_url, videoForm.video_type, lang);
     if (problem) return alert(`❌ ${problem}`);
+
+    if (isPortraitBackground(videoForm)) {
+      return alert(t(
+        '❌ The background only takes LANDSCAPE (wide) videos and pictures.\n\n'
+        + 'This one is portrait (upright) — on a full screen it would be mostly black bars. '
+        + 'Set “Where it shows” to Announcement instead, or use a landscape version.',
+        '❌ LANDSCAPE (pahiga) lang ang puwede sa background.\n\n'
+        + 'Portrait (patayo) ito — sa buong screen, puro itim na gilid ang lalabas. '
+        + 'Gawing Anunsyo ang “Saan lalabas”, o gumamit ng landscape na bersyon.',
+      ));
+    }
 
     setIsSaving(true);
     try {
@@ -481,22 +542,18 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
 
   const handleSaveAnnouncement = async (e) => {
     e.preventDefault();
-    // Iisang row lang sa database ang kinalalagyan ng dalawang teksto,
-    // kaya kahit isa lang ang binubuksan, kailangang dalhin pabalik ang
-    // kapareha nito nang buo — kung hindi, mabubura ito.
+    // Iisang row lang sa database ang kinalalagyan ng dalawang teksto at ng
+    // kalagayan ng elevator, kaya ang binuksang teksto lang ang binabago —
+    // buo ang iba (tingnan ang patchKioskSettings).
     // Huling pigil sa haba, sakaling may nakalusot na teksto sa textarea
     // (hal. galing sa touchscreen keyboard na hindi dumaan sa onChange).
     const draft = annDraft.slice(0, annLimit);
-    const next = {
-      advisory: annEditor === 'advisory' ? draft : advisoryText,
-      announcement: annEditor === 'announcement' ? draft : announcementText,
-    };
 
     setIsSaving(true);
     try {
-      await updateAnnouncement(JSON.stringify(next));
-      setAdvisoryText(next.advisory);
-      setAnnouncementText(next.announcement);
+      const next = await patchKioskSettings({ [annEditor]: draft });
+      setAdvisoryText(next.advisory || '');
+      setAnnouncementText(next.announcement || '');
       setAnnEditor(null);
       alert(t(
         '✅ Saved! It will show up on the welcome screen within a minute.',
@@ -610,6 +667,10 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
           </button>
           <button className={`adm-tab${activeTab === 'offices' ? ' active' : ''}`} onClick={() => setActiveTab('offices')}>
             🏢 {t('Office Directory', 'Direktoryo ng Tanggapan')}
+          </button>
+          <button className={`adm-tab${activeTab === 'elevator' ? ' active' : ''}`} onClick={() => setActiveTab('elevator')}>
+            🛗 Elevator
+            {elevatorSaved && elevatorSaved !== 'available' && <span className="adm-tab-alert" aria-hidden="true">⚠️</span>}
           </button>
           <button className={`adm-tab${activeTab === 'security' ? ' active' : ''}`} onClick={() => setActiveTab('security')}>
             🔒 {t('Admin Password', 'Password ng Admin')}
@@ -736,6 +797,14 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                           {video.placement === 'background'
                             ? t('background', 'background')
                             : t('side card', 'kard sa gilid')}
+                          {/* Nauna pa ang talang ito sa patakarang landscape
+                              lang ang background — nilalaktawan ito ng kiosk. */}
+                          {isPortraitBackground(video) && (
+                            <span className="adm-vid-warn">
+                              {' · ⚠️ '}
+                              {t('not shown — background must be landscape', 'hindi lumalabas — landscape lang ang background')}
+                            </span>
+                          )}
                         </span>
                       </span>
                       <span className={`adm-vid-pill${video.is_active ? ' is-on' : ''}`}>
@@ -979,15 +1048,32 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   <p className="adm-hint">
                     {t(
                       'Announcement: Facebook posts and notices, shown in the card. Background: a '
-                      + 'city video like “Welcome to Tagaytay” that plays behind the title. Only one '
-                      + 'sound plays at a time — while an announcement video with sound is in the card, '
-                      + 'the background goes quiet.',
+                      + 'city video like “Welcome to Tagaytay” that plays behind the title — '
+                      + 'landscape (wide) only. Only one sound plays at a time — while an announcement '
+                      + 'video with sound is in the card, the background goes quiet.',
                       'Anunsyo: mga post at abiso mula sa FB, sa kard sa gilid. Background: video ng '
-                      + 'lungsod gaya ng “Welcome to Tagaytay”, tumutugtog sa likod ng pamagat. Iisang '
-                      + 'tunog lang ang lalabas — habang may anunsyong video na may tunog sa kard, '
-                      + 'tatahimik ang background.',
+                      + 'lungsod gaya ng “Welcome to Tagaytay”, tumutugtog sa likod ng pamagat — '
+                      + 'landscape (pahiga) lang. Iisang tunog lang ang lalabas — habang may anunsyong '
+                      + 'video na may tunog sa kard, tatahimik ang background.',
                     )}
                   </p>
+                  {isPortraitBackground(videoForm) && (
+                    <p className="adm-bad">
+                      {videoForm.measured_portrait
+                        ? t(
+                            '⚠️ The uploaded file is portrait (upright). The background only takes '
+                            + 'landscape — choose Announcement, or upload a landscape version.',
+                            '⚠️ Portrait (patayo) ang na-upload na file. Landscape lang ang puwede sa '
+                            + 'background — piliin ang Anunsyo, o mag-upload ng landscape na bersyon.',
+                          )
+                        : t(
+                            '⚠️ Portrait (upright) cannot be the background. Choose Announcement, or '
+                            + 'change the shape below to Landscape if it is really wide.',
+                            '⚠️ Hindi puwedeng background ang portrait (patayo). Piliin ang Anunsyo, o '
+                            + 'gawing Landscape ang hugis sa ibaba kung talagang pahiga ito.',
+                          )}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -1002,17 +1088,27 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                     onChange={(e) => setVideoField('orientation', e.target.value)}
                   >
                     {getOrientations(lang).map((o) => (
-                      <option key={o.value} value={o.value}>{o.label}</option>
+                      <option
+                        key={o.value}
+                        value={o.value}
+                        // Hindi mapipili sa background — pero kung iyon na
+                        // ang nakatakda, lumalabas pa rin ito nang tapat.
+                        disabled={o.value === 'portrait' && videoForm.placement === 'background'}
+                      >
+                        {o.label}
+                      </option>
                     ))}
                   </select>
                   <p className="adm-hint">
                     {t(
                       'Portrait is picked automatically when a Reel is pasted, or when an upright '
                       + 'picture or video is uploaded. If that is wrong, change it here — otherwise '
-                      + 'the kiosk will show black bars on the sides.',
+                      + 'the kiosk will show black bars on the sides. Portrait only works in the '
+                      + 'Announcement card, not as the background.',
                       'Awtomatikong napipili ang Portrait kapag Reels ang na-paste, o kapag patayo '
                       + 'ang na-upload na larawan o video. Kung mali, palitan mo dito — kung hindi, '
-                      + 'magkakaroon ng itim na gilid sa kiosk.',
+                      + 'magkakaroon ng itim na gilid sa kiosk. Sa kard ng Anunsyo lang puwede ang '
+                      + 'Portrait, hindi sa background.',
                     )}
                   </p>
                 </div>
@@ -1340,6 +1436,67 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                 </form>
               )}
             </div>
+          </div>
+        )}
+
+        {activeTab === 'elevator' && (
+          <div className="adm-pane">
+            <h3>
+              🛗 {t('Elevator Status', 'Kalagayan ng Elevator')}
+              {' '}
+              {elevatorSaved && (
+                <span className={`adm-vid-pill${elevatorSaved === 'available' ? ' is-on' : ' is-bad'}`}>
+                  {elevatorSaved === 'available'
+                    ? t('WORKING', 'GUMAGANA')
+                    : elevatorSaved === 'maintenance'
+                      ? t('MAINTENANCE', 'INAAYOS')
+                      : t('OUT OF ORDER', 'SIRA')}
+                </span>
+              )}
+            </h3>
+            <p className="adm-hint">
+              {t(
+                'When the elevator is not working, the kiosk greys out the Elevator choice, '
+                + 'marks it on the map, and sends visitors up by the stairs (or the escalator '
+                + 'for Floor 2). Set it back to Working once it is fixed.',
+                'Kapag hindi gumagana ang elevator, hindi na ito mapipili sa kiosk, may marka '
+                + 'ito sa mapa, at sa hagdan (o escalator para sa Palapag 2) na papupuntahin '
+                + 'ang mga bisita. Ibalik sa Gumagana kapag naayos na.',
+              )}
+            </p>
+
+            {!elevatorDraft ? (
+              <p className="adm-hint">{t('Loading…', 'Binabasa…')}</p>
+            ) : (
+              <form className="adm-form" onSubmit={handleSaveElevator} style={{ maxWidth: '520px', flex: 'none' }}>
+                {[
+                  { value: 'available', label: t('🟢 Working', '🟢 Gumagana') },
+                  { value: 'maintenance', label: t('🟡 Under maintenance', '🟡 Inaayos (maintenance)') },
+                  { value: 'broken', label: t('🔴 Out of order', '🔴 Sira') },
+                ].map((opt) => (
+                  <label key={opt.value} className="adm-check">
+                    <input
+                      type="radio"
+                      name="elevator-status"
+                      value={opt.value}
+                      checked={elevatorDraft === opt.value}
+                      onChange={() => setElevatorDraft(opt.value)}
+                    />
+                    <span>{opt.label}</span>
+                  </label>
+                ))}
+
+                <button
+                  type="submit"
+                  className="k-btn k-btn--primary"
+                  disabled={isSaving || elevatorDraft === elevatorSaved}
+                >
+                  {isSaving
+                    ? t('Deploying to kiosks…', 'Ipinapadala sa mga kiosk…')
+                    : t('💾 Save Elevator Status', '💾 I-save ang Kalagayan')}
+                </button>
+              </form>
+            )}
           </div>
         )}
 

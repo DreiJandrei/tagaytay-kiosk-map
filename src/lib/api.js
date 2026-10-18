@@ -324,16 +324,65 @@ export const updateAnnouncement = async (text) => {
     const { data: existing, error: checkErr } = await supabase.from('kiosks_announcements').select('id').eq('id', 1).maybeSingle();
     if (checkErr) throw checkErr;
 
-    if (existing) {
-      await supabase.from('kiosks_announcements').update({ announcement_text: text }).eq('id', 1);
-    } else {
-      await supabase.from('kiosks_announcements').insert([{ id: 1, announcement_text: text }]);
-    }
+    // Hindi nagtatapon ang supabase-js kapag tinanggihan ang pagsulat —
+    // nasa `error` ito. Kung hindi titingnan, "nai-save na" ang sasabihin
+    // sa admin kahit walang nagbago.
+    const { error: writeErr } = existing
+      ? await supabase.from('kiosks_announcements').update({ announcement_text: text }).eq('id', 1)
+      : await supabase.from('kiosks_announcements').insert([{ id: 1, announcement_text: text }]);
+    if (writeErr) throw writeErr;
     return true;
   } catch (error) {
     console.error("Save Announcement Error:", error);
     throw error;
   }
+};
+
+// Iisang JSON sa iisang row ang lahat ng setting ng welcome screen at ng
+// elevator: { advisory, announcement, elevator }. Ang lumang row na payak
+// na teksto lang ay ang advisory noon pa.
+const parseKioskSettings = (text) => {
+  if (!text) return {};
+  try {
+    const parsed = JSON.parse(text);
+    return parsed && typeof parsed === 'object' ? parsed : { advisory: text };
+  } catch {
+    return { advisory: text };
+  }
+};
+
+// Binabago lang ang mga field na ibinigay; buo ang iba. Sariwang basa ito
+// mula sa database — HINDI ang getAnnouncement, na blangko ang ibinabalik
+// kapag nabigo. Kung iyon ang gagamitin, ang isang pumalyang basa ay
+// magbubura ng anunsyo sa susunod na pag-save ng elevator.
+export const patchKioskSettings = async (patch) => {
+  const { data, error } = await supabase
+    .from('kiosks_announcements').select('announcement_text').eq('id', 1).maybeSingle();
+  if (error) throw error;
+  const next = { ...parseKioskSettings(data?.announcement_text), ...patch };
+  await updateAnnouncement(JSON.stringify(next));
+  return next;
+};
+
+// ==============================================================
+// 6b. KALAGAYAN NG ELEVATOR
+// ==============================================================
+//   'available'   — gumagana
+//   'maintenance' — inaayos (naka-iskedyul)
+//   'broken'      — sira
+export const ELEVATOR_STATUSES = ['available', 'maintenance', 'broken'];
+
+// Kapag hindi mabasa (walang internet, o wala pang naitala), gumagana ang
+// palagay — gaya ng kiosk bago pa nagkaroon ng setting na ito.
+export const getElevatorStatus = async () => {
+  const status = parseKioskSettings(await getAnnouncement()).elevator;
+  return ELEVATOR_STATUSES.includes(status) ? status : 'available';
+};
+
+export const setElevatorStatus = async (status) => {
+  if (!ELEVATOR_STATUSES.includes(status)) throw new Error(`Unknown elevator status: ${status}`);
+  await patchKioskSettings({ elevator: status });
+  return status;
 };
 
 // ==============================================================

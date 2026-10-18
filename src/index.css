@@ -721,6 +721,31 @@ img { max-width: 100%; }
 .elevator-doors { background: rgba(96,165,250,.55) !important; }
 .light-theme .elevator-doors { background: #7FA9E0 !important; }
 
+/* Sira o inaayos ang elevator (tab na Elevator sa admin). Guhit-guhit na
+   parang harang sa construction — kilala ito kahit hindi basahin. */
+.elevator-block.is-out {
+  flex-direction: column; gap: 6px;
+  background: repeating-linear-gradient(135deg,
+    #3A1B14 0 10px, #2A1410 10px 20px) !important;
+  border: 1.5px dashed #F59E0B !important;
+  color: #FDE7C7 !important;
+}
+.light-theme .elevator-block.is-out {
+  background: repeating-linear-gradient(135deg,
+    #FFF4E0 0 10px, #FDE9C8 10px 20px) !important;
+  border-color: #D97706 !important;
+  color: #7C2D12 !important;
+}
+.elevator-out-tag {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #F59E0B;
+  color: #1C1003;
+  font-size: .72rem; font-weight: 900;
+  white-space: nowrap;
+}
+.elevator-block.is-out .elevator-doors { background: #F59E0B !important; }
+
 .garden-area {
   border-radius: 8px !important;
   border: 2px dashed #2E62B8 !important;
@@ -2421,6 +2446,19 @@ img { max-width: 100%; }
   outline: none;
 }
 .route-opt:active { transform: translateY(0); }
+/* Sira o inaayos ang elevator: nakikita pa rin, pero hindi mapipindot. */
+.route-opt.is-out,
+.route-opt.is-out:hover {
+  cursor: not-allowed;
+  border-style: dashed;
+  border-color: var(--ui-line-2);
+  background: var(--ui-raise);
+  transform: none;
+  box-shadow: none;
+}
+.route-opt.is-out .route-opt-ico,
+.route-opt.is-out .route-opt-name { opacity: .45; }
+.route-opt-sub.route-opt-warn { color: var(--ui-danger); font-weight: 800; }
 .route-opt-ico { font-size: 2.6rem; line-height: 1; }
 .route-opt-name {
   font-size: 1.22rem; font-weight: 900;
@@ -3684,6 +3722,9 @@ button:active { transform: scale(.97); }
   letter-spacing: .5px;
 }
 .adm-vid-pill.is-on { background: var(--ui-accent-sf); color: var(--ui-accent); }
+.adm-vid-pill.is-bad { background: var(--ui-danger-sf); color: var(--ui-danger); }
+.adm-vid-warn { color: var(--ui-danger); font-weight: 800; }
+.adm-tab-alert { margin-left: 6px; }
 .adm-vid-meta {
   display: block;
   margin-top: 3px;
@@ -3765,6 +3806,19 @@ button:active { transform: scale(.97); }
   border-radius: var(--ui-r-sm);
   background: var(--ui-raise);
 }
+/* Kapatid ng .adm-ok — para sa hindi puwedeng i-save. */
+.adm-bad {
+  margin: 8px 0 0;
+  padding: 11px 14px;
+  border: 1px solid var(--ui-danger);
+  border-radius: var(--ui-r-sm);
+  background: var(--ui-danger-sf);
+  color: var(--ui-danger);
+  font-size: .92rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
 .adm-check {
   display: flex;
   align-items: center;

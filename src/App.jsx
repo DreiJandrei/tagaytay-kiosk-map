@@ -11,12 +11,12 @@ import './index.css';
 import { QRCodeSVG } from 'qrcode.react'; 
 import { useSearchParams } from 'react-router-dom';
 
-import { getAllOffices, initializeDatabase, incrementSearchCount, loginAdmin, resetPasswordEmail, logoutAdmin, onAuthChange, changeAdminPassword } from './lib/api';
+import { getAllOffices, initializeDatabase, incrementSearchCount, loginAdmin, resetPasswordEmail, logoutAdmin, onAuthChange, changeAdminPassword, getElevatorStatus } from './lib/api';
 import { coordinateMapping, mergeOfficeData } from './lib/coordinateMapping';
 import { defaultOfficeData } from './lib/defaultOfficeData';
 import { isRecoveryLink } from './lib/recoveryFlag';
 import { buildVisitorLink, readVisitorLink } from './lib/visitorLink';
-import { floorName, localizeBadge, localizeHours, officeDescription } from './lib/i18n';
+import { floorName, localizeBadge, localizeHours, officeDescription, elevatorStatusLabel } from './lib/i18n';
 
 // Isang pinagmumulan ng estado ng opisina: kulay, salin, at hugis ng pill.
 const statusPresets = {
@@ -264,6 +264,19 @@ export default function App() {
   const [routeStep, setRouteStep] = useState('idle');
   const [destinationData, setDestinationData] = useState(null);
   const [transportMethod, setTransportMethod] = useState(() => visitorLink.transport);
+
+  // Itinatakda ng admin (tab na Elevator). Kapag hindi 'available', hindi
+  // na mapipili ang elevator at sa hagdan nagsisimula ang bawat ruta.
+  // Kasabay ng anunsyo ang paghila — isang minuto.
+  const [elevatorStatus, setElevatorStatus] = useState('available');
+  const elevatorOut = elevatorStatus !== 'available';
+  useEffect(() => {
+    let alive = true;
+    const load = () => getElevatorStatus().then((s) => { if (alive) setElevatorStatus(s); });
+    load();
+    const timer = setInterval(load, 60000);
+    return () => { alive = false; clearInterval(timer); };
+  }, []);
 
   // Step-by-step na balikan ng ruta. Kapag bukas ito, ang bumibisita na
   // ang humahawak ng palapag — hindi na ang awtomatikong orasan. Dito
@@ -624,8 +637,9 @@ export default function App() {
       // Kung hindi, ang daang pinili sa NAKARAANG opisina ang nakasakay
       // pa rin habang wala pang pinipili ang bisita — at iyon ang
       // naisusulat sa QR, kaya ibang daan ang nababasa sa telepono
-      // kaysa sa pipiliin niya sa kiosk pagkatapos.
-      setTransportMethod('elevator');
+      // kaysa sa pipiliin niya sa kiosk pagkatapos. Hagdan naman kapag
+      // sira o inaayos ang elevator — hindi dapat iyon ang nasa QR.
+      setTransportMethod(elevatorOut ? 'stairs' : 'elevator');
       setRouteStep('choose-transport');
     }
   };
@@ -775,9 +789,13 @@ export default function App() {
     [selectedOfficeKey, transportMethod]
   );
 
+  // Kung masira ang elevator habang nakabukas na ang pagpili ng daan,
+  // elevator pa ang palagay — pero hindi iyon ang dapat dalhin ng QR.
   const destinationQrLink = useMemo(
-    () => (destinationData ? buildVisitorLink(destinationData.key, transportMethod) : ''),
-    [destinationData, transportMethod]
+    () => (destinationData
+      ? buildVisitorLink(destinationData.key, elevatorOut && transportMethod === 'elevator' ? 'stairs' : transportMethod)
+      : ''),
+    [destinationData, transportMethod, elevatorOut]
   );
 
   // Nasaang palapag ang opisinang nakasulat sa na-scan na link. Dito
@@ -1432,6 +1450,7 @@ export default function App() {
           onPickFloor={handlePickFloor}
           transportMethod={transportMethod}
           routeStep={routeStep}
+          elevatorStatus={elevatorStatus}
           kioskLabel={guideKioskLabel}
           lang={lang}
           // Ang `route` sa URL ay galing lang sa QR na na-scan ng bisita —
@@ -1512,17 +1531,28 @@ export default function App() {
             </div>
 
             <div className="route-pick-opts">
+              {/* Nananatiling nakikita kahit sira — kapag nawala na lang
+                  ito, iisipin ng bisita na walang elevator ang gusali at
+                  hahanapin pa rin. Ang malinaw na "sira" ang sagot doon. */}
               <button
-                className="route-opt"
+                className={`route-opt${elevatorOut ? ' is-out' : ''}`}
+                disabled={elevatorOut}
                 onClick={() => { setSelectedOfficeKey('elevator-up'); setTransportMethod('elevator'); setRouteStep('go-to-transport'); }}
               >
                 <span className="route-opt-ico">🛗</span>
                 <span className="route-opt-name">{lang === 'EN' ? 'Elevator' : 'Elevator'}</span>
-                <span className="route-opt-sub">
-                  {lang === 'EN'
-                    ? `Ride up to Floor ${destinationData.floor}`
-                    : `Sumakay paakyat sa Palapag ${destinationData.floor}`}
-                </span>
+                {elevatorOut ? (
+                  <span className="route-opt-sub route-opt-warn">
+                    ⚠️ {elevatorStatusLabel(elevatorStatus, lang)}
+                    {lang === 'EN' ? ' — not available right now' : ' — hindi magagamit sa ngayon'}
+                  </span>
+                ) : (
+                  <span className="route-opt-sub">
+                    {lang === 'EN'
+                      ? `Ride up to Floor ${destinationData.floor}`
+                      : `Sumakay paakyat sa Palapag ${destinationData.floor}`}
+                  </span>
+                )}
               </button>
 
               {destinationData.floor === 2 && (

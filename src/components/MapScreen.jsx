@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { elevatorStatusLabel } from '../lib/i18n';
 
 export default function MapScreen({ 
   offices, 
@@ -11,6 +12,9 @@ export default function MapScreen({
   onPickFloor,
   transportMethod = 'elevator',
   routeStep,
+  // Mula sa tab na Elevator ng admin. Kapag hindi 'available', may
+  // nakasulat na "sira / inaayos" sa mismong elevator sa mapa.
+  elevatorStatus = 'available',
   // Kapag may laman, ito ang nakasulat sa pin — ginagamit ito ng
   // step-by-step na gabay sa mga palapag na dinaraanan lang.
   kioskLabel = null,
@@ -784,8 +788,12 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
               </div>
               {/* Elevator: nasa ibaba ang pinto. May 60px na pasilyo (y 790-850)
                   sa pagitan nito at ng escalator para may daanan ang ruta. */}
-              <div className="structural-element elevator-block" style={{ width: '145px', height: '100px', left: '1110px', top: '690px' }}>
-                Elevator<div className="elevator-doors" style={{ left: '43px' }}></div>
+              <div className={`structural-element elevator-block${elevatorStatus !== 'available' ? ' is-out' : ''}`} style={{ width: '145px', height: '100px', left: '1110px', top: '690px' }}>
+                Elevator
+                {elevatorStatus !== 'available' && (
+                  <span className="elevator-out-tag">⚠️ {elevatorStatusLabel(elevatorStatus, lang)}</span>
+                )}
+                <div className="elevator-doors" style={{ left: '43px' }}></div>
               </div>
               <div className="structural-element escalator-block" style={{ width: '120px', height: '80px', left: '1120px', top: '845px' }}>
                 <div className="stair-lines"></div><span className="escalator-label">Escalator ◀</span>
