@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import tagaytaySeal from './assets/tagaytay-seal.jpg';
+import photoFranz from './assets/team/franz.jpg';
+import photoNeftali from './assets/team/neftali.jpg';
+import photoRicalyn from './assets/team/ricalyn.jpg';
+import photoMarlon from './assets/team/marlon.jpg';
 import WelcomeScreen from './WelcomeScreen';
 import DashboardScreen from './DashboardScreen';
 import DirectoryScreen from './DirectoryScreen';
@@ -17,6 +21,14 @@ import { defaultOfficeData } from './lib/defaultOfficeData';
 import { isRecoveryLink } from './lib/recoveryFlag';
 import { buildVisitorLink, readVisitorLink } from './lib/visitorLink';
 import { floorName, localizeBadge, localizeHours, officeDescription, elevatorStatusLabel } from './lib/i18n';
+
+// Ang bumuo ng kiosk, sa ganitong pagkakasunod-sunod sa About.
+const TEAM = [
+  { name: 'Franz Jandrei Valderama', photo: photoFranz },
+  { name: 'Neftali Luya', photo: photoNeftali },
+  { name: 'Ricalyn Mereyes', photo: photoRicalyn },
+  { name: 'Marlon Panganiban', photo: photoMarlon },
+];
 
 // Isang pinagmumulan ng estado ng opisina: kulay, salin, at hugis ng pill.
 const statusPresets = {
@@ -1635,17 +1647,13 @@ export default function App() {
             <div className="k-roster">
               <h3 className="k-roster-title">{lang === 'EN' ? 'The Development Team' : 'Ang Bumuo ng Kiosk'}</h3>
 
-              <div className="k-roster-row">
-                <span className="k-roster-name">Franz Jandrei Valderama</span>
-              </div>
-              <div className="k-roster-row">
-                <span className="k-roster-name">Neftali Luya</span>
-              </div>
-              <div className="k-roster-row">
-                <span className="k-roster-name">Ricalyn Mereyes</span>
-              </div>
-              <div className="k-roster-row">
-                <span className="k-roster-name">Marlon Panganiban</span>
+              <div className="k-roster-grid">
+                {TEAM.map((member) => (
+                  <div key={member.name} className="k-roster-card">
+                    <img src={member.photo} alt={member.name} className="k-roster-photo" loading="lazy" />
+                    <span className="k-roster-name">{member.name}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
