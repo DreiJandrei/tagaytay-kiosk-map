@@ -550,6 +550,33 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
     transition: isGesturing ? 'none' : 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
   };
 
+  // Ang dalawang pinto ng elevator sa 2nd–7th Floor. Kapag sira o inaayos
+  // (tab na Elevator / Escalator sa admin), guhit-guhit ang mga pinto at may
+  // nakasulat sa itaas nila — gaya ng elevator sa Ground Floor. Kung wala
+  // ito, mukhang gumagana ang elevator sa bawat palapag maliban sa una.
+  const renderElevators = (lefts, top, width, height, fontSize) => {
+    const out = elevatorStatus !== 'available';
+    const centerX = (lefts[0] + lefts[lefts.length - 1] + width) / 2;
+    return (
+      <>
+        {lefts.map((left) => (
+          <div
+            key={left}
+            className={`elev-door${out ? ' is-out' : ''}`}
+            style={{ position: 'absolute', width, height, left, top, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize, fontWeight: 'bold', color: '#1F2937' }}
+          >
+            ELEV
+          </div>
+        ))}
+        {out && (
+          <span className="elevator-out-tag elevator-out-tag--floating" style={{ left: centerX, top: top - 4 }}>
+            ⚠️ {liftStatusLabel(elevatorStatus, lang)}
+          </span>
+        )}
+      </>
+    );
+  };
+
   const exitBadgeStyle = (leftPos, topPos) => ({
     position: 'absolute',
     left: leftPos,
@@ -856,8 +883,7 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
               ) : (
                 <div className="structural-element escalator-block" style={{ width: 150, height: 60, left: 500, top: 590, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="escalator-lines"></div><span className="escalator-label">Escalator ▼</span></div>
               )}
-              <div style={{ position: 'absolute', width: 40, height: 30, left: 800, top: 460, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
-              <div style={{ position: 'absolute', width: 40, height: 30, left: 850, top: 460, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
+              {renderElevators([800, 850], 460, 40, 30, 10)}
               
               <div className="exit-badge" style={exitBadgeStyle(910, 480)}>FIRE EXIT</div>
             </>
@@ -867,8 +893,7 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
             <>
               <div className="structural-element stairs-block" style={{ width: 80, height: 80, left: 200, top: 680, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">{EN ? 'Stairs' : 'Hagdan'} ↙</span></div>
               <div className="structural-element stairs-block" style={{ width: 80, height: 80, left: 280, top: 740, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">{EN ? 'Stairs' : 'Hagdan'} ↗</span></div>
-              <div style={{ position: 'absolute', width: 40, height: 30, left: 560, top: 410, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
-              <div style={{ position: 'absolute', width: 40, height: 30, left: 640, top: 410, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
+              {renderElevators([560, 640], 410, 40, 30, 10)}
               {/* Walang escalator sa 3rd hanggang 5th Floor. Hanggang 2nd
                   Floor lang ito sa tunay na gusali — hagdan at elevator
                   na ang paakyat mula rito. Ang ruta na "escalator" ang
@@ -882,8 +907,7 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
           
           {currentFloor >= 6 && (
             <>
-              <div style={{ position: 'absolute', width: 50, height: 40, left: 570, top: 350, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
-              <div style={{ position: 'absolute', width: 50, height: 40, left: 680, top: 350, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
+              {renderElevators([570, 680], 350, 50, 40, 12)}
               <div className="structural-element stairs-block" style={{ width: 200, height: 60, left: 550, top: 550, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">{EN ? 'Stairs' : 'Hagdan'} ↙ ↗</span></div>
 
               <div className="exit-badge" style={exitBadgeStyle(765, 435)}>FIRE EXIT</div>
