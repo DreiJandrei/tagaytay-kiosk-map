@@ -630,7 +630,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
             <span>
               Admin Panel
               <span className="adm-top-sub">
-                {t('Tagaytay City Hall Kiosk', 'Kiosk ng City Hall ng Tagaytay')}
+                {t('City Government of Tagaytay Kiosk', 'Kiosk ng Pamahalaang Lungsod ng Tagaytay')}
               </span>
             </span>
           </h2>

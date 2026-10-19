@@ -297,6 +297,22 @@ export default function App() {
     return () => { alive = false; clearInterval(timer); };
   }, []);
 
+  // Hindi sapat na naka-disable lang ang buton sa pagpili ng daan. Puwedeng
+  // nakasakay pa rin ang escalator/elevator: napili ito bago nasira (isang
+  // minuto ang paghila), naiwan mula sa naunang ruta, o galing sa QR link.
+  // Kaya dito inililipat ang daan sa gumaganang paraan — at muling
+  // iginuguhit ng mapa ang ruta mula roon.
+  useEffect(() => {
+    let next = null;
+    if (transportMethod === 'escalator' && escalatorOut) next = elevatorOut ? 'stairs' : 'elevator';
+    else if (transportMethod === 'elevator' && elevatorOut) next = 'stairs';
+    if (!next) return;
+    setTransportMethod(next);
+    // Habang naglalakad pa papunta sa sasakyan, ang tunguhin sa Ground
+    // Floor ay ang mismong sasakyan — kaya kailangang ilipat din iyon.
+    if (routeStep === 'go-to-transport') setSelectedOfficeKey(next === 'stairs' ? 'stairs-up' : 'elevator-up');
+  }, [transportMethod, escalatorOut, elevatorOut, routeStep]);
+
   // Step-by-step na balikan ng ruta. Kapag bukas ito, ang bumibisita na
   // ang humahawak ng palapag — hindi na ang awtomatikong orasan. Dito
   // nakaimbak ang pinanggalingan para maibalik kapag isinara.
@@ -966,7 +982,7 @@ export default function App() {
           turned off.
         </p>
         <p className="sys-text">
-          Please return to the Tagaytay City Hall Directory Kiosk and scan the QR code again.
+          Please return to the City Government of Tagaytay Directory Kiosk and scan the QR code again.
         </p>
         <span className="sys-note">Secure mobile session</span>
       </div>
@@ -980,9 +996,9 @@ export default function App() {
         <h2 className="sys-title">System Locked</h2>
         <p className="sys-text">
           This system is restricted and can only be accessed from the physical
-          Tagaytay City Hall Kiosk Terminal.
+          City Government of Tagaytay Kiosk Terminal.
         </p>
-        <span className="sys-note">Tagaytay City Hall · Directory Kiosk</span>
+        <span className="sys-note">City Government of Tagaytay · Directory Kiosk</span>
       </div>
     );
   }
@@ -991,7 +1007,7 @@ export default function App() {
     return (
       <div className="sys">
         <img src={tagaytaySeal} alt="Tagaytay City Seal" className="k-modal-seal" style={{ width: '96px', height: '96px', margin: '0 0 24px 0' }} />
-        <h2 className="sys-title">Tagaytay City Hall</h2>
+        <h2 className="sys-title">City Government of Tagaytay</h2>
         <p className="sys-text">Initializing kiosk systems…</p>
         <span className="sys-loader" />
       </div>
@@ -1009,7 +1025,7 @@ export default function App() {
           This office is no longer listed in the directory, so the saved route cannot be shown.
         </p>
         <p className="sys-text">
-          Please return to the Tagaytay City Hall Directory Kiosk and scan the QR code again.
+          Please return to the City Government of Tagaytay Directory Kiosk and scan the QR code again.
         </p>
         <span className="sys-note">Secure mobile session</span>
       </div>
@@ -1141,7 +1157,7 @@ export default function App() {
           </span>
           <span className="brand-text">
             <span className="dir-subtitle">{lang === 'EN' ? 'Republic of the Philippines' : 'Republika ng Pilipinas'}</span>
-            <h2 className="dir-title">Tagaytay City Hall</h2>
+            <h2 className="dir-title">City Government of Tagaytay</h2>
             <span className="brand-tagline">{lang === 'EN' ? 'Interactive Directory Kiosk' : 'Interaktibong Gabay sa Opisina'}</span>
           </span>
         </div>
@@ -1156,7 +1172,7 @@ export default function App() {
               title={lang === 'EN' ? 'Back to the start screen' : 'Bumalik sa simula'}
             >
               <span className="hdr-btn-glyph">🏠</span>
-              <span className="hdr-btn-label">{lang === 'EN' ? 'Home' : 'Simula'}</span>
+              <span className="hdr-btn-label">{lang === 'EN' ? 'Back to Idle' : 'Bumalik sa Simula'}</span>
             </button>
           )}
 
@@ -1648,7 +1664,7 @@ export default function App() {
 
             <div className="k-modal-head">
               <div>
-                <span className="k-modal-eyebrow">Tagaytay City Hall</span>
+                <span className="k-modal-eyebrow">City Government of Tagaytay</span>
                 <h2 className="k-modal-title">{lang === 'EN' ? 'About the Kiosk' : 'Tungkol sa Kiosk'}</h2>
               </div>
               <button className="k-close" onClick={() => setShowAbout(false)}>✕</button>

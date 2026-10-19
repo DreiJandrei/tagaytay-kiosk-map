@@ -76,7 +76,7 @@ export default function DashboardScreen({
             <span className="dir-subtitle" style={{ color: colorPalette.accentText, fontSize: isLarge ? '1.1rem' : '0.9rem', fontWeight: 900, letterSpacing: '1px' }}>
               {lang === 'EN' ? 'REPUBLIC OF THE PHILIPPINES' : 'REPUBLIKA NG PILIPINAS'}
             </span>
-            <h2 className="dir-title" style={{ color: colorPalette.primaryText, fontSize: isLarge ? '2rem' : '1.7rem', fontWeight: 900, margin: 0 }}>Tagaytay City Hall</h2>
+            <h2 className="dir-title" style={{ color: colorPalette.primaryText, fontSize: isLarge ? '2rem' : '1.7rem', fontWeight: 900, margin: 0 }}>City Government of Tagaytay</h2>
           </div>
         </div>
         
@@ -105,7 +105,7 @@ export default function DashboardScreen({
         <section className="dir-hero" style={{ background: isDarkMode ? 'linear-gradient(135deg, #0F172A 0%, #1E1B4B 100%)' : 'linear-gradient(135deg, #1E1B4B 0%, #4F46E5 100%)', marginBottom: '40px', padding: '50px 30px', borderRadius: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', boxSizing: 'border-box', transition: 'all 0.2s ease' }}>
           <div className="dir-hero-content" style={{ textAlign: 'center', color: '#FFFFFF', width: '100%' }}>
             <h1 style={{ fontSize: isLarge ? '3.2rem' : '2.6rem', margin: '0 0 16px 0', fontWeight: 900, letterSpacing: '-0.5px' }}>
-              {lang === 'EN' ? 'Welcome to Tagaytay City Hall' : 'Maligayang Pagdating sa City Hall ng Tagaytay'}
+              {lang === 'EN' ? 'Welcome to the City Government of Tagaytay' : 'Maligayang Pagdating sa Pamahalaang Lungsod ng Tagaytay'}
             </h1>
             <p style={{ margin: '0 auto', textAlign: 'center', opacity: 0.95, fontSize: isLarge ? '1.6rem' : '1.3rem', fontWeight: 700, maxWidth: '800px' }}>
               {lang === 'EN' ? 'How can we help you today?' : 'Paano po namin kayo matutulungan ngayon?'}

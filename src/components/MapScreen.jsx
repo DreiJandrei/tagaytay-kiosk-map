@@ -417,7 +417,9 @@ export default function MapScreen({
   // (x 450) hanggang sa hagdan.
   if (currentFloor === 2 && transportMethod === 'stairs' && !selectedOffice
       && (routeStep === 'climbing-stairs' || kioskLabel)) {
-      finalPathData = "M 220 420 L 220 350 L 530 350 L 530 560 L 450 560 L 450 850 L 150 850";
+      // Lumiliko sa y 545 — malayo sa itaas ng escalator (y 590) para hindi
+      // magmukhang doon dumadaan ang linya.
+      finalPathData = "M 220 420 L 220 350 L 530 350 L 530 545 L 450 545 L 450 850 L 150 850";
   }
 
 if (currentFloor === 1 && transportMethod === 'escalator') {
