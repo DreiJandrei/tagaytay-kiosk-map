@@ -3290,6 +3290,25 @@ img { max-width: 100%; }
   border: 2px solid var(--ui-line-2);
 }
 
+/* Hanay ng logo sa ilalim ng About: selyo ng lungsod, CCT, at SCS. May
+   sariling kulay na background ang dalawang logo ng paaralan, kaya
+   parisukat na may bilugang kanto sila — hindi bilog na may puting gilid. */
+.k-modal-logos {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 22px;
+}
+.k-modal-logos .k-modal-seal { margin: 0; width: 84px; height: 84px; }
+.k-modal-logo {
+  width: 84px; height: 84px;
+  border-radius: 16px;
+  object-fit: cover;
+  border: 2px solid var(--ui-line-2);
+}
+
 /* ═══════════ 9. SYSTEM SCREEN ═══════════ */
 .sys {
   display: flex;

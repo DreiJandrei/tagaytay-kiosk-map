@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import tagaytaySeal from './assets/tagaytay-seal.jpg';
+import cctLogo from './assets/cct-logo.jpg';
+import scsLogo from './assets/scs-logo.jpg';
 import photoFranz from './assets/team/franz.jpg';
 import photoNeftali from './assets/team/neftali.jpg';
 import photoRicalyn from './assets/team/ricalyn.jpg';
@@ -1702,7 +1704,13 @@ export default function App() {
               </div>
             </div>
 
-            <img src={tagaytaySeal} alt="City College of Tagaytay" className="k-modal-seal" />
+            {/* Ang lungsod na pinagsisilbihan, ang kolehiyo, at ang
+                departamentong bumuo ng kiosk. */}
+            <div className="k-modal-logos">
+              <img src={tagaytaySeal} alt="City Government of Tagaytay" className="k-modal-seal" />
+              <img src={cctLogo} alt="City College of Tagaytay" className="k-modal-logo" />
+              <img src={scsLogo} alt="School of Computer Studies" className="k-modal-logo" />
+            </div>
           </div>
         </div>
       )}
