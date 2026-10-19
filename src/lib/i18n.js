@@ -70,10 +70,10 @@ export const localizeHours = (hours, lang) => {
   return HOURS_PHRASES.reduce((text, [re, tl]) => text.replace(re, tl), hours);
 };
 
-// Kalagayan ng elevator (tingnan ang getElevatorStatus sa api.js), para
-// sa route picker at sa mapa. Walang label ang 'available' — doon walang
-// kailangang sabihin.
-export const elevatorStatusLabel = (status, lang) => {
+// Kalagayan ng elevator o escalator (tingnan ang getLiftStatuses sa
+// api.js), para sa route picker at sa mapa. Walang label ang 'available'
+// — doon walang kailangang sabihin.
+export const liftStatusLabel = (status, lang) => {
   const EN = lang !== 'TL';
   if (status === 'maintenance') return EN ? 'Under maintenance' : 'Inaayos';
   if (status === 'broken') return EN ? 'Out of order' : 'Sira';

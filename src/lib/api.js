@@ -365,23 +365,27 @@ export const patchKioskSettings = async (patch) => {
 };
 
 // ==============================================================
-// 6b. KALAGAYAN NG ELEVATOR
+// 6b. KALAGAYAN NG ELEVATOR AT ESCALATOR
 // ==============================================================
 //   'available'   — gumagana
 //   'maintenance' — inaayos (naka-iskedyul)
 //   'broken'      — sira
-export const ELEVATOR_STATUSES = ['available', 'maintenance', 'broken'];
+export const LIFT_STATUSES = ['available', 'maintenance', 'broken'];
+export const LIFTS = ['elevator', 'escalator'];
 
-// Kapag hindi mabasa (walang internet, o wala pang naitala), gumagana ang
-// palagay — gaya ng kiosk bago pa nagkaroon ng setting na ito.
-export const getElevatorStatus = async () => {
-  const status = parseKioskSettings(await getAnnouncement()).elevator;
-  return ELEVATOR_STATUSES.includes(status) ? status : 'available';
+// Iisang basa para sa dalawa — sabay silang hinihila ng kiosk bawat
+// minuto. Kapag hindi mabasa (walang internet, o wala pang naitala),
+// gumagana ang palagay — gaya ng kiosk bago pa nagkaroon ng setting na ito.
+export const getLiftStatuses = async () => {
+  const settings = parseKioskSettings(await getAnnouncement());
+  const pick = (status) => (LIFT_STATUSES.includes(status) ? status : 'available');
+  return { elevator: pick(settings.elevator), escalator: pick(settings.escalator) };
 };
 
-export const setElevatorStatus = async (status) => {
-  if (!ELEVATOR_STATUSES.includes(status)) throw new Error(`Unknown elevator status: ${status}`);
-  await patchKioskSettings({ elevator: status });
+export const setLiftStatus = async (lift, status) => {
+  if (!LIFTS.includes(lift)) throw new Error(`Unknown lift: ${lift}`);
+  if (!LIFT_STATUSES.includes(status)) throw new Error(`Unknown ${lift} status: ${status}`);
+  await patchKioskSettings({ [lift]: status });
   return status;
 };
 

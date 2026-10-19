@@ -721,16 +721,20 @@ img { max-width: 100%; }
 .elevator-doors { background: rgba(96,165,250,.55) !important; }
 .light-theme .elevator-doors { background: #7FA9E0 !important; }
 
-/* Sira o inaayos ang elevator (tab na Elevator sa admin). Guhit-guhit na
-   parang harang sa construction — kilala ito kahit hindi basahin. */
-.elevator-block.is-out {
+/* Sira o inaayos ang elevator o escalator (tab na Elevator / Escalator sa
+   admin). Guhit-guhit na parang harang sa construction — kilala ito kahit
+   hindi basahin. */
+.elevator-block.is-out, .escalator-block.is-out {
   flex-direction: column; gap: 6px;
   background: repeating-linear-gradient(135deg,
     #3A1B14 0 10px, #2A1410 10px 20px) !important;
   border: 1.5px dashed #F59E0B !important;
   color: #FDE7C7 !important;
 }
-.light-theme .elevator-block.is-out {
+/* Mas maliit ang escalator kaysa elevator, kaya mas siksik ang marka. */
+.escalator-block.is-out { gap: 3px; font-size: .8rem; }
+.escalator-block.is-out .elevator-out-tag { font-size: .62rem; padding: 2px 6px; }
+.light-theme .elevator-block.is-out, .light-theme .escalator-block.is-out {
   background: repeating-linear-gradient(135deg,
     #FFF4E0 0 10px, #FDE9C8 10px 20px) !important;
   border-color: #D97706 !important;

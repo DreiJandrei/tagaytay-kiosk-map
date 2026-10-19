@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { elevatorStatusLabel } from '../lib/i18n';
+import { liftStatusLabel } from '../lib/i18n';
 
 export default function MapScreen({ 
   offices, 
@@ -12,9 +12,10 @@ export default function MapScreen({
   onPickFloor,
   transportMethod = 'elevator',
   routeStep,
-  // Mula sa tab na Elevator ng admin. Kapag hindi 'available', may
-  // nakasulat na "sira / inaayos" sa mismong elevator sa mapa.
+  // Mula sa tab na Elevator / Escalator ng admin. Kapag hindi 'available',
+  // may nakasulat na "sira / inaayos" sa mismong elevator o escalator sa mapa.
   elevatorStatus = 'available',
+  escalatorStatus = 'available',
   // Kapag may laman, ito ang nakasulat sa pin — ginagamit ito ng
   // step-by-step na gabay sa mga palapag na dinaraanan lang.
   kioskLabel = null,
@@ -408,6 +409,17 @@ export default function MapScreen({
       finalPathData = `M ${x} ${y} L ${x} ${y - 20} L ${x + 20} ${y - 20} L ${x + 20} ${y - 40} L ${x + 40} ${y - 40}`;
   }
 
+  // 2nd Floor na dinaraanan lang: PABABA na lang ang hagdang dinatnan
+  // (▼, sa itaas-kaliwa) — hindi na iyon tumutuloy paakyat. Ang paakyat
+  // sa 3rd ay ang hagdan sa ilalim ng Small Library (↗). Kaya lalakarin
+  // muna: palabas sa bukana ng silid (x 380, y 310-380), pababa sa puwang
+  // ng pader (x 480-580, y 520), at sa pagitan ng library at escalator
+  // (x 450) hanggang sa hagdan.
+  if (currentFloor === 2 && transportMethod === 'stairs' && !selectedOffice
+      && (routeStep === 'climbing-stairs' || kioskLabel)) {
+      finalPathData = "M 220 420 L 220 350 L 530 350 L 530 560 L 450 560 L 450 850 L 150 850";
+  }
+
 if (currentFloor === 1 && transportMethod === 'escalator') {
       // Nasa KANANG dulo ang sakayan paakyat ng escalator. Kaya pahalang
       // muna sa pasilyo (y 822, nasa pagitan ng elevator at escalator),
@@ -791,12 +803,16 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
               <div className={`structural-element elevator-block${elevatorStatus !== 'available' ? ' is-out' : ''}`} style={{ width: '145px', height: '100px', left: '1110px', top: '690px' }}>
                 Elevator
                 {elevatorStatus !== 'available' && (
-                  <span className="elevator-out-tag">⚠️ {elevatorStatusLabel(elevatorStatus, lang)}</span>
+                  <span className="elevator-out-tag">⚠️ {liftStatusLabel(elevatorStatus, lang)}</span>
                 )}
                 <div className="elevator-doors" style={{ left: '43px' }}></div>
               </div>
-              <div className="structural-element escalator-block" style={{ width: '120px', height: '80px', left: '1120px', top: '845px' }}>
-                <div className="stair-lines"></div><span className="escalator-label">Escalator ◀</span>
+              <div className={`structural-element escalator-block${escalatorStatus !== 'available' ? ' is-out' : ''}`} style={{ width: '120px', height: '80px', left: '1120px', top: '845px' }}>
+                {escalatorStatus !== 'available' ? (
+                  <>Escalator<span className="elevator-out-tag">⚠️ {liftStatusLabel(escalatorStatus, lang)}</span></>
+                ) : (
+                  <><div className="stair-lines"></div><span className="escalator-label">Escalator ◀</span></>
+                )}
               </div>
 
               {/* Pulang "Map" block — ito ang pisikal na kiosk kung saan
@@ -831,7 +847,13 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
             <>
               <div className="structural-element stairs-block" style={{ width: 150, height: 80, left: 150, top: 380, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">{EN ? 'Stairs' : 'Hagdan'} ▼</span></div>
               <div className="structural-element stairs-block" style={{ width: 100, height: 80, left: 100, top: 810, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">{EN ? 'Stairs' : 'Hagdan'} ↗</span></div>
-              <div className="structural-element escalator-block" style={{ width: 150, height: 60, left: 500, top: 590, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="escalator-lines"></div><span className="escalator-label">Escalator ▼</span></div>
+              {escalatorStatus !== 'available' ? (
+                <div className="structural-element escalator-block is-out" style={{ width: 150, height: 60, left: 500, top: 590 }}>
+                  Escalator<span className="elevator-out-tag">⚠️ {liftStatusLabel(escalatorStatus, lang)}</span>
+                </div>
+              ) : (
+                <div className="structural-element escalator-block" style={{ width: 150, height: 60, left: 500, top: 590, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="escalator-lines"></div><span className="escalator-label">Escalator ▼</span></div>
+              )}
               <div style={{ position: 'absolute', width: 40, height: 30, left: 800, top: 460, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
               <div style={{ position: 'absolute', width: 40, height: 30, left: 850, top: 460, background: '#9CA3AF', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', color: '#1F2937' }}>ELEV</div>
               

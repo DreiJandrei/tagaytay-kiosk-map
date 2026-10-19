@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import VirtualKeyboard from '../components/VirtualKeyboard';
 import {
   updateOffice, getAnnouncement, patchKioskSettings, changeAdminPassword, logoutAdmin,
-  getElevatorStatus, setElevatorStatus,
+  getLiftStatuses, setLiftStatus,
   getKioskVideos, saveKioskVideo, deleteKioskVideo, placeKioskVideo,
   uploadKioskVideoFile, deleteKioskVideoFile, isUploadedFile,
 } from '../lib/api';
@@ -76,11 +76,12 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
   const [annEditor, setAnnEditor] = useState(null);
   const [annDraft, setAnnDraft] = useState('');
 
-  // Ang nakatala sa database (`elevatorSaved`) at ang pinipili pa lang
-  // (`elevatorDraft`). Hiwalay sila para malinaw kung may hindi pa nase-save.
-  // `null` habang binabasa pa — para hindi magmukhang "gumagana" ang sira.
-  const [elevatorSaved, setElevatorSaved] = useState(null);
-  const [elevatorDraft, setElevatorDraft] = useState(null);
+  // Ang nakatala sa database (`liftSaved`) at ang pinipili pa lang
+  // (`liftDraft`), bawat isa ay { elevator, escalator }. Hiwalay sila para
+  // malinaw kung may hindi pa nase-save. `null` habang binabasa pa — para
+  // hindi magmukhang "gumagana" ang sira.
+  const [liftSaved, setLiftSaved] = useState(null);
+  const [liftDraft, setLiftDraft] = useState(null);
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -128,34 +129,42 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
   }, []);
 
   useEffect(() => {
-    getElevatorStatus().then((status) => {
-      setElevatorSaved(status);
-      setElevatorDraft(status);
+    getLiftStatuses().then((statuses) => {
+      setLiftSaved(statuses);
+      setLiftDraft(statuses);
     });
   }, []);
 
-  const handleSaveElevator = async (e) => {
+  const handleSaveLift = async (e, lift) => {
     e.preventDefault();
-    if (!elevatorDraft) return;
+    if (!liftDraft) return;
+    const name = lift === 'elevator' ? 'elevator' : 'escalator';
     setIsSaving(true);
     try {
-      const status = await setElevatorStatus(elevatorDraft);
-      setElevatorSaved(status);
+      const status = await setLiftStatus(lift, liftDraft[lift]);
+      setLiftSaved((prev) => ({ ...prev, [lift]: status }));
       alert(status === 'available'
         ? t(
-            '✅ Saved! The elevator is back as a choice on the kiosk within a minute.',
-            '✅ Nai-save na! Mapipili na ulit ang elevator sa kiosk sa loob ng isang minuto.',
+            `✅ Saved! The ${name} is back as a choice on the kiosk within a minute.`,
+            `✅ Nai-save na! Mapipili na ulit ang ${name} sa kiosk sa loob ng isang minuto.`,
           )
-        : t(
-            '✅ Saved! Within a minute the kiosk will stop sending visitors to the elevator '
-            + 'and point them to the stairs instead.',
-            '✅ Nai-save na! Sa loob ng isang minuto, hindi na ituturo ng kiosk ang elevator — '
-            + 'sa hagdan na papupuntahin ang mga bisita.',
-          ));
+        : lift === 'elevator'
+          ? t(
+              '✅ Saved! Within a minute the kiosk will stop sending visitors to the elevator '
+              + 'and point them to the stairs instead.',
+              '✅ Nai-save na! Sa loob ng isang minuto, hindi na ituturo ng kiosk ang elevator — '
+              + 'sa hagdan na papupuntahin ang mga bisita.',
+            )
+          : t(
+              '✅ Saved! Within a minute the kiosk will mark the escalator on the map '
+              + 'and stop offering it as a way up to Floor 2.',
+              '✅ Nai-save na! Sa loob ng isang minuto, may marka na ang escalator sa mapa '
+              + 'at hindi na ito mapipili paakyat sa Palapag 2.',
+            ));
     } catch (error) {
       alert(t(
-        `❌ The elevator status was not saved.\n\n${error.message || error}`,
-        `❌ Hindi na-save ang kalagayan ng elevator.\n\n${error.message || error}`,
+        `❌ The ${name} status was not saved.\n\n${error.message || error}`,
+        `❌ Hindi na-save ang kalagayan ng ${name}.\n\n${error.message || error}`,
       ));
     } finally { setIsSaving(false); }
   };
@@ -669,8 +678,9 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
             🏢 {t('Office Directory', 'Direktoryo ng Tanggapan')}
           </button>
           <button className={`adm-tab${activeTab === 'elevator' ? ' active' : ''}`} onClick={() => setActiveTab('elevator')}>
-            🛗 Elevator
-            {elevatorSaved && elevatorSaved !== 'available' && <span className="adm-tab-alert" aria-hidden="true">⚠️</span>}
+            🛗 Elevator / Escalator
+            {liftSaved && (liftSaved.elevator !== 'available' || liftSaved.escalator !== 'available')
+              && <span className="adm-tab-alert" aria-hidden="true">⚠️</span>}
           </button>
           <button className={`adm-tab${activeTab === 'security' ? ' active' : ''}`} onClick={() => setActiveTab('security')}>
             🔒 {t('Admin Password', 'Password ng Admin')}
@@ -1441,62 +1451,80 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
 
         {activeTab === 'elevator' && (
           <div className="adm-pane">
-            <h3>
-              🛗 {t('Elevator Status', 'Kalagayan ng Elevator')}
-              {' '}
-              {elevatorSaved && (
-                <span className={`adm-vid-pill${elevatorSaved === 'available' ? ' is-on' : ' is-bad'}`}>
-                  {elevatorSaved === 'available'
-                    ? t('WORKING', 'GUMAGANA')
-                    : elevatorSaved === 'maintenance'
-                      ? t('MAINTENANCE', 'INAAYOS')
-                      : t('OUT OF ORDER', 'SIRA')}
-                </span>
-              )}
-            </h3>
-            <p className="adm-hint">
-              {t(
-                'When the elevator is not working, the kiosk greys out the Elevator choice, '
-                + 'marks it on the map, and sends visitors up by the stairs (or the escalator '
-                + 'for Floor 2). Set it back to Working once it is fixed.',
-                'Kapag hindi gumagana ang elevator, hindi na ito mapipili sa kiosk, may marka '
-                + 'ito sa mapa, at sa hagdan (o escalator para sa Palapag 2) na papupuntahin '
-                + 'ang mga bisita. Ibalik sa Gumagana kapag naayos na.',
-              )}
-            </p>
-
-            {!elevatorDraft ? (
+            {!liftDraft ? (
               <p className="adm-hint">{t('Loading…', 'Binabasa…')}</p>
-            ) : (
-              <form className="adm-form" onSubmit={handleSaveElevator} style={{ maxWidth: '520px', flex: 'none' }}>
-                {[
-                  { value: 'available', label: t('🟢 Working', '🟢 Gumagana') },
-                  { value: 'maintenance', label: t('🟡 Under maintenance', '🟡 Inaayos (maintenance)') },
-                  { value: 'broken', label: t('🔴 Out of order', '🔴 Sira') },
-                ].map((opt) => (
-                  <label key={opt.value} className="adm-check">
-                    <input
-                      type="radio"
-                      name="elevator-status"
-                      value={opt.value}
-                      checked={elevatorDraft === opt.value}
-                      onChange={() => setElevatorDraft(opt.value)}
-                    />
-                    <span>{opt.label}</span>
-                  </label>
-                ))}
+            ) : [
+              {
+                lift: 'elevator',
+                icon: '🛗',
+                title: t('Elevator Status', 'Kalagayan ng Elevator'),
+                hint: t(
+                  'When the elevator is not working, the kiosk greys out the Elevator choice, '
+                  + 'marks it on the map, and sends visitors up by the stairs (or the escalator '
+                  + 'for Floor 2). Set it back to Working once it is fixed.',
+                  'Kapag hindi gumagana ang elevator, hindi na ito mapipili sa kiosk, may marka '
+                  + 'ito sa mapa, at sa hagdan (o escalator para sa Palapag 2) na papupuntahin '
+                  + 'ang mga bisita. Ibalik sa Gumagana kapag naayos na.',
+                ),
+                save: t('💾 Save Elevator Status', '💾 I-save ang Kalagayan ng Elevator'),
+              },
+              {
+                lift: 'escalator',
+                icon: '🪜',
+                title: t('Escalator Status', 'Kalagayan ng Escalator'),
+                hint: t(
+                  'When the escalator is not working, the kiosk greys out the Escalator choice '
+                  + 'for Floor 2 and marks it on the map. Set it back to Working once it is fixed.',
+                  'Kapag hindi gumagana ang escalator, hindi na ito mapipili papuntang Palapag 2 '
+                  + 'at may marka ito sa mapa. Ibalik sa Gumagana kapag naayos na.',
+                ),
+                save: t('💾 Save Escalator Status', '💾 I-save ang Kalagayan ng Escalator'),
+              },
+            ].map(({ lift, icon, title, hint, save }) => (
+              <section key={lift} style={{ marginBottom: '28px' }}>
+                <h3>
+                  {icon} {title}
+                  {' '}
+                  <span className={`adm-vid-pill${liftSaved[lift] === 'available' ? ' is-on' : ' is-bad'}`}>
+                    {liftSaved[lift] === 'available'
+                      ? t('WORKING', 'GUMAGANA')
+                      : liftSaved[lift] === 'maintenance'
+                        ? t('MAINTENANCE', 'INAAYOS')
+                        : t('OUT OF ORDER', 'SIRA')}
+                  </span>
+                </h3>
+                <p className="adm-hint">{hint}</p>
 
-                <button
-                  type="submit"
-                  className="k-btn k-btn--primary"
-                  disabled={isSaving || elevatorDraft === elevatorSaved}
-                >
-                  {isSaving
-                    ? t('Deploying to kiosks…', 'Ipinapadala sa mga kiosk…')
-                    : t('💾 Save Elevator Status', '💾 I-save ang Kalagayan')}
-                </button>
-              </form>
-            )}
+                <form className="adm-form" onSubmit={(e) => handleSaveLift(e, lift)} style={{ maxWidth: '520px', flex: 'none' }}>
+                  {[
+                    { value: 'available', label: t('🟢 Working', '🟢 Gumagana') },
+                    { value: 'maintenance', label: t('🟡 Under maintenance', '🟡 Inaayos (maintenance)') },
+                    { value: 'broken', label: t('🔴 Out of order', '🔴 Sira') },
+                  ].map((opt) => (
+                    <label key={opt.value} className="adm-check">
+                      <input
+                        type="radio"
+                        name={`${lift}-status`}
+                        value={opt.value}
+                        checked={liftDraft[lift] === opt.value}
+                        onChange={() => setLiftDraft((prev) => ({ ...prev, [lift]: opt.value }))}
+                      />
+                      <span>{opt.label}</span>
+                    </label>
+                  ))}
+
+                  <button
+                    type="submit"
+                    className="k-btn k-btn--primary"
+                    disabled={isSaving || liftDraft[lift] === liftSaved[lift]}
+                  >
+                    {isSaving
+                      ? t('Deploying to kiosks…', 'Ipinapadala sa mga kiosk…')
+                      : save}
+                  </button>
+                </form>
+              </section>
+            ))}
           </div>
         )}
 

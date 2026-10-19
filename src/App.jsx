@@ -15,12 +15,12 @@ import './index.css';
 import { QRCodeSVG } from 'qrcode.react'; 
 import { useSearchParams } from 'react-router-dom';
 
-import { getAllOffices, initializeDatabase, incrementSearchCount, loginAdmin, resetPasswordEmail, logoutAdmin, onAuthChange, changeAdminPassword, getElevatorStatus } from './lib/api';
+import { getAllOffices, initializeDatabase, incrementSearchCount, loginAdmin, resetPasswordEmail, logoutAdmin, onAuthChange, changeAdminPassword, getLiftStatuses } from './lib/api';
 import { coordinateMapping, mergeOfficeData } from './lib/coordinateMapping';
 import { defaultOfficeData } from './lib/defaultOfficeData';
 import { isRecoveryLink } from './lib/recoveryFlag';
 import { buildVisitorLink, readVisitorLink } from './lib/visitorLink';
-import { floorName, localizeBadge, localizeHours, officeDescription, elevatorStatusLabel } from './lib/i18n';
+import { floorName, localizeBadge, localizeHours, officeDescription, liftStatusLabel } from './lib/i18n';
 
 // Ang bumuo ng kiosk, sa ganitong pagkakasunod-sunod sa About.
 const TEAM = [
@@ -277,14 +277,21 @@ export default function App() {
   const [destinationData, setDestinationData] = useState(null);
   const [transportMethod, setTransportMethod] = useState(() => visitorLink.transport);
 
-  // Itinatakda ng admin (tab na Elevator). Kapag hindi 'available', hindi
-  // na mapipili ang elevator at sa hagdan nagsisimula ang bawat ruta.
-  // Kasabay ng anunsyo ang paghila — isang minuto.
+  // Itinatakda ng admin (tab na Elevator / Escalator). Kapag hindi
+  // 'available' ang elevator, hindi na ito mapipili at sa hagdan
+  // nagsisimula ang bawat ruta. Ganoon din ang escalator: hindi na ito
+  // mapipili papuntang 2nd Floor. Kasabay ng anunsyo ang paghila — isang minuto.
   const [elevatorStatus, setElevatorStatus] = useState('available');
+  const [escalatorStatus, setEscalatorStatus] = useState('available');
   const elevatorOut = elevatorStatus !== 'available';
+  const escalatorOut = escalatorStatus !== 'available';
   useEffect(() => {
     let alive = true;
-    const load = () => getElevatorStatus().then((s) => { if (alive) setElevatorStatus(s); });
+    const load = () => getLiftStatuses().then((s) => {
+      if (!alive) return;
+      setElevatorStatus(s.elevator);
+      setEscalatorStatus(s.escalator);
+    });
     load();
     const timer = setInterval(load, 60000);
     return () => { alive = false; clearInterval(timer); };
@@ -713,9 +720,11 @@ export default function App() {
     let timeoutId;
     if (routeStep === 'climbing-stairs' && destinationData) {
       if (currentFloor < destinationData.floor) {
+        // Mas matagal sa 2nd Floor: may lalakarin doon papunta sa ibang
+        // hagdan (tingnan ang MapScreen), hindi lang tuloy-tuloy na akyat.
         timeoutId = setTimeout(() => {
           setCurrentFloor(prev => prev + 1);
-        }, 1500);
+        }, currentFloor === 2 ? 5000 : 1500);
       } else {
         // `>=`, hindi `===`. Kung sakaling makalampas ang palapag sa
         // paroroonan, walang sasalo sa dating `===` at doon titigil ang
@@ -870,9 +879,15 @@ export default function App() {
           officeKey: null,
           icon: '🚶',
           title: EN ? 'Take the stairs up' : 'Umakyat sa hagdan',
-          body: EN
-            ? `You pass Floor ${f}. Keep climbing — the stairs continue up from the same spot.`
-            : `Dadaanan po ninyo ang Palapag ${f}. Tuloy lang paakyat — dito rin nagpapatuloy ang hagdan.`,
+          // Sa 2nd Floor, hindi tumutuloy paakyat ang hagdang dinatnan —
+          // nasa ilalim ng Small Library ang paakyat.
+          body: f === 2
+            ? (EN
+              ? 'You arrive on Floor 2. These stairs only go down from here — follow the line to the other stairs below the Small Library to keep climbing.'
+              : 'Darating po kayo sa Palapag 2. Pababa na lang ang hagdang ito — sundan ang linya papunta sa kabilang hagdan sa ilalim ng Small Library para tumuloy paakyat.')
+            : (EN
+              ? `You pass Floor ${f}. Keep climbing — the stairs continue up from the same spot.`
+              : `Dadaanan po ninyo ang Palapag ${f}. Tuloy lang paakyat — dito rin nagpapatuloy ang hagdan.`),
         });
       }
     } else {
@@ -1369,6 +1384,11 @@ export default function App() {
                   <span className="route-status-icon">🚶</span>
                   <h2>{lang === 'EN' ? 'Climbing stairs…' : 'Umaakyat sa hagdan…'}</h2>
                   <p>{lang === 'EN' ? `Currently passing Floor ${currentFloor}` : `Kasalukuyang nasa Palapag ${currentFloor}`}</p>
+                  {currentFloor === 2 && (
+                    <p>{lang === 'EN'
+                      ? 'Walk to the other stairs below the Small Library to keep going up.'
+                      : 'Lumakad papunta sa kabilang hagdan sa ilalim ng Small Library para tumuloy paakyat.'}</p>
+                  )}
                 </div>
                 <div className="route-status-step">🎯 {lang === 'EN' ? 'Target' : 'Papunta sa'}: {floorName(destinationData.floor, lang)}</div>
               </div>
@@ -1463,6 +1483,7 @@ export default function App() {
           transportMethod={transportMethod}
           routeStep={routeStep}
           elevatorStatus={elevatorStatus}
+          escalatorStatus={escalatorStatus}
           kioskLabel={guideKioskLabel}
           lang={lang}
           // Ang `route` sa URL ay galing lang sa QR na na-scan ng bisita —
@@ -1555,7 +1576,7 @@ export default function App() {
                 <span className="route-opt-name">{lang === 'EN' ? 'Elevator' : 'Elevator'}</span>
                 {elevatorOut ? (
                   <span className="route-opt-sub route-opt-warn">
-                    ⚠️ {elevatorStatusLabel(elevatorStatus, lang)}
+                    ⚠️ {liftStatusLabel(elevatorStatus, lang)}
                     {lang === 'EN' ? ' — not available right now' : ' — hindi magagamit sa ngayon'}
                   </span>
                 ) : (
@@ -1569,14 +1590,22 @@ export default function App() {
 
               {destinationData.floor === 2 && (
                 <button
-                  className="route-opt"
+                  className={`route-opt${escalatorOut ? ' is-out' : ''}`}
+                  disabled={escalatorOut}
                   onClick={() => { setSelectedOfficeKey('elevator-up'); setTransportMethod('escalator'); setRouteStep('go-to-transport'); }}
                 >
                   <span className="route-opt-ico">🪜</span>
                   <span className="route-opt-name">{lang === 'EN' ? 'Escalator' : 'Escalator'}</span>
-                  <span className="route-opt-sub">
-                    {lang === 'EN' ? 'Glide up to Floor 2' : 'Paakyat sa Palapag 2'}
-                  </span>
+                  {escalatorOut ? (
+                    <span className="route-opt-sub route-opt-warn">
+                      ⚠️ {liftStatusLabel(escalatorStatus, lang)}
+                      {lang === 'EN' ? ' — not available right now' : ' — hindi magagamit sa ngayon'}
+                    </span>
+                  ) : (
+                    <span className="route-opt-sub">
+                      {lang === 'EN' ? 'Glide up to Floor 2' : 'Paakyat sa Palapag 2'}
+                    </span>
+                  )}
                 </button>
               )}
 
