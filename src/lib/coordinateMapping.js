@@ -30,8 +30,11 @@ export const coordinateMapping = {
           badge: "Vertical Transport"
       },
       "stairs-up": {
-          targetX: 450, targetY: 630,
-          pathData: "M 1045 822 L 1045 710 L 500 710 L 500 630 L 450 630",
+          // Paakyat pakanan ang hagdan (tingnan ang "Stairs ▶" sa plano), kaya
+          // pumapasok ang ruta sa kaliwang dulo (ibaba ng hagdan) at
+          // pakanan ang lakad papunta sa taas — hindi pakaliwa.
+          targetX: 590, targetY: 630,
+          pathData: "M 1045 822 L 1045 710 L 400 710 L 400 630 L 590 630",
           style: { display: 'none' },
           isDirectionOnly: true,
           title: "Stairs to Upper Floors",
