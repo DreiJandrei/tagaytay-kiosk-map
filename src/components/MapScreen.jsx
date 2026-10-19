@@ -422,6 +422,15 @@ export default function MapScreen({
       finalPathData = "M 220 420 L 220 350 L 530 350 L 530 545 L 450 545 L 450 850 L 150 850";
   }
 
+  // 5th Floor na dinaraanan lang: walang paakyat sa kaliwang hagdan na
+  // dinatnan. Ang paakyat sa 6th ay nasa gitna, paglabas ng elevator. Kaya
+  // palabas ng silid ng hagdan (pinto x 340-400), pataas sa x 450, sa
+  // pasilyo (y 480) hanggang sa gitna, tapos pababa sa hagdan.
+  if (currentFloor === 5 && transportMethod === 'stairs' && !selectedOffice
+      && (routeStep === 'climbing-stairs' || kioskLabel)) {
+      finalPathData = "M 240 720 L 370 720 L 370 630 L 450 630 L 450 480 L 620 480 L 620 505";
+  }
+
 if (currentFloor === 1 && transportMethod === 'escalator') {
       // Nasa KANANG dulo ang sakayan paakyat ng escalator. Kaya pahalang
       // muna sa pasilyo (y 822, nasa pagitan ng elevator at escalator),
@@ -458,6 +467,9 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
                   finalPathData = finalPathData.replace("M 620 480 L 770 480", "M 240 720 L 370 720 L 370 630 L 450 630 L 450 480 L 770 480");
               } else if (finalPathData.startsWith("M 620 480 L 620 520")) {
                   finalPathData = finalPathData.replace("M 620 480 L 620 520", "M 240 720 L 370 720 L 370 630 L 450 630 L 450 480 L 620 480 L 620 520");
+              } else if (finalPathData.startsWith("M 620 480 L 745 480")) {
+                  // Silid sa ilalim sa 5th Floor (pinto sa kanan ng hagdan).
+                  finalPathData = finalPathData.replace("M 620 480 L 745 480", "M 240 720 L 370 720 L 370 630 L 450 630 L 450 480 L 745 480");
               }
           }
       }
@@ -775,7 +787,13 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
                 <path d="M 410 270 L 410 80 L 810 80 L 810 270 L 740 270 M 680 270 L 570 270 M 510 270 L 410 270" />
                 <path d="M 510 300 L 510 460 L 730 460 L 730 300 L 660 300 M 580 300 L 510 300" />
                 <path d="M 820 170 L 1080 170 L 1080 580 L 820 580 L 820 420 M 820 360 L 820 170" />
-                <path d="M 480 520 L 480 740 L 780 740 L 780 520 L 670 520 M 600 520 L 480 520" />
+                {/* Sa 5th Floor, ibinaba ang silid sa ilalim (y 600, hindi
+                    520) para may luwag ang hagdan paakyat sa 6th sa gitna ng
+                    pasilyo. Nasa kanan ng hagdan ang pinto (x 720-770) para
+                    hindi tumawid sa hagdan ang ruta papasok. */}
+                {currentFloor === 5
+                  ? <path d="M 480 600 L 480 740 L 780 740 L 780 600 L 770 600 M 720 600 L 480 600" />
+                  : <path d="M 480 520 L 480 740 L 780 740 L 780 520 L 670 520 M 600 520 L 480 520" />}
                 <path d="M 150 650 L 150 870 L 480 870 L 480 650 L 400 650 M 340 650 L 150 650" />
               </g>
             </svg>
@@ -892,7 +910,16 @@ if (currentFloor === 1 && transportMethod === 'escalator') {
           {(currentFloor >= 3 && currentFloor <= 5) && (
             <>
               <div className="structural-element stairs-block" style={{ width: 80, height: 80, left: 200, top: 680, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">{EN ? 'Stairs' : 'Hagdan'} ↙</span></div>
-              <div className="structural-element stairs-block" style={{ width: 80, height: 80, left: 280, top: 740, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">{EN ? 'Stairs' : 'Hagdan'} ↗</span></div>
+              {currentFloor === 5 ? (
+                // Paakyat sa 6th: sa gitna, paglabas ng elevator — katapat
+                // ng hagdan sa gitna ng 6th Floor. Wala nang paakyat sa
+                // kaliwa rito; walang hagdan sa kaliwa ng 6th na dadatnan.
+                // Nakahanay sa lapad ng elevator (560-680), at may 25px na
+                // luwag sa ilalim ng pasilyo (y 480) para sa ruta.
+                <div className="structural-element stairs-block" style={{ width: 150, height: 55, left: 545, top: 505 }}><div className="stair-lines"></div><span className="stair-label">{EN ? 'Stairs' : 'Hagdan'} ↗</span></div>
+              ) : (
+                <div className="structural-element stairs-block" style={{ width: 80, height: 80, left: 280, top: 740, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}><div className="stair-lines"></div><span className="stair-label">{EN ? 'Stairs' : 'Hagdan'} ↗</span></div>
+              )}
               {renderElevators([560, 640], 410, 40, 30, 10)}
               {/* Walang escalator sa 3rd hanggang 5th Floor. Hanggang 2nd
                   Floor lang ito sa tunay na gusali — hagdan at elevator

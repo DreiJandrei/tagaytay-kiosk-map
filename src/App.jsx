@@ -755,11 +755,11 @@ export default function App() {
     let timeoutId;
     if (routeStep === 'climbing-stairs' && destinationData) {
       if (currentFloor < destinationData.floor) {
-        // Mas matagal sa 2nd Floor: may lalakarin doon papunta sa ibang
-        // hagdan (tingnan ang MapScreen), hindi lang tuloy-tuloy na akyat.
+        // Mas matagal sa 2nd at 5th Floor: may lalakarin doon papunta sa
+        // ibang hagdan (tingnan ang MapScreen), hindi lang tuloy-tuloy na akyat.
         timeoutId = setTimeout(() => {
           setCurrentFloor(prev => prev + 1);
-        }, currentFloor === 2 ? 5000 : 1500);
+        }, currentFloor === 2 || currentFloor === 5 ? 5000 : 1500);
       } else {
         // `>=`, hindi `===`. Kung sakaling makalampas ang palapag sa
         // paroroonan, walang sasalo sa dating `===` at doon titigil ang
@@ -914,12 +914,17 @@ export default function App() {
           officeKey: null,
           icon: '🚶',
           title: EN ? 'Take the stairs up' : 'Umakyat sa hagdan',
-          // Sa 2nd Floor, hindi tumutuloy paakyat ang hagdang dinatnan —
-          // nasa ilalim ng Small Library ang paakyat.
+          // Sa 2nd at 5th Floor, hindi tumutuloy paakyat ang hagdang
+          // dinatnan — nasa ilalim ng Small Library (2nd) o sa gitna,
+          // paglabas ng elevator (5th), ang paakyat.
           body: f === 2
             ? (EN
               ? 'You arrive on Floor 2. These stairs only go down from here — follow the line to the other stairs below the Small Library to keep climbing.'
               : 'Darating po kayo sa Palapag 2. Pababa na lang ang hagdang ito — sundan ang linya papunta sa kabilang hagdan sa ilalim ng Small Library para tumuloy paakyat.')
+            : f === 5
+            ? (EN
+              ? 'You arrive on Floor 5. The stairs up to Floor 6 are in the middle, right outside the elevator — follow the line there.'
+              : 'Darating po kayo sa Palapag 5. Nasa gitna ang hagdan paakyat sa Palapag 6, paglabas mismo ng elevator — sundan ang linya papunta roon.')
             : (EN
               ? `You pass Floor ${f}. Keep climbing — the stairs continue up from the same spot.`
               : `Dadaanan po ninyo ang Palapag ${f}. Tuloy lang paakyat — dito rin nagpapatuloy ang hagdan.`),
@@ -1423,6 +1428,11 @@ export default function App() {
                     <p>{lang === 'EN'
                       ? 'Walk to the other stairs below the Small Library to keep going up.'
                       : 'Lumakad papunta sa kabilang hagdan sa ilalim ng Small Library para tumuloy paakyat.'}</p>
+                  )}
+                  {currentFloor === 5 && (
+                    <p>{lang === 'EN'
+                      ? 'Walk to the stairs in the middle, right outside the elevator, to keep going up.'
+                      : 'Lumakad papunta sa hagdan sa gitna, paglabas ng elevator, para tumuloy paakyat.'}</p>
                   )}
                 </div>
                 <div className="route-status-step">🎯 {lang === 'EN' ? 'Target' : 'Papunta sa'}: {floorName(destinationData.floor, lang)}</div>

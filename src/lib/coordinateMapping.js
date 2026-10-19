@@ -207,8 +207,12 @@ export const coordinateMapping = {
           style: { width: 200, height: 350, left: 850, top: 200, backgroundColor: '#4f46e5', color: 'white', textAlign: 'center' }, cssClass: "vertical-text-wrapper"
       },
       "const-south-5": {
-          targetX: 620, targetY: 520, pathData: "M 620 480 L 620 520",
-          style: { width: 240, height: 160, left: 510, top: 550, backgroundColor: '#cbd5e1', color: '#334155', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }, cssClass: ""
+          // Sa 5th lang: nasa gitna ng pasilyo ang hagdan paakyat sa 6th
+          // (x 545-695, y 505-560), kaya ibinaba ang silid na ito (pader sa
+          // y 600) at nasa kanan ng hagdan ang pinto (x 720-770). Iniikutan
+          // ng ruta ang hagdan, hindi tinatawid.
+          targetX: 745, targetY: 615, pathData: "M 620 480 L 745 480 L 745 615",
+          style: { width: 240, height: 110, left: 510, top: 615, backgroundColor: '#cbd5e1', color: '#334155', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }, cssClass: ""
       },
       "restroom-cr-5": {
           targetX: 620, targetY: 350, pathData: "M 620 480 L 450 480 L 450 285 L 620 285 L 620 350",
