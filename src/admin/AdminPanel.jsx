@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import VirtualKeyboard from '../components/VirtualKeyboard';
+import { isTypable } from '../lib/keyboardUtils';
 import {
   updateOffice, getAnnouncement, patchKioskSettings, changeAdminPassword, logoutAdmin,
   getLiftStatuses, setLiftStatus,
@@ -50,20 +51,20 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
   const [showKeyboard, setShowKeyboard] = useState(false);
   const admRef = useRef(null);
 
-  // Awtomatikong lumalabas sa unang pagpindot ng kahit anong field, para
-  // hindi na kailangang hanapin pa ng staff ang buton.
+  // Awtomatikong lumalabas sa pagpindot ng kahit anong field, para hindi
+  // na kailangang hanapin pa ng staff ang buton. `pointerdown` din, hindi
+  // lang `focusin`: kapag itinago ang keyboard, naka-focus pa rin ang field
+  // — kaya ang muling pindot doon ay walang bagong focus na maibibigay.
   useEffect(() => {
     const root = admRef.current;
     if (!root) return;
-    const open = (e) => {
-      const el = e.target;
-      const typable =
-        (el.tagName === 'INPUT' && !['checkbox', 'radio', 'submit', 'button', 'file'].includes(el.type)) ||
-        el.tagName === 'TEXTAREA';
-      if (typable) setShowKeyboard(true);
-    };
+    const open = (e) => { if (isTypable(e.target)) setShowKeyboard(true); };
     root.addEventListener('focusin', open);
-    return () => root.removeEventListener('focusin', open);
+    root.addEventListener('pointerdown', open);
+    return () => {
+      root.removeEventListener('focusin', open);
+      root.removeEventListener('pointerdown', open);
+    };
   }, []);
 
   const [advisoryText, setAdvisoryText] = useState('');

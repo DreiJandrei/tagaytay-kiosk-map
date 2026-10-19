@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { isTypable } from '../lib/keyboardUtils';
 
 // ==========================================================
 // FLOATING TOUCHSCREEN KEYBOARD
@@ -57,10 +58,6 @@ const submitOwningForm = (el) => {
   else submitter?.click();
 };
 
-const isTypable = (el) =>
-  !!el &&
-  ((el.tagName === 'INPUT' && !['checkbox', 'radio', 'submit', 'button', 'file'].includes(el.type)) ||
-    el.tagName === 'TEXTAREA');
 
 export default function VirtualKeyboard({ scopeRef, onClose, lang = 'EN' }) {
   const [shift, setShift] = useState(false);

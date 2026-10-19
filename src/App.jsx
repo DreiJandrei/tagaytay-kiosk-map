@@ -12,6 +12,7 @@ import DirectoryScreen from './DirectoryScreen';
 import MapScreen from './components/MapScreen';
 import AdminPanel from './admin/AdminPanel';
 import VirtualKeyboard from './components/VirtualKeyboard';
+import { isTypable } from './lib/keyboardUtils';
 import './index.css';
 
 import { QRCodeSVG } from 'qrcode.react'; 
@@ -178,6 +179,22 @@ const formatCountdown = (ms) => {
 // ng useEffect na nagse-setState, na nagdudulot ng cascading renders.
 function AuthKeyboard({ scopeRef, lang }) {
   const [hidden, setHidden] = useState(false);
+
+  // Kapag itinago, babalik ito sa susunod na pindot sa field. `pointerdown`
+  // din, hindi lang `focusin`: naka-focus pa rin ang password field matapos
+  // itago ang keyboard, kaya walang bagong focus na mangyayari sa pindot.
+  useEffect(() => {
+    const root = scopeRef.current;
+    if (!root) return;
+    const show = (e) => { if (isTypable(e.target)) setHidden(false); };
+    root.addEventListener('focusin', show);
+    root.addEventListener('pointerdown', show);
+    return () => {
+      root.removeEventListener('focusin', show);
+      root.removeEventListener('pointerdown', show);
+    };
+  }, [scopeRef]);
+
   if (hidden) return null;
   return <VirtualKeyboard scopeRef={scopeRef} onClose={() => setHidden(true)} lang={lang} />;
 }
