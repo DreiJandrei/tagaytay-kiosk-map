@@ -1119,6 +1119,19 @@ img { max-width: 100%; }
   text-shadow: 0 14px 34px rgba(2,10,26,.85);
   animation: rise 1s .18s cubic-bezier(.16,1,.3,1) both;
 }
+/* Tatlong linya: ano ito (kiosk), para kanino, at ang pangalan ng
+   lungsod bilang pinakamalaki. */
+/* `inherit`: ang `*` sa itaas ng file ay naglalagay ng sans sa bawat
+   span — kailangang sadyang hiramin ang serif ng h1. */
+.welcome-title-kiosk { display: block; font-family: inherit; }
+.welcome-title-for {
+  display: block;
+  margin-top: 8px;
+  font-size: calc(var(--h-title) * .5);
+  font-weight: 700;
+  letter-spacing: .2px;
+  color: #BFDBFE;
+}
 .welcome-title-accent {
   display: block; font-size: var(--h-accent); margin-top: 2px;
   /* Ang gradient ay pininta sa loob lang ng kahon ng teksto. Sa
@@ -1278,12 +1291,10 @@ img { max-width: 100%; }
   background: rgba(37,99,235,.55);
   border-color: rgba(191,219,254,.9);
 }
+/* Bilang lang ("1/3") — walang kahon, para hindi mapagkamalang buton. */
 .welcome-video-count {
   flex-shrink: 0;
-  padding: 4px 12px; border-radius: 999px;
-  background: rgba(96,165,250,.2);
-  border: 1px solid rgba(147,197,253,.4);
-  color: var(--k-100); font-size: .85rem; font-weight: 800; letter-spacing: 1px;
+  color: var(--k-100); font-size: .95rem; font-weight: 800; letter-spacing: 1px;
 }
 /* Lumalaki ang video hanggang sa kayang saluhin ng hanay. Ang taas ang
    unang hangganan, at doon kinukuha ang lapad; kapag mas makitid ang
@@ -1668,6 +1679,19 @@ img { max-width: 100%; }
   --ui-r-lg: 20px;
   --ui-r-xl: 26px;
 
+  /* ── Ang hitsura ng BUTON ────────────────────────────────────
+     Iisang patakaran sa buong kiosk: ang napipindot ay may solidong
+     mukha, malinaw na gilid, at "labi" sa ilalim (ang --ui-btn-lip) na
+     nawawala kapag pinindot — parang tunay na pindutan. Ang HINDI
+     napipindot (badge, bilang, orasan, estado) ay walang kahon: payak na
+     teksto lang. Touchscreen ito, walang hover — kaya kailangang halata
+     na ito bago pa hawakan. */
+  --ui-btn:       #143562;
+  --ui-btn-line:  rgba(147,197,253,.55);
+  --ui-btn-lip:   #040B18;
+  --ui-btn-sh:    0 4px 0 var(--ui-btn-lip), 0 10px 18px rgba(2,10,26,.35);
+  --ui-btn-sh-down: 0 1px 0 var(--ui-btn-lip), 0 3px 8px rgba(2,10,26,.3);
+
   --ui-sh-1: 0 4px 12px rgba(2,10,26,.35);
   --ui-sh-2: 0 12px 30px rgba(2,10,26,.45);
   --ui-sh-3: 0 30px 64px rgba(2,10,26,.65);
@@ -1706,6 +1730,12 @@ img { max-width: 100%; }
   --ui-warn:      #B45309;
   --ui-danger:    #BE123C;
   --ui-danger-sf: #FFF1F3;
+
+  --ui-btn:       #FFFFFF;
+  --ui-btn-line:  #8FB2E6;
+  --ui-btn-lip:   #A9C3E8;
+  --ui-btn-sh:    0 4px 0 var(--ui-btn-lip), 0 10px 18px rgba(37,99,235,.12);
+  --ui-btn-sh-down: 0 1px 0 var(--ui-btn-lip), 0 3px 8px rgba(37,99,235,.1);
 
   --ui-sh-1: 0 4px 12px rgba(37,99,235,.08);
   --ui-sh-2: 0 12px 28px rgba(37,99,235,.12);
@@ -1804,26 +1834,29 @@ img { max-width: 100%; }
   justify-content: center;
   gap: 9px;
   border-radius: var(--ui-r-md);
-  border: 1px solid var(--ui-line) !important;
-  background: var(--ui-raise) !important;
+  border: 1px solid var(--ui-btn-line) !important;
+  background: var(--ui-btn) !important;
   color: var(--ui-ink) !important;
+  box-shadow: var(--ui-btn-sh);
   font-size: 1.02rem;
   font-weight: 800;
   letter-spacing: .2px;
   cursor: pointer;
-  transition: transform .18s ease, background .18s ease, border-color .18s ease !important;
+  transition: transform .12s ease, box-shadow .12s ease, background .18s ease, border-color .18s ease !important;
 }
 .hdr-btn--icon { padding: 0; font-size: 1.35rem; }
 .hdr-btn:hover {
-  background: var(--ui-raise-2) !important;
-  border-color: var(--ui-line-2) !important;
-  transform: translateY(-2px);
+  border-color: var(--ui-accent) !important;
+}
+.hdr-btn:active {
+  transform: translateY(3px);
+  box-shadow: var(--ui-btn-sh-down);
 }
 .hdr-btn.is-on {
   background: linear-gradient(160deg, var(--ui-accent-2), #1E3A8A) !important;
   border-color: var(--ui-accent) !important;
   color: #FFFFFF !important;
-  box-shadow: 0 8px 18px rgba(37,99,235,.38);
+  box-shadow: 0 4px 0 #0B1F4D, 0 10px 18px rgba(37,99,235,.38);
 }
 .hdr-btn-glyph { font-size: 1.2rem; line-height: 1; }
 .hdr-btn-label { white-space: nowrap; }
@@ -1848,18 +1881,18 @@ img { max-width: 100%; }
   margin: 0 6px;
 }
 
+/* Ang orasan ay basahin, hindi pindutin — kaya walang kahon. Dati'y
+   kapareho ng mga buton sa tabi nito ang balot, at mukha itong isa pa. */
 .hdr-clock {
   height: 58px;
-  min-width: 156px;
-  padding: 0 22px;
+  min-width: 140px;
+  padding: 0 4px 0 10px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   gap: 1px;
-  border-radius: var(--ui-r-md);
-  background: var(--ui-raise) !important;
-  border: 1px solid var(--ui-line);
+  background: transparent !important;
   color: var(--ui-ink);
 }
 .hdr-clock-time {
@@ -1984,34 +2017,35 @@ img { max-width: 100%; }
   color: var(--ui-gold);
 }
 
+/* Bawat resulta ay sariling buton, may › sa kanan — gaya ng listahan
+   ng opisina sa ibaba (tingnan ang .office-row). */
 .result-row {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 7px;
-  padding: 15px 20px;
+  gap: 5px;
+  margin: 10px 12px 0;
+  padding: 13px 58px 13px 16px;
+  border-radius: var(--ui-r-md);
+  border: 1px solid var(--ui-btn-line);
+  background: var(--ui-btn);
+  box-shadow: var(--ui-btn-sh);
   cursor: pointer;
-  border-bottom: 1px solid var(--ui-line);
-  transition: background .18s ease, padding-left .18s ease;
+  transition: transform .12s ease, box-shadow .12s ease, border-color .18s ease;
 }
-.result-row:last-child { border-bottom: none; }
-.result-row:hover { background: var(--ui-raise-2); padding-left: 26px; }
+.result-row:last-child { margin-bottom: 14px; }
+.result-row:hover { border-color: var(--ui-accent); }
+.result-row:active { transform: translateY(3px); box-shadow: var(--ui-btn-sh-down); }
+.sb-panel--gold .result-row { border-color: var(--ui-gold); }
+/* Label lang ang lokasyon — payak na teksto, walang kahon. */
 .result-badge {
-  width: fit-content;
-  padding: 4px 11px;
-  border-radius: 999px;
-  background: var(--ui-accent-sf);
-  border: 1px solid var(--ui-line);
   color: var(--ui-accent);
-  font-size: .73rem;
+  font-size: .72rem;
   font-weight: 800;
-  letter-spacing: .4px;
+  letter-spacing: .1px;
   text-transform: uppercase;
 }
-.sb-panel--gold .result-badge {
-  background: var(--ui-gold-sf);
-  border-color: var(--ui-gold);
-  color: var(--ui-gold);
-}
+.sb-panel--gold .result-badge { color: var(--ui-gold); }
 .result-title {
   font-size: 1.12rem;
   font-weight: 800;
@@ -2021,74 +2055,44 @@ img { max-width: 100%; }
 
 /* ═══════════ 4. IDLE: BANNER AT LISTAHAN ═══════════ */
 
-/* --- Banner ng palapag --- */
+/* --- Pamagat ng palapag ---
+   Pamagat ito, hindi buton. Dati'y malaking asul na kahon na may anino —
+   ang pinakamukhang-buton sa buong sidebar, kahit walang nangyayari sa
+   pindot. Ngayon: payak na teksto na may guhit sa ilalim. */
 .floor-banner {
-  position: relative;
-  overflow: hidden;
-  margin-bottom: 16px;
-  padding: 20px 22px !important;
-  border-radius: var(--ui-r-lg) !important;
-  border: 1px solid var(--ui-line-2) !important;
-  background: linear-gradient(135deg, #2563EB 0%, #1E3A8A 58%, #0B1A33 100%) !important;
-  box-shadow: 0 14px 28px rgba(29,78,216,.32) !important;
-  color: #FFFFFF;
-}
-.floor-banner::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(255,255,255,.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.07) 1px, transparent 1px);
-  background-size: 22px 22px;
-  pointer-events: none;
-}
-.floor-banner::after {
-  content: '';
-  position: absolute;
-  right: -50px; top: -60px;
-  width: 190px; height: 190px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(147,197,253,.32) 0%, transparent 68%);
-  pointer-events: none;
+  margin-bottom: 14px;
+  padding: 4px 4px 14px !important;
+  border-bottom: 2px solid var(--ui-accent-2);
+  color: var(--ui-ink);
 }
 .floor-banner-row {
-  position: relative;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 14px;
 }
 .floor-banner h2 {
-  position: relative;
   margin: 0;
   font-size: 1.42rem !important;
   font-weight: 900;
   letter-spacing: -.2px;
-  text-shadow: 0 4px 12px rgba(2,10,26,.45);
+  color: var(--ui-ink);
 }
 .floor-banner-sub {
-  position: relative;
   display: block;
   margin-top: 3px;
   font-size: .76rem;
   font-weight: 700;
   letter-spacing: 1.4px;
   text-transform: uppercase;
-  color: #BFDBFE;
+  color: var(--ui-accent);
 }
 .floor-banner-count {
-  position: relative;
   flex-shrink: 0;
-  min-width: 54px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: rgba(255,255,255,.16);
-  border: 1px solid rgba(255,255,255,.3);
-  text-align: center;
-  font-size: 1.05rem;
-  font-weight: 900;
-  color: #FFFFFF;
+  font-size: .9rem;
+  font-weight: 800;
+  white-space: nowrap;
+  color: var(--ui-ink-3);
 }
 
 /* --- Listahan ng opisina --- */
@@ -2098,46 +2102,48 @@ img { max-width: 100%; }
   gap: 10px;
   padding-bottom: 10px;
 }
+/* Bawat opisina ay buton: solidong mukha, labi sa ilalim, at › sa kanan
+   na nagsasabing "dito ka dadalhin". Dati'y kapareho ng kulay ng
+   sidebar ang mukha at sa hover lang lumilitaw ang palatandaan — wala
+   namang hover sa touchscreen. */
 .office-row {
   position: relative !important;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 7px;
+  gap: 5px;
   width: 100%;
-  padding: 14px 18px 14px 22px !important;
+  padding: 14px 62px 14px 18px !important;
   border-radius: var(--ui-r-md) !important;
-  border: 1px solid var(--ui-line) !important;
-  background: var(--ui-panel) !important;
-  box-shadow: var(--ui-sh-1) !important;
+  border: 1px solid var(--ui-btn-line) !important;
+  background: var(--ui-btn) !important;
+  box-shadow: var(--ui-btn-sh) !important;
   text-align: left;
   cursor: pointer;
-  transition: transform .2s var(--ui-ease), background .2s ease, border-color .2s ease !important;
+  transition: transform .12s ease, box-shadow .12s ease, border-color .18s ease !important;
 }
-.office-row::before {
-  content: '';
+.office-row::after,
+.result-row::after {
+  content: '›';
   position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 4px;
-  background: linear-gradient(180deg, var(--ui-accent), var(--ui-accent-2));
-  transform: scaleY(0);
-  transition: transform .25s var(--ui-ease);
+  right: 14px; top: 50%;
+  width: 34px; height: 34px;
+  margin-top: -17px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: var(--ui-accent-2);
+  color: #FFFFFF;
+  font-size: 1.5rem; font-weight: 900; line-height: 1;
+  padding-bottom: 3px;
 }
-.office-row:hover {
-  background: var(--ui-raise) !important;
-  border-color: var(--ui-accent) !important;
-  transform: translateX(5px);
-  box-shadow: var(--ui-sh-2) !important;
+.office-row:hover { border-color: var(--ui-accent) !important; }
+.office-row:active {
+  transform: translateY(3px);
+  box-shadow: var(--ui-btn-sh-down) !important;
 }
-.office-row:hover::before { transform: scaleY(1); }
-.office-row:active { transform: translateX(2px) scale(.99); }
 
+/* Label lang ang lokasyon — payak na teksto, walang kahon. */
 .office-row-badge {
-  padding: 4px 11px !important;
-  border-radius: 999px !important;
-  background: var(--ui-accent-sf) !important;
-  border: 1px solid var(--ui-line) !important;
   color: var(--ui-accent) !important;
   font-size: .72rem !important;
   font-weight: 800;
@@ -2152,7 +2158,7 @@ img { max-width: 100%; }
   color: var(--ui-ink) !important;
 }
 
-.office-row { animation: rowIn .4s var(--ui-ease) both; }
+.office-row { animation: rowIn .4s var(--ui-ease) backwards; }
 .office-row:nth-child(1) { animation-delay: .02s }
 .office-row:nth-child(2) { animation-delay: .05s }
 .office-row:nth-child(3) { animation-delay: .08s }
@@ -2185,20 +2191,21 @@ img { max-width: 100%; }
   align-items: center;
   gap: 8px;
   margin-bottom: 18px;
-  padding: 11px 20px !important;
-  border-radius: 999px !important;
-  border: 1px solid var(--ui-line) !important;
-  background: var(--ui-raise) !important;
-  color: var(--ui-ink-2) !important;
-  font-size: .95rem !important;
+  padding: 12px 20px !important;
+  border-radius: var(--ui-r-md) !important;
+  border: 1px solid var(--ui-btn-line) !important;
+  background: var(--ui-btn) !important;
+  color: var(--ui-ink) !important;
+  box-shadow: var(--ui-btn-sh);
+  font-size: .98rem !important;
   font-weight: 800;
   cursor: pointer;
-  transition: transform .18s ease, background .18s ease !important;
+  transition: transform .12s ease, box-shadow .12s ease, border-color .18s ease !important;
 }
-.back-to-list-btn:hover {
-  background: var(--ui-raise-2) !important;
-  color: var(--ui-ink) !important;
-  transform: translateX(-4px);
+.back-to-list-btn:hover { border-color: var(--ui-accent) !important; }
+.back-to-list-btn:active {
+  transform: translateY(3px);
+  box-shadow: var(--ui-btn-sh-down);
 }
 
 /* Magkatabi ang pabalik at ang gabay. Bumababa sila sa dalawang linya
@@ -2413,30 +2420,25 @@ img { max-width: 100%; }
   letter-spacing: -.5px; line-height: 1.15;
   color: var(--ui-ink);
 }
+/* Impormasyon, hindi buton — kaya walang kahon. Ang mga pindutan sa
+   bintanang ito ay ang mga paraan ng pag-akyat lang, at ang "Never mind". */
 .route-pick-dest {
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 9px;
+  gap: 4px 9px;
   margin: 0;
-  padding: 11px 18px;
-  border-radius: 999px;
-  border: 1px solid var(--ui-line-2);
-  background: var(--ui-accent-sf);
   color: var(--ui-ink-2);
-  font-size: 1.02rem; font-weight: 600;
+  font-size: 1.05rem; font-weight: 600;
 }
 .route-pick-dest strong { color: var(--ui-ink); font-weight: 900; }
 .route-pick-badge {
-  padding: 3px 11px;
-  border-radius: 999px;
-  border: 1px solid var(--ui-line);
-  background: var(--ui-raise);
   color: var(--ui-accent);
-  font-size: .76rem; font-weight: 900;
+  font-size: .8rem; font-weight: 900;
   letter-spacing: .4px; text-transform: uppercase;
 }
+.route-pick-badge::before { content: '· '; color: var(--ui-ink-3); }
 
 /* Isang malaking pindutan bawat paraan ng pag-akyat. Pantay-pantay
    sila — walang isang mas mainam sa iba, iba lang ang sakto sa
@@ -2453,20 +2455,18 @@ img { max-width: 100%; }
   gap: 7px;
   padding: 26px 16px 22px;
   border-radius: var(--ui-r-lg);
-  border: 2px solid var(--ui-line-2);
-  background: var(--ui-raise);
+  border: 2px solid var(--ui-btn-line);
+  background: var(--ui-btn);
   color: var(--ui-ink);
+  box-shadow: var(--ui-btn-sh);
   cursor: pointer;
-  transition: border-color .18s ease, background .18s ease, transform .18s ease, box-shadow .18s ease;
+  transition: border-color .18s ease, background .18s ease, transform .12s ease, box-shadow .12s ease;
 }
 .route-opt:hover, .route-opt:focus-visible {
   border-color: var(--ui-accent);
-  background: var(--ui-accent-sf);
-  transform: translateY(-3px);
-  box-shadow: var(--ui-sh-2);
   outline: none;
 }
-.route-opt:active { transform: translateY(0); }
+.route-opt:active { transform: translateY(3px); box-shadow: var(--ui-btn-sh-down); }
 /* Sira o inaayos ang elevator: nakikita pa rin, pero hindi mapipindot. */
 .route-opt.is-out,
 .route-opt.is-out:hover {
@@ -2500,19 +2500,20 @@ img { max-width: 100%; }
 .route-pick-cancel {
   margin-top: 18px;
   padding: 13px 22px;
-  border-radius: var(--ui-r-lg);
-  border: 1px solid var(--ui-line);
-  background: transparent;
-  color: var(--ui-ink-2);
-  font-size: .94rem; font-weight: 800;
+  border-radius: var(--ui-r-md);
+  border: 1px solid var(--ui-btn-line);
+  background: var(--ui-btn);
+  color: var(--ui-ink);
+  box-shadow: var(--ui-btn-sh);
+  font-size: .96rem; font-weight: 800;
   cursor: pointer;
-  transition: background .18s ease, color .18s ease, border-color .18s ease;
+  transition: transform .12s ease, box-shadow .12s ease, color .18s ease, border-color .18s ease;
 }
 .route-pick-cancel:hover {
   border-color: var(--ui-danger);
-  background: var(--ui-danger-sf);
   color: var(--ui-danger);
 }
+.route-pick-cancel:active { transform: translateY(3px); box-shadow: var(--ui-btn-sh-down); }
 
 /* Sa pandak o makitid na screen, nagpapayat ang bintana — ang tatlong
    pindutan ang huling binibitawan, patong-patong sila kung kailangan. */
@@ -2584,18 +2585,21 @@ img { max-width: 100%; }
   letter-spacing: -.3px;
   color: var(--ui-ink) !important;
 }
+/* Kung nasaan ang opisina — basahin lang. Dati'y solidong asul na pill
+   na may anino: kamukha ng pinakapangunahing buton sa kiosk. */
 .destination-card .floor-badge {
   display: inline-block;
   margin-top: 0 !important;
-  padding: 8px 18px !important;
-  border-radius: 999px !important;
-  background: linear-gradient(135deg, var(--ui-accent-2), #1E3A8A) !important;
-  color: #FFFFFF !important;
-  font-size: .92rem !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  color: var(--ui-accent) !important;
+  font-size: 1rem !important;
   font-weight: 800;
-  letter-spacing: .4px;
-  box-shadow: 0 6px 16px rgba(37,99,235,.35) !important;
+  letter-spacing: .2px;
+  box-shadow: none !important;
 }
+.destination-card .floor-badge::before { content: '📍 '; }
 
 /* --- Mga linya ng detalye --- */
 .office-meta {
@@ -2619,28 +2623,28 @@ img { max-width: 100%; }
 .office-meta .meta-row + .meta-row { border-top: 1px solid var(--ui-line); }
 .office-meta .meta-row strong { color: var(--ui-ink); font-weight: 800 !important; }
 
+/* Estado: may kulay na tuldok at teksto, walang kahon — basahin, hindi
+   pindutin. */
 .status-pill {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   margin-left: auto;
-  padding: 5px 13px;
-  border-radius: 999px;
-  font-size: .86rem;
+  font-size: .92rem;
   font-weight: 900;
   letter-spacing: .3px;
   white-space: nowrap;
 }
 .status-pill::before {
   content: '';
-  width: 8px; height: 8px;
+  width: 10px; height: 10px;
   border-radius: 50%;
   background: currentColor;
 }
-.status-pill--ok      { background: rgba(52,211,153,.14);  color: var(--ui-ok); }
-.status-pill--meeting { background: var(--ui-danger-sf);   color: var(--ui-danger); }
-.status-pill--out     { background: var(--ui-gold-sf);     color: var(--ui-warn); }
-.status-pill--closed  { background: var(--ui-raise-2);     color: var(--ui-ink-3); }
+.status-pill--ok      { color: var(--ui-ok); }
+.status-pill--meeting { color: var(--ui-danger); }
+.status-pill--out     { color: var(--ui-warn); }
+.status-pill--closed  { color: var(--ui-ink-3); }
 
 .office-about {
   margin-bottom: 16px;
@@ -2862,20 +2866,22 @@ img { max-width: 100%; }
 }
 .ui-action-btn.zoom-btn,
 .reset-view-btn {
-  background: transparent !important;
-  border: 1px solid rgba(96,165,250,.4) !important;
+  background: var(--ui-btn) !important;
+  border: 1px solid var(--ui-btn-line) !important;
   color: var(--k-300) !important;
+  box-shadow: var(--ui-btn-sh) !important;
   border-radius: 10px !important;
   font-weight: 800 !important;
-  transition: transform .18s ease, background .18s ease !important;
+  transition: transform .12s ease, box-shadow .12s ease !important;
 }
-.ui-action-btn.zoom-btn:hover,
-.reset-view-btn:hover {
-  background: rgba(59,130,246,.2) !important; transform: translateY(-2px) !important;
+.ui-action-btn.zoom-btn:active,
+.reset-view-btn:active {
+  transform: translateY(3px) !important;
+  box-shadow: var(--ui-btn-sh-down) !important;
 }
 
 .light-theme .ui-action-btn.zoom-btn,
-.light-theme .reset-view-btn { color: var(--k-700) !important; border-color: #BFDBFE !important; }
+.light-theme .reset-view-btn { color: var(--k-700) !important; }
 
 .bottom-floor-bar {
   background: rgba(7,18,35,.88) !important;
@@ -2889,20 +2895,25 @@ img { max-width: 100%; }
   box-shadow: 0 20px 40px rgba(15,23,42,.12) !important;
 }
 .floor-chip {
-  background: transparent !important;
-  border: 1px solid rgba(96,165,250,.3) !important;
-  color: #B6CCE8 !important;
-  box-shadow: none !important;
-  transition: transform .18s ease, background .18s ease !important;
+  background: var(--ui-btn) !important;
+  border: 1px solid var(--ui-btn-line) !important;
+  color: var(--ui-ink) !important;
+  box-shadow: var(--ui-btn-sh) !important;
+  transition: transform .12s ease, box-shadow .12s ease, background .18s ease !important;
 }
-.floor-chip:hover { transform: translateY(-3px) !important; background: rgba(59,130,246,.18) !important; }
+.floor-chip:hover { border-color: var(--ui-accent) !important; }
+.floor-chip:active {
+  transform: translateY(3px) !important;
+  box-shadow: var(--ui-btn-sh-down) !important;
+}
+/* Ang kasalukuyang palapag: nakababa na, parang pindutang nakadiin. */
 .floor-chip.active {
   background: linear-gradient(160deg, var(--k-500), var(--k-700)) !important;
   border-color: var(--k-300) !important;
   color: #FFF !important;
-  box-shadow: 0 8px 20px rgba(37,99,235,.5) !important;
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #0B1F4D, 0 6px 16px rgba(37,99,235,.45) !important;
 }
-.light-theme .floor-chip { color: #44618C !important; border-color: #BFDBFE !important; }
 .light-theme .floor-chip.active { color: #FFF !important; }
 
 /* ═══════════ 7. KIOSK KEYBOARD ═══════════ */

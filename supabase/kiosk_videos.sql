@@ -2,6 +2,11 @@
 -- WELCOME SCREEN VIDEOS AT LARAWAN
 -- Patakbuhin ito nang isang beses sa Supabase → SQL Editor → New query.
 -- Ligtas itong ulitin: gumagamit ng IF NOT EXISTS / DROP POLICY IF EXISTS.
+--
+-- ⚠️ Pagkatapos patakbuhin ito, patakbuhin ULIT ang admin_only_writes.sql.
+-- "Kahit sinong naka-login" ang policy sa ibaba — kasama na roon ang
+-- login ng kiosk mismo. Ang admin_only_writes.sql ang naglilimita nito
+-- sa admin lang.
 -- ============================================================
 
 create table if not exists public.kiosk_videos (

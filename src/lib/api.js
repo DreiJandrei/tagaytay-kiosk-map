@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { bumpSearchCount } from './kioskDevice';
 
 // ==============================================================
 // HINDI PA NAPAPATAKBO ANG supabase/office_phones.sql
@@ -34,8 +35,8 @@ export const resetPasswordEmail = async (email) => {
   // Kapag naka-hardcode, ang admin na humihiling mula sa localhost ay
   // itatapon sa production (o babagsak sa Site URL ng Supabase kapag hindi
   // naka-allowlist ang redirectTo) — kaya "hindi gumagana" ang reset link.
-  // Idinadagdag ang kiosk key para hindi mag-"System Locked" pagbalik.
-  const redirectTo = `${window.location.origin}/?key=cct-bsit-kiosk`;
+  // Ang recovery token sa link mismo ang nagpapapasok pagbalik.
+  const redirectTo = `${window.location.origin}/`;
 
   const { data, error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
   if (error) throw error;
@@ -298,14 +299,14 @@ export const updateOffice = async (officeKey, updates) => {
 // ==============================================================
 // 5. INCREMENT SEARCH COUNT
 // ==============================================================
+// Dating basa-tapos-sulat ito mula sa anonymous na client — kaya bukas
+// ang `offices` sa pagsulat ng kahit sino. Ngayon, isang function sa
+// database na +1 lang ang kaya (supabase/admin_only_writes.sql).
 export const incrementSearchCount = async (officeKey) => {
   try {
-    const { data: currentData, error: fetchError } = await supabase.from('offices').select('search_count').eq('office_key', officeKey).single();
-    if (fetchError) throw fetchError;
-    const newCount = (currentData.search_count || 0) + 1;
-    await supabase.from('offices').update({ search_count: newCount }).eq('office_key', officeKey);
+    await bumpSearchCount(officeKey);
     return true;
-  } catch (error) { return false; }
+  } catch { return false; }
 };
 
 // ==============================================================

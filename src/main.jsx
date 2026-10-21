@@ -1,6 +1,6 @@
 // DAPAT NAUUNA ITO SA LAHAT: sinasalo ang recovery hash bago pa mabuo
 // ang Supabase client, dahil buburahin nito ang hash sa URL.
-import './lib/recoveryFlag.js';
+import { isKioskResetPage } from './lib/recoveryFlag.js';
 
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -15,7 +15,8 @@ import { installKioskMode } from './lib/kioskMode.js';
 installKioskMode();
 
 // 1. I-import yung ginawa nating DownloadPDF component
-import DownloadPDF from './DownloadPDF.jsx'; 
+import DownloadPDF from './DownloadPDF.jsx';
+import KioskResetPage from './components/KioskResetPage.jsx';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -25,7 +26,9 @@ createRoot(document.getElementById('root')).render(
         <Route path="/download/:officeKey" element={<DownloadPDF />} />
         
         {/* 3. Kapag normal na gamit sa Kiosk, yung App mo ang lalabas */}
-        <Route path="*" element={<App />} />
+        {/* `/?reset=kiosk` — nakalimutang password ng kiosk. Hiwalay na
+            pahina, hindi bahagi ng kiosk (tingnan ang KioskResetPage). */}
+        <Route path="*" element={isKioskResetPage ? <KioskResetPage /> : <App />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>

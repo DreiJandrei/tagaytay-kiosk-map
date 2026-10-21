@@ -16,7 +16,7 @@
 const isTouchKiosk = () => {
   if (typeof window === 'undefined') return false;
   // Ang mga screen na nasa kamay ng bisita ay dumadaan sa QR, at may
-  // `route` na sangkap ang link nila. Ang kiosk mismo ay may `key`.
+  // `route` na sangkap ang link nila.
   const params = new URLSearchParams(window.location.search);
   if (params.get('route')) return false;
   return window.innerWidth > 1024;

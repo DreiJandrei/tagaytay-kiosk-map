@@ -1,5 +1,54 @@
 # Tagaytay City Hall Kiosk
 
+## Seguridad: dalawang login, iisang Gmail
+
+| Account | Para saan | Puwedeng mag-edit? |
+|---|---|---|
+| `tagaytaykiosk@gmail.com` | Admin Panel | ✅ |
+| `tagaytaykiosk+device@gmail.com` | Pambukas ng kiosk mismo | ❌ tingin lang |
+
+Sa Gmail, binabalewala ang `+device`, kaya iisang inbox ang tumatanggap
+ng lahat ng email. Sa Supabase, magkaibang user sila na may magkaibang
+password.
+
+**Pagbukas ng kiosk.** Wala nang `?key=` sa link. Sa unang bukas sa isang
+device, hihingi ang kiosk ng password ng `+device` na account. Isang
+beses lang: tinatandaan iyon ng browser, kaya kusang bumubukas pa rin
+pagkatapos ng restart. Hindi kailangan ng password ang telepono ng
+bisitang nag-scan ng QR.
+
+**Nakalimutan ang password ng kiosk.** Buksan ang
+`https://tagaytay-kiosk-map-one.vercel.app/?reset=kiosk` sa kahit anong
+device. Hindi ito naka-link saanman sa kiosk. Sa Gmail ng lungsod
+dumarating ang reset link.
+
+**Admin login.** Pindutin ang seal sa itaas-kaliwa nang **eksaktong 15
+beses**, tapos huminto. Kulang o sobra, walang lalabas. Hindi ito ang
+kandado; ang password at ang database rules iyon. Para lang ito hindi
+aksidenteng lumabas ang login sa harap ng bisita.
+
+### Isang beses na setup sa Supabase
+
+1. **Authentication → Users → Add user → Create new user.**
+   Email: `tagaytaykiosk+device@gmail.com`, maglagay ng password, at
+   i-check ang **Auto Confirm User**.
+2. **SQL Editor → New query →** i-paste ang buong
+   `supabase/admin_only_writes.sql` → **Run**. Apat na policy bawat
+   table dapat ang lumabas sa dulo.
+3. **Authentication → URL Configuration → Redirect URLs →** idagdag ang
+   `https://tagaytay-kiosk-map-one.vercel.app/**` (at
+   `http://localhost:5173/**` para sa testing). Kung wala ito, hindi
+   babalik sa reset page ang link sa email.
+4. **Authentication → Sign In / Providers →** patayin ang **Allow new
+   users to sign up**. Ang dalawang account sa itaas lang ang dapat na
+   umiiral.
+
+**Tandaan:** pagkatapos ng `admin_only_writes.sql`, hindi na kayang
+punuin ng kiosk ang isang *bagong, walang lamang* database. Hindi ito
+problema sa kasalukuyang database na may laman na.
+
+---
+
 ## Kiosk mode sa mini PC (Windows)
 
 Nasa `kiosk/` na folder ang lahat ng kailangan. Kopyahin ang buong
@@ -190,10 +239,10 @@ gamit ang flag na ito:
 
 ```bash
 # macOS
-open -a "Google Chrome" --args --autoplay-policy=no-user-gesture-required --kiosk "https://tagaytay-kiosk-map-one.vercel.app/?key=cct-bsit-kiosk"
+open -a "Google Chrome" --args --autoplay-policy=no-user-gesture-required --kiosk "https://tagaytay-kiosk-map-one.vercel.app/"
 
 # Windows
-chrome.exe --autoplay-policy=no-user-gesture-required --kiosk "https://tagaytay-kiosk-map-one.vercel.app/?key=cct-bsit-kiosk"
+chrome.exe --autoplay-policy=no-user-gesture-required --kiosk "https://tagaytay-kiosk-map-one.vercel.app/"
 ```
 
 Ilagay ito sa startup shortcut ng kiosk para tuwing bubukas ang makina,

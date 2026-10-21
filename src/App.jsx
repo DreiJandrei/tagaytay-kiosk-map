@@ -11,14 +11,18 @@ import DashboardScreen from './DashboardScreen';
 import DirectoryScreen from './DirectoryScreen';
 import MapScreen from './components/MapScreen';
 import AdminPanel from './admin/AdminPanel';
-import VirtualKeyboard from './components/VirtualKeyboard';
-import { isTypable } from './lib/keyboardUtils';
+import AuthKeyboard from './components/AuthKeyboard';
+import KioskLockScreen from './components/KioskLockScreen';
 import './index.css';
 
-import { QRCodeSVG } from 'qrcode.react'; 
-import { useSearchParams } from 'react-router-dom';
+import { QRCodeSVG } from 'qrcode.react';
 
 import { getAllOffices, initializeDatabase, incrementSearchCount, loginAdmin, resetPasswordEmail, logoutAdmin, onAuthChange, changeAdminPassword, getLiftStatuses } from './lib/api';
+import { checkKioskSession, onKioskSessionChange } from './lib/kioskDevice';
+import {
+  ADMIN_GUARD_KEY, MAX_LOGIN_ATTEMPTS, FRESH_GUARD,
+  readLoginGuard, writeLoginGuard, guardAfterFailure, isWrongPassword, formatCountdown, isStrongPassword,
+} from './lib/loginGuard';
 import { coordinateMapping, mergeOfficeData } from './lib/coordinateMapping';
 import { defaultOfficeData } from './lib/defaultOfficeData';
 import { isRecoveryLink } from './lib/recoveryFlag';
@@ -118,36 +122,16 @@ function QrCard({ link, lang }) {
   );
 }
 
-// ── Bantay sa maling password ng admin ──────────────────────────
-// Gaya ng sa telepono: limang maling subok, tapos naka-lock nang ilang
-// minuto — at humahaba ang lock sa bawat ulit. Nasa localStorage para
-// hindi ito mabura ng pag-refresh ng pahina. Bumabalik sa simula kapag
-// tama na ang password. (Pandagdag lang ito: may sariling limitasyon din
-// ang Supabase sa dami ng login.)
-const LOGIN_GUARD_KEY = 'tagaytay-admin-login-guard';
-const MAX_LOGIN_ATTEMPTS = 5;
-const LOCK_MINUTES = [1, 5, 15, 30, 60];
-const FRESH_GUARD = { fails: 0, lockUntil: 0, level: 0 };
-
-const readLoginGuard = () => {
-  try {
-    const g = JSON.parse(localStorage.getItem(LOGIN_GUARD_KEY));
-    if (g && typeof g === 'object') {
-      return { fails: Number(g.fails) || 0, lockUntil: Number(g.lockUntil) || 0, level: Number(g.level) || 0 };
-    }
-  } catch { /* walang storage o sira ang laman — magsimula sa malinis */ }
-  return FRESH_GUARD;
-};
-
-const writeLoginGuard = (g) => {
-  try { localStorage.setItem(LOGIN_GUARD_KEY, JSON.stringify(g)); } catch { /* walang storage */ }
-};
-
-// Maling password ba talaga — o problema sa internet o sa Supabase?
-// Ang mali lang na password ang binibilang.
-const isWrongPassword = (error) =>
-  error?.code === 'invalid_credentials'
-  || /invalid login credentials/i.test(error?.message || '');
+// ── Admin login: eksaktong 15 pindot sa seal ─────────────────────
+// Binibilang ang pindot hanggang huminto nang TAP_PAUSE_MS. Saka lang
+// tinitingnan: eksaktong 15 → lalabas ang login. Kulang o sobra → walang
+// nangyayari, at walang anumang senyas kung bakit. Ang batang naglalaro
+// sa seal ay halos laging lalampas.
+//
+// Hindi ito ang kandado — ang password at ang Supabase RLS iyon. Ito ay
+// para hindi aksidenteng lumabas ang login sa harap ng bisita.
+const ADMIN_TAPS = 15;
+const TAP_PAUSE_MS = 1500;
 
 // ── Pahinga ng "Forgot password" ─────────────────────────────────
 // May limitasyon ang Supabase sa dami ng email kada oras. Kapag naabot,
@@ -166,42 +150,7 @@ const writeResetCooldown = (until) => {
   try { localStorage.setItem(RESET_COOLDOWN_KEY, String(until)); } catch { /* walang storage */ }
 };
 
-const formatCountdown = (ms) => {
-  const total = Math.max(0, Math.ceil(ms / 1000));
-  const h = Math.floor(total / 3600);
-  const m = Math.floor((total % 3600) / 60);
-  const sec = String(total % 60).padStart(2, '0');
-  return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`;
-};
-
-// Keyboard para sa mga auth modal. Hiwalay na component para ang pag-unmount
-// nito (pagsara ng modal) ang mag-reset ng "hidden" — kaya hindi na kailangan
-// ng useEffect na nagse-setState, na nagdudulot ng cascading renders.
-function AuthKeyboard({ scopeRef, lang }) {
-  const [hidden, setHidden] = useState(false);
-
-  // Kapag itinago, babalik ito sa susunod na pindot sa field. `pointerdown`
-  // din, hindi lang `focusin`: naka-focus pa rin ang password field matapos
-  // itago ang keyboard, kaya walang bagong focus na mangyayari sa pindot.
-  useEffect(() => {
-    const root = scopeRef.current;
-    if (!root) return;
-    const show = (e) => { if (isTypable(e.target)) setHidden(false); };
-    root.addEventListener('focusin', show);
-    root.addEventListener('pointerdown', show);
-    return () => {
-      root.removeEventListener('focusin', show);
-      root.removeEventListener('pointerdown', show);
-    };
-  }, [scopeRef]);
-
-  if (hidden) return null;
-  return <VirtualKeyboard scopeRef={scopeRef} onClose={() => setHidden(true)} lang={lang} />;
-}
-
 export default function App() {
-  const [searchParams] = useSearchParams();
-
   // ── Telepono ba ito ng bisita? ────────────────────────────────
   // Binabasa nang ISANG BESES sa pagbukas pa lang ng pahina, at hindi
   // na muling tinitingnan. Sinasadya ito: kung nakasabit ito sa buhay
@@ -214,7 +163,22 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggingIn, setIsLoggingIn] = useState(false); 
 
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  // Ang login ng kiosk mismo: 'checking' | 'unlocked' | 'locked' | 'offline'.
+  // Hindi kailangan sa telepono ng bisita — ang may-tatak na link ang
+  // pampasok doon — kaya hindi na rin ito sinusuri roon.
+  const [kioskStatus, setKioskStatus] = useState(() => (visitorLink.isVisitor ? 'locked' : 'checking'));
+
+  // Tatlo lang ang pinapapasok:
+  //   • ang device na naka-login bilang kiosk (tingnan ang kioskDevice.js)
+  //   • ang password recovery ng admin na galing sa email
+  //   • ang BUHAY PANG QR link ng bisita
+  //
+  // Dating `?key=cct-bsit-kiosk` sa URL ang una. Nakasulat ang key na
+  // iyon sa public na repo, kaya kahit sino ay kayang buksan ang buong
+  // kiosk — at ang admin login — mula sa sariling laptop.
+  const isAuthorized = isRecoveryLink
+    || kioskStatus === 'unlocked'
+    || (isVisitorView && !visitorLink.expired);
   // Paso na ang link bago pa tumakbo ang unang effect — kaya dito na
   // ito nagsisimula, hindi sa `false`. Kung hihintayin pa ang effect,
   // may isang kisap-mata na sumisilip ang buhay na mapa.
@@ -266,8 +230,9 @@ export default function App() {
   const authModalRef = useRef(null);
   const [recoveryPassword, setRecoveryPassword] = useState('');
 
-  const [secretClicks, setSecretClicks] = useState(0);
-  const [loginGuard, setLoginGuard] = useState(readLoginGuard);
+  const logoTaps = useRef({ count: 0, timer: null });
+  useEffect(() => () => clearTimeout(logoTaps.current.timer), []);
+  const [loginGuard, setLoginGuard] = useState(() => readLoginGuard(ADMIN_GUARD_KEY));
   // Orasan ng countdown habang naka-lock. Itinatakda rin sa mga pindot,
   // para sariwa agad ang bilang pagbukas ng login.
   const [guardNow, setGuardNow] = useState(() => Date.now());
@@ -281,7 +246,7 @@ export default function App() {
     setGuardNow(Date.now());
     return until;
   };
-  const updateLoginGuard = (next) => { setLoginGuard(next); writeLoginGuard(next); };
+  const updateLoginGuard = (next) => { setLoginGuard(next); writeLoginGuard(ADMIN_GUARD_KEY, next); };
 
   // Countdown ng lock sa admin login at ng pahinga ng reset — tumatakbo
   // lang habang bukas ang login at may binibilang pa.
@@ -363,25 +328,36 @@ export default function App() {
     };
   }, []);
 
+  // ── Naka-login ba ang device na ito bilang kiosk? ────────────────
+  // Sinusubaybayan din pagkatapos: kapag binawi ng server ang session
+  // (hal. napalitan ang password), babalik ito sa lock screen.
   useEffect(() => {
-    const key = searchParams.get('key');
+    if (isVisitorView) return;
+    let alive = true;
+    let retry;
 
-    // Tatlo lang ang pinapapasok:
-    //   • ang kiosk mismo, na may takdang `key` sa launcher nito
-    //   • ang password recovery na galing sa email
-    //   • ang BUHAY PANG QR link ng bisita
-    //
-    // Dating sapat na ang basta may `route` sa URL. Iyon ang butas:
-    // nakikita ng lahat ang anyo ng link sa QR, kaya kahit sino,
-    // kahit kailan, puwedeng mag-type ng sarili niyang `?route=` at
-    // mabuksan ang buong app. Ngayon, kailangang tunay at sariwa ang
-    // link bago ito tumbasan ng pagpasok.
-    if (isRecoveryLink || key === 'cct-bsit-kiosk' || (isVisitorView && !visitorLink.expired)) {
-      setIsAuthorized(true);
-    } else {
-      setIsAuthorized(false);
-    }
-  }, [searchParams, isVisitorView, visitorLink.expired]);
+    const check = async () => {
+      const status = await checkKioskSession();
+      if (!alive) return;
+      setKioskStatus(status);
+      // Walang internet sa pagbukas ng mini PC: hindi lock, hintay lang.
+      // Nasa storage pa ang session — subukan ulit hanggang makakonekta.
+      if (status === 'offline') retry = setTimeout(check, 10000);
+    };
+    check();
+
+    const { data } = onKioskSessionChange((event, isKiosk) => {
+      if (!alive) return;
+      if (isKiosk) setKioskStatus('unlocked');
+      else if (event === 'SIGNED_OUT') setKioskStatus('locked');
+    });
+
+    return () => {
+      alive = false;
+      clearTimeout(retry);
+      data?.subscription?.unsubscribe();
+    };
+  }, [isVisitorView]);
 
   // ── Buhay ng sesyon sa telepono ──────────────────────────────
   // Dating nakasabit ito sa `window.innerWidth <= 1024`. Tablet na
@@ -541,7 +517,7 @@ export default function App() {
     // telepono — at doon, ang `setAppState('welcome')` ay naglalabas ng
     // WELCOME SCREEN NG KIOSK sa kamay ng bisita. Isang pindot sa
     // "Start" at nasa buong kiosk na siya: listahan ng opisina,
-    // paghahanap, paglipat ng palapag, at ang limang pindot sa seal na
+    // paghahanap, paglipat ng palapag, at ang mga pindot sa seal na
     // nagbubukas ng admin login. Apatnapu't limang segundo lang ang
     // kailangan — kaya "nirefresh ko lang, nakapasok na ako".
     //
@@ -569,17 +545,20 @@ export default function App() {
   // nananatiling naroon sa DOM kung saan kayang pindutin.
 
   const handleLogoTap = () => {
-    // Ang limang pindot sa seal ang nagbubukas ng admin login. Hindi
-    // ito dapat umabot sa telepono ng kahit sinong nakakita ng QR.
+    // Eksaktong 15 pindot sa seal ang nagbubukas ng admin login (tingnan
+    // ang ADMIN_TAPS sa itaas). Hindi ito dapat umabot sa telepono ng
+    // kahit sinong nakakita ng QR.
     if (isVisitorView) return;
-    if (secretClicks + 1 >= 5) {
+    const taps = logoTaps.current;
+    taps.count += 1;
+    clearTimeout(taps.timer);
+    taps.timer = setTimeout(() => {
+      const exact = taps.count === ADMIN_TAPS;
+      taps.count = 0;
+      if (!exact) return;
       setGuardNow(Date.now());
-      setShowAdminLogin(true); 
-      setSecretClicks(0); 
-    } else { 
-      setSecretClicks(prev => prev + 1); 
-      setTimeout(() => setSecretClicks(0), 3000); 
-    }
+      setShowAdminLogin(true);
+    }, TAP_PAUSE_MS);
   };
 
   const handleAdminLogin = async (e) => {
@@ -604,13 +583,7 @@ export default function App() {
           : '❌ Hindi maabot ang server. Tingnan ang koneksyon sa internet at subukan ulit.');
         return;
       }
-      const fails = loginGuard.fails + 1;
-      if (fails >= MAX_LOGIN_ATTEMPTS) {
-        const minutes = LOCK_MINUTES[Math.min(loginGuard.level, LOCK_MINUTES.length - 1)];
-        updateLoginGuard({ fails: 0, lockUntil: Date.now() + minutes * 60000, level: loginGuard.level + 1 });
-      } else {
-        updateLoginGuard({ ...loginGuard, fails });
-      }
+      updateLoginGuard(guardAfterFailure(loginGuard));
       setGuardNow(Date.now());
     } finally {
       setIsLoggingIn(false);
@@ -1014,15 +987,20 @@ export default function App() {
   }
 
   if (!isAuthorized) {
+    if (kioskStatus === 'locked') {
+      return <KioskLockScreen lang={lang} onUnlocked={() => setKioskStatus('unlocked')} />;
+    }
+    // Sinusuri pa, o naghihintay ng internet.
     return (
       <div className="sys">
-        <span className="sys-icon">🔒</span>
-        <h2 className="sys-title">System Locked</h2>
+        <img src={tagaytaySeal} alt="Tagaytay City Seal" className="k-modal-seal" style={{ width: '96px', height: '96px', margin: '0 0 24px 0' }} />
+        <h2 className="sys-title">City Government of Tagaytay</h2>
         <p className="sys-text">
-          This system is restricted and can only be accessed from the physical
-          City Government of Tagaytay Kiosk Terminal.
+          {kioskStatus === 'offline'
+            ? 'Waiting for the internet connection…'
+            : 'Starting the kiosk…'}
         </p>
-        <span className="sys-note">City Government of Tagaytay · Directory Kiosk</span>
+        <span className="sys-loader" />
       </div>
     );
   }
@@ -1335,7 +1313,11 @@ export default function App() {
                         {lang === 'EN' ? 'Tap an office to see the way' : 'Pindutin ang opisina para sa daan'}
                       </span>
                     </div>
-                    <span className="floor-banner-count">{floorOfficeList.length}</span>
+                    <span className="floor-banner-count">
+                      {lang === 'EN'
+                        ? `${floorOfficeList.length} ${floorOfficeList.length === 1 ? 'office' : 'offices'}`
+                        : `${floorOfficeList.length} opisina`}
+                    </span>
                   </div>
                 </div>
 
@@ -1757,13 +1739,10 @@ export default function App() {
 
             <form onSubmit={async (e) => {
               e.preventDefault();
-              const hasUpper = /[A-Z]/.test(recoveryPassword);
-              const hasLower = /[a-z]/.test(recoveryPassword);
-              const hasNumber = /\d/.test(recoveryPassword);
-              if (recoveryPassword.length < 6 || !hasUpper || !hasLower || !hasNumber) {
+              if (!isStrongPassword(recoveryPassword)) {
                 return alert(lang === 'EN'
-                  ? '❌ Weak Password:\n\nPassword must be at least 6 characters long and include:\n- At least 1 Uppercase letter\n- At least 1 Lowercase letter\n- At least 1 Number'
-                  : '❌ Mahinang Password:\n\nKailangang hindi bababa sa 6 na karakter ang password at may kasamang:\n- Kahit 1 malaking letra\n- Kahit 1 maliit na letra\n- Kahit 1 numero');
+                  ? '❌ Weak Password:\n\nPassword must be at least 8 characters long and include:\n- At least 1 Uppercase letter\n- At least 1 Lowercase letter\n- At least 1 Number'
+                  : '❌ Mahinang Password:\n\nKailangang hindi bababa sa 8 na karakter ang password at may kasamang:\n- Kahit 1 malaking letra\n- Kahit 1 maliit na letra\n- Kahit 1 numero');
               }
               try {
                 setIsLoggingIn(true);
@@ -1791,8 +1770,8 @@ export default function App() {
                   value={recoveryPassword}
                   onChange={(e) => setRecoveryPassword(e.target.value)}
                   placeholder={lang === 'EN'
-                    ? 'Min 6 chars, 1 uppercase, 1 number'
-                    : 'Hindi bababa sa 6 na karakter, 1 malaking letra, 1 numero'}
+                    ? 'Min 8 chars, 1 uppercase, 1 number'
+                    : 'Hindi bababa sa 8 na karakter, 1 malaking letra, 1 numero'}
                   autoFocus
                   required
                 />

@@ -14,6 +14,9 @@
 -- Kung mabigo pa rin: gawin na lang sa Dashboard (Storage → New bucket).
 -- Hindi lahat ng proyekto ay may pahintulot na baguhin ang
 -- storage.objects mula sa SQL Editor.
+--
+-- ⚠️ Pagkatapos patakbuhin ito, patakbuhin ULIT ang admin_only_writes.sql
+-- — doon nililimitahan sa admin lang ang upload at pagbura.
 -- ============================================================
 
 -- ── 1. Ang bucket ──────────────────────────────────────────

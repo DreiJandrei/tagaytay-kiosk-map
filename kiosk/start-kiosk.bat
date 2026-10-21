@@ -23,7 +23,11 @@ REM --- Ang link na bubuksan ---------------------------------
 REM  Kung papalitan ito at may "&" sa bagong link, palitan ang
 REM  bawat "&" ng "^&" — kung hindi, doon puputulin ng Windows
 REM  ang linya at mali ang mabubuksan.
-set "KIOSK_URL=https://tagaytay-kiosk-map-one.vercel.app/?key=cct-bsit-kiosk"
+REM
+REM  Wala nang "?key=" sa dulo. Sa unang bukas, hihingi ang kiosk
+REM  ng password (isang beses lang). Tinatandaan iyon sa profile sa
+REM  ibaba — kaya HUWAG burahin ang folder na iyon, o hihingi ulit.
+set "KIOSK_URL=https://tagaytay-kiosk-map-one.vercel.app/"
 
 REM --- Laki ng lahat sa screen (parang zoom ng Chrome) -------
 REM  0.8 = parang 80% na zoom: lumiliit ang lahat, kaya mas marami

@@ -113,7 +113,8 @@ export default function WelcomeScreen({ onStart }) {
           <p className="welcome-republic">Republic of the Philippines</p>
 
           <h1 className="welcome-title">
-            City Government of
+            <span className="welcome-title-kiosk">Interactive Directory Kiosk</span>
+            <span className="welcome-title-for">for the City Government of</span>
             <span className="welcome-title-accent">Tagaytay</span>
           </h1>
 
