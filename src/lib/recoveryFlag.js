@@ -19,7 +19,12 @@
 const initialHash = typeof window !== 'undefined' ? window.location.hash : '';
 const initialSearch = typeof window !== 'undefined' ? window.location.search : '';
 
-const hasRecoveryType = /(^|[#&?])type=recovery(&|$)/.test(initialHash + initialSearch);
+// Hiwalay na sinusuri ang hash at ang query. Kapag pinagdugtong, ang
+// `#...&type=recovery` + `?reset=kiosk` ay nagiging `type=recovery?reset=kiosk`
+// — walang `&` o dulo pagkatapos ng `recovery`, kaya hindi tumutugma at
+// hindi nakikilala ang reset link ng kiosk.
+const RECOVERY_TYPE = /(^|[#&?])type=recovery(&|$)/;
+const hasRecoveryType = RECOVERY_TYPE.test(initialHash) || RECOVERY_TYPE.test(initialSearch);
 
 // Ang pahina para sa nakalimutang password NG KIOSK (`/?reset=kiosk`).
 // Hiwalay ito sa admin: ibang account, ibang Supabase client. Kailangan
