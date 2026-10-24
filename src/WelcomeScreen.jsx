@@ -4,6 +4,19 @@ import cityhallBg from './assets/cityhall.jpg';
 import WelcomeVideo from './components/WelcomeVideo';
 import { getAnnouncement } from './lib/api';
 
+const VOLUME_KEY = 'kiosk-welcome-volume';
+const DEFAULT_VOLUME = 70;
+const VOLUME_STEP = 10;
+const readVolume = () => {
+  try {
+    const saved = localStorage.getItem(VOLUME_KEY);
+    if (saved !== null && saved !== '' && !Number.isNaN(Number(saved))) {
+      return Math.max(0, Math.min(100, Number(saved)));
+    }
+  } catch { /* walang storage */ }
+  return DEFAULT_VOLUME;
+};
+
 export default function WelcomeScreen({ onStart }) {
   const [advisory, setAdvisory] = useState("");
   const [announcement, setAnnouncement] = useState("");
@@ -20,6 +33,15 @@ export default function WelcomeScreen({ onStart }) {
   const claimForSide = useCallback((on) => { if (on) setSoundOwner('side'); }, []);
   const claimForBackground = useCallback((on) => setSoundOwner(on ? 'background' : 'side'), []);
   const backToSide = useCallback(() => setSoundOwner('side'), []);
+  // Lakas ng tunog (0–100) ng video sa idle screen lang. Nasa localStorage
+  // para hindi bumalik sa dati tuwing nire-restart ang kiosk.
+  const [volume, setVolume] = useState(readVolume);
+  const [bgAudible, setBgAudible] = useState(false);
+  const changeVolume = (v) => {
+    const next = Math.max(0, Math.min(100, Math.round(v)));
+    setVolume(next);
+    try { localStorage.setItem(VOLUME_KEY, String(next)); } catch { /* walang storage */ }
+  };
   // Patayo ba ang nasa kard ngayon (poster, Reels). Kapag oo, buong taas
   // ito sa kanang dulo ng screen, at sa natitirang lapad ang lahat ng iba.
   const [sidePortrait, setSidePortrait] = useState(false);
@@ -79,6 +101,8 @@ export default function WelcomeScreen({ onStart }) {
           placement="background"
           backgroundHost={videoHost}
           otherAudible={sideAudible}
+          volume={volume}
+          onAudibleChange={setBgAudible}
           onClaimSound={claimForBackground}
         />
       )}
@@ -139,6 +163,7 @@ export default function WelcomeScreen({ onStart }) {
           <WelcomeVideo
             placement="side"
             isOwner={soundOwner === 'side'}
+            volume={volume}
             onAudibleChange={setSideAudible}
             onClaimSound={claimForSide}
             onItemChange={backToSide}
@@ -162,6 +187,43 @@ export default function WelcomeScreen({ onStart }) {
 
         </div>
       </div>
+
+      {/* Lakas ng tunog — lumalabas lang habang may tumutunog na video.
+          Hindi nagsisimula ng kiosk ang pindot dito. */}
+      {(sideAudible || bgAudible) && (
+        <div
+          className="welcome-volume"
+          onClick={(e) => e.stopPropagation()}
+          role="group"
+          aria-label="Lakas ng tunog"
+        >
+          <button
+            type="button"
+            className="welcome-volume-btn"
+            onClick={() => changeVolume(volume - VOLUME_STEP)}
+            disabled={volume <= 0}
+            aria-label="Hinaan ang tunog"
+          >−</button>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            step="1"
+            value={volume}
+            onChange={(e) => changeVolume(Number(e.target.value))}
+            style={{ '--vol': `${volume}%` }}
+            aria-label="Lakas ng tunog"
+          />
+          <button
+            type="button"
+            className="welcome-volume-btn"
+            onClick={() => changeVolume(volume + VOLUME_STEP)}
+            disabled={volume >= 100}
+            aria-label="Lakasan ang tunog"
+          >+</button>
+          <span className="welcome-volume-value">{volume}%</span>
+        </div>
+      )}
 
       {/* Layer 3: gumagalaw na advisory sa pinakailalim */}
       {hasAdvisory && (

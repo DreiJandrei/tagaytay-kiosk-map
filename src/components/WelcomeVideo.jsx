@@ -40,9 +40,12 @@ const signatureOf = (list) =>
 //     ang binuksan ang tumutunog, ang isa ay tumatahimik.
 //   • Bagong anunsyo sa kard (`onItemChange`) — balik sa anunsyo ang
 //     tunog. Siya ang inuuna.
+//
+// LAKAS NG TUNOG. Galing din sa WelcomeScreen ang `volume` (0–100), iisa
+// para sa dalawa — iisa lang naman ang tumutunog sa bawat sandali.
 export default function WelcomeVideo({
   placement = 'side', backgroundHost = null,
-  isOwner = true, otherAudible = false,
+  isOwner = true, otherAudible = false, volume = 100,
   onAudibleChange, onClaimSound, onItemChange, onShapeChange,
 }) {
   const isBackground = placement === 'background' && !!backgroundHost;
@@ -159,10 +162,11 @@ export default function WelcomeVideo({
   // …at siya ang dapat tumunog ngayon (tingnan ang IISANG TUNOG sa itaas).
   const soundOn = soundWanted && (isBackground ? !otherAudible : isOwner);
 
-  // Ang kard: iniuulat kung talagang tumutunog siya ngayon.
+  // Iniuulat kung talagang tumutunog ngayon — ng kard para sa IISANG
+  // TUNOG, at ng dalawa para malaman kung ipapakita ang lakas ng tunog.
   useEffect(() => {
-    if (!isBackground) onAudibleChange?.(soundOn);
-  }, [isBackground, soundOn, onAudibleChange]);
+    onAudibleChange?.(soundOn);
+  }, [soundOn, onAudibleChange]);
 
   // Ang kard: bagong anunsyo — siya ulit ang uunahin sa tunog.
   const currentId = current?.id;
@@ -173,18 +177,27 @@ export default function WelcomeVideo({
   // YouTube sa background: pinatatahimik at binubuksan sa utos sa player
   // (postMessage), hindi sa pagpapalit ng link — kung hindi, magre-restart
   // ang video tuwing nagpapalit ang anunsyo sa gilid.
-  const ytCommand = useCallback((muted) => {
+  const ytCommand = useCallback((func, args = []) => {
     const win = iframeRef.current?.contentWindow;
     if (!win) return;
-    win.postMessage(JSON.stringify({ event: 'command', func: muted ? 'mute' : 'unMute', args: [] }), '*');
+    win.postMessage(JSON.stringify({ event: 'command', func, args }), '*');
   }, []);
   const ytControlled = isBackground && type === 'youtube';
   // Pinakabagong hatol, para sa mga utos na naantala (tingnan ang onLoad).
   const soundOnRef = useRef(soundOn);
   useEffect(() => {
     soundOnRef.current = soundOn;
-    if (ytControlled) ytCommand(!soundOn);
+    if (ytControlled) ytCommand(soundOn ? 'unMute' : 'mute');
   }, [ytControlled, soundOn, ytCommand]);
+
+  // Lakas ng tunog. Sa .mp4, diretso sa elemento; sa YouTube (kard man o
+  // background), utos sa player — kaya laging may enablejsapi ang link.
+  const volumeRef = useRef(volume);
+  useEffect(() => {
+    volumeRef.current = volume;
+    if (fileRef.current) fileRef.current.volume = volume / 100;
+    if (type === 'youtube') ytCommand('setVolume', [volume]);
+  }, [volume, type, current, cycle, ytCommand]);
 
   // Ang pagpindot mismo sa buton ay siyang pahintulot na hinihingi ng
   // browser, kaya sinusubukan ulit ang tunog tuwing may bagong pili.
@@ -302,7 +315,7 @@ export default function WelcomeVideo({
         // Sa background na YouTube, ang `soundWanted` ang nasa link, at ang
         // pagpapaubaya ay sa utos na ginagawa (tingnan ang ytCommand).
         sound: ytControlled ? soundWanted : soundOn,
-        jsApi: ytControlled,
+        jsApi: type === 'youtube',
       });
   const heading = (current.title || '').trim() || 'City Updates';
   const caption = (current.caption || '').trim();
@@ -341,8 +354,11 @@ export default function WelcomeVideo({
         src={embedUrl}
         // Matagal bago handang makinig ang YouTube player, kaya inuulit
         // ang utos nang ilang beses pagka-load.
-        onLoad={ytControlled ? () => {
-          [300, 1200, 3000].forEach((ms) => setTimeout(() => ytCommand(!soundOnRef.current), ms));
+        onLoad={type === 'youtube' ? () => {
+          [300, 1200, 3000].forEach((ms) => setTimeout(() => {
+            if (ytControlled) ytCommand(soundOnRef.current ? 'unMute' : 'mute');
+            ytCommand('setVolume', [volumeRef.current]);
+          }, ms));
         } : undefined}
         title={heading}
         frameBorder="0"
