@@ -54,13 +54,24 @@ problema sa kasalukuyang database na may laman na.
 Nasa `kiosk/` na folder ang lahat ng kailangan. Kopyahin ang buong
 folder sa mini PC — halimbawa sa `C:\kiosk`.
 
-**1 · Isang beses lang: patayin ang pagtulog**
+**1 · Isang beses lang: patayin ang pagtulog at ang pag-swipe sa gilid**
 
-Kanang-klik sa `setup-power.bat` → **Run as administrator**.
+Kanang-klik sa `setup-power.bat` → **Run as administrator**, tapos
+**i-restart ang mini PC**.
 
 Kahit tama ang lahat sa app, papatayin pa rin ng Windows ang TV
 pagkaraan ng ilang minuto, at walang gigising niyon hanggang may
 pumindot. Ito ang pumapatay ng lahat ng timer at ng screen saver.
+
+Pinapatay rin nito ang **pag-swipe mula sa gilid ng screen**. Sa
+touchscreen, ang hagod mula sa pinakadulong kanan ay nagbubukas ng
+notification at calendar ng Windows (sa kaliwa, ng Widgets) — sa ibabaw
+ng kiosk. Windows ang may hawak niyon, kaya hindi ito kayang harangin ng
+app o ng Chrome. Gumagana lang ito pagkatapos ng restart.
+
+Isang bagay pang gawin nang kamay: **Settings → Bluetooth & devices →
+Touch → "Three- and four-finger touch gestures" → Off**, para hindi
+makapagpalit ng app ang bisita gamit ang tatlong daliri.
 
 **2 · Subukan muna**
 
