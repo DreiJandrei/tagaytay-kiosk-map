@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import tagaytaySeal from './assets/tagaytay-seal.jpg';
 import cityhallBg from './assets/cityhall.jpg';
 import WelcomeVideo from './components/WelcomeVideo';
+import HowToUse from './components/HowToUse';
 import { getAnnouncement } from './lib/api';
 
 const VOLUME_KEY = 'kiosk-welcome-volume';
@@ -42,6 +43,10 @@ export default function WelcomeScreen({ onStart }) {
     setVolume(next);
     try { localStorage.setItem(VOLUME_KEY, String(next)); } catch { /* walang storage */ }
   };
+  // Dito inilalagay ng background na video ang 🔊 niya — sa loob mismo ng
+  // kahon ng lakas ng tunog sa kaliwang ibaba.
+  const [soundSlot, setSoundSlot] = useState(null);
+  const [showHelp, setShowHelp] = useState(false);
   // Patayo ba ang nasa kard ngayon (poster, Reels). Kapag oo, buong taas
   // ito sa kanang dulo ng screen, at sa natitirang lapad ang lahat ng iba.
   const [sidePortrait, setSidePortrait] = useState(false);
@@ -100,6 +105,7 @@ export default function WelcomeScreen({ onStart }) {
         <WelcomeVideo
           placement="background"
           backgroundHost={videoHost}
+          soundSlot={soundSlot}
           otherAudible={sideAudible}
           volume={volume}
           onAudibleChange={setBgAudible}
@@ -117,7 +123,18 @@ export default function WelcomeScreen({ onStart }) {
         {/* Itaas: petsa at oras */}
         <div className="welcome-topbar">
           <span className="welcome-date">{dateText}</span>
-          <span className="welcome-time">{timeText}</span>
+          <div className="welcome-topbar-right">
+            <span className="welcome-time">{timeText}</span>
+            <button
+              type="button"
+              className="welcome-help-btn"
+              onClick={(e) => { e.stopPropagation(); setShowHelp(true); }}
+              aria-label="How to use / Paano gamitin"
+            >
+              <span className="welcome-help-icon" aria-hidden="true">i</span>
+              <span className="welcome-help-label">How to Use</span>
+            </button>
+          </div>
         </div>
 
         {/* Gitna. Dalawang palapag: magkatabing hanay sa itaas, tapos ang
@@ -188,42 +205,49 @@ export default function WelcomeScreen({ onStart }) {
         </div>
       </div>
 
-      {/* Lakas ng tunog — lumalabas lang habang may tumutunog na video.
-          Hindi nagsisimula ng kiosk ang pindot dito. */}
-      {(sideAudible || bgAudible) && (
-        <div
-          className="welcome-volume"
-          onClick={(e) => e.stopPropagation()}
-          role="group"
-          aria-label="Lakas ng tunog"
-        >
-          <button
-            type="button"
-            className="welcome-volume-btn"
-            onClick={() => changeVolume(volume - VOLUME_STEP)}
-            disabled={volume <= 0}
-            aria-label="Hinaan ang tunog"
-          >−</button>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            step="1"
-            value={volume}
-            onChange={(e) => changeVolume(Number(e.target.value))}
-            style={{ '--vol': `${volume}%` }}
-            aria-label="Lakas ng tunog"
-          />
-          <button
-            type="button"
-            className="welcome-volume-btn"
-            onClick={() => changeVolume(volume + VOLUME_STEP)}
-            disabled={volume >= 100}
-            aria-label="Lakasan ang tunog"
-          >+</button>
-          <span className="welcome-volume-value">{volume}%</span>
-        </div>
-      )}
+      {/* Kaliwang ibaba: ang 🔊 ng background (inilalagay ng WelcomeVideo
+          sa slot) at, habang may tumutunog, ang lakas ng tunog katabi
+          nito. Walang laman? Nakatago (tingnan ang CSS). Hindi nagsisimula
+          ng kiosk ang pindot dito. */}
+      <div
+        className="welcome-volume"
+        onClick={(e) => e.stopPropagation()}
+        role="group"
+        aria-label="Tunog"
+      >
+        <span className="welcome-volume-slot" ref={setSoundSlot} />
+        {(sideAudible || bgAudible) && (
+          <div className="welcome-volume-adjust">
+            <button
+              type="button"
+              className="welcome-volume-btn"
+              onClick={() => changeVolume(volume - VOLUME_STEP)}
+              disabled={volume <= 0}
+              aria-label="Hinaan ang tunog"
+            >−</button>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              value={volume}
+              onChange={(e) => changeVolume(Number(e.target.value))}
+              style={{ '--vol': `${volume}%` }}
+              aria-label="Lakas ng tunog"
+            />
+            <button
+              type="button"
+              className="welcome-volume-btn"
+              onClick={() => changeVolume(volume + VOLUME_STEP)}
+              disabled={volume >= 100}
+              aria-label="Lakasan ang tunog"
+            >+</button>
+            <span className="welcome-volume-value">{volume}%</span>
+          </div>
+        )}
+      </div>
+
+      {showHelp && <HowToUse onClose={() => setShowHelp(false)} />}
 
       {/* Layer 3: gumagalaw na advisory sa pinakailalim */}
       {hasAdvisory && (

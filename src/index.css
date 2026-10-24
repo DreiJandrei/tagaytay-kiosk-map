@@ -1483,10 +1483,6 @@ img { max-width: 100%; }
     -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent 100%);
     mask-image: linear-gradient(90deg, #000 88%, transparent 100%);
   }
-  /* Ang 🔊 ng background ay lumilipat sa kaliwa ng kard. */
-  .welcome-screen.has-side-portrait .welcome-bg-sound {
-    right: calc(var(--strip-w) + var(--strip-right) + 20px);
-  }
 }
 @media (min-aspect-ratio: 1/1) and (max-height: 900px) {
   .welcome-screen.has-side-portrait {
@@ -1567,37 +1563,33 @@ img { max-width: 100%; }
   text-shadow: 0 2px 12px rgba(2,10,26,.95);
 }
 
-/* Bilog na 🔊 ng background na video — kanang ibaba, sa ibabaw ng
-   advisory. Kapareho ng buton ng kard; mas malaki lang nang kaunti
-   dahil nag-iisa ito sa gilid ng screen. */
-.welcome-bg-sound {
-  position: absolute; right: 32px; bottom: 32px; z-index: 7;
-  width: 60px; height: 60px; font-size: 1.5rem;
-  box-shadow: 0 10px 26px rgba(2,10,26,.55);
-  animation: fadeIn .8s ease both;
-}
-.welcome-screen:has(.announcement-bar) .welcome-bg-sound { bottom: 96px; }
-@media (max-height: 900px) {
-  .welcome-bg-sound { width: 50px; height: 50px; font-size: 1.25rem; right: 24px; bottom: 24px; }
-  .welcome-screen:has(.announcement-bar) .welcome-bg-sound { bottom: 82px; }
-}
-
-/* ── Lakas ng tunog ───────────────────────────────────────────
-   Sa kaliwang ibaba ng idle screen, malayo sa 🔊 ng background sa
-   kanan. Malaki ang buton at hawakan ng slider — daliri ang gamit. */
+/* ── Tunog: kaliwang ibaba ─────────────────────────────────────
+   Iisang kahon: ang bilog na 🔊 ng background, at sa ibabaw nito —
+   habang may tumutunog — ang lakas ng tunog. Patayo, para hindi matakpan
+   ang opisyal na anunsyo sa tabi. Kapag walang background na video at
+   walang tumutunog, walang laman ang kahon, kaya nakatago ito.
+   Malaki ang buton at hawakan ng slider — daliri ang gamit. */
 .welcome-volume {
   position: absolute; left: 32px; bottom: 32px; z-index: 7;
-  display: flex; align-items: center; gap: 14px;
-  padding: 10px 18px;
+  display: flex; flex-direction: column-reverse; align-items: center; gap: 12px;
+  padding: 8px;
   border-radius: 999px;
   border: 2px solid rgba(147,197,253,.5);
   background: rgba(7,18,35,.75);
   box-shadow: 0 10px 26px rgba(2,10,26,.55);
   color: #FFF;
   cursor: default;
+  animation: fadeIn .8s ease both;
+}
+.welcome-volume:not(:has(button, input)) { display: none; }
+.welcome-screen:has(.announcement-bar) .welcome-volume { bottom: 96px; }
+.welcome-volume-slot { display: contents; }
+.welcome-bg-sound { width: 60px; height: 60px; font-size: 1.5rem; }
+.welcome-volume-adjust {
+  display: flex; flex-direction: column-reverse; align-items: center; gap: 12px;
+  padding: 10px 0 4px;
   animation: fadeIn .4s ease both;
 }
-.welcome-screen:has(.announcement-bar) .welcome-volume { bottom: 96px; }
 .welcome-volume-btn {
   width: 44px; height: 44px;
   display: flex; align-items: center; justify-content: center;
@@ -1612,9 +1604,11 @@ img { max-width: 100%; }
 .welcome-volume-btn:disabled { opacity: .35; cursor: default; }
 .welcome-volume input[type="range"] {
   -webkit-appearance: none; appearance: none;
-  width: 220px; height: 10px;
+  /* Patayo: ibaba ang mahina, itaas ang malakas. */
+  writing-mode: vertical-lr; direction: rtl;
+  width: 10px; height: 200px;
   border-radius: 999px;
-  background: linear-gradient(to right, #60A5FA var(--vol), rgba(255,255,255,.2) var(--vol));
+  background: linear-gradient(to top, #60A5FA var(--vol), rgba(255,255,255,.2) var(--vol));
   outline: none;
   cursor: pointer;
 }
@@ -1630,15 +1624,149 @@ img { max-width: 100%; }
   box-shadow: 0 2px 8px rgba(2,10,26,.5);
 }
 .welcome-volume-value {
-  min-width: 3.2em; text-align: right;
-  font-size: 1rem; font-weight: 800; letter-spacing: .5px;
+  text-align: center;
+  font-size: .95rem; font-weight: 800; letter-spacing: .5px;
   font-variant-numeric: tabular-nums;
 }
 @media (max-height: 900px) {
-  .welcome-volume { left: 24px; bottom: 24px; padding: 8px 14px; gap: 10px; }
+  .welcome-volume { left: 24px; bottom: 24px; padding: 6px; gap: 10px; }
   .welcome-screen:has(.announcement-bar) .welcome-volume { bottom: 82px; }
+  .welcome-bg-sound { width: 50px; height: 50px; font-size: 1.25rem; }
+  .welcome-volume-adjust { gap: 10px; }
   .welcome-volume-btn { width: 38px; height: 38px; font-size: 1.25rem; }
-  .welcome-volume input[type="range"] { width: 160px; }
+  .welcome-volume input[type="range"] { height: 150px; }
+}
+
+/* ── "How to Use" ─────────────────────────────────────────────
+   Buton na ⓘ sa kanan ng orasan, at ang tutorial na binubuksan nito. */
+.welcome-topbar-right { display: flex; align-items: center; gap: 18px; }
+.welcome-help-btn {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 16px 6px 6px;
+  border-radius: 999px;
+  border: 2px solid rgba(147,197,253,.55);
+  background: rgba(7,18,35,.6);
+  color: #FFF;
+  font: inherit; font-size: .95rem; font-weight: 800; letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background .2s ease, transform .2s ease;
+}
+.welcome-help-btn:active { transform: scale(.95); }
+.welcome-help-icon {
+  width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: #2563EB;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.3rem; font-style: italic; font-weight: 900;
+  text-transform: none;
+}
+@media (max-height: 900px) {
+  .welcome-help-btn { font-size: .8rem; padding: 4px 12px 4px 4px; gap: 8px; }
+  .welcome-help-icon { width: 28px; height: 28px; font-size: 1.1rem; }
+}
+
+.howto-overlay {
+  position: absolute; inset: 0; z-index: 20;
+  display: flex; align-items: center; justify-content: center;
+  padding: 32px;
+  background: rgba(2,10,26,.72);
+  backdrop-filter: blur(6px);
+  cursor: default;
+  animation: fadeIn .25s ease both;
+}
+.howto-card {
+  width: min(1040px, 100%);
+  max-height: 100%;
+  display: flex; flex-direction: column; gap: 20px;
+  padding: 28px 32px;
+  border-radius: 24px;
+  border: 1px solid rgba(147,197,253,.35);
+  background: linear-gradient(160deg, #0B1F3A 0%, #071223 100%);
+  box-shadow: 0 30px 80px rgba(0,0,0,.6);
+  color: #E2E8F0;
+  overflow: hidden;
+  animation: rise .35s ease both;
+}
+.howto-head { display: flex; align-items: center; gap: 18px; }
+.howto-badge {
+  flex-shrink: 0;
+  width: 56px; height: 56px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: #2563EB; color: #FFF;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 2rem; font-style: italic; font-weight: 900;
+}
+.howto-heading { flex: 1; min-width: 0; }
+.howto-heading h2 { margin: 0; color: #FFF; font-size: 1.8rem; font-weight: 900; }
+.howto-heading p { margin: 4px 0 0; color: #93C5FD; font-size: 1.05rem; }
+.howto-lang {
+  flex-shrink: 0;
+  padding: 12px 20px;
+  border-radius: 999px;
+  border: 2px solid rgba(147,197,253,.5);
+  background: rgba(37,99,235,.25);
+  color: #FFF; font: inherit; font-size: 1rem; font-weight: 800;
+  cursor: pointer;
+}
+.howto-body {
+  display: flex; flex-direction: column; gap: 18px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.howto-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.howto-section h3 {
+  margin: 0 0 10px;
+  color: #93C5FD; font-size: .9rem; font-weight: 900;
+  letter-spacing: 1.5px; text-transform: uppercase;
+}
+.howto-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.howto-list.is-numbered { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.howto-list li {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(147,197,253,.15);
+}
+.howto-list.is-numbered li { flex-direction: column; gap: 8px; }
+.howto-icon {
+  flex-shrink: 0;
+  min-width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; font-weight: 900; color: #FFF;
+}
+.howto-list.is-numbered .howto-icon {
+  width: 36px; border-radius: 50%;
+  background: #2563EB; font-size: 1.1rem;
+}
+.howto-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.howto-text strong { color: #FFF; font-size: 1.05rem; }
+.howto-text span { font-size: .95rem; line-height: 1.4; color: #CBD5E1; }
+.howto-close {
+  align-self: center;
+  padding: 14px 48px;
+  border-radius: 999px;
+  border: none;
+  background: #2563EB; color: #FFF;
+  font: inherit; font-size: 1.15rem; font-weight: 900; letter-spacing: .5px;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(37,99,235,.4);
+  transition: transform .2s ease;
+}
+.howto-close:active { transform: scale(.96); }
+@media (max-width: 900px), (max-aspect-ratio: 1/1) {
+  .howto-columns { grid-template-columns: 1fr; }
+}
+@media (max-height: 900px) {
+  .howto-overlay { padding: 20px; }
+  .howto-card { padding: 20px 24px; gap: 14px; }
+  .howto-heading h2 { font-size: 1.4rem; }
+  .howto-heading p { font-size: .95rem; }
+  .howto-badge { width: 46px; height: 46px; font-size: 1.6rem; }
+  .howto-list li { padding: 10px 12px; }
 }
 
 @keyframes rise { from { opacity:0; transform: translateY(26px) } to { opacity:1; transform: translateY(0) } }

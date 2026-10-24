@@ -44,7 +44,7 @@ const signatureOf = (list) =>
 // LAKAS NG TUNOG. Galing din sa WelcomeScreen ang `volume` (0–100), iisa
 // para sa dalawa — iisa lang naman ang tumutunog sa bawat sandali.
 export default function WelcomeVideo({
-  placement = 'side', backgroundHost = null,
+  placement = 'side', backgroundHost = null, soundSlot = null,
   isOwner = true, otherAudible = false, volume = 100,
   onAudibleChange, onClaimSound, onItemChange, onShapeChange,
 }) {
@@ -389,13 +389,12 @@ export default function WelcomeVideo({
     : null;
 
   if (isBackground) {
-    return (
-      <>
-        {backgroundLayer}
-        {/* Bilog na 🔊 sa kanang ibaba — laging nandito kapag kayang
-            tumunog ang background. 🔇 habang tumutunog ang anunsyo;
-            ang pindot dito ay paglipat ng tunog sa background. */}
-        {backgroundLayer && soundAvailable && (
+    // Bilog na 🔊 — laging nandito kapag kayang tumunog ang background.
+    // 🔇 habang tumutunog ang anunsyo; ang pindot dito ay paglipat ng
+    // tunog sa background. Nakatira ito sa `soundSlot` ng WelcomeScreen:
+    // sa kaliwang ibaba, katabi mismo ng lakas ng tunog.
+    const soundButton = backgroundLayer && soundAvailable && soundSlot
+      ? createPortal(
           <button
             type="button"
             className={`welcome-video-sound welcome-bg-sound${soundOn ? ' is-on' : ''}`}
@@ -403,8 +402,14 @@ export default function WelcomeVideo({
             aria-label={soundOn ? 'Patayin ang tunog ng background' : 'Buksan ang tunog ng background'}
           >
             <span aria-hidden="true">{soundOn ? '🔊' : '🔇'}</span>
-          </button>
-        )}
+          </button>,
+          soundSlot,
+        )
+      : null;
+    return (
+      <>
+        {backgroundLayer}
+        {soundButton}
       </>
     );
   }
