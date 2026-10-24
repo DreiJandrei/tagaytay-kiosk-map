@@ -42,6 +42,20 @@ html.is-kiosk {
   touch-action: pan-x pan-y;
 }
 
+/* WALANG SCROLLBAR NG BUONG PAHINA SA KIOSK. Kasya na sa screen ang
+   lahat — ang listahan, ang admin at ang mga popup ay may kanya-kanyang
+   scroll sa loob. Pero sa Windows, kahit isang pixel lang na lumampas
+   (madalas dahil sa 0.8 na scale ng start-kiosk.bat, o sa `100vw` na
+   kasama ang lapad ng scrollbar) ay naglalabas na ng scrollbar sa kanan
+   at sa ibaba — at nagpapalabas pa iyon ng isa pa. Sa Mac, nakatago ang
+   ganitong scrollbar, kaya doon hindi ito nakikita. */
+html.is-kiosk,
+html.is-kiosk body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 /* Sa kiosk, ang mapa ang humahawak ng sarili nitong paghila sa
    JavaScript (handleDragStart sa MapScreen.jsx), kaya buo nang
    ipinapaubaya sa atin ang mga daliri dito: walang pinch, walang

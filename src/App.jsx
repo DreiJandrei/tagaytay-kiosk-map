@@ -557,6 +557,9 @@ export default function App() {
       const exact = taps.count === ADMIN_TAPS;
       taps.count = 0;
       if (!exact) return;
+      // Binabasa ulit: puwedeng nadagdagan ito ng maling kasalukuyang
+      // password sa Admin Panel (pagpapalit ng password).
+      setLoginGuard(readLoginGuard(ADMIN_GUARD_KEY));
       setGuardNow(Date.now());
       setShowAdminLogin(true);
     }, TAP_PAUSE_MS);

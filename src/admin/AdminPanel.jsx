@@ -3,7 +3,7 @@ import VirtualKeyboard from '../components/VirtualKeyboard';
 import EscalatorIcon from '../components/EscalatorIcon';
 import { isTypable } from '../lib/keyboardUtils';
 import {
-  updateOffice, getAnnouncement, patchKioskSettings, changeAdminPassword, logoutAdmin,
+  updateOffice, getAnnouncement, patchKioskSettings, changeAdminPasswordWithCurrent, logoutAdmin,
   getLiftStatuses, setLiftStatus,
   getKioskVideos, saveKioskVideo, deleteKioskVideo, placeKioskVideo,
   uploadKioskVideoFile, deleteKioskVideoFile, isUploadedFile,
@@ -13,6 +13,10 @@ import {
   normalizeFacebookUrl, looksLikeReel, readVideoMeta, readImageMeta,
   MAX_VIDEO_BYTES, MAX_IMAGE_BYTES, formatBytes, isImageFile,
 } from '../lib/videoUtils';
+import {
+  ADMIN_GUARD_KEY, FRESH_GUARD, MAX_LOGIN_ATTEMPTS,
+  readLoginGuard, writeLoginGuard, guardAfterFailure, isWrongPassword, formatCountdown,
+} from '../lib/loginGuard';
 
 const BLANK_VIDEO = {
   id: null, title: '', caption: '', source_url: '',
@@ -85,8 +89,10 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
   const [liftSaved, setLiftSaved] = useState(null);
   const [liftDraft, setLiftDraft] = useState(null);
 
+  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
 
   const [selectedFloor, setSelectedFloor] = useState(1);
   const [selectedOfficeKey, setSelectedOfficeKey] = useState(null);
@@ -580,6 +586,23 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
 
   const handleSavePassword = async (e) => {
     e.preventDefault();
+    if (isSavingPassword) return;
+    // Iisang bantay ang login ng admin at ang maling kasalukuyang password
+    // dito — iisang account lang naman, kaya iisa ang bilang ng mali.
+    const guard = readLoginGuard(ADMIN_GUARD_KEY);
+    if (guard.lockUntil > Date.now()) {
+      const wait = formatCountdown(guard.lockUntil - Date.now());
+      return alert(t(
+        `🔒 Too many wrong passwords. Try again in ${wait}.`,
+        `🔒 Sobrang daming maling password. Subukan ulit sa loob ng ${wait}.`,
+      ));
+    }
+    if (!currentPassword) {
+      return alert(t(
+        'Please enter your current password first.',
+        'Ilagay po muna ang kasalukuyang password.',
+      ));
+    }
     if (!newPassword || newPassword.trim() === '') {
       return alert(t(
         'Please enter a valid password.',
@@ -603,9 +626,18 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
         '❌ Mahinang Password:\n\nKailangang hindi bababa sa 6 na karakter ang password at may kasamang:\n- Kahit 1 malaking letra\n- Kahit 1 maliit na letra\n- Kahit 1 numero',
       ));
     }
+    if (newPassword === currentPassword) {
+      return alert(t(
+        'The new password must be different from the current one.',
+        'Dapat iba ang bagong password sa kasalukuyan.',
+      ));
+    }
 
+    setIsSavingPassword(true);
     try {
-      await changeAdminPassword(newPassword);
+      await changeAdminPasswordWithCurrent(currentPassword, newPassword);
+      writeLoginGuard(ADMIN_GUARD_KEY, FRESH_GUARD);
+      setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
       alert(t(
@@ -615,10 +647,29 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
       await logoutAdmin();
       onClose();
     } catch (error) {
+      if (isWrongPassword(error)) {
+        const next = guardAfterFailure(guard);
+        writeLoginGuard(ADMIN_GUARD_KEY, next);
+        setCurrentPassword('');
+        if (next.lockUntil > Date.now()) {
+          const wait = formatCountdown(next.lockUntil - Date.now());
+          return alert(t(
+            `❌ Wrong current password.\n\n🔒 Too many wrong passwords. Try again in ${wait}.`,
+            `❌ Mali ang kasalukuyang password.\n\n🔒 Sobrang daming maling password. Subukan ulit sa loob ng ${wait}.`,
+          ));
+        }
+        const left = MAX_LOGIN_ATTEMPTS - next.fails;
+        return alert(t(
+          `❌ Wrong current password. ${left} ${left === 1 ? 'try' : 'tries'} left before it locks.`,
+          `❌ Mali ang kasalukuyang password. ${left} subok na lang bago ma-lock.`,
+        ));
+      }
       alert(t(
-        '❌ Failed to update password. You must be logged in to do this.',
-        '❌ Hindi na-update ang password. Kailangan pong naka-login kayo para dito.',
+        '❌ Failed to update password. Check the internet connection and make sure you are still logged in.',
+        '❌ Hindi na-update ang password. Tingnan ang koneksyon sa internet at siguraduhing naka-login pa kayo.',
       ));
+    } finally {
+      setIsSavingPassword(false);
     }
   };
 
@@ -1550,6 +1601,20 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
             <form className="adm-form" onSubmit={handleSavePassword} style={{ maxWidth: '480px', flex: 'none' }}>
               <div>
                 <label className="k-label">
+                  {t('Current admin password', 'Kasalukuyang password ng admin')}
+                </label>
+                <input
+                  type="password"
+                  className="k-input"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder={t('Enter current password…', 'Ilagay ang kasalukuyang password…')}
+                  autoComplete="current-password"
+                  required
+                />
+              </div>
+              <div>
+                <label className="k-label">
                   {t(
                     'New admin password (min 6 chars, 1 uppercase, 1 number)',
                     'Bagong password ng admin (hindi bababa sa 6 na karakter, 1 malaking letra, 1 numero)',
@@ -1561,6 +1626,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder={t('Enter new password…', 'Ilagay ang bagong password…')}
+                  autoComplete="new-password"
                   required
                   minLength="6"
                 />
@@ -1575,12 +1641,15 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder={t('Re-type new password…', 'I-type ulit ang bagong password…')}
+                  autoComplete="new-password"
                   required
                   minLength="6"
                 />
               </div>
-              <button type="submit" className="k-btn k-btn--primary">
-                ☁️ {t('Save Password to Cloud', 'I-save ang Password sa Cloud')}
+              <button type="submit" className="k-btn k-btn--primary" disabled={isSavingPassword}>
+                {isSavingPassword
+                  ? `⏳ ${t('Checking…', 'Sinusuri…')}`
+                  : `☁️ ${t('Save Password to Cloud', 'I-save ang Password sa Cloud')}`}
               </button>
             </form>
           </div>

@@ -49,6 +49,24 @@ export const changeAdminPassword = async (newPassword) => {
   return data;
 };
 
+// Pagpapalit mula sa Admin Panel: sinusuri muna ang KASALUKUYANG
+// password, para hindi ito mapalitan ng sinumang nakadaan sa naiwang
+// bukas na admin. Sinusubukang mag-login ulit gamit iyon — kapag mali,
+// iyon ang error na ibinabato (tingnan ang isWrongPassword).
+// Ang recovery link ay hindi dumadaan dito: hindi na alam ng gumagamit
+// niyon ang dating password, kaya changeAdminPassword pa rin doon.
+export const changeAdminPasswordWithCurrent = async (currentPassword, newPassword) => {
+  const { data: { user } = {}, error: userError } = await supabase.auth.getUser();
+  if (userError) throw userError;
+  if (!user?.email) throw new Error('Not logged in');
+  const { error: verifyError } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: currentPassword,
+  });
+  if (verifyError) throw verifyError;
+  return changeAdminPassword(newPassword);
+};
+
 export const logoutAdmin = async () => {
   await supabase.auth.signOut();
 };

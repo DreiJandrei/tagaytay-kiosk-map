@@ -94,6 +94,15 @@ const requestWakeLock = async () => {
   }
 };
 
+// ── Pag-usog ng buong pahina ─────────────────────────────
+// Tinatanggal ng `overflow: hidden` sa index.css (html.is-kiosk) ang
+// scrollbar at ang pag-scroll ng daliri. Pero kaya pa ring iusog ng
+// browser mismo ang pahina — hal. kapag may na-focus na kahon malapit
+// sa gilid — at maiiwan itong nakaangat. Ibinabalik agad sa 0.
+const pinPage = () => {
+  if (window.scrollX || window.scrollY) window.scrollTo(0, 0);
+};
+
 const onVisibilityChange = () => {
   if (document.visibilityState === 'visible') requestWakeLock();
 };
@@ -119,6 +128,7 @@ export function installKioskMode() {
   window.addEventListener('touchstart', blockPinch, { passive: false });
   window.addEventListener('touchmove', blockPinch, { passive: false });
   window.addEventListener('keydown', blockKeys);
+  window.addEventListener('scroll', pinPage);
   document.addEventListener('visibilitychange', onVisibilityChange);
 
   requestWakeLock();
@@ -136,6 +146,7 @@ export function installKioskMode() {
     window.removeEventListener('touchstart', blockPinch);
     window.removeEventListener('touchmove', blockPinch);
     window.removeEventListener('keydown', blockKeys);
+    window.removeEventListener('scroll', pinPage);
     document.removeEventListener('visibilitychange', onVisibilityChange);
     wakeLock?.release?.();
     wakeLock = null;
