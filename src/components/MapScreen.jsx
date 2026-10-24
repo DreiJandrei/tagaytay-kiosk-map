@@ -149,6 +149,11 @@ export default function MapScreen({
 
   const computeDefaultView = () => viewFor(measureViewport(), measureContent());
 
+  // Ang default na tanaw ng kasalukuyang palapag at screen. Ito rin ang
+  // pinakamalayong zoom out — kapag lumampas pa roon, lumiliit ang plano
+  // sa gitna ng blangkong grid at parang nawawala ang mapa.
+  const defaultViewRef = useRef(null);
+
   const [zoom, setZoom] = useState(() => viewFor(estimateViewport(), null).zoom);
   const [pan, setPan] = useState(() => viewFor(estimateViewport(), null).pan);
   // Lapad ng viewport — dito nakasalalay kung sisikip ang hanay ng palapag.
@@ -177,8 +182,9 @@ export default function MapScreen({
     const recenter = () => {
       const size = measureViewport();
       setViewportWidth(size.w);
-      if (hasUserMoved.current) return;
       const next = viewFor(size, measureContent());
+      defaultViewRef.current = next;
+      if (hasUserMoved.current) return;
       setZoom(next.zoom);
       setPan(next.pan);
     };
@@ -233,7 +239,21 @@ export default function MapScreen({
   // ==============================================================
   const MIN_ZOOM = 0.2;
   const MAX_ZOOM = 2.5;
-  const clampZoom = (z) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z));
+  // Hindi lalayo pa sa default na tanaw (tingnan ang defaultViewRef).
+  const minZoom = () => defaultViewRef.current?.zoom ?? MIN_ZOOM;
+  const clampZoom = (z) => Math.min(MAX_ZOOM, Math.max(minZoom(), z));
+  // Pagsagad sa zoom out ay pagbalik sa default na tanaw — buo at nasa
+  // gitna ang palapag, kahit saan pa ito nahila. Kung hindi, puwedeng
+  // maiwan ang plano sa gilid ng screen.
+  const settle = (nextZoom, nextPan) => {
+    const home = defaultViewRef.current;
+    if (home && nextZoom <= home.zoom + 1e-6) {
+      hasUserMoved.current = false;
+      return { zoom: home.zoom, pan: home.pan };
+    }
+    hasUserMoved.current = true;
+    return { zoom: nextZoom, pan: nextPan };
+  };
   const pinch = useRef(null);
   const wheelIdle = useRef(null);
   // Huling zoom/pan, para sa wheel listener na nasa labas ng render.
@@ -281,9 +301,9 @@ export default function MapScreen({
     // Ang punto sa ilalim ng unang gitna ng mga daliri ay sumusunod sa
     // bagong gitna — kaya puwede ring ihila ang mapa gamit ang dalawang daliri.
     const fromStart = panKeeping(start.mid, start, nextZoom);
-    hasUserMoved.current = true;
-    setZoom(nextZoom);
-    setPan({ x: fromStart.x + (mid.x - start.mid.x), y: fromStart.y + (mid.y - start.mid.y) });
+    const next = settle(nextZoom, { x: fromStart.x + (mid.x - start.mid.x), y: fromStart.y + (mid.y - start.mid.y) });
+    setZoom(next.zoom);
+    setPan(next.pan);
   };
 
   // Gulong ng mouse at pinch sa trackpad (ctrlKey + wheel sa Chrome).
@@ -298,33 +318,36 @@ export default function MapScreen({
       const factor = Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0015));
       const nextZoom = clampZoom(from.zoom * factor);
       if (nextZoom === from.zoom) return;
-      const nextPan = panKeeping(toLocal(e.clientX, e.clientY), from, nextZoom);
-      viewRef.current = { zoom: nextZoom, pan: nextPan };
-      hasUserMoved.current = true;
+      const next = settle(nextZoom, panKeeping(toLocal(e.clientX, e.clientY), from, nextZoom));
+      viewRef.current = next;
       setIsGesturing(true);
       clearTimeout(wheelIdle.current);
       wheelIdle.current = setTimeout(() => setIsGesturing(false), 200);
-      setZoom(nextZoom);
-      setPan(nextPan);
+      setZoom(next.zoom);
+      setPan(next.pan);
     };
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => {
       el.removeEventListener('wheel', onWheel);
       clearTimeout(wheelIdle.current);
     };
+    // Ref lang ang binabasa ng clampZoom at settle, kaya ligtas ang kopya
+    // mula sa unang render — hindi kailangang ikabit ulit ang listener.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMobile, staticView]);
 
   // Mga buton na + at −: sa gitna ng nakikitang mapa sila nag-zo-zoom.
   const zoomBy = (delta) => {
     const size = measureViewport();
     const nextZoom = clampZoom(zoom + delta);
-    hasUserMoved.current = true;
-    setPan(panKeeping({ x: size.w / 2, y: size.h / 2 }, { zoom, pan }, nextZoom));
-    setZoom(nextZoom);
+    const next = settle(nextZoom, panKeeping({ x: size.w / 2, y: size.h / 2 }, { zoom, pan }, nextZoom));
+    setPan(next.pan);
+    setZoom(next.zoom);
   };
 
   const resetView = () => {
     const next = computeDefaultView();
+    defaultViewRef.current = next;
     setZoom(next.zoom);
     setPan(next.pan);
     hasUserMoved.current = false;
