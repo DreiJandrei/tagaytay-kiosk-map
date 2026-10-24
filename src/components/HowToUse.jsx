@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import EscalatorIcon from './EscalatorIcon';
 
 // Kusang nagsasara kapag iniwan ng bisita — para hindi maiwang nakatakip
 // ang tutorial sa idle screen hanggang sa susunod na tao.
@@ -12,7 +13,7 @@ const CONTENT = {
     steps: [
       ['👆', 'Touch the screen', 'Tap anywhere on this screen to start.'],
       ['🔍', 'Find the office', 'Type its name in the search box, or pick it from the list.'],
-      ['🪜', 'Choose stairs or elevator', 'If the office is upstairs, pick how you want to go up.'],
+      [<EscalatorIcon className="escalator-icon--inline" />, 'Choose how to go up', 'If the office is upstairs, pick the elevator, escalator, or stairs.'],
       ['🗺️', 'Follow the map', 'The line on the map shows the way to the office.'],
       ['📱', 'Take the map with you', 'Scan the QR code with your phone camera to keep the directions.'],
     ],
@@ -38,7 +39,7 @@ const CONTENT = {
     steps: [
       ['👆', 'Pindutin ang screen', 'Pindutin kahit saan sa screen na ito para magsimula.'],
       ['🔍', 'Hanapin ang opisina', 'I-type ang pangalan nito sa search, o piliin sa listahan.'],
-      ['🪜', 'Hagdan o elevator', 'Kung nasa itaas ang opisina, piliin kung paano aakyat.'],
+      [<EscalatorIcon className="escalator-icon--inline" />, 'Piliin kung paano aakyat', 'Kung nasa itaas ang opisina, pumili: elevator, escalator, o hagdan.'],
       ['🗺️', 'Sundan ang mapa', 'Ang guhit sa mapa ang daan papunta sa opisina.'],
       ['📱', 'Dalhin ang mapa', 'I-scan ang QR code gamit ang camera ng phone para dala mo ang direksyon.'],
     ],

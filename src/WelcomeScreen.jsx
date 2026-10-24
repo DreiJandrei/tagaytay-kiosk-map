@@ -1,23 +1,11 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import tagaytaySeal from './assets/tagaytay-seal.jpg';
 import cityhallBg from './assets/cityhall.jpg';
 import WelcomeVideo from './components/WelcomeVideo';
 import HowToUse from './components/HowToUse';
+import { VolumePanel, VolumeToggle } from './components/VolumeControl';
+import { useAutoHide, useStoredVolume } from './lib/volume';
 import { getAnnouncement } from './lib/api';
-
-const VOLUME_KEY = 'kiosk-welcome-volume';
-const DEFAULT_VOLUME = 70;
-const VOLUME_STEP = 10;
-const VOLUME_AUTO_HIDE_MS = 10000;
-const readVolume = () => {
-  try {
-    const saved = localStorage.getItem(VOLUME_KEY);
-    if (saved !== null && saved !== '' && !Number.isNaN(Number(saved))) {
-      return Math.max(0, Math.min(100, Number(saved)));
-    }
-  } catch { /* walang storage */ }
-  return DEFAULT_VOLUME;
-};
 
 export default function WelcomeScreen({ onStart }) {
   const [advisory, setAdvisory] = useState("");
@@ -35,34 +23,13 @@ export default function WelcomeScreen({ onStart }) {
   const claimForSide = useCallback((on) => { if (on) setSoundOwner('side'); }, []);
   const claimForBackground = useCallback((on) => setSoundOwner(on ? 'background' : 'side'), []);
   const backToSide = useCallback(() => setSoundOwner('side'), []);
-  // Lakas ng tunog (0–100) ng video sa idle screen lang. Nasa localStorage
-  // para hindi bumalik sa dati tuwing nire-restart ang kiosk.
-  const [volume, setVolume] = useState(readVolume);
+  // Lakas ng tunog (0–100), hiwalay sa background at sa City Updates.
+  // Natatandaan kahit i-restart ang kiosk. Ang sa City Updates ay nasa
+  // kard mismo (tingnan ang WelcomeVideo); ang sa background ay dito.
+  const [bgVolume, setBgVolume] = useStoredVolume('kiosk-welcome-volume-bg');
+  const [sideVolume, setSideVolume] = useStoredVolume('kiosk-welcome-volume-side');
   const [bgAudible, setBgAudible] = useState(false);
-  // Nakatago ang slider hanggang pindutin ang ▲. Kusa itong nagtatago ulit
-  // kapag iniwan — para hindi nakaharang sa idle screen buong araw.
-  const [volumeOpen, setVolumeOpen] = useState(false);
-  const volumeTimer = useRef(null);
-  const keepVolumeOpen = () => {
-    clearTimeout(volumeTimer.current);
-    volumeTimer.current = setTimeout(() => setVolumeOpen(false), VOLUME_AUTO_HIDE_MS);
-  };
-  const toggleVolume = () => {
-    if (volumeOpen) {
-      clearTimeout(volumeTimer.current);
-      setVolumeOpen(false);
-    } else {
-      setVolumeOpen(true);
-      keepVolumeOpen();
-    }
-  };
-  useEffect(() => () => clearTimeout(volumeTimer.current), []);
-  const changeVolume = (v) => {
-    const next = Math.max(0, Math.min(100, Math.round(v)));
-    setVolume(next);
-    keepVolumeOpen();
-    try { localStorage.setItem(VOLUME_KEY, String(next)); } catch { /* walang storage */ }
-  };
+  const bgSlider = useAutoHide();
   // Dito inilalagay ng background na video ang 🔊 niya — sa loob mismo ng
   // kahon ng lakas ng tunog sa kaliwang ibaba.
   const [soundSlot, setSoundSlot] = useState(null);
@@ -127,7 +94,7 @@ export default function WelcomeScreen({ onStart }) {
           backgroundHost={videoHost}
           soundSlot={soundSlot}
           otherAudible={sideAudible}
-          volume={volume}
+          volume={bgVolume}
           onAudibleChange={setBgAudible}
           onClaimSound={claimForBackground}
         />
@@ -200,7 +167,8 @@ export default function WelcomeScreen({ onStart }) {
           <WelcomeVideo
             placement="side"
             isOwner={soundOwner === 'side'}
-            volume={volume}
+            volume={sideVolume}
+            onVolumeChange={setSideVolume}
             onAudibleChange={setSideAudible}
             onClaimSound={claimForSide}
             onItemChange={backToSide}
@@ -226,56 +194,28 @@ export default function WelcomeScreen({ onStart }) {
       </div>
 
       {/* Kaliwang ibaba: ang 🔊 ng background (inilalagay ng WelcomeVideo
-          sa slot) at, habang may tumutunog, ang 🎚️ na nagpapakita o
-          nagtatago ng lakas ng tunog sa ibabaw nito. Walang laman?
+          sa slot) at, habang tumutunog ang background, ang 🎚️ na
+          nagpapakita o nagtatago ng lakas nito sa ibabaw. Walang laman?
           Nakatago (tingnan ang CSS). Hindi nagsisimula ng kiosk ang
           pindot dito. */}
       <div
         className="welcome-volume"
         onClick={(e) => e.stopPropagation()}
         role="group"
-        aria-label="Tunog"
+        aria-label="Tunog ng background"
       >
         <span className="welcome-volume-slot" ref={setSoundSlot} />
-        {(sideAudible || bgAudible) && (
-          <button
-            type="button"
-            className={`welcome-volume-toggle${volumeOpen ? ' is-open' : ''}`}
-            onClick={toggleVolume}
-            aria-expanded={volumeOpen}
-            aria-label={volumeOpen ? 'Itago ang lakas ng tunog' : 'Ipakita ang lakas ng tunog'}
-          >
-            <span aria-hidden="true">{volumeOpen ? '✕' : '🎚️'}</span>
-          </button>
+        {bgAudible && (
+          <VolumeToggle open={bgSlider.open} onToggle={bgSlider.toggle} label="ng background" />
         )}
-        {(sideAudible || bgAudible) && volumeOpen && (
-          <div className="welcome-volume-adjust" onPointerDown={keepVolumeOpen}>
-            <button
-              type="button"
-              className="welcome-volume-btn"
-              onClick={() => changeVolume(volume - VOLUME_STEP)}
-              disabled={volume <= 0}
-              aria-label="Hinaan ang tunog"
-            >−</button>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              step="1"
-              value={volume}
-              onChange={(e) => changeVolume(Number(e.target.value))}
-              style={{ '--vol': `${volume}%` }}
-              aria-label="Lakas ng tunog"
-            />
-            <button
-              type="button"
-              className="welcome-volume-btn"
-              onClick={() => changeVolume(volume + VOLUME_STEP)}
-              disabled={volume >= 100}
-              aria-label="Lakasan ang tunog"
-            >+</button>
-            <span className="welcome-volume-value">{volume}%</span>
-          </div>
+        {bgAudible && bgSlider.open && (
+          <VolumePanel
+            vertical
+            value={bgVolume}
+            onChange={setBgVolume}
+            onActivity={bgSlider.keepOpen}
+            label="ng background"
+          />
         )}
       </div>
 

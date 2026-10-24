@@ -16,6 +16,7 @@ import KioskLockScreen from './components/KioskLockScreen';
 import './index.css';
 
 import { QRCodeSVG } from 'qrcode.react';
+import EscalatorIcon from './components/EscalatorIcon';
 
 import { getAllOffices, initializeDatabase, incrementSearchCount, loginAdmin, resetPasswordEmail, logoutAdmin, onAuthChange, changeAdminPassword, getLiftStatuses } from './lib/api';
 import { checkKioskSession, onKioskSessionChange } from './lib/kioskDevice';
@@ -1621,7 +1622,7 @@ export default function App() {
                   disabled={escalatorOut}
                   onClick={() => { setSelectedOfficeKey('elevator-up'); setTransportMethod('escalator'); setRouteStep('go-to-transport'); }}
                 >
-                  <span className="route-opt-ico">🪜</span>
+                  <span className="route-opt-ico"><EscalatorIcon /></span>
                   <span className="route-opt-name">{lang === 'EN' ? 'Escalator' : 'Escalator'}</span>
                   {escalatorOut ? (
                     <span className="route-opt-sub route-opt-warn">

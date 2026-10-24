@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { getKioskVideos } from '../lib/api';
 import { buildEmbedUrl, detectVideoType } from '../lib/videoUtils';
+import { VolumePanel, VolumeToggle } from './VolumeControl';
+import { useAutoHide } from '../lib/volume';
 
 // Kasabay ng announcement ang paghila ng bagong listahan, para agad
 // lumitaw sa kiosk ang bagong post nang hindi kailangang i-restart.
@@ -41,11 +43,12 @@ const signatureOf = (list) =>
 //   • Bagong anunsyo sa kard (`onItemChange`) — balik sa anunsyo ang
 //     tunog. Siya ang inuuna.
 //
-// LAKAS NG TUNOG. Galing din sa WelcomeScreen ang `volume` (0–100), iisa
-// para sa dalawa — iisa lang naman ang tumutunog sa bawat sandali.
+// LAKAS NG TUNOG. Galing sa WelcomeScreen ang `volume` (0–100), may
+// kanya-kanya ang kard at ang background. Ang kard ay may sariling 🎚️ sa
+// ulo nito (`onVolumeChange`); ang sa background ay nasa kaliwang ibaba.
 export default function WelcomeVideo({
   placement = 'side', backgroundHost = null, soundSlot = null,
-  isOwner = true, otherAudible = false, volume = 100,
+  isOwner = true, otherAudible = false, volume = 100, onVolumeChange,
   onAudibleChange, onClaimSound, onItemChange, onShapeChange,
 }) {
   const isBackground = placement === 'background' && !!backgroundHost;
@@ -73,6 +76,7 @@ export default function WelcomeVideo({
   const shown = isBackground ? videos.filter((v) => measured[shapeKeyOf(v)] !== true) : videos;
   const fileRef = useRef(null);
   const iframeRef = useRef(null);
+  const slider = useAutoHide();
   const swipe = useRef({ id: null, x: 0, y: 0, active: false, moved: false });
 
   useEffect(() => {
@@ -442,6 +446,25 @@ export default function WelcomeVideo({
           >
             <span aria-hidden="true">{soundOn ? '🔊' : '🔇'}</span>
           </button>
+        )}
+        {soundOn && onVolumeChange && (
+          <VolumeToggle
+            open={slider.open}
+            onToggle={slider.toggle}
+            className="welcome-video-vol-toggle"
+            label="ng City Updates"
+          />
+        )}
+        {/* Pahiga, nakalutang sa ibabaw ng video sa ilalim ng ulo — hindi
+            nito itinutulak pababa ang video. */}
+        {soundOn && onVolumeChange && slider.open && (
+          <VolumePanel
+            value={volume}
+            onChange={onVolumeChange}
+            onActivity={slider.keepOpen}
+            className="welcome-video-vol-panel"
+            label="ng City Updates"
+          />
         )}
         {shown.length > 1 && (
           <span className="welcome-video-count">{position + 1}/{shown.length}</span>

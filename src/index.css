@@ -1585,9 +1585,12 @@ img { max-width: 100%; }
 .welcome-screen:has(.announcement-bar) .welcome-volume { bottom: 96px; }
 .welcome-volume-slot { display: contents; }
 .welcome-bg-sound { width: 60px; height: 60px; font-size: 1.5rem; }
-/* Nagpapakita o nagtatago ng slider. Mas maliit kaysa sa 🔊 — pangalawa
-   lang ito sa kanya. */
-.welcome-volume-toggle {
+/* ── Lakas ng tunog (VolumeControl.jsx) ───────────────────────
+   Dalawa ang gumagamit: ang background (patayo, sa kahon sa kaliwang
+   ibaba) at ang City Updates (pahiga, nakalutang sa ilalim ng ulo ng
+   kard). Ang 🎚️ ang nagpapakita o nagtatago ng slider. */
+.vol-toggle {
+  flex-shrink: 0;
   width: 48px; height: 48px;
   display: flex; align-items: center; justify-content: center;
   border-radius: 50%;
@@ -1597,17 +1600,23 @@ img { max-width: 100%; }
   cursor: pointer;
   transition: background .2s ease, transform .2s ease;
 }
-.welcome-volume-toggle:active { transform: scale(.92); }
-.welcome-volume-toggle.is-open {
+.vol-toggle:active { transform: scale(.92); }
+.vol-toggle.is-open {
   background: rgba(37,99,235,.55);
   border-color: rgba(191,219,254,.9);
 }
-.welcome-volume-adjust {
-  display: flex; flex-direction: column-reverse; align-items: center; gap: 12px;
-  padding: 10px 0 4px;
-  animation: fadeIn .4s ease both;
+.vol-panel {
+  display: flex; align-items: center; gap: 12px;
+  color: #FFF;
+  cursor: default;
+  animation: fadeIn .3s ease both;
 }
-.welcome-volume-btn {
+.vol-panel.is-vertical {
+  flex-direction: column-reverse;
+  padding: 10px 0 4px;
+}
+.vol-btn {
+  flex-shrink: 0;
   width: 44px; height: 44px;
   display: flex; align-items: center; justify-content: center;
   border-radius: 50%;
@@ -1617,42 +1626,63 @@ img { max-width: 100%; }
   cursor: pointer;
   transition: background .2s ease, transform .2s ease;
 }
-.welcome-volume-btn:active { transform: scale(.92); }
-.welcome-volume-btn:disabled { opacity: .35; cursor: default; }
-.welcome-volume input[type="range"] {
+.vol-btn:active { transform: scale(.92); }
+.vol-btn:disabled { opacity: .35; cursor: default; }
+.vol-panel input[type="range"] {
   -webkit-appearance: none; appearance: none;
-  /* Patayo: ibaba ang mahina, itaas ang malakas. */
-  writing-mode: vertical-lr; direction: rtl;
-  width: 10px; height: 200px;
+  width: 200px; height: 10px;
   border-radius: 999px;
-  background: linear-gradient(to top, #60A5FA var(--vol), rgba(255,255,255,.2) var(--vol));
+  background: linear-gradient(to right, #60A5FA var(--vol), rgba(255,255,255,.2) var(--vol));
   outline: none;
   cursor: pointer;
 }
-.welcome-volume input[type="range"]::-webkit-slider-thumb {
+/* Patayo: ibaba ang mahina, itaas ang malakas. */
+.vol-panel.is-vertical input[type="range"] {
+  writing-mode: vertical-lr; direction: rtl;
+  width: 10px; height: 200px;
+  background: linear-gradient(to top, #60A5FA var(--vol), rgba(255,255,255,.2) var(--vol));
+}
+.vol-panel input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none; appearance: none;
   width: 30px; height: 30px; border-radius: 50%;
   background: #FFF; border: 3px solid #2563EB;
   box-shadow: 0 2px 8px rgba(2,10,26,.5);
 }
-.welcome-volume input[type="range"]::-moz-range-thumb {
+.vol-panel input[type="range"]::-moz-range-thumb {
   width: 30px; height: 30px; border-radius: 50%;
   background: #FFF; border: 3px solid #2563EB;
   box-shadow: 0 2px 8px rgba(2,10,26,.5);
 }
-.welcome-volume-value {
-  text-align: center;
+.vol-value {
+  min-width: 3.2em; text-align: center;
   font-size: .95rem; font-weight: 800; letter-spacing: .5px;
   font-variant-numeric: tabular-nums;
 }
+
+/* City Updates: ang 🎚️ ay kasinlaki ng 🔊 ng kard, at ang slider ay
+   nakalutang sa kanang itaas ng video — hindi itinutulak pababa ang video. */
+.welcome-video-head { position: relative; }
+.welcome-video-vol-toggle { width: 52px; height: 52px; font-size: 1.4rem; }
+.welcome-video-vol-panel {
+  position: absolute; top: calc(100% + 10px); right: 0; z-index: 3;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 2px solid rgba(147,197,253,.5);
+  background: rgba(7,18,35,.88);
+  box-shadow: 0 10px 26px rgba(2,10,26,.55);
+}
+.welcome-video-vol-panel input[type="range"] { width: 160px; }
+
 @media (max-height: 900px) {
   .welcome-volume { left: 24px; bottom: 24px; padding: 6px; gap: 10px; }
   .welcome-screen:has(.announcement-bar) .welcome-volume { bottom: 82px; }
   .welcome-bg-sound { width: 50px; height: 50px; font-size: 1.25rem; }
-  .welcome-volume-toggle { width: 40px; height: 40px; font-size: 1.1rem; }
-  .welcome-volume-adjust { gap: 10px; }
-  .welcome-volume-btn { width: 38px; height: 38px; font-size: 1.25rem; }
-  .welcome-volume input[type="range"] { height: 150px; }
+  .vol-toggle { width: 40px; height: 40px; font-size: 1.1rem; }
+  .welcome-video-vol-toggle { width: 42px; height: 42px; font-size: 1.1rem; }
+  .vol-panel { gap: 10px; }
+  .vol-btn { width: 38px; height: 38px; font-size: 1.25rem; }
+  .vol-panel.is-vertical input[type="range"] { height: 150px; }
+  .welcome-video-vol-panel input[type="range"] { width: 130px; }
 }
 
 /* ── "How to Use" ─────────────────────────────────────────────
@@ -4432,3 +4462,8 @@ button:active { transform: scale(.97); }
   border-color: var(--ui-accent);
   color: var(--ui-accent-on);
 }
+
+/* Escalator icon (EscalatorIcon.jsx) — kapalit ng 🪜. Kasinlaki ng teksto
+   gaya ng emoji; ang --inline ay pantay sa linya ng teksto. */
+.escalator-icon { display: inline-block; flex-shrink: 0; }
+.escalator-icon--inline { vertical-align: -0.125em; }

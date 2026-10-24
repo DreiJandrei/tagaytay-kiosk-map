@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import VirtualKeyboard from '../components/VirtualKeyboard';
+import EscalatorIcon from '../components/EscalatorIcon';
 import { isTypable } from '../lib/keyboardUtils';
 import {
   updateOffice, getAnnouncement, patchKioskSettings, changeAdminPassword, logoutAdmin,
@@ -1471,7 +1472,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
               },
               {
                 lift: 'escalator',
-                icon: '🪜',
+                icon: <EscalatorIcon className="escalator-icon--inline" />,
                 title: t('Escalator Status', 'Kalagayan ng Escalator'),
                 hint: t(
                   'When the escalator is not working, the kiosk greys out the Escalator choice '

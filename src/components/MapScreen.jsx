@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { liftStatusLabel } from '../lib/i18n';
+import EscalatorIcon from './EscalatorIcon';
 
 export default function MapScreen({ 
   offices, 
@@ -372,7 +373,7 @@ export default function MapScreen({
           else if (currentFloor >= 6) kioskStyle = { left: 650, top: 580 };
       }
       else if (transportMethod === 'escalator') {
-          kioskText = EN ? "🪜 ARRIVED VIA ESCALATOR" : "🪜 DUMATING SA ESCALATOR";
+          kioskText = <><EscalatorIcon className="escalator-icon--inline" /> {EN ? "ARRIVED VIA ESCALATOR" : "DUMATING SA ESCALATOR"}</>;
           if (currentFloor === 2) kioskStyle = { left: 575, top: 670 };
           // Walang naka-mapa na escalator sa 3rd pataas — gamitin ang
           // posisyon ng elevator para hindi mawala sa (0,0) ang pin.
