@@ -19,7 +19,7 @@ const CONTENT = {
     screenHead: 'On this screen',
     screen: [
       ['🔊', 'Sound', 'Tap the round 🔊 button at the bottom left to turn the sound on or off.'],
-      ['🎚️', 'Volume', 'Drag the slider above it up or down, or press + and −, to make it louder or softer.'],
+      ['🎚️', 'Volume', 'Tap 🎚️ above the sound button to show the slider. Drag it up or down, or press + and −. Tap ✕ to hide it.'],
       ['👈', 'More announcements', 'Swipe the announcement card left or right to see the others.'],
     ],
     topHead: 'Buttons at the top of the map',
@@ -45,7 +45,7 @@ const CONTENT = {
     screenHead: 'Sa screen na ito',
     screen: [
       ['🔊', 'Tunog', 'Pindutin ang bilog na 🔊 sa kaliwang ibaba para buksan o patayin ang tunog.'],
-      ['🎚️', 'Lakas ng tunog', 'I-drag pataas o pababa ang slider sa ibabaw nito, o pindutin ang + at −, para lakasan o hinaan.'],
+      ['🎚️', 'Lakas ng tunog', 'Pindutin ang 🎚️ sa ibabaw ng buton ng tunog para lumabas ang slider. I-drag pataas o pababa, o pindutin ang + at −. Pindutin ang ✕ para itago.'],
       ['👈', 'Iba pang anunsyo', 'I-swipe pakaliwa o pakanan ang kard ng anunsyo para makita ang iba.'],
     ],
     topHead: 'Mga buton sa itaas ng mapa',

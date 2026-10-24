@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import tagaytaySeal from './assets/tagaytay-seal.jpg';
 import cityhallBg from './assets/cityhall.jpg';
 import WelcomeVideo from './components/WelcomeVideo';
@@ -8,6 +8,7 @@ import { getAnnouncement } from './lib/api';
 const VOLUME_KEY = 'kiosk-welcome-volume';
 const DEFAULT_VOLUME = 70;
 const VOLUME_STEP = 10;
+const VOLUME_AUTO_HIDE_MS = 10000;
 const readVolume = () => {
   try {
     const saved = localStorage.getItem(VOLUME_KEY);
@@ -38,9 +39,28 @@ export default function WelcomeScreen({ onStart }) {
   // para hindi bumalik sa dati tuwing nire-restart ang kiosk.
   const [volume, setVolume] = useState(readVolume);
   const [bgAudible, setBgAudible] = useState(false);
+  // Nakatago ang slider hanggang pindutin ang ▲. Kusa itong nagtatago ulit
+  // kapag iniwan — para hindi nakaharang sa idle screen buong araw.
+  const [volumeOpen, setVolumeOpen] = useState(false);
+  const volumeTimer = useRef(null);
+  const keepVolumeOpen = () => {
+    clearTimeout(volumeTimer.current);
+    volumeTimer.current = setTimeout(() => setVolumeOpen(false), VOLUME_AUTO_HIDE_MS);
+  };
+  const toggleVolume = () => {
+    if (volumeOpen) {
+      clearTimeout(volumeTimer.current);
+      setVolumeOpen(false);
+    } else {
+      setVolumeOpen(true);
+      keepVolumeOpen();
+    }
+  };
+  useEffect(() => () => clearTimeout(volumeTimer.current), []);
   const changeVolume = (v) => {
     const next = Math.max(0, Math.min(100, Math.round(v)));
     setVolume(next);
+    keepVolumeOpen();
     try { localStorage.setItem(VOLUME_KEY, String(next)); } catch { /* walang storage */ }
   };
   // Dito inilalagay ng background na video ang 🔊 niya — sa loob mismo ng
@@ -206,9 +226,10 @@ export default function WelcomeScreen({ onStart }) {
       </div>
 
       {/* Kaliwang ibaba: ang 🔊 ng background (inilalagay ng WelcomeVideo
-          sa slot) at, habang may tumutunog, ang lakas ng tunog katabi
-          nito. Walang laman? Nakatago (tingnan ang CSS). Hindi nagsisimula
-          ng kiosk ang pindot dito. */}
+          sa slot) at, habang may tumutunog, ang 🎚️ na nagpapakita o
+          nagtatago ng lakas ng tunog sa ibabaw nito. Walang laman?
+          Nakatago (tingnan ang CSS). Hindi nagsisimula ng kiosk ang
+          pindot dito. */}
       <div
         className="welcome-volume"
         onClick={(e) => e.stopPropagation()}
@@ -217,7 +238,18 @@ export default function WelcomeScreen({ onStart }) {
       >
         <span className="welcome-volume-slot" ref={setSoundSlot} />
         {(sideAudible || bgAudible) && (
-          <div className="welcome-volume-adjust">
+          <button
+            type="button"
+            className={`welcome-volume-toggle${volumeOpen ? ' is-open' : ''}`}
+            onClick={toggleVolume}
+            aria-expanded={volumeOpen}
+            aria-label={volumeOpen ? 'Itago ang lakas ng tunog' : 'Ipakita ang lakas ng tunog'}
+          >
+            <span aria-hidden="true">{volumeOpen ? '✕' : '🎚️'}</span>
+          </button>
+        )}
+        {(sideAudible || bgAudible) && volumeOpen && (
+          <div className="welcome-volume-adjust" onPointerDown={keepVolumeOpen}>
             <button
               type="button"
               className="welcome-volume-btn"
