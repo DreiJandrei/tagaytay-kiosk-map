@@ -655,11 +655,18 @@ export default function App() {
     // lumalabas (ang gabay at ang bagong pagpili ng daan).
     setGuide(null);
 
+    // Ang panimulang daan: elevator, o hagdan kapag sira ang elevator.
+    const defaultTransport = elevatorOut ? 'stairs' : 'elevator';
+
     if (floor === 1 || isMobile) {
       setCurrentFloor(floor);
       setSelectedOfficeKey(key);
       setRouteStep('arrived');
       setDestinationData(null);
+      // Walang sasakyan papunta sa 1st Floor. Kung maiiwan ang daang
+      // pinili sa NAKARAANG opisina (hal. escalator), iyon ang naisusulat
+      // sa QR at ginagamit ng gabay — kaya ibinabalik sa panimula.
+      if (floor === 1) setTransportMethod(defaultTransport);
     } else {
       setDestinationData({ key, floor, ...targetOffice });
       setCurrentFloor(1);
@@ -670,7 +677,7 @@ export default function App() {
       // naisusulat sa QR, kaya ibang daan ang nababasa sa telepono
       // kaysa sa pipiliin niya sa kiosk pagkatapos. Hagdan naman kapag
       // sira o inaayos ang elevator — hindi dapat iyon ang nasa QR.
-      setTransportMethod(elevatorOut ? 'stairs' : 'elevator');
+      setTransportMethod(defaultTransport);
       setRouteStep('choose-transport');
     }
   };

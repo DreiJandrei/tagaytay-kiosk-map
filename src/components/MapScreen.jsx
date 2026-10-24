@@ -455,7 +455,11 @@ export default function MapScreen({
       finalPathData = "M 240 720 L 370 720 L 370 630 L 450 630 L 450 480 L 620 480 L 620 505";
   }
 
-if (currentFloor === 1 && transportMethod === 'escalator') {
+  // Kapag papunta lang talaga sa escalator ('elevator-up' ang tunguhin —
+  // tingnan sa itaas). Kung wala iyon, natatabunan ng escalator ang ruta
+  // ng kahit anong opisina sa 1st Floor na pinili pagkatapos ng isang
+  // biyaheng naka-escalator.
+  if (currentFloor === 1 && transportMethod === 'escalator' && selectedOfficeKey === 'elevator-up') {
       // Nasa KANANG dulo ang sakayan paakyat ng escalator. Kaya pahalang
       // muna sa pasilyo (y 822, nasa pagitan ng elevator at escalator),
       // hanggang x 1225, tapos pababa papasok sa kanang dulo.
