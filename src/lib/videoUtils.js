@@ -274,10 +274,12 @@ export function validateVideoUrl(url, type, lang = 'EN') {
         + '<iframe> code at i-paste dito nang buo.';
   }
 
-  if (!/^https?:\/\//i.test(link)) {
+  // https lang: tinatanggihan din ng database ang iba
+  // (supabase/security_hardening.sql).
+  if (!/^https:\/\//i.test(link)) {
     return EN
-      ? 'The link must start with http:// or https://'
-      : 'Dapat magsimula ang link sa http:// o https://';
+      ? 'The link must start with https://'
+      : 'Dapat magsimula ang link sa https://';
   }
   if (type === 'youtube' && !getYouTubeId(link)) {
     return EN

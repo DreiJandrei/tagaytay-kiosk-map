@@ -184,7 +184,9 @@ export default function WelcomeVideo({
   const ytCommand = useCallback((func, args = []) => {
     const win = iframeRef.current?.contentWindow;
     if (!win) return;
-    win.postMessage(JSON.stringify({ event: 'command', func, args }), '*');
+    // Sa YouTube lang ipinapadala — hindi sa kung anumang pahinang
+    // napunta sa iframe.
+    win.postMessage(JSON.stringify({ event: 'command', func, args }), 'https://www.youtube.com');
   }, []);
   const ytControlled = isBackground && type === 'youtube';
   // Pinakabagong hatol, para sa mga utos na naantala (tingnan ang onLoad).

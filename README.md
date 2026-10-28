@@ -43,9 +43,36 @@ aksidenteng lumabas ang login sa harap ng bisita.
    users to sign up**. Ang dalawang account sa itaas lang ang dapat na
    umiiral.
 
+5. **SQL Editor → New query →** i-paste ang buong
+   `supabase/security_hardening.sql` → **Run** (pagkatapos ng
+   `admin_only_writes.sql`). Nilalagyan nito ng RLS ang *bawat* table,
+   tinatanggal ang anumang karapatang magsulat ng anon, at https lang ang
+   tinatanggap na link ng video. Walang row dapat sa unang dalawang
+   resulta sa dulo.
+6. **Authentication → Sign In / Providers → Email →** Minimum password
+   length: `8`, Password requirements: **Lowercase, uppercase letters
+   and digits**. Ganito rin ang tsek sa app, pero sa browser lang iyon —
+   ito ang pumipilit sa server.
+
 **Tandaan:** pagkatapos ng `admin_only_writes.sql`, hindi na kayang
 punuin ng kiosk ang isang *bagong, walang lamang* database. Hindi ito
 problema sa kasalukuyang database na may laman na.
+
+### Mga header ng website (`vercel.json`)
+
+Ipinapadala ng Vercel sa bawat pahina:
+
+- **Content-Security-Policy** — ang code lang ng site ang tumatakbo, at
+  sa Supabase lang ng proyekto ito nakakausap. YouTube at Facebook lang
+  ang puwedeng i-embed.
+- **`frame-ancestors 'none'` / `X-Frame-Options: DENY`** — hindi
+  maipapaloob ng ibang website ang kiosk o ang Admin Panel sa sariling
+  pahina nila (panlilinlang sa pag-click).
+
+**Kapag may idinagdag na bagong panlabas na serbisyo** (ibang video
+site, ibang font, ibang Supabase project), idagdag ang domain nito sa
+`Content-Security-Policy` sa `vercel.json`. Kung hindi, tahimik itong
+haharangan ng browser — makikita ang dahilan sa Console.
 
 ---
 
@@ -68,6 +95,13 @@ touchscreen, ang hagod mula sa pinakadulong kanan ay nagbubukas ng
 notification at calendar ng Windows (sa kaliwa, ng Widgets) — sa ibabaw
 ng kiosk. Windows ang may hawak niyon, kaya hindi ito kayang harangin ng
 app o ng Chrome. Gumagana lang ito pagkatapos ng restart.
+
+Isinasara rin nito sa Chrome ang **DevTools (F12), Incognito, Guest, at
+password manager**, at hinaharangan ang `file://`. Mahalaga ito kapag may
+nagsaksak ng keyboard: sa DevTools, nababasa ang session ng kiosk, at
+hindi dapat matandaan ng pampublikong makina ang password ng admin.
+Tumatalab ito sa lahat ng Chrome sa mini PC. Para bawiin (bilang
+administrator): `reg delete "HKLM\SOFTWARE\Policies\Google\Chrome" /f`.
 
 Isang bagay pang gawin nang kamay: **Settings → Bluetooth & devices →
 Touch → "Three- and four-finger touch gestures" → Off**, para hindi

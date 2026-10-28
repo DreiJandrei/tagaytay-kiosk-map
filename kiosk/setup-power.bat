@@ -46,11 +46,32 @@ REM  kaya dito ito pinapatay, hindi sa app.
 echo Pinapatay ang pag-swipe mula sa gilid ng screen...
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\EdgeUI" /v AllowEdgeSwipe /t REG_DWORD /d 0 /f >nul
 
+REM  PAGSASARA NG CHROME SA MGA PANLABAS NA DAAN
+REM  Kapag may nagsaksak ng keyboard, ito ang mga daan palabas ng
+REM  kiosk o papasok sa loob nito:
+REM    - DevTools (F12): nababasa at nababago ang session ng kiosk
+REM    - Incognito, Guest, bagong profile: bagong window sa ibabaw
+REM    - file:// : nababasa ang mga file ng mini PC
+REM    - Password manager at autofill: hindi dapat matandaan sa
+REM      pampublikong makina ang password ng admin
+REM  Sa LAHAT ng Chrome sa mini PC ito tumatalab, hindi lang sa kiosk.
+REM  Para bawiin:  reg delete "HKLM\SOFTWARE\Policies\Google\Chrome" /f
+echo Isinasara ang DevTools, Incognito at password manager ng Chrome...
+set "CHROME_POLICY=HKLM\SOFTWARE\Policies\Google\Chrome"
+reg add "%CHROME_POLICY%" /v DeveloperToolsAvailability /t REG_DWORD /d 2 /f >nul
+reg add "%CHROME_POLICY%" /v IncognitoModeAvailability /t REG_DWORD /d 1 /f >nul
+reg add "%CHROME_POLICY%" /v BrowserGuestModeEnabled /t REG_DWORD /d 0 /f >nul
+reg add "%CHROME_POLICY%" /v BrowserAddPersonEnabled /t REG_DWORD /d 0 /f >nul
+reg add "%CHROME_POLICY%" /v PasswordManagerEnabled /t REG_DWORD /d 0 /f >nul
+reg add "%CHROME_POLICY%" /v AutofillAddressEnabled /t REG_DWORD /d 0 /f >nul
+reg add "%CHROME_POLICY%" /v AutofillCreditCardEnabled /t REG_DWORD /d 0 /f >nul
+reg add "%CHROME_POLICY%\URLBlocklist" /v 1 /t REG_SZ /d "file://*" /f >nul
+
 echo.
 echo   TAPOS NA.
 echo.
 echo   I-RESTART ANG MINI PC para gumana ang pagpatay sa
-echo   pag-swipe mula sa gilid.
+echo   pag-swipe mula sa gilid at ang mga patakaran ng Chrome.
 echo.
 echo   Isang bagay pang gawin nang kamay, wala kasi itong
 echo   maaasahang utos sa lahat ng bersyon ng Windows:
