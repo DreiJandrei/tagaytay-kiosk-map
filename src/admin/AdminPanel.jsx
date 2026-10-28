@@ -1587,12 +1587,12 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
             <p className="adm-hint">
               {EN ? (
                 <>
-                  Change the master password for <strong>tagaytaykiosk@gmail.com</strong>. This is updated
+                  Change the master password of the <strong>admin account</strong>. This is updated
                   directly in the Supabase Cloud.
                 </>
               ) : (
                 <>
-                  Palitan ang master password ng <strong>tagaytaykiosk@gmail.com</strong>. Direkta itong
+                  Palitan ang master password ng <strong>admin account</strong>. Direkta itong
                   ina-update sa Supabase Cloud.
                 </>
               )}

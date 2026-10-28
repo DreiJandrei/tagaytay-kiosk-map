@@ -24,9 +24,20 @@ const isMissingDescriptionTlColumn = (error) => isMissingColumn(error, ['descrip
 // ==============================================================
 // 1. SUPABASE AUTHENTICATION
 // ==============================================================
+// Ita-type ng staff ang email — hindi ito nakasulat sa code, na nababasa
+// ng kahit sino sa browser. Pagkapasok, ang database mismo ang tinatanong
+// kung admin nga (is_kiosk_admin sa supabase/admin_only_writes.sql): ang
+// account ng kiosk ay may tamang password din, pero hindi admin.
 export const loginAdmin = async (email, password) => {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
   if (error) throw error;
+  const { data: isAdmin, error: rpcError } = await supabase.rpc('is_kiosk_admin');
+  if (rpcError || isAdmin !== true) {
+    await supabase.auth.signOut({ scope: 'local' });
+    if (rpcError) throw rpcError;
+    // Gaya ng maling password, para iisa ang bilang at mensahe.
+    throw Object.assign(new Error('Invalid login credentials'), { code: 'invalid_credentials' });
+  }
   return data;
 };
 

@@ -20,6 +20,7 @@ import {
 export default function KioskLockScreen({ lang, onUnlocked }) {
   const EN = lang === 'EN';
   const cardRef = useRef(null);
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -38,11 +39,11 @@ export default function KioskLockScreen({ lang, onUnlocked }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (guard.lockUntil > Date.now() || !password) return;
+    if (guard.lockUntil > Date.now() || !email.trim() || !password) return;
     setBusy(true);
     setServerDown(false);
     try {
-      await unlockKiosk(password);
+      await unlockKiosk(email, password);
       updateGuard(FRESH_GUARD);
       onUnlocked();
     } catch (error) {
@@ -70,11 +71,26 @@ export default function KioskLockScreen({ lang, onUnlocked }) {
         </h2>
         <p className="k-modal-text k-modal-text--center">
           {EN
-            ? 'Enter the kiosk password to start this terminal. This device will remember it.'
-            : 'Ilagay ang password ng kiosk para mabuksan ang terminal na ito. Tatandaan ito ng device na ito.'}
+            ? 'Enter the kiosk account email and password to start this terminal. This device will remember it.'
+            : 'Ilagay ang email at password ng kiosk account para mabuksan ang terminal na ito. Tatandaan ito ng device na ito.'}
         </p>
 
         <form onSubmit={handleSubmit}>
+          <div className="k-field">
+            <input
+              type="email"
+              className="k-input"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder={EN ? 'Kiosk account email…' : 'Email ng kiosk account…'}
+              autoComplete="username"
+              autoCapitalize="none"
+              spellCheck={false}
+              disabled={locked}
+              required
+              autoFocus
+            />
+          </div>
           <div className="k-field k-input-wrap">
             <input
               type={showPassword ? 'text' : 'password'}
@@ -84,7 +100,6 @@ export default function KioskLockScreen({ lang, onUnlocked }) {
               placeholder={EN ? 'Kiosk password…' : 'Password ng kiosk…'}
               autoComplete="current-password"
               disabled={locked}
-              autoFocus
             />
             <button
               type="button"
@@ -113,8 +128,8 @@ export default function KioskLockScreen({ lang, onUnlocked }) {
           ) : guard.fails > 0 && (
             <p className="k-login-guard" role="alert">
               ⚠️ {EN
-                ? `Wrong password. ${triesLeft} ${triesLeft === 1 ? 'try' : 'tries'} left before it locks.`
-                : `Mali ang password. ${triesLeft} subok na lang bago ma-lock.`}
+                ? `Wrong email or password. ${triesLeft} ${triesLeft === 1 ? 'try' : 'tries'} left before it locks.`
+                : `Mali ang email o password. ${triesLeft} subok na lang bago ma-lock.`}
             </p>
           )}
 

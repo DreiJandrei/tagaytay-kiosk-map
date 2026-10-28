@@ -26,6 +26,7 @@ export default function KioskResetPage() {
   const [stage, setStage] = useState(STAGE_FROM_URL);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
 
@@ -40,11 +41,13 @@ export default function KioskResetPage() {
     return () => { alive = false; };
   }, [stage]);
 
-  const handleSend = async () => {
+  const handleSend = async (e) => {
+    e.preventDefault();
+    if (!email.trim()) return;
     setBusy(true);
     setMessage('');
     try {
-      await sendKioskResetEmail();
+      await sendKioskResetEmail(email);
       setStage('sent');
     } catch (error) {
       const limited = error?.code === 'over_email_send_rate_limit' || error?.status === 429;
@@ -94,22 +97,37 @@ export default function KioskResetPage() {
         <h2 className="k-modal-title" style={{ marginBottom: '10px' }}>Kiosk Password Reset</h2>
 
         {stage === 'request' && (
-          <>
+          <form onSubmit={handleSend}>
             <p className="k-modal-text k-modal-text--center">
-              A reset link will be sent to the kiosk's Gmail inbox (tagaytaykiosk@gmail.com).
+              Type the kiosk account email. A reset link will be sent to its Gmail inbox.
               Open it on this device or any other.
             </p>
+            <div className="k-field">
+              <input
+                type="email"
+                className="k-input"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Kiosk account email"
+                autoComplete="username"
+                autoCapitalize="none"
+                spellCheck={false}
+                autoFocus
+                required
+              />
+            </div>
             {message && <p className="k-login-guard is-locked" role="alert">{message}</p>}
-            <button type="button" className="k-btn k-btn--primary" onClick={handleSend} disabled={busy}>
+            <button type="submit" className="k-btn k-btn--primary" disabled={busy}>
               {busy ? 'Sending…' : '✉️ Send reset link'}
             </button>
-          </>
+          </form>
         )}
 
         {stage === 'sent' && (
           <p className="k-modal-text k-modal-text--center" style={{ marginBottom: 0 }}>
-            ✅ Sent. Check the inbox of tagaytaykiosk@gmail.com and open the newest
-            "Reset Password" email. The link works only once.
+            ✅ If that is the kiosk account email, a link is on its way. Open the newest
+            "Reset Password" email in the Gmail inbox. The link works only once. Nothing
+            arrived? Check the spelling of the email and send again.
           </p>
         )}
 

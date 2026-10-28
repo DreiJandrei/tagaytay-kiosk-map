@@ -11,16 +11,23 @@ Sa Gmail, binabalewala ang `+device`, kaya iisang inbox ang tumatanggap
 ng lahat ng email. Sa Supabase, magkaibang user sila na may magkaibang
 password.
 
+**Hindi nakasulat ang mga email sa code ng website.** Nababasa ng kahit
+sino ang JavaScript sa browser, kaya ita-type ng staff ang email kasama
+ng password — sa admin login, sa lock screen ng kiosk, at sa reset page.
+Kung papalitan ang email ng `+device` na account, palitan din ang
+`KIOSK_DEVICE_EMAIL_SHA256` sa `src/lib/kioskDevice.js` (SHA-256 ng
+bagong email, maliliit na titik).
+
 **Pagbukas ng kiosk.** Wala nang `?key=` sa link. Sa unang bukas sa isang
-device, hihingi ang kiosk ng password ng `+device` na account. Isang
+device, hihingi ang kiosk ng email at password ng `+device` na account. Isang
 beses lang: tinatandaan iyon ng browser, kaya kusang bumubukas pa rin
 pagkatapos ng restart. Hindi kailangan ng password ang telepono ng
 bisitang nag-scan ng QR.
 
 **Nakalimutan ang password ng kiosk.** Buksan ang
 `https://tagaytay-kiosk-map-one.vercel.app/?reset=kiosk` sa kahit anong
-device. Hindi ito naka-link saanman sa kiosk. Sa Gmail ng lungsod
-dumarating ang reset link.
+device at i-type ang email ng `+device` na account. Hindi ito naka-link
+saanman sa kiosk. Sa Gmail ng lungsod dumarating ang reset link.
 
 **Admin login.** Pindutin ang seal sa itaas-kaliwa nang **eksaktong 15
 beses**, tapos huminto. Kulang o sobra, walang lalabas. Hindi ito ang

@@ -221,8 +221,9 @@ export default function App() {
 
   const [showAdmin, setShowAdmin] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false); 
-  const [adminPasswordInput, setAdminPasswordInput] = useState(''); 
-  const [showPassword, setShowPassword] = useState(false); 
+  const [adminEmailInput, setAdminEmailInput] = useState('');
+  const [adminPasswordInput, setAdminPasswordInput] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
 
@@ -494,6 +495,7 @@ export default function App() {
     setGuide(null);
     setShowAdmin(false);
     setShowAdminLogin(false);
+    setAdminEmailInput('');
     setAdminPasswordInput('');
     setShowPassword(false);
     setShowAbout(false);
@@ -572,9 +574,10 @@ export default function App() {
     setIsLoggingIn(true);
     
     try {
-      await loginAdmin('tagaytaykiosk@gmail.com', adminPasswordInput);
+      await loginAdmin(adminEmailInput, adminPasswordInput);
       updateLoginGuard(FRESH_GUARD);
       setShowAdminLogin(false);
+      setAdminEmailInput('');
       setAdminPasswordInput('');
       setShowPassword(false);
       setShowAdmin(true); 
@@ -597,12 +600,23 @@ export default function App() {
   const handleForgotPassword = async () => {
     // Nagpapahinga pa: hindi na ipinapadala — lalo lang tatagal ang hintay.
     if (resetCooldownUntil > Date.now()) return;
-    try {
-      await resetPasswordEmail('tagaytaykiosk@gmail.com');
-      startResetCooldown(RESET_AFTER_SEND_MS);
+    // Hindi na nakasulat sa code ang email ng admin, kaya ang na-type sa
+    // itaas ang pagpapadalhan.
+    const email = adminEmailInput.trim();
+    if (!email) {
       alert(lang === 'EN'
-        ? '✅ Recovery link sent to tagaytaykiosk@gmail.com!\n\nPlease check the Gmail inbox to set a new password.'
-        : '✅ Naipadala ang recovery link sa tagaytaykiosk@gmail.com!\n\nTingnan ang Gmail inbox para maglagay ng bagong password.');
+        ? 'Type the admin email above first, then tap "Forgot password" again.'
+        : 'I-type muna ang email ng admin sa itaas, saka pindutin ulit ang "Nakalimutan ang password".');
+      return;
+    }
+    try {
+      await resetPasswordEmail(email);
+      startResetCooldown(RESET_AFTER_SEND_MS);
+      // Pareho ang sagot ng Supabase tama man o mali ang email — hindi
+      // nito sinasabi kung may ganoong account.
+      alert(lang === 'EN'
+        ? '✅ If that is the admin email, a recovery link is on its way.\n\nCheck the Gmail inbox to set a new password. Nothing arrived? Check the spelling of the email.'
+        : '✅ Kung iyan ang email ng admin, papunta na ang recovery link.\n\nTingnan ang Gmail inbox para maglagay ng bagong password. Walang dumating? Tingnan ang baybay ng email.');
     } catch (error) {
       // Dati ay laging "internet connection" ang sinasabi nito kahit ano pa
       // ang tunay na dahilan — kaya mahirap i-debug. Ipakita ang totoo.
@@ -1811,11 +1825,27 @@ export default function App() {
             </h2>
             <p className="k-modal-text k-modal-text--center">
               {lang === 'EN'
-                ? 'Enter the password for tagaytaykiosk@gmail.com'
-                : 'Ilagay ang password para sa tagaytaykiosk@gmail.com'}
+                ? 'Enter the admin email and password.'
+                : 'Ilagay ang email at password ng admin.'}
             </p>
 
             <form onSubmit={handleAdminLogin}>
+
+              <div className="k-field">
+                <input
+                  type="email"
+                  className="k-input"
+                  value={adminEmailInput}
+                  onChange={(e) => setAdminEmailInput(e.target.value)}
+                  placeholder={lang === 'EN' ? 'Admin email…' : 'Email ng admin…'}
+                  autoComplete="username"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  disabled={loginLocked}
+                  required
+                  autoFocus
+                />
+              </div>
 
               <div className="k-field k-input-wrap">
                 <input
@@ -1824,8 +1854,8 @@ export default function App() {
                   value={adminPasswordInput}
                   onChange={(e) => setAdminPasswordInput(e.target.value)}
                   placeholder={lang === 'EN' ? 'Enter password…' : 'Ilagay ang password…'}
+                  autoComplete="current-password"
                   disabled={loginLocked}
-                  autoFocus
                 />
                 <button
                   type="button"
@@ -1849,8 +1879,8 @@ export default function App() {
               ) : loginGuard.fails > 0 && (
                 <p className="k-login-guard" role="alert">
                   ⚠️ {lang === 'EN'
-                    ? `Wrong password. ${MAX_LOGIN_ATTEMPTS - loginGuard.fails} ${MAX_LOGIN_ATTEMPTS - loginGuard.fails === 1 ? 'try' : 'tries'} left before it locks.`
-                    : `Mali ang password. ${MAX_LOGIN_ATTEMPTS - loginGuard.fails} subok na lang bago ma-lock.`}
+                    ? `Wrong email or password. ${MAX_LOGIN_ATTEMPTS - loginGuard.fails} ${MAX_LOGIN_ATTEMPTS - loginGuard.fails === 1 ? 'try' : 'tries'} left before it locks.`
+                    : `Mali ang email o password. ${MAX_LOGIN_ATTEMPTS - loginGuard.fails} subok na lang bago ma-lock.`}
                 </p>
               )}
 
@@ -1858,7 +1888,7 @@ export default function App() {
                 <button
                   type="button"
                   className="k-btn k-btn--ghost"
-                  onClick={() => { setShowAdminLogin(false); setAdminPasswordInput(''); setShowPassword(false); }}
+                  onClick={() => { setShowAdminLogin(false); setAdminEmailInput(''); setAdminPasswordInput(''); setShowPassword(false); }}
                 >
                   {lang === 'EN' ? 'Cancel' : 'Kanselahin'}
                 </button>
