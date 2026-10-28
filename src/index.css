@@ -1174,22 +1174,25 @@ img { max-width: 100%; }
   text-transform: uppercase;
   animation: fadeIn 1.2s .36s ease both;
 }
+/* Paalala, hindi buton: walang kahon, anino o ripple — teksto lang na
+   dahan-dahang humihinga, para basahin at hindi pindutin. */
 .welcome-prompt {
-  position: relative; display: inline-flex; align-items: center; gap: 20px;
-  padding: var(--h-prompt-pad); border-radius: 999px;
-  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 60%, #1E3A8A 100%);
-  border: 2px solid rgba(147,197,253,.85);
-  color: #FFF; font-size: var(--h-prompt); font-weight: 900;
-  letter-spacing: 1.5px; text-transform: uppercase;
-  box-shadow: 0 20px 45px rgba(29,78,216,.55);
+  position: relative; display: inline-flex; align-items: center; gap: 22px;
+  padding: 6px 0;
+  color: #FFF; font-size: var(--h-prompt); font-weight: 800;
+  letter-spacing: 4px; text-transform: uppercase;
+  text-shadow: 0 2px 18px rgba(4,12,26,.85), 0 0 2px rgba(4,12,26,.6);
   animation: rise 1s .45s cubic-bezier(.16,1,.3,1) both,
-             bob 2.6s 1.4s ease-in-out infinite;
+             breathe 2.8s 1.4s ease-in-out infinite;
 }
-.welcome-prompt-ripple {
-  position: absolute; inset: -2px; border-radius: 999px;
-  border: 2px solid rgba(147,197,253,.8);
-  animation: ring 2.6s ease-out infinite; pointer-events: none;
+.welcome-prompt-line {
+  width: 56px; height: 2px; border-radius: 2px;
+  background: linear-gradient(90deg, transparent, rgba(147,197,253,.9));
 }
+.welcome-prompt-line:last-child {
+  background: linear-gradient(90deg, rgba(147,197,253,.9), transparent);
+}
+@keyframes breathe { 0%,100% { opacity: 1 } 50% { opacity: .55 } }
 .welcome-prompt-hand { font-size: 2.1rem; animation: tap 2.2s ease-in-out infinite; }
 @keyframes tap { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-9px) } }
 @keyframes bob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-7px) } }
@@ -1838,7 +1841,8 @@ img { max-width: 100%; }
   .welcome-title { font-size: 2.2rem; }
   .welcome-title-accent { font-size: 3.4rem; }
   .welcome-tagline { font-size: 1rem; letter-spacing: 4px; margin-bottom: 30px; }
-  .welcome-prompt { font-size: 1.15rem; padding: 16px 34px; }
+  .welcome-prompt { font-size: 1.15rem; gap: 14px; letter-spacing: 2.5px; }
+  .welcome-prompt-line { width: 32px; }
   .welcome-topbar { font-size: .8rem; }
   .welcome-time { font-size: 1.1rem; }
   .welcome-board { padding: 20px 22px; }

@@ -152,12 +152,16 @@ export default function WelcomeScreen({ onStart }) {
 
           <p className="welcome-tagline">Character City of the South</p>
 
+          {/* Paalala ito, hindi buton: kahit saan sa screen ang pindot.
+              Dati'y asul na pill na may anino at ripple — mukhang iyon
+              lang ang pipindutin, kaya doon tumutok ang mga bisita. */}
           <div className="welcome-prompt">
-            <span className="welcome-prompt-ripple" aria-hidden="true" />
-            <span className="welcome-prompt-text">Touch the screen to start</span>
+            <span className="welcome-prompt-line" aria-hidden="true" />
+            <span className="welcome-prompt-text">Touch anywhere to start</span>
+            <span className="welcome-prompt-line" aria-hidden="true" />
           </div>
 
-          <p className="welcome-subprompt">Pindutin ang screen upang magsimula</p>
+          <p className="welcome-subprompt">Pindutin kahit saan sa screen upang magsimula</p>
         </div>
 
         {/* Kanan: mga anunsyong video (naka-"Anunsyo" sa Admin Panel).
