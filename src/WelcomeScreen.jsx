@@ -154,7 +154,6 @@ export default function WelcomeScreen({ onStart }) {
 
           <div className="welcome-prompt">
             <span className="welcome-prompt-ripple" aria-hidden="true" />
-            <span className="welcome-prompt-hand">👆</span>
             <span className="welcome-prompt-text">Touch the screen to start</span>
           </div>
 
@@ -183,7 +182,6 @@ export default function WelcomeScreen({ onStart }) {
         {hasAnnouncement && (
           <div className="welcome-board">
             <div className="welcome-board-head">
-              <span className="welcome-board-icon">📰</span>
               <h2>Official Announcement</h2>
             </div>
             <div className="welcome-board-body">{announcement}</div>
@@ -225,7 +223,7 @@ export default function WelcomeScreen({ onStart }) {
       {hasAdvisory && (
         <div className="announcement-bar">
           <div className="marquee">
-            <span className="advisory-tag">🚨 ADVISORY:</span>
+            <span className="advisory-tag">ADVISORY:</span>
             {advisory.split('\n').map((line, index, array) => (
               <React.Fragment key={index}>
                 {line}

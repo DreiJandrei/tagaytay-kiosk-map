@@ -44,11 +44,11 @@ export default function DownloadPDF() {
 
         // 3. I-download automatic sa phone ng user
         doc.save(`${data.title}_Requirements.pdf`);
-        setStatus('✅ PDF Downloaded! You can close this page.');
+        setStatus('PDF Downloaded! You can close this page.');
         
       } catch (err) {
         console.error(err);
-        setStatus('❌ Error generating PDF.');
+        setStatus('Error generating PDF.');
       }
     };
 

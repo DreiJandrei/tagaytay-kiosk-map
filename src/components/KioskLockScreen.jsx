@@ -109,25 +109,25 @@ export default function KioskLockScreen({ lang, onUnlocked }) {
                 ? (showPassword ? 'Hide password' : 'Show password')
                 : (showPassword ? 'Itago ang password' : 'Ipakita ang password')}
             >
-              {showPassword ? '🙈' : '👁️'}
+              {EN ? (showPassword ? 'Hide' : 'Show') : (showPassword ? 'Itago' : 'Ipakita')}
             </button>
           </div>
 
           {locked ? (
             <p className="k-login-guard is-locked" role="alert">
-              🔒 {EN
+              {EN
                 ? `Too many wrong passwords. Try again in ${formatCountdown(guard.lockUntil - now)}.`
                 : `Sobrang daming maling password. Subukan ulit sa loob ng ${formatCountdown(guard.lockUntil - now)}.`}
             </p>
           ) : serverDown ? (
             <p className="k-login-guard is-locked" role="alert">
-              📡 {EN
+              {EN
                 ? 'Could not reach the server. Check the internet connection and try again.'
                 : 'Hindi maabot ang server. Tingnan ang koneksyon sa internet at subukan ulit.'}
             </p>
           ) : guard.fails > 0 && (
             <p className="k-login-guard" role="alert">
-              ⚠️ {EN
+              {EN
                 ? `Wrong email or password. ${triesLeft} ${triesLeft === 1 ? 'try' : 'tries'} left before it locks.`
                 : `Mali ang email o password. ${triesLeft} subok na lang bago ma-lock.`}
             </p>
@@ -135,8 +135,8 @@ export default function KioskLockScreen({ lang, onUnlocked }) {
 
           <button type="submit" className="k-btn k-btn--primary" disabled={busy || locked}>
             {EN
-              ? (busy ? 'Checking…' : locked ? 'Locked' : '🔓 Unlock Kiosk')
-              : (busy ? 'Sinusuri…' : locked ? 'Naka-lock' : '🔓 Buksan ang Kiosk')}
+              ? (busy ? 'Checking…' : locked ? 'Locked' : 'Unlock Kiosk')
+              : (busy ? 'Sinusuri…' : locked ? 'Naka-lock' : 'Buksan ang Kiosk')}
           </button>
         </form>
       </div>

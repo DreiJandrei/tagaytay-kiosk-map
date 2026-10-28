@@ -3133,6 +3133,54 @@ img { max-width: 100%; }
 .light-theme .ui-action-btn.zoom-btn,
 .light-theme .reset-view-btn { color: var(--k-700) !important; }
 
+/* Salita na ang laman ng zoom/reset, hindi + / − / ⟲. */
+.map-ctrl-btn {
+  min-height: 45px;
+  padding: 10px 16px !important;
+  font-size: .95rem !important;
+  white-space: nowrap;
+}
+
+/* "You are viewing · 2nd Floor" — nasa itaas ng zoom buttons. */
+.map-floor-tag {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 6px 10px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid rgba(96,165,250,.28);
+  text-align: center;
+  pointer-events: none;
+}
+.map-floor-tag-label {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--k-300);
+  opacity: .85;
+}
+.map-floor-tag-name {
+  margin-top: 2px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  white-space: nowrap;
+}
+.light-theme .map-floor-tag { border-bottom-color: #C7DCFA; }
+.light-theme .map-floor-tag-label { color: var(--k-700); }
+.light-theme .map-floor-tag-name { color: #0F172A; }
+
+/* Sa naka-lock na tanawin (telepono), mag-isa ang tag sa sulok. */
+.floor-selector.map-floor-solo {
+  pointer-events: none !important;
+}
+.map-floor-solo .map-floor-tag {
+  padding: 2px 4px;
+  margin: 0;
+  border-bottom: none;
+}
+
 .bottom-floor-bar {
   background: rgba(7,18,35,.88) !important;
   border: 1px solid rgba(96,165,250,.25) !important;
@@ -3305,6 +3353,32 @@ img { max-width: 100%; }
 }
 .k-modal--sm { max-width: 440px; }
 .k-modal--lg { max-width: 1100px; padding: 0; overflow: hidden; }
+
+/* "Nandiyan pa ba kayo?" — nasa ibabaw ng lahat, pati ng Admin Panel. */
+.k-overlay.still-there { z-index: 100000; }
+.still-there .k-modal { max-width: 520px; }
+.still-there-count {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 6px 0 24px;
+}
+.still-there-num {
+  font-size: 3.4rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--ui-accent);
+  font-variant-numeric: tabular-nums;
+}
+.still-there-unit {
+  margin-top: 6px;
+  font-size: .85rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  opacity: .7;
+}
+.still-there .k-btn-row > .k-btn { flex: 1; }
 
 .k-modal-head {
   display: flex;
@@ -3504,14 +3578,20 @@ img { max-width: 100%; }
 }
 .k-textarea { resize: none; line-height: 1.55; }
 .k-input-wrap { position: relative; }
-.k-input-wrap .k-input { padding-right: 52px; }
+.k-input-wrap .k-input { padding-right: 84px; }
+/* "Show" / "Hide" na salita, hindi 👁️ / 🙈. */
 .k-eye {
   position: absolute;
-  right: 12px; top: 50%;
+  right: 8px; top: 50%;
   transform: translateY(-50%);
+  min-width: 64px;
+  padding: 6px 8px;
   background: transparent;
   border: none;
-  font-size: 1.4rem;
+  border-radius: 8px;
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--ui-accent);
   cursor: pointer;
 }
 

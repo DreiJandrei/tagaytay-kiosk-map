@@ -2,7 +2,16 @@ import React, { useEffect, useRef, useState } from 'react';
 import { liftStatusLabel } from '../lib/i18n';
 import EscalatorIcon from './EscalatorIcon';
 
-export default function MapScreen({ 
+// "Ground Floor", "2nd Floor", "Ika-3 Palapag"… — sa floor tag sa itaas
+// ng mapa.
+const floorName = (floor, EN) => {
+  if (floor === 1) return 'Ground Floor';
+  if (!EN) return `Ika-${floor} Palapag`;
+  const suffix = floor === 2 ? 'nd' : floor === 3 ? 'rd' : 'th';
+  return `${floor}${suffix} Floor`;
+};
+
+export default function MapScreen({
   offices, 
   selectedOfficeKey, 
   onSelectOffice, 
@@ -360,6 +369,16 @@ export default function MapScreen({
 
   const selectedOffice = selectedOfficeKey ? offices?.[selectedOfficeKey] : null;
 
+  // Kung aling palapag ang nasa screen. Kapag nagpalit ng palapag ang
+  // gabay o ang bisita, hindi laging halata sa plano lang kung nasaan na
+  // — ito ang nagsasabi. Lumalabas din sa telepono.
+  const floorTag = (
+    <div className="map-floor-tag" aria-live="polite">
+      <span className="map-floor-tag-label">{EN ? 'You are viewing' : 'Tinitingnan ang'}</span>
+      <span className="map-floor-tag-name">{floorName(currentFloor, EN)}</span>
+    </div>
+  );
+
   // ==============================================================
   // TUNGUHIN NG RUTA (puwedeng palitan ng transport override)
   // Ang "elevator-up" ang ginagamit na key kahit escalator ang pinili,
@@ -379,7 +398,7 @@ export default function MapScreen({
   if (currentFloor === 1) {
       // Katapat ng pulang "Map" block sa floor plan — sa loob ng lobby,
       // kaliwa ng escalator. Dito nagsisimula lahat ng ruta sa 1st floor.
-      kioskText = EN ? "🔴 YOU ARE HERE (Map Kiosk)" : "🔴 NARITO KAYO (Map Kiosk)";
+      kioskText = EN ? "YOU ARE HERE (Map Kiosk)" : "NARITO KAYO (Map Kiosk)";
       kioskStyle = { left: 1045, top: 822, display: 'block' };
   } else if (selectedOfficeKey || routeStep !== 'idle') {
       kioskStyle = { display: 'block' };
@@ -387,8 +406,8 @@ export default function MapScreen({
 
       if (transportMethod === 'stairs') {
           kioskText = isClimbing
-            ? (EN ? "⬆️ CLIMBING STAIRS..." : "⬆️ UMAAKYAT SA HAGDAN...")
-            : (EN ? "🚶‍♂️ ARRIVED VIA STAIRS" : "🚶‍♂️ DUMATING SA HAGDAN");
+            ? (EN ? "CLIMBING STAIRS..." : "UMAAKYAT SA HAGDAN...")
+            : (EN ? "ARRIVED VIA STAIRS" : "DUMATING SA HAGDAN");
           if (currentFloor === 2) kioskStyle = { left: 220, top: 420 };
           else if (currentFloor >= 3 && currentFloor <= 5) kioskStyle = { left: 240, top: 720 };
           // Iisa ang plano ng 6th at 7th Floor, kaya iisa rin ang
@@ -404,7 +423,7 @@ export default function MapScreen({
           else if (currentFloor >= 6) kioskStyle = { left: 620, top: 350 };
       }
       else {
-          kioskText = EN ? "🛗 ARRIVED VIA ELEVATOR" : "🛗 DUMATING SA ELEVATOR";
+          kioskText = EN ? "ARRIVED VIA ELEVATOR" : "DUMATING SA ELEVATOR";
           if (currentFloor === 2) kioskStyle = { left: 820, top: 460 };
           else if (currentFloor >= 3 && currentFloor <= 5) kioskStyle = { left: 600, top: 410 };
           else if (currentFloor >= 6) kioskStyle = { left: 620, top: 350 };
@@ -682,12 +701,24 @@ export default function MapScreen({
       onTouchCancel={() => { pinch.current = null; handleDragEnd(); }}
     >
 
-      {/* Walang kontrol sa naka-lock na tanawin — larawan lang ito. */}
-      {!staticView && (
+      {/* Walang kontrol sa naka-lock na tanawin — larawan lang ito. Ang
+          floor tag lang ang natitira roon, mag-isa sa sulok. */}
+      {staticView ? (
+        <div className="floor-selector map-floor-solo">{floorTag}</div>
+      ) : (
         <div className="floor-selector" style={{ position: 'absolute', top: 30, right: 30, zIndex: 10, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => zoomBy(0.15)}>➕</button>
-          <button className="ui-action-btn zoom-btn" style={{ height: '45px', fontSize: '1.2rem' }} onClick={() => zoomBy(-0.15)}>➖</button>
-          <button className="ui-action-btn reset-view-btn" style={{ height: '45px', fontSize: '1rem' }} onClick={resetView} title={EN ? 'Recenter map' : 'Ibalik sa gitna ang mapa'}>⟲</button>
+          {floorTag}
+          {/* Salita, hindi + / − / ⟲: hindi alam ng lahat ng bisita kung
+              ano ang ibig sabihin ng mga simbolo. */}
+          <button className="ui-action-btn zoom-btn map-ctrl-btn" onClick={() => zoomBy(0.15)}>
+            {EN ? 'Zoom in' : 'Palakihin'}
+          </button>
+          <button className="ui-action-btn zoom-btn map-ctrl-btn" onClick={() => zoomBy(-0.15)}>
+            {EN ? 'Zoom out' : 'Paliitin'}
+          </button>
+          <button className="ui-action-btn reset-view-btn map-ctrl-btn" onClick={resetView} title={EN ? 'Recenter map' : 'Ibalik sa gitna ang mapa'}>
+            {EN ? 'Reset' : 'I-reset'}
+          </button>
         </div>
       )}
 
@@ -866,7 +897,6 @@ export default function MapScreen({
             <>
               <div className="structural-element garden-area" style={{ width: '400px', height: '220px', left: '350px', top: '730px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
-                  <div style={{ fontSize: '2.2rem', display: 'flex', gap: '15px', justifyContent: 'center' }}>🌿 🪴 🌴</div>
                   <div style={{ textAlign: 'center', fontWeight: '800', marginTop: '10px' }}>{EN ? 'Atrium Garden' : 'Hardin ng Atrium'}</div>
                 </div>
               </div>
@@ -902,7 +932,6 @@ export default function MapScreen({
               {/* Parking area — nasa labas ng gusali, kaliwang bahagi. */}
               <div className="structural-element parking-area" style={{ width: '240px', height: '150px', left: '20px', top: '730px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
-                  <div style={{ fontSize: '2rem' }}>🅿️ 🚗</div>
                   <div style={{ textAlign: 'center', fontWeight: '800', marginTop: '8px' }}>{EN ? 'Parking Area' : 'Paradahan'}</div>
                 </div>
               </div>

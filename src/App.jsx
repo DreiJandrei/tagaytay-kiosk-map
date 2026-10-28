@@ -13,6 +13,7 @@ import MapScreen from './components/MapScreen';
 import AdminPanel from './admin/AdminPanel';
 import AuthKeyboard from './components/AuthKeyboard';
 import KioskLockScreen from './components/KioskLockScreen';
+import StillThereModal from './components/StillThereModal';
 import './index.css';
 
 import { QRCodeSVG } from 'qrcode.react';
@@ -84,15 +85,15 @@ function OfficeMeta({ office, lang }) {
       </p>
 
       {hasText(office.hours) && (
-        <p className="meta-row">🕒 <strong>{lang === 'EN' ? 'Hours' : 'Oras'}</strong> {localizeHours(office.hours, lang)}</p>
+        <p className="meta-row"><strong>{lang === 'EN' ? 'Hours' : 'Oras'}</strong> {localizeHours(office.hours, lang)}</p>
       )}
 
       {hasText(office.head) && (
-        <p className="meta-row">👤 <strong>{lang === 'EN' ? 'Contact Person' : 'Kausapin'}</strong> {office.head}</p>
+        <p className="meta-row"><strong>{lang === 'EN' ? 'Contact Person' : 'Kausapin'}</strong> {office.head}</p>
       )}
 
       {hasText(office.phone) && (
-        <p className="meta-row">📞 <strong>{lang === 'EN' ? 'Direct Line' : 'Telepono'}</strong>
+        <p className="meta-row"><strong>{lang === 'EN' ? 'Direct Line' : 'Telepono'}</strong>
           {office.phone}{hasText(office.local) ? ` · local ${office.local}` : ''}
         </p>
       )}
@@ -111,7 +112,7 @@ function QrCard({ link, lang }) {
     : ['Buksan ang camera ng inyong phone.', 'Itutok sa QR code na ito at huwag gumalaw.', 'Pindutin ang link na lalabas — bubukas ang mapa.'];
   return (
     <div className="qr-card">
-      <span className="qr-title">📱 {EN ? 'Scan for live mobile map' : 'I-scan para sa live mobile map'}</span>
+      <span className="qr-title">{EN ? 'Scan for live mobile map' : 'I-scan para sa live mobile map'}</span>
       <div className="qr-frame">
         <QRCodeSVG value={link} size={130} bgColor={"#ffffff"} fgColor={"#0F172A"} />
       </div>
@@ -132,6 +133,11 @@ function QrCard({ link, lang }) {
 // Hindi ito ang kandado — ang password at ang Supabase RLS iyon. Ito ay
 // para hindi aksidenteng lumabas ang login sa harap ng bisita.
 const ADMIN_TAPS = 15;
+
+// Walang pumipindot nang IDLE_MS → "Nandiyan pa ba kayo?". Walang sumagot
+// sa loob ng STILL_THERE_MS → balik sa welcome screen.
+const IDLE_MS = 45 * 1000;
+const STILL_THERE_MS = 45 * 1000;
 const TAP_PAUSE_MS = 1500;
 
 // ── Pahinga ng "Forgot password" ─────────────────────────────────
@@ -221,6 +227,9 @@ export default function App() {
 
   const [showAdmin, setShowAdmin] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false); 
+  // Kailan babalik sa welcome screen kapag walang sumagot sa "Nandiyan
+  // pa ba kayo?". null = nakasara ang tanong.
+  const [stillThereDeadline, setStillThereDeadline] = useState(null);
   const [adminEmailInput, setAdminEmailInput] = useState('');
   const [adminPasswordInput, setAdminPasswordInput] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -502,14 +511,27 @@ export default function App() {
     setShowRecoveryModal(false);
     setRecoveryPassword('');
     setCurrentFloor(1);
+    setStillThereDeadline(null);
     logoutAdmin();
   };
 
+  // Pagkaraan ng IDLE_MS na walang pumipindot, nagtatanong muna ng
+  // "Nandiyan pa ba kayo?" (StillThereModal). Kapag walang sumagot sa
+  // loob ng STILL_THERE_MS, saka pa lang bumabalik sa welcome screen.
   useEffect(() => {
+    if (stillThereDeadline === null) return;
+    const timeout = setTimeout(returnToIdle, Math.max(0, stillThereDeadline - Date.now()));
+    return () => clearTimeout(timeout);
+  }, [stillThereDeadline]);
+
+  useEffect(() => {
+    // Habang nakabukas ang tanong, ang mga buton lang niyon ang sagot —
+    // hindi binibilang ang basta pagdaan ng kamay sa screen.
+    if (stillThereDeadline !== null) return;
     let timeout;
     const resetTimer = () => {
       clearTimeout(timeout);
-      timeout = setTimeout(returnToIdle, 45000);
+      timeout = setTimeout(() => setStillThereDeadline(Date.now() + STILL_THERE_MS), IDLE_MS);
     };
 
     // ITO ANG PINAKAMALAKING BUTAS NA NAHULI NG EVALUATION.
@@ -538,7 +560,7 @@ export default function App() {
       window.removeEventListener('touchstart', resetTimer);
       window.removeEventListener('click', resetTimer);
     };
-  }, [appState, isVisitorView]);
+  }, [appState, isVisitorView, stillThereDeadline]);
 
   // ── Mga pindot na sa kiosk lang ──────────────────────────────
   // Nakatago na ang mga buton na ito sa tanawin ng bisita (tingnan ang
@@ -586,8 +608,8 @@ export default function App() {
       if (!isWrongPassword(error)) {
         // Hindi ito binibilang — hindi kasalanan ng nagta-type ang internet.
         alert(lang === 'EN'
-          ? '❌ Could not reach the server. Check the internet connection and try again.'
-          : '❌ Hindi maabot ang server. Tingnan ang koneksyon sa internet at subukan ulit.');
+          ? 'Could not reach the server. Check the internet connection and try again.'
+          : 'Hindi maabot ang server. Tingnan ang koneksyon sa internet at subukan ulit.');
         return;
       }
       updateLoginGuard(guardAfterFailure(loginGuard));
@@ -615,8 +637,8 @@ export default function App() {
       // Pareho ang sagot ng Supabase tama man o mali ang email — hindi
       // nito sinasabi kung may ganoong account.
       alert(lang === 'EN'
-        ? '✅ If that is the admin email, a recovery link is on its way.\n\nCheck the Gmail inbox to set a new password. Nothing arrived? Check the spelling of the email.'
-        : '✅ Kung iyan ang email ng admin, papunta na ang recovery link.\n\nTingnan ang Gmail inbox para maglagay ng bagong password. Walang dumating? Tingnan ang baybay ng email.');
+        ? 'If that is the admin email, a recovery link is on its way.\n\nCheck the Gmail inbox to set a new password. Nothing arrived? Check the spelling of the email.'
+        : 'Kung iyan ang email ng admin, papunta na ang recovery link.\n\nTingnan ang Gmail inbox para maglagay ng bagong password. Walang dumating? Tingnan ang baybay ng email.');
     } catch (error) {
       // Dati ay laging "internet connection" ang sinasabi nito kahit ano pa
       // ang tunay na dahilan — kaya mahirap i-debug. Ipakita ang totoo.
@@ -630,11 +652,11 @@ export default function App() {
         const at = new Date(until).toLocaleTimeString(lang === 'EN' ? 'en-PH' : 'fil-PH', { hour: 'numeric', minute: '2-digit' });
         const wait = formatCountdown(until - Date.now());
         alert(lang === 'EN'
-          ? '⏳ Too many reset requests.\n\n' +
+          ? 'Too many reset requests.\n\n' +
             'Supabase limits how many emails can be sent, and that limit has been reached.\n\n' +
             `You can try again in ${wait} (around ${at}). The countdown is shown on the ` +
             '"Forgot password" button.'
-          : '⏳ Sobrang dami nang reset request.\n\n' +
+          : 'Sobrang dami nang reset request.\n\n' +
             'May limitasyon ang Supabase sa dami ng email na maipapadala, at naabot na ito.\n\n' +
             `Puwede ulit pagkalipas ng ${wait} (bandang ${at}). Makikita ang countdown sa ` +
             '"Forgot password" na buton.'
@@ -643,10 +665,10 @@ export default function App() {
       }
 
       alert(lang === 'EN'
-        ? '❌ Failed to send reset email.\n\n' +
+        ? 'Failed to send reset email.\n\n' +
           `Reason: ${error?.message || 'Unknown'}` +
           (error?.status ? ` (HTTP ${error.status})` : '')
-        : '❌ Hindi naipadala ang reset email.\n\n' +
+        : 'Hindi naipadala ang reset email.\n\n' +
           `Dahilan: ${error?.message || 'Hindi matukoy'}` +
           (error?.status ? ` (HTTP ${error.status})` : '')
       );
@@ -883,7 +905,6 @@ export default function App() {
     const steps = [{
       floor: 1,
       officeKey: method === 'stairs' ? 'stairs-up' : 'elevator-up',
-      icon: '📍',
       title: EN ? 'Start here' : 'Dito magsimula',
       body: EN
         ? `You are at the map kiosk on the Ground Floor. Follow the line to the ${ride}.`
@@ -891,7 +912,6 @@ export default function App() {
     }];
 
     const arrive = {
-      icon: '🎯',
       title: EN ? `Arrive at ${office.title}` : `Dumating sa ${office.title}`,
     };
 
@@ -910,7 +930,6 @@ export default function App() {
         } : {
           floor: f,
           officeKey: null,
-          icon: '🚶',
           title: EN ? 'Take the stairs up' : 'Umakyat sa hagdan',
           // Sa 2nd at 5th Floor, hindi tumutuloy paakyat ang hagdang
           // dinatnan — nasa ilalim ng Small Library (2nd) o sa gitna,
@@ -985,8 +1004,8 @@ export default function App() {
   const guideStep = guide ? guide.steps[guide.index] : null;
   const guideKioskLabel = guideStep && guideStep.officeKey === null
     ? (lang === 'EN'
-      ? `🚶 PASSING FLOOR ${guideStep.floor}`
-      : `🚶 DINARAANAN — PALAPAG ${guideStep.floor}`)
+      ? `PASSING FLOOR ${guideStep.floor}`
+      : `DINARAANAN — PALAPAG ${guideStep.floor}`)
     : null;
 
   // Mga opisinang ipinapakita sa listahan ng kasalukuyang palapag
@@ -996,7 +1015,6 @@ export default function App() {
   if (isMobileSessionExpired) {
     return (
       <div className="sys sys--alert">
-        <span className="sys-icon">⏱️</span>
         <h2 className="sys-title">Session Expired</h2>
         <p className="sys-text">
           For security purposes, this mobile map link is no longer valid. A scanned link works
@@ -1046,7 +1064,6 @@ export default function App() {
   if (isVisitorView && visitorRouteFloor === null) {
     return (
       <div className="sys sys--alert">
-        <span className="sys-icon">🗺️</span>
         <h2 className="sys-title">Route Unavailable</h2>
         <p className="sys-text">
           This office is no longer listed in the directory, so the saved route cannot be shown.
@@ -1113,7 +1130,7 @@ export default function App() {
     <div className="map-guide">
       <div className="map-guide-head">
         <span className="map-guide-cap">
-          🧭 {lang === 'EN'
+          {lang === 'EN'
             ? `Step ${guide.index + 1} of ${guide.steps.length}`
             : `Hakbang ${guide.index + 1} ng ${guide.steps.length}`}
         </span>
@@ -1137,7 +1154,6 @@ export default function App() {
       </div>
 
       <div className="map-guide-now" key={guide.index}>
-        <span className="map-guide-icon">{guideStep.icon}</span>
         <div className="map-guide-text">
           <span className="map-guide-floor">{floorName(guideStep.floor, lang)}</span>
           <h3>{guideStep.title}</h3>
@@ -1166,7 +1182,6 @@ export default function App() {
     </div>
   ) : canOpenGuide ? (
     <button className="map-guide-open" onClick={openGuide}>
-      <span className="map-guide-open-ico">🧭</span>
       <span className="map-guide-open-text">
         <strong>{lang === 'EN' ? 'Step-by-step directions' : 'Hakbang-hakbang na direksyon'}</strong>
         <small>{lang === 'EN' ? 'See the way floor by floor' : 'Tingnan ang daan bawat palapag'}</small>
@@ -1198,7 +1213,6 @@ export default function App() {
               onClick={returnToIdle}
               title={lang === 'EN' ? 'Back to the start screen' : 'Bumalik sa simula'}
             >
-              <span className="hdr-btn-glyph">🏠</span>
               <span className="hdr-btn-label">{lang === 'EN' ? 'Back to Idle' : 'Bumalik sa Simula'}</span>
             </button>
           )}
@@ -1237,7 +1251,6 @@ export default function App() {
           </button>
 
           <button className="hdr-btn" onClick={() => setLang(lang === 'EN' ? 'TL' : 'EN')}>
-            <span className="hdr-btn-glyph">🌐</span>
             <span className="hdr-btn-label">{lang === 'EN' ? 'English' : 'Tagalog'}</span>
           </button>
 
@@ -1245,7 +1258,6 @@ export default function App() {
             className={`hdr-btn${isDarkMode ? ' is-on' : ''}`}
             onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
           >
-            <span className="hdr-btn-glyph">{isDarkMode ? '☀️' : '🌙'}</span>
             <span className="hdr-btn-label">
               {lang === 'EN' ? (isDarkMode ? 'Light' : 'Dark') : (isDarkMode ? 'Maliwanag' : 'Madilim')}
             </span>
@@ -1289,7 +1301,7 @@ export default function App() {
             {!isVisitorView && searchQuery.trim() !== "" && filteredSearchOptions.length > 0 && (
               <section className="sb-panel">
                 <header className="sb-panel-head">
-                  🔍 {lang === 'EN' ? 'Search Results' : 'Resulta ng Paghahanap'}
+                  {lang === 'EN' ? 'Search Results' : 'Resulta ng Paghahanap'}
                 </header>
                 {filteredSearchOptions.map((officeItem) => (
                   <div
@@ -1297,7 +1309,7 @@ export default function App() {
                     className="result-row"
                     onClick={() => handleSearchSelect(officeItem.key, officeItem.floor)}
                   >
-                    <span className="result-badge">📍 {localizeBadge(officeItem.badge, lang)}</span>
+                    <span className="result-badge">{localizeBadge(officeItem.badge, lang)}</span>
                     <span className="result-title">{officeItem.title}</span>
                   </div>
                 ))}
@@ -1307,7 +1319,7 @@ export default function App() {
             {!isVisitorView && searchQuery.trim() === "" && showKeyboard && popularSearches.length > 0 && (
               <section className="sb-panel sb-panel--gold">
                 <header className="sb-panel-head">
-                  🔥 {lang === 'EN' ? 'Frequently Searched' : 'Madalas Hanapin'}
+                  {lang === 'EN' ? 'Frequently Searched' : 'Madalas Hanapin'}
                 </header>
                 {popularSearches.map((officeItem) => (
                   <div
@@ -1315,7 +1327,7 @@ export default function App() {
                     className="result-row"
                     onClick={() => handleSearchSelect(officeItem.key, officeItem.floor)}
                   >
-                    <span className="result-badge">📍 {localizeBadge(officeItem.badge, lang)} • 🔍 {officeItem.searchCount || 0}</span>
+                    <span className="result-badge">{localizeBadge(officeItem.badge, lang)} • {officeItem.searchCount || 0} {lang === 'EN' ? 'searches' : 'hanap'}</span>
                     <span className="result-title">{officeItem.title}</span>
                   </div>
                 ))}
@@ -1323,7 +1335,7 @@ export default function App() {
             )}
 
             {/* Ang listahan ng buong palapag — ito ang dating naabot ng
-                bisita sa pamamagitan ng "⬅️ Floor N list" na buton sa
+                bisita sa pamamagitan ng "Floor N list" na buton sa
                 ibaba, at ito ang ibig sabihin ng "na-access nila ang
                 kiosk". Wala na ang buton na iyon sa telepono, pero
                 nakasara na rin ang listahan mismo. */}
@@ -1360,7 +1372,6 @@ export default function App() {
                     ))
                   ) : (
                     <div className="sb-empty">
-                      <span>🚧</span>
                       <p>{lang === 'EN' ? 'No offices mapped for this floor yet.' : 'Wala pang nakatalang opisina sa palapag na ito.'}</p>
                     </div>
                   )}
@@ -1402,7 +1413,6 @@ export default function App() {
             {routeStep === 'go-to-transport' && destinationData && (
               <div>
                 <div className="route-status">
-                  <span className="route-status-icon">📍</span>
                   <h2>{lang === 'EN' ? 'Showing route on the Ground Floor' : 'Ipinapakita ang ruta sa Ground Floor'}</h2>
                   <p>
                     {lang === 'EN' ? 'Please proceed to the ' : 'Pumunta po sa '}
@@ -1410,7 +1420,7 @@ export default function App() {
                   </p>
                 </div>
                 <div className="route-status-step">
-                  ⏳ {lang === 'EN'
+                  {lang === 'EN'
                         ? (transportMethod === 'elevator'
                           ? `Going up to Floor ${destinationData.floor}…`
                           : transportMethod === 'escalator'
@@ -1428,7 +1438,6 @@ export default function App() {
             {routeStep === 'climbing-stairs' && destinationData && (
               <div>
                 <div className="route-status route-status--gold">
-                  <span className="route-status-icon">🚶</span>
                   <h2>{lang === 'EN' ? 'Climbing stairs…' : 'Umaakyat sa hagdan…'}</h2>
                   <p>{lang === 'EN' ? `Currently passing Floor ${currentFloor}` : `Kasalukuyang nasa Palapag ${currentFloor}`}</p>
                   {currentFloor === 2 && (
@@ -1442,7 +1451,7 @@ export default function App() {
                       : 'Lumakad papunta sa hagdan sa gitna, paglabas ng elevator, para tumuloy paakyat.'}</p>
                   )}
                 </div>
-                <div className="route-status-step">🎯 {lang === 'EN' ? 'Target' : 'Papunta sa'}: {floorName(destinationData.floor, lang)}</div>
+                <div className="route-status-step">{lang === 'EN' ? 'Target' : 'Papunta sa'}: {floorName(destinationData.floor, lang)}</div>
               </div>
             )}
 
@@ -1483,7 +1492,7 @@ export default function App() {
                       className="back-to-list-btn"
                       onClick={() => { setSelectedOfficeKey(null); setRouteStep('idle'); setDestinationData(null); }}
                     >
-                      ⬅️ {lang === 'EN' ? `Floor ${currentFloor} list` : `Palapag ${currentFloor}`}
+                      {lang === 'EN' ? `Floor ${currentFloor} list` : `Palapag ${currentFloor}`}
                     </button>
                   </div>
                 )}
@@ -1505,7 +1514,7 @@ export default function App() {
 
                 {selectedOffice.isDirectionOnly ? (
                   <div className="wayfinding-note">
-                    🚶 <strong>{lang === 'EN' ? 'Wayfinding path generated.' : 'Nakahanda na ang daan.'}</strong>{' '}
+                    <strong>{lang === 'EN' ? 'Wayfinding path generated.' : 'Nakahanda na ang daan.'}</strong>{' '}
                     {lang === 'EN'
                       ? 'Please follow the highlighted path on the map.'
                       : 'Sundan po ang linyang nakahighlight sa mapa.'}
@@ -1548,7 +1557,7 @@ export default function App() {
 
         {isVisitorView && (
           <div className="screenshot-hint">
-            <strong>📸 {lang === 'EN' ? 'Take a screenshot' : 'Mag-screenshot'}</strong>
+            <strong>{lang === 'EN' ? 'Take a screenshot' : 'Mag-screenshot'}</strong>
             <span>{lang === 'EN'
               ? 'Session expires when the screen is locked or idle.'
               : 'Mawawala ang session kapag na-lock o hindi ginalaw ang screen.'}</span>
@@ -1676,7 +1685,7 @@ export default function App() {
             </div>
 
             <p className="route-pick-hint">
-              👆 {lang === 'EN'
+              {lang === 'EN'
                 ? 'Pick one and the route will be drawn on the map.'
                 : 'Pumili po at iguguhit na ang ruta sa mapa.'}
             </p>
@@ -1752,7 +1761,6 @@ export default function App() {
       {showRecoveryModal && (
         <div className="k-overlay">
           <div className="k-modal k-modal--sm" ref={authModalRef} style={{ textAlign: 'center' }}>
-            <span className="k-modal-icon" style={{ margin: '0 auto 16px' }}>🔑</span>
             <h2 className="k-modal-title" style={{ marginBottom: '10px' }}>
               {lang === 'EN' ? 'Set New Password' : 'Maglagay ng Bagong Password'}
             </h2>
@@ -1766,23 +1774,23 @@ export default function App() {
               e.preventDefault();
               if (!isStrongPassword(recoveryPassword)) {
                 return alert(lang === 'EN'
-                  ? '❌ Weak Password:\n\nPassword must be at least 8 characters long and include:\n- At least 1 Uppercase letter\n- At least 1 Lowercase letter\n- At least 1 Number'
-                  : '❌ Mahinang Password:\n\nKailangang hindi bababa sa 8 na karakter ang password at may kasamang:\n- Kahit 1 malaking letra\n- Kahit 1 maliit na letra\n- Kahit 1 numero');
+                  ? 'Weak Password:\n\nPassword must be at least 8 characters long and include:\n- At least 1 Uppercase letter\n- At least 1 Lowercase letter\n- At least 1 Number'
+                  : 'Mahinang Password:\n\nKailangang hindi bababa sa 8 na karakter ang password at may kasamang:\n- Kahit 1 malaking letra\n- Kahit 1 maliit na letra\n- Kahit 1 numero');
               }
               try {
                 setIsLoggingIn(true);
                 await changeAdminPassword(recoveryPassword);
                 alert(lang === 'EN'
-                  ? '✅ Password successfully changed! You can now login.'
-                  : '✅ Matagumpay na napalitan ang password! Maaari na kayong mag-login.');
+                  ? 'Password successfully changed! You can now login.'
+                  : 'Matagumpay na napalitan ang password! Maaari na kayong mag-login.');
                 setShowRecoveryModal(false);
                 setRecoveryPassword('');
                 await logoutAdmin(); 
                 setShowAdminLogin(true); 
               } catch (err) {
                 alert(lang === 'EN'
-                  ? '❌ Failed to update password. Link might be expired.'
-                  : '❌ Hindi na-update ang password. Baka expired na ang link.');
+                  ? 'Failed to update password. Link might be expired.'
+                  : 'Hindi na-update ang password. Baka expired na ang link.');
               } finally {
                 setIsLoggingIn(false);
               }
@@ -1801,14 +1809,14 @@ export default function App() {
                   required
                 />
                 <button type="button" className="k-eye" onClick={() => setShowPassword(!showPassword)}>
-                  {showPassword ? '🙈' : '👁️'}
+                  {lang === 'EN' ? (showPassword ? 'Hide' : 'Show') : (showPassword ? 'Itago' : 'Ipakita')}
                 </button>
               </div>
 
               <button type="submit" className="k-btn k-btn--ok" disabled={isLoggingIn}>
                 {lang === 'EN'
-                  ? (isLoggingIn ? 'Saving…' : '💾 Save New Password')
-                  : (isLoggingIn ? 'Sine-save…' : '💾 I-save ang Bagong Password')}
+                  ? (isLoggingIn ? 'Saving…' : 'Save New Password')
+                  : (isLoggingIn ? 'Sine-save…' : 'I-save ang Bagong Password')}
               </button>
 
             </form>
@@ -1819,7 +1827,6 @@ export default function App() {
       {showAdminLogin && (
         <div className="k-overlay">
           <div className="k-modal k-modal--sm" ref={authModalRef} style={{ textAlign: 'center' }}>
-            <span className="k-modal-icon" style={{ margin: '0 auto 16px' }}>🔒</span>
             <h2 className="k-modal-title" style={{ marginBottom: '10px' }}>
               {lang === 'EN' ? 'Admin Access' : 'Pagpasok ng Admin'}
             </h2>
@@ -1865,20 +1872,20 @@ export default function App() {
                     ? (showPassword ? 'Hide password' : 'Show password')
                     : (showPassword ? 'Itago ang password' : 'Ipakita ang password')}
                 >
-                  {showPassword ? '🙈' : '👁️'}
+                  {lang === 'EN' ? (showPassword ? 'Hide' : 'Show') : (showPassword ? 'Itago' : 'Ipakita')}
                 </button>
               </div>
 
               {/* Ilang subok pa, o gaano pa katagal ang lock. */}
               {loginLocked ? (
                 <p className="k-login-guard is-locked" role="alert">
-                  🔒 {lang === 'EN'
+                  {lang === 'EN'
                     ? `Too many wrong passwords. Try again in ${formatCountdown(loginGuard.lockUntil - guardNow)}.`
                     : `Sobrang daming maling password. Subukan ulit sa loob ng ${formatCountdown(loginGuard.lockUntil - guardNow)}.`}
                 </p>
               ) : loginGuard.fails > 0 && (
                 <p className="k-login-guard" role="alert">
-                  ⚠️ {lang === 'EN'
+                  {lang === 'EN'
                     ? `Wrong email or password. ${MAX_LOGIN_ATTEMPTS - loginGuard.fails} ${MAX_LOGIN_ATTEMPTS - loginGuard.fails === 1 ? 'try' : 'tries'} left before it locks.`
                     : `Mali ang email o password. ${MAX_LOGIN_ATTEMPTS - loginGuard.fails} subok na lang bago ma-lock.`}
                 </p>
@@ -1902,8 +1909,8 @@ export default function App() {
               <button type="button" className="k-btn k-btn--link" onClick={handleForgotPassword} disabled={resetLocked}>
                 {resetLocked
                   ? (lang === 'EN'
-                    ? `⏳ Reset link: try again in ${formatCountdown(resetCooldownUntil - guardNow)}`
-                    : `⏳ Reset link: puwede ulit sa loob ng ${formatCountdown(resetCooldownUntil - guardNow)}`)
+                    ? `Reset link: try again in ${formatCountdown(resetCooldownUntil - guardNow)}`
+                    : `Reset link: puwede ulit sa loob ng ${formatCountdown(resetCooldownUntil - guardNow)}`)
                   : lang === 'EN'
                   ? 'Forgot password? Send reset link'
                   : 'Nakalimutan ang password? Magpadala ng reset link'}
@@ -1929,6 +1936,16 @@ export default function App() {
           containing block at malilihis (o maiipit sa overflow) ang keyboard.
           Dito, ang viewport lagi ang sukatan. */}
       {(showAdminLogin || showRecoveryModal) && <AuthKeyboard scopeRef={authModalRef} lang={lang} />}
+
+      {/* Huli sa DOM para nasa ibabaw ng lahat, pati ng Admin Panel. */}
+      {stillThereDeadline !== null && (
+        <StillThereModal
+          deadline={stillThereDeadline}
+          lang={lang}
+          onStay={() => setStillThereDeadline(null)}
+          onLeave={returnToIdle}
+        />
+      )}
     </div>
   );
 }

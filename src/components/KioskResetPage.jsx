@@ -118,14 +118,14 @@ export default function KioskResetPage() {
             </div>
             {message && <p className="k-login-guard is-locked" role="alert">{message}</p>}
             <button type="submit" className="k-btn k-btn--primary" disabled={busy}>
-              {busy ? 'Sending…' : '✉️ Send reset link'}
+              {busy ? 'Sending…' : 'Send reset link'}
             </button>
           </form>
         )}
 
         {stage === 'sent' && (
           <p className="k-modal-text k-modal-text--center" style={{ marginBottom: 0 }}>
-            ✅ If that is the kiosk account email, a link is on its way. Open the newest
+            If that is the kiosk account email, a link is on its way. Open the newest
             "Reset Password" email in the Gmail inbox. The link works only once. Nothing
             arrived? Check the spelling of the email and send again.
           </p>
@@ -141,7 +141,7 @@ export default function KioskResetPage() {
         {stage === 'failed' && (
           <>
             <p className="k-modal-text k-modal-text--center">
-              ⏱️ This reset link has expired or was already used. Send a new one.
+              This reset link has expired or was already used. Send a new one.
             </p>
             <button type="button" className="k-btn k-btn--primary" onClick={restart}>
               Start again
@@ -180,14 +180,14 @@ export default function KioskResetPage() {
             </div>
             {message && <p className="k-login-guard is-locked" role="alert">{message}</p>}
             <button type="submit" className="k-btn k-btn--ok" disabled={busy}>
-              {busy ? 'Saving…' : '💾 Save new password'}
+              {busy ? 'Saving…' : 'Save new password'}
             </button>
           </form>
         )}
 
         {stage === 'done' && (
           <p className="k-modal-text k-modal-text--center" style={{ marginBottom: 0 }}>
-            ✅ Password changed. Supabase may sign out kiosks that were unlocked with the old
+            Password changed. Supabase may sign out kiosks that were unlocked with the old
             password. If a kiosk shows "Kiosk Locked", enter the new password there.
           </p>
         )}

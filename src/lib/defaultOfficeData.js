@@ -264,28 +264,28 @@ export const defaultOfficeData = {
   },
   4: {
     "const-west": {
-      title: "🚧 UNDER CONSTRUCTION",
+      title: "UNDER CONSTRUCTION",
       badge: "4th Floor - West Wing",
       hours: "Closed for Renovation",
       head: "City Engineering",
       requirements: []
     },
     "const-north": {
-      title: "🚧 UNDER CONSTRUCTION",
+      title: "UNDER CONSTRUCTION",
       badge: "4th Floor - North Wing",
       hours: "Closed for Renovation",
       head: "City Engineering",
       requirements: []
     },
     "const-east": {
-      title: "🚧 UNDER CONSTRUCTION",
+      title: "UNDER CONSTRUCTION",
       badge: "4th Floor - East Wing",
       hours: "Closed for Renovation",
       head: "City Engineering",
       requirements: []
     },
     "const-south": {
-      title: "🚧 UNDER CONSTRUCTION",
+      title: "UNDER CONSTRUCTION",
       badge: "4th Floor - South Wing",
       hours: "Closed for Renovation",
       head: "City Engineering",
@@ -332,7 +332,7 @@ export const defaultOfficeData = {
       requirements: ["Appointment Schedule"]
     },
     "const-south-5": {
-      title: "🚧 UNDER CONSTRUCTION",
+      title: "UNDER CONSTRUCTION",
       badge: "5th Floor - South",
       hours: "Closed for Renovation",
       head: "City Engineering",

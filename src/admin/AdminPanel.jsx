@@ -153,26 +153,26 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
       setLiftSaved((prev) => ({ ...prev, [lift]: status }));
       alert(status === 'available'
         ? t(
-            `✅ Saved! The ${name} is back as a choice on the kiosk within a minute.`,
-            `✅ Nai-save na! Mapipili na ulit ang ${name} sa kiosk sa loob ng isang minuto.`,
+            `Saved! The ${name} is back as a choice on the kiosk within a minute.`,
+            `Nai-save na! Mapipili na ulit ang ${name} sa kiosk sa loob ng isang minuto.`,
           )
         : lift === 'elevator'
           ? t(
-              '✅ Saved! Within a minute the kiosk will stop sending visitors to the elevator '
+              'Saved! Within a minute the kiosk will stop sending visitors to the elevator '
               + 'and point them to the stairs instead.',
-              '✅ Nai-save na! Sa loob ng isang minuto, hindi na ituturo ng kiosk ang elevator — '
+              'Nai-save na! Sa loob ng isang minuto, hindi na ituturo ng kiosk ang elevator — '
               + 'sa hagdan na papupuntahin ang mga bisita.',
             )
           : t(
-              '✅ Saved! Within a minute the kiosk will mark the escalator on the map '
+              'Saved! Within a minute the kiosk will mark the escalator on the map '
               + 'and stop offering it as a way up to Floor 2.',
-              '✅ Nai-save na! Sa loob ng isang minuto, may marka na ang escalator sa mapa '
+              'Nai-save na! Sa loob ng isang minuto, may marka na ang escalator sa mapa '
               + 'at hindi na ito mapipili paakyat sa Palapag 2.',
             ));
     } catch (error) {
       alert(t(
-        `❌ The ${name} status was not saved.\n\n${error.message || error}`,
-        `❌ Hindi na-save ang kalagayan ng ${name}.\n\n${error.message || error}`,
+        `The ${name} status was not saved.\n\n${error.message || error}`,
+        `Hindi na-save ang kalagayan ng ${name}.\n\n${error.message || error}`,
       ));
     } finally { setIsSaving(false); }
   };
@@ -198,9 +198,9 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     // pagbura ng nakatala na ay bukas pa rin kahit puno na.
     if (!video && isVideoListFull) {
       return alert(t(
-        `❌ ${MAX_VIDEOS} items is the limit.\n\n`
+        `${MAX_VIDEOS} items is the limit.\n\n`
         + 'Delete one on the list first before adding another.',
-        `❌ ${MAX_VIDEOS} na tala lang ang hangganan.\n\n`
+        `${MAX_VIDEOS} na tala lang ang hangganan.\n\n`
         + 'Burahin muna ang isa sa listahan bago magdagdag ng bago.',
       ));
     }
@@ -255,12 +255,12 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
 
     if (file.size > limit) {
       return alert(t(
-        `❌ That file is too large (${formatBytes(file.size)}).\n\n`
+        `That file is too large (${formatBytes(file.size)}).\n\n`
         + `The limit is ${formatBytes(limit)}. `
         + (image
           ? 'Shrink the picture first (or save it as JPG).'
           : 'Compress the video first, or trim it to a shorter clip.'),
-        `❌ Masyadong malaki ang file (${formatBytes(file.size)}).\n\n`
+        `Masyadong malaki ang file (${formatBytes(file.size)}).\n\n`
         + `Ang hangganan ay ${formatBytes(limit)}. `
         + (image
           ? 'Paliitin muna ang larawan (o i-save bilang JPG).'
@@ -297,9 +297,9 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
       let hint = '';
       if (/bucket not found/i.test(detail)) {
         hint = t(
-          '\n\n👉 THERE IS NO BUCKET YET.\n'
+          '\n\nTHERE IS NO BUCKET YET.\n'
           + 'Supabase → Storage → New bucket → name: kiosk-videos → turn ON Public bucket.',
-          '\n\n👉 WALA PANG BUCKET.\n'
+          '\n\nWALA PANG BUCKET.\n'
           + 'Supabase → Storage → New bucket → pangalan: kiosk-videos → i-ON ang Public bucket.',
         );
       } else if (/mime type|not supported/i.test(detail)) {
@@ -307,28 +307,28 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
         // makikita ng admin kapag larawan ang unang ini-upload sa isang
         // kiosk na na-set up bago pa dumating ang larawan.
         hint = t(
-          '\n\n👉 THE STORAGE DOES NOT ACCEPT PICTURES YET.\n'
+          '\n\nTHE STORAGE DOES NOT ACCEPT PICTURES YET.\n'
           + 'Run supabase/kiosk_videos_storage.sql again in Supabase → SQL Editor, '
           + 'or Storage → kiosk-videos → Settings → add image/jpeg, image/png, image/webp.',
-          '\n\n👉 HINDI PA TUMATANGGAP NG LARAWAN ANG STORAGE.\n'
+          '\n\nHINDI PA TUMATANGGAP NG LARAWAN ANG STORAGE.\n'
           + 'Patakbuhin ulit ang supabase/kiosk_videos_storage.sql sa Supabase → SQL Editor, '
           + 'o Storage → kiosk-videos → Settings → idagdag ang image/jpeg, image/png, image/webp.',
         );
       } else if (/row-level security|policy|unauthorized|403/i.test(detail)) {
         hint = t(
-          '\n\n👉 THE BUCKET EXISTS, BUT UPLOADS ARE BLOCKED.\n'
+          '\n\nTHE BUCKET EXISTS, BUT UPLOADS ARE BLOCKED.\n'
           + 'A permission is missing. Supabase → Storage → Policies → find '
           + 'kiosk-videos → New policy → allow INSERT and DELETE for the '
           + '“authenticated” role.',
-          '\n\n👉 MAY BUCKET NA, PERO BAWAL MAG-UPLOAD.\n'
+          '\n\nMAY BUCKET NA, PERO BAWAL MAG-UPLOAD.\n'
           + 'Kulang ang permission. Supabase → Storage → Policies → hanapin ang '
           + 'kiosk-videos → New policy → payagan ang INSERT at DELETE para sa '
           + '“authenticated” na role.',
         );
       }
       alert(t(
-        `❌ The file was not uploaded.\n\n${detail}${hint}`,
-        `❌ Hindi na-upload ang file.\n\n${detail}${hint}`,
+        `The file was not uploaded.\n\n${detail}${hint}`,
+        `Hindi na-upload ang file.\n\n${detail}${hint}`,
       ));
     } finally { setIsUploading(false); }
   };
@@ -341,22 +341,22 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     // ng ibang admin ang listahan sa ibang kiosk.
     if (!videoForm.id && isVideoListFull) {
       return alert(t(
-        `❌ ${MAX_VIDEOS} items is the limit — this one was not saved.\n\n`
+        `${MAX_VIDEOS} items is the limit — this one was not saved.\n\n`
         + 'Delete one on the list first.',
-        `❌ ${MAX_VIDEOS} na tala lang ang hangganan — hindi na-save ito.\n\n`
+        `${MAX_VIDEOS} na tala lang ang hangganan — hindi na-save ito.\n\n`
         + 'Burahin muna ang isa sa listahan.',
       ));
     }
 
     const problem = validateVideoUrl(videoForm.source_url, videoForm.video_type, lang);
-    if (problem) return alert(`❌ ${problem}`);
+    if (problem) return alert(`${problem}`);
 
     if (isPortraitBackground(videoForm)) {
       return alert(t(
-        '❌ The background only takes LANDSCAPE (wide) videos and pictures.\n\n'
+        'The background only takes LANDSCAPE (wide) videos and pictures.\n\n'
         + 'This one is portrait (upright) — on a full screen it would be mostly black bars. '
         + 'Set “Where it shows” to Announcement instead, or use a landscape version.',
-        '❌ LANDSCAPE (pahiga) lang ang puwede sa background.\n\n'
+        'LANDSCAPE (pahiga) lang ang puwede sa background.\n\n'
         + 'Portrait (patayo) ito — sa buong screen, puro itim na gilid ang lalabas. '
         + 'Gawing Anunsyo ang “Saan lalabas”, o gumamit ng landscape na bersyon.',
       ));
@@ -384,14 +384,14 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
         ));
       } else {
         alert(t(
-          '🎬 Saved! It will show up on the welcome screen within a minute.',
-          '🎬 Nai-save na! Lalabas na ito sa welcome screen sa loob ng isang minuto.',
+          'Saved! It will show up on the welcome screen within a minute.',
+          'Nai-save na! Lalabas na ito sa welcome screen sa loob ng isang minuto.',
         ));
       }
     } catch (error) {
       alert(t(
-        `❌ Failed to save video.\n\n${error.message || error}`,
-        `❌ Hindi na-save ang video.\n\n${error.message || error}`,
+        `Failed to save video.\n\n${error.message || error}`,
+        `Hindi na-save ang video.\n\n${error.message || error}`,
       ));
     } finally { setIsSaving(false); }
   };
@@ -418,8 +418,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
       setVideoForm(null);
     } catch (error) {
       alert(t(
-        `❌ Failed to delete video.\n\n${error.message || error}`,
-        `❌ Hindi nabura ang video.\n\n${error.message || error}`,
+        `Failed to delete video.\n\n${error.message || error}`,
+        `Hindi nabura ang video.\n\n${error.message || error}`,
       ));
     } finally { setIsSaving(false); }
   };
@@ -573,8 +573,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
       setAnnouncementText(next.announcement || '');
       setAnnEditor(null);
       alert(t(
-        '✅ Saved! It will show up on the welcome screen within a minute.',
-        '✅ Nai-save na! Makikita ito sa welcome screen sa loob ng isang minuto.',
+        'Saved! It will show up on the welcome screen within a minute.',
+        'Nai-save na! Makikita ito sa welcome screen sa loob ng isang minuto.',
       ));
     } catch (error) {
       alert(t(
@@ -593,8 +593,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     if (guard.lockUntil > Date.now()) {
       const wait = formatCountdown(guard.lockUntil - Date.now());
       return alert(t(
-        `🔒 Too many wrong passwords. Try again in ${wait}.`,
-        `🔒 Sobrang daming maling password. Subukan ulit sa loob ng ${wait}.`,
+        `Too many wrong passwords. Try again in ${wait}.`,
+        `Sobrang daming maling password. Subukan ulit sa loob ng ${wait}.`,
       ));
     }
     if (!currentPassword) {
@@ -622,8 +622,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
 
     if (newPassword.length < 6 || !hasUpper || !hasLower || !hasNumber) {
       return alert(t(
-        '❌ Weak Password:\n\nPassword must be at least 6 characters long and include:\n- At least 1 Uppercase letter\n- At least 1 Lowercase letter\n- At least 1 Number',
-        '❌ Mahinang Password:\n\nKailangang hindi bababa sa 6 na karakter ang password at may kasamang:\n- Kahit 1 malaking letra\n- Kahit 1 maliit na letra\n- Kahit 1 numero',
+        'Weak Password:\n\nPassword must be at least 6 characters long and include:\n- At least 1 Uppercase letter\n- At least 1 Lowercase letter\n- At least 1 Number',
+        'Mahinang Password:\n\nKailangang hindi bababa sa 6 na karakter ang password at may kasamang:\n- Kahit 1 malaking letra\n- Kahit 1 maliit na letra\n- Kahit 1 numero',
       ));
     }
     if (newPassword === currentPassword) {
@@ -641,8 +641,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
       setNewPassword('');
       setConfirmPassword('');
       alert(t(
-        '✅ Admin Password updated securely in the cloud!\n\nYou will now be logged out. Please login again using your new password.',
-        '✅ Ligtas nang na-update ang Admin Password sa cloud!\n\nMa-lo-log out po kayo ngayon. Mag-login ulit gamit ang bagong password.',
+        'Admin Password updated securely in the cloud!\n\nYou will now be logged out. Please login again using your new password.',
+        'Ligtas nang na-update ang Admin Password sa cloud!\n\nMa-lo-log out po kayo ngayon. Mag-login ulit gamit ang bagong password.',
       ));
       await logoutAdmin();
       onClose();
@@ -654,19 +654,19 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
         if (next.lockUntil > Date.now()) {
           const wait = formatCountdown(next.lockUntil - Date.now());
           return alert(t(
-            `❌ Wrong current password.\n\n🔒 Too many wrong passwords. Try again in ${wait}.`,
-            `❌ Mali ang kasalukuyang password.\n\n🔒 Sobrang daming maling password. Subukan ulit sa loob ng ${wait}.`,
+            `Wrong current password.\n\nToo many wrong passwords. Try again in ${wait}.`,
+            `Mali ang kasalukuyang password.\n\nSobrang daming maling password. Subukan ulit sa loob ng ${wait}.`,
           ));
         }
         const left = MAX_LOGIN_ATTEMPTS - next.fails;
         return alert(t(
-          `❌ Wrong current password. ${left} ${left === 1 ? 'try' : 'tries'} left before it locks.`,
-          `❌ Mali ang kasalukuyang password. ${left} subok na lang bago ma-lock.`,
+          `Wrong current password. ${left} ${left === 1 ? 'try' : 'tries'} left before it locks.`,
+          `Mali ang kasalukuyang password. ${left} subok na lang bago ma-lock.`,
         ));
       }
       alert(t(
-        '❌ Failed to update password. Check the internet connection and make sure you are still logged in.',
-        '❌ Hindi na-update ang password. Tingnan ang koneksyon sa internet at siguraduhing naka-login pa kayo.',
+        'Failed to update password. Check the internet connection and make sure you are still logged in.',
+        'Hindi na-update ang password. Tingnan ang koneksyon sa internet at siguraduhing naka-login pa kayo.',
       ));
     } finally {
       setIsSavingPassword(false);
@@ -679,7 +679,6 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
 
         <div className="adm-top">
           <h2>
-            🔧
             <span>
               Admin Panel
               <span className="adm-top-sub">
@@ -697,7 +696,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                 onClick={() => setLang(EN ? 'TL' : 'EN')}
                 title={t('Switch to Tagalog', 'Lumipat sa English')}
               >
-                🌐 {t('English', 'Tagalog')}
+                {t('English', 'Tagalog')}
               </button>
             )}
             <button
@@ -725,33 +724,33 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
 
         <div className="adm-tabs">
           <button className={`adm-tab${activeTab === 'announcements' ? ' active' : ''}`} onClick={() => setActiveTab('announcements')}>
-            📢 {t('Announcements', 'Mga Anunsyo')}
+            {t('Announcements', 'Mga Anunsyo')}
           </button>
           <button className={`adm-tab${activeTab === 'offices' ? ' active' : ''}`} onClick={() => setActiveTab('offices')}>
-            🏢 {t('Office Directory', 'Direktoryo ng Tanggapan')}
+            {t('Office Directory', 'Direktoryo ng Tanggapan')}
           </button>
           <button className={`adm-tab${activeTab === 'elevator' ? ' active' : ''}`} onClick={() => setActiveTab('elevator')}>
-            🛗 Elevator / Escalator
+            Elevator / Escalator
             {liftSaved && (liftSaved.elevator !== 'available' || liftSaved.escalator !== 'available')
               && <span className="adm-tab-alert" aria-hidden="true">⚠️</span>}
           </button>
           <button className={`adm-tab${activeTab === 'security' ? ' active' : ''}`} onClick={() => setActiveTab('security')}>
-            🔒 {t('Admin Password', 'Password ng Admin')}
+            {t('Admin Password', 'Password ng Admin')}
           </button>
         </div>
 
         {activeTab === 'announcements' && (
           <div className="adm-pane">
-            <h3>📢 {t('Announcements & Advisories', 'Mga Anunsyo at Paalala')}</h3>
+            <h3>{t('Announcements & Advisories', 'Mga Anunsyo at Paalala')}</h3>
             <p className="adm-hint">
               {EN ? (
                 <>
-                  This is what shows on the welcome screen. Tap <strong>✏️ Edit</strong> to
+                  This is what shows on the welcome screen. Tap <strong>Edit</strong> to
                   open the writing box. Blank = hidden.
                 </>
               ) : (
                 <>
-                  Ito ang lumalabas sa welcome screen. Pindutin ang <strong>✏️ Edit</strong> para
+                  Ito ang lumalabas sa welcome screen. Pindutin ang <strong>Edit</strong> para
                   buksan ang kahon ng pagsusulat. Blangko = nakatago.
                 </>
               )}
@@ -793,7 +792,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                     className="k-btn k-btn--ghost"
                     onClick={() => openAnnEditor(card.key)}
                   >
-                    ✏️ {t('Edit', 'I-edit')}
+                    {t('Edit', 'I-edit')}
                   </button>
                 </div>
               ))}
@@ -802,7 +801,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
             <div className="adm-divider" aria-hidden="true" />
 
             <h3>
-              🎬 {t('Welcome Screen Videos & Pictures', 'Mga Video at Larawan sa Welcome Screen')}
+              {t('Welcome Screen Videos & Pictures', 'Mga Video at Larawan sa Welcome Screen')}
               {' '}
               <span className={`adm-tally${isVideoListFull ? ' is-full' : ''}`}>
                 {videos.length} / {MAX_VIDEOS}
@@ -848,7 +847,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                         <span className="adm-vid-name">{video.title || video.source_url}</span>
                         <span className="adm-vid-meta">
                           {video.video_type === 'image'
-                            ? t('🖼️ picture', '🖼️ larawan')
+                            ? t('picture', 'larawan')
                             : video.video_type}
                           {' · '}{video.duration_seconds}s ·{' '}
                           {/* Walang simbolo rito: ang ▯ ay walang glyph sa
@@ -864,7 +863,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                               lang ang background — nilalaktawan ito ng kiosk. */}
                           {isPortraitBackground(video) && (
                             <span className="adm-vid-warn">
-                              {' · ⚠️ '}
+                              {' · '}
                               {t('not shown — background must be landscape', 'hindi lumalabas — landscape lang ang background')}
                             </span>
                           )}
@@ -874,7 +873,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                         {video.is_active ? 'LIVE' : 'OFF'}
                       </span>
                       <button type="button" className="k-btn k-btn--ghost" onClick={() => pickVideo(video)}>
-                        ✏️ {t('Edit', 'I-edit')}
+                        {t('Edit', 'I-edit')}
                       </button>
                     </div>
                   ))}
@@ -891,8 +890,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
             {isVideoListFull && (
               <p className="adm-hint">
                 {t(
-                  `The list is full (${MAX_VIDEOS}). Tap ✏️ Edit on one of them and delete it to free up a slot.`,
-                  `Puno na ang listahan (${MAX_VIDEOS}). Pindutin ang ✏️ Edit sa isa at burahin ito para may mabakante.`,
+                  `The list is full (${MAX_VIDEOS}). Tap Edit on one of them and delete it to free up a slot.`,
+                  `Puno na ang listahan (${MAX_VIDEOS}). Pindutin ang Edit sa isa at burahin ito para may mabakante.`,
                 )}
               </p>
             )}
@@ -908,11 +907,11 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                 <h4>
                   {videoForm.video_type === 'image'
                     ? (videoForm.id
-                        ? t('🖼️ Edit picture', '🖼️ I-edit ang larawan')
-                        : t('🖼️ New picture', '🖼️ Bagong larawan'))
+                        ? t('Edit picture', 'I-edit ang larawan')
+                        : t('New picture', 'Bagong larawan'))
                     : (videoForm.id
-                        ? t('🎬 Edit video', '🎬 I-edit ang video')
-                        : t('🎬 New video', '🎬 Bagong video'))}
+                        ? t('Edit video', 'I-edit ang video')
+                        : t('New video', 'Bagong video'))}
                 </h4>
                 <button type="button" className="adm-modal-x" onClick={closeVideoEditor} disabled={isSaving}>
                   ✕
@@ -969,7 +968,6 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                       onChange={handleVideoFileUpload}
                       disabled={isUploading}
                     />
-                    <span className="adm-upload-icon">{isUploading ? '⏳' : '⬆️'}</span>
                     <span className="adm-upload-text">
                       {isUploading
                         ? t('Uploading… do not close this window', 'Ina-upload… huwag isara ang window')
@@ -992,12 +990,12 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                     <p className="adm-ok">
                       {EN ? (
                         <>
-                          ✅ The {videoForm.video_type === 'image' ? 'picture' : 'video'} is
+                          The {videoForm.video_type === 'image' ? 'picture' : 'video'} is
                           uploaded. Tap <strong>Save</strong> below to put it on the kiosk.
                         </>
                       ) : (
                         <>
-                          ✅ Na-upload na ang {videoForm.video_type === 'image' ? 'larawan' : 'video'}.
+                          Na-upload na ang {videoForm.video_type === 'image' ? 'larawan' : 'video'}.
                           Pindutin ang <strong>I-save</strong> sa ibaba para mailagay ito sa kiosk.
                         </>
                       )}
@@ -1124,15 +1122,15 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                     <p className="adm-bad">
                       {videoForm.measured_portrait
                         ? t(
-                            '⚠️ The uploaded file is portrait (upright). The background only takes '
+                            'The uploaded file is portrait (upright). The background only takes '
                             + 'landscape — choose Announcement, or upload a landscape version.',
-                            '⚠️ Portrait (patayo) ang na-upload na file. Landscape lang ang puwede sa '
+                            'Portrait (patayo) ang na-upload na file. Landscape lang ang puwede sa '
                             + 'background — piliin ang Anunsyo, o mag-upload ng landscape na bersyon.',
                           )
                         : t(
-                            '⚠️ Portrait (upright) cannot be the background. Choose Announcement, or '
+                            'Portrait (upright) cannot be the background. Choose Announcement, or '
                             + 'change the shape below to Landscape if it is really wide.',
-                            '⚠️ Hindi puwedeng background ang portrait (patayo). Piliin ang Anunsyo, o '
+                            'Hindi puwedeng background ang portrait (patayo). Piliin ang Anunsyo, o '
                             + 'gawing Landscape ang hugis sa ibaba kung talagang pahiga ito.',
                           )}
                     </p>
@@ -1206,7 +1204,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                       onChange={(e) => setVideoField('has_sound', e.target.checked)}
                       disabled={videoForm.video_type === 'facebook' || videoForm.video_type === 'image'}
                     />
-                    <span>🔊 {t('Turn the sound on', 'Buksan ang tunog')}</span>
+                    <span>{t('Turn the sound on', 'Buksan ang tunog')}</span>
                   </label>
                   <p className="adm-hint">
                     {videoForm.video_type === 'image'
@@ -1259,7 +1257,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                     onClick={handleDeleteVideo}
                     disabled={isSaving}
                   >
-                    🗑️ {t('Delete', 'Burahin')}
+                    {t('Delete', 'Burahin')}
                   </button>
                 )}
                 <button type="button" className="k-btn k-btn--ghost" onClick={closeVideoEditor} disabled={isSaving}>
@@ -1269,8 +1267,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   {isSaving
                     ? t('Deploying to kiosks…', 'Ipinapadala sa mga kiosk…')
                     : videoForm.video_type === 'image'
-                      ? t('💾 Save Picture', '💾 I-save ang Larawan')
-                      : t('💾 Save Video', '💾 I-save ang Video')}
+                      ? t('Save Picture', 'I-save ang Larawan')
+                      : t('Save Video', 'I-save ang Video')}
                 </button>
               </div>
             </form>
@@ -1285,8 +1283,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
               <div className="adm-modal-top">
                 <h4>
                   {annEditor === 'announcement'
-                    ? t('📰 Official Announcement', '📰 Opisyal na Anunsyo')
-                    : t('🚨 Scrolling Advisory', '🚨 Gumagalaw na Paalala')}
+                    ? t('Official Announcement', 'Opisyal na Anunsyo')
+                    : t('Scrolling Advisory', 'Gumagalaw na Paalala')}
                 </h4>
                 <button type="button" className="adm-modal-x" onClick={closeAnnEditor} disabled={isSaving}>
                   ✕
@@ -1355,7 +1353,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                 <button type="submit" className="k-btn k-btn--primary" disabled={isSaving}>
                   {isSaving
                     ? t('Deploying to kiosks…', 'Ipinapadala sa mga kiosk…')
-                    : t('💾 Save', '💾 I-save')}
+                    : t('Save', 'I-save')}
                 </button>
               </div>
             </form>
@@ -1389,7 +1387,6 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
             <div className="adm-pane">
               {!selectedOfficeKey ? (
                 <div className="adm-empty">
-                  <span>📝</span>
                   <h3>{t('Select an office to edit', 'Pumili ng tanggapang ie-edit')}</h3>
                   <p className="adm-hint">
                     {t(
@@ -1421,9 +1418,9 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                       {/* Ang `value` ay nananatiling Ingles — iyon ang nasa
                           database. Ang label lang ang nagsasalin. */}
                       <select className="k-select" value={formStatus} onChange={(e) => setFormStatus(e.target.value)}>
-                        <option value="Available">🟢 {t('Available', 'Maaaring Kausapin')}</option>
-                        <option value="In a Meeting">🔴 {t('In a Meeting', 'May Pulong')}</option>
-                        <option value="Out of Office">🟡 {t('Out of Office', 'Wala sa Opisina')}</option>
+                        <option value="Available">{t('Available', 'Maaaring Kausapin')}</option>
+                        <option value="In a Meeting">{t('In a Meeting', 'May Pulong')}</option>
+                        <option value="Out of Office">{t('Out of Office', 'Wala sa Opisina')}</option>
                       </select>
                     </div>
                   </div>
@@ -1494,7 +1491,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   <button type="submit" className="k-btn k-btn--primary" disabled={isSaving}>
                     {isSaving
                       ? t('Saving…', 'Sine-save…')
-                      : t('💾 Save Office Metadata', '💾 I-save ang Datos ng Tanggapan')}
+                      : t('Save Office Metadata', 'I-save ang Datos ng Tanggapan')}
                   </button>
                 </form>
               )}
@@ -1519,7 +1516,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   + 'ito sa mapa, at sa hagdan (o escalator para sa Palapag 2) na papupuntahin '
                   + 'ang mga bisita. Ibalik sa Gumagana kapag naayos na.',
                 ),
-                save: t('💾 Save Elevator Status', '💾 I-save ang Kalagayan ng Elevator'),
+                save: t('Save Elevator Status', 'I-save ang Kalagayan ng Elevator'),
               },
               {
                 lift: 'escalator',
@@ -1531,7 +1528,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   'Kapag hindi gumagana ang escalator, hindi na ito mapipili papuntang Palapag 2 '
                   + 'at may marka ito sa mapa. Ibalik sa Gumagana kapag naayos na.',
                 ),
-                save: t('💾 Save Escalator Status', '💾 I-save ang Kalagayan ng Escalator'),
+                save: t('Save Escalator Status', 'I-save ang Kalagayan ng Escalator'),
               },
             ].map(({ lift, icon, title, hint, save }) => (
               <section key={lift} style={{ marginBottom: '28px' }}>
@@ -1550,9 +1547,9 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
 
                 <form className="adm-form" onSubmit={(e) => handleSaveLift(e, lift)} style={{ maxWidth: '520px', flex: 'none' }}>
                   {[
-                    { value: 'available', label: t('🟢 Working', '🟢 Gumagana') },
-                    { value: 'maintenance', label: t('🟡 Under maintenance', '🟡 Inaayos (maintenance)') },
-                    { value: 'broken', label: t('🔴 Out of order', '🔴 Sira') },
+                    { value: 'available', label: t('Working', 'Gumagana') },
+                    { value: 'maintenance', label: t('Under maintenance', 'Inaayos (maintenance)') },
+                    { value: 'broken', label: t('Out of order', 'Sira') },
                   ].map((opt) => (
                     <label key={opt.value} className="adm-check">
                       <input
@@ -1583,7 +1580,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
 
         {activeTab === 'security' && (
           <div className="adm-pane">
-            <h3>🔒 {t('Cloud Security & Authentication', 'Seguridad sa Cloud at Pagpapatunay')}</h3>
+            <h3>{t('Cloud Security & Authentication', 'Seguridad sa Cloud at Pagpapatunay')}</h3>
             <p className="adm-hint">
               {EN ? (
                 <>
@@ -1648,8 +1645,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
               </div>
               <button type="submit" className="k-btn k-btn--primary" disabled={isSavingPassword}>
                 {isSavingPassword
-                  ? `⏳ ${t('Checking…', 'Sinusuri…')}`
-                  : `☁️ ${t('Save Password to Cloud', 'I-save ang Password sa Cloud')}`}
+                  ? `${t('Checking…', 'Sinusuri…')}`
+                  : `${t('Save Password to Cloud', 'I-save ang Password sa Cloud')}`}
               </button>
             </form>
           </div>

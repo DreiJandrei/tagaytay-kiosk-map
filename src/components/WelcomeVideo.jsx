@@ -373,7 +373,6 @@ export default function WelcomeVideo({
       />
     ) : (
       <div className="welcome-video-fallback">
-        <span>⚠️</span>
         <p>Hindi mabasa ang video link.</p>
       </div>
     );
@@ -437,7 +436,6 @@ export default function WelcomeVideo({
       onClickCapture={swipeable ? onClickCapture : undefined}
     >
       <div className="welcome-video-head">
-        <span className="welcome-video-icon">{isImage ? '🖼️' : '🎬'}</span>
         <h2>{heading}</h2>
         {soundAvailable && (
           <button
