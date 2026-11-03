@@ -89,35 +89,35 @@ export const coordinateMapping = {
   },
   2: {
     "city-eng": {
-      routes: { elevator: "M 928 508 L 928 551 L 184 551 L 184 277", stairs: "M 224 470 L 186 470 L 186 277", escalator: "M 1040 691 L 527 691 L 527 303 L 291 303 L 291 277" },
+      routes: { elevator: "M 928 508 L 928 551 L 184 551 L 184 277", stairs: "M 224 470 L 182 470 L 182 277", escalator: "M 865 663 L 529 663 L 529 303 L 293 303 L 293 277" },
       style: { width: 168, height: 138, left: 142, top: 139 }, cssClass: ""
     },
     "housing": {
-      routes: { elevator: "M 928 508 L 928 551 L 512 551 L 512 303 L 468 303 L 468 277", stairs: "M 349 433 L 349 277", escalator: "M 1040 691 L 527 691 L 527 303 L 471 303 L 471 277" },
+      routes: { elevator: "M 928 508 L 928 551 L 512 551 L 512 303 L 468 303 L 468 277", stairs: "M 349 433 L 349 277", escalator: "M 865 663 L 529 663 L 529 303 L 469 303 L 469 277" },
       style: { width: 170, height: 138, left: 317, top: 139 }, cssClass: ""
     },
     "bac": {
-      routes: { elevator: "M 928 508 L 928 551 L 628 551 L 628 277", stairs: "M 474 470 L 512 470 L 512 277", escalator: "M 1040 691 L 627 691 L 627 277" },
+      routes: { elevator: "M 928 508 L 928 551 L 628 551 L 628 277", stairs: "M 474 470 L 516 470 L 516 277", escalator: "M 865 663 L 629 663 L 629 277" },
       style: { width: 150, height: 138, left: 494, top: 139, fontSize: '0.75rem' }, cssClass: ""
     },
     "planning": {
-      routes: { elevator: "M 928 508 L 928 551 L 788 551 L 788 277", stairs: "M 474 470 L 672 470 L 672 277", escalator: "M 1040 691 L 791 691 L 791 277" },
+      routes: { elevator: "M 928 508 L 928 551 L 788 551 L 788 277", stairs: "M 474 470 L 672 470 L 672 277", escalator: "M 865 663 L 789 663 L 789 277" },
       style: { width: 171, height: 138, left: 656, top: 139 }, cssClass: ""
     },
     "zoning": {
-      routes: { elevator: "M 928 508 L 928 551 L 788 551 L 788 303 L 852 303 L 852 277", stairs: "M 349 433 L 349 305 L 853 305 L 853 277", escalator: "M 1040 691 L 791 691 L 791 303 L 851 303 L 851 277" },
+      routes: { elevator: "M 928 508 L 928 551 L 788 551 L 788 303 L 852 303 L 852 277", stairs: "M 349 433 L 349 305 L 853 305 L 853 277", escalator: "M 865 663 L 789 663 L 789 303 L 853 303 L 853 277" },
       style: { width: 177, height: 138, left: 834, top: 139, fontSize: '0.75rem' }, cssClass: ""
     },
     "back-ext": {
-      routes: { elevator: "M 928 508 L 928 551 L 788 551 L 788 303 L 1040 303 L 1040 277", stairs: "M 349 433 L 349 305 L 1041 305 L 1041 277", escalator: "M 1040 691 L 791 691 L 791 303 L 1039 303 L 1039 277" },
+      routes: { elevator: "M 928 508 L 928 551 L 788 551 L 788 303 L 1040 303 L 1040 277", stairs: "M 349 433 L 349 305 L 1041 305 L 1041 277", escalator: "M 865 663 L 789 663 L 789 303 L 1041 303 L 1041 277" },
       style: { width: 126, height: 138, left: 1026, top: 139, fontSize: '0.75rem' }, cssClass: ""
     },
     "restroom-cr-2": {
-      routes: { elevator: "M 928 508 L 928 535 L 1008 535 L 1008 428", stairs: "M 474 470 L 836 470 L 836 428", escalator: "M 1040 691 L 839 691 L 839 428" },
+      routes: { elevator: "M 928 508 L 928 535 L 1008 535 L 1008 428", stairs: "M 474 470 L 836 470 L 836 428", escalator: "M 865 663 L 801 663 L 801 415 L 817 415" },
       style: { width: 221, height: 94, left: 817, top: 334 }, cssClass: "", isDirectionOnly: true
     },
     "library": {
-      routes: { elevator: "M 928 508 L 928 591 L 484 591 L 484 639", stairs: "M 349 506 L 349 639", escalator: "M 1040 691 L 501 691" },
+      routes: { elevator: "M 928 508 L 928 591 L 484 591 L 484 639", stairs: "M 349 506 L 349 639", escalator: "M 865 663 L 501 663" },
       style: { width: 296, height: 188, left: 205, top: 639 }, cssClass: ""
     },
   },
@@ -171,11 +171,11 @@ export const coordinateMapping = {
   },
   5: {
     "legal-office": {
-      routes: { elevator: "M 646 533 L 646 560 L 420 560", stairs: "M 596 586 L 596 550 L 420 550" },
+      routes: { elevator: "M 646 533 L 646 560 L 420 560", stairs: "M 596 586 L 596 546 L 420 546" },
       style: { width: 194, height: 292, left: 226, top: 336 }, cssClass: ""
     },
     "hr-office": {
-      routes: { elevator: "M 646 533 L 646 560 L 494 560 L 494 306", stairs: "M 526 618 L 488 618 L 488 306" },
+      routes: { elevator: "M 646 533 L 646 560 L 494 560 L 494 306", stairs: "M 526 618 L 484 618 L 484 306" },
       style: { width: 370, height: 164, left: 451, top: 142 }, cssClass: ""
     },
     "admin-office": {
@@ -183,11 +183,11 @@ export const coordinateMapping = {
       style: { width: 224, height: 407, left: 852, top: 261 }, cssClass: ""
     },
     "const-south-5": {
-      routes: { elevator: "M 646 533 L 646 564 L 706 564 L 706 685", stairs: "M 596 649 L 596 685" },
+      routes: { elevator: "M 646 533 L 646 564 L 706 564 L 706 685", stairs: "M 666 618 L 708 618 L 708 685" },
       style: { width: 370, height: 238, left: 463, top: 685 }, cssClass: ""
     },
     "restroom-cr-5": {
-      routes: { elevator: "M 646 533 L 646 560 L 566 560 L 566 465", stairs: "M 596 586 L 596 550 L 568 550 L 568 465" },
+      routes: { elevator: "M 646 533 L 646 560 L 566 560 L 566 465", stairs: "M 596 586 L 596 546 L 568 546 L 568 465" },
       style: { width: 194, height: 97, left: 520, top: 368 }, cssClass: "", isDirectionOnly: true
     },
   },
@@ -201,7 +201,7 @@ export const coordinateMapping = {
       style: { width: 450, height: 213, left: 565, top: 700 }, cssClass: ""
     },
     "restroom-cr-6": {
-      routes: { elevator: "M 785 406 L 785 433 L 705 433 L 705 333", stairs: "M 816 593 L 854 593 L 854 333" },
+      routes: { elevator: "M 785 406 L 785 433 L 705 433 L 705 333", stairs: "M 733 557 L 733 449 L 705 449 L 705 333" },
       style: { width: 225, height: 108, left: 648, top: 225 }, cssClass: "", isDirectionOnly: true
     },
   },
@@ -211,7 +211,7 @@ export const coordinateMapping = {
       style: { width: 542, height: 765, left: 356, top: 155, clipPath: 'polygon(0% 0%, 100% 0%, 100% 28%, 41.5% 28%, 41.5% 100%, 0% 100%)', '--l-arm': '28%', '--l-leg': '41.5%' }, cssClass: ""
     },
     "mayor-receiving": {
-      routes: { elevator: "M 816 454 L 816 549 L 896 549 L 896 720", stairs: "M 857 624 L 895 624 L 895 720" },
+      routes: { elevator: "M 816 454 L 816 549 L 896 549 L 896 720", stairs: "M 857 624 L 899 624 L 899 720" },
       style: { width: 201, height: 207, left: 821, top: 720 }, cssClass: ""
     },
     "waiting-area": {
@@ -236,7 +236,7 @@ export const floorPlans = {
     wall: "M 282 600 L 920 600 L 920 845 L 1357 845 L 1357 100 L 224 100 L 224 600 L 243 600",
     caption: { x: 790, y: 100 },
     kiosk: {"x": 1017, "y": 698},
-    escalatorPath: "M 1017 698 L 1017 634 L 1269 634 L 1269 697 L 1149 697",
+    escalatorPath: "M 1017 698 L 1017 634 L 1309 634 L 1309 675 L 1286 675",
     structures: [
       {"type": "stairs", "left": 321, "top": 496, "width": 225, "height": 63},
       {"type": "elevator", "doors": [1170, 1216], "top": 555, "doorW": 36, "doorH": 44},
@@ -340,6 +340,81 @@ export const floorPlans = {
 export const arrivalFor = (floor, method) => {
   const plan = floorPlans[floor];
   return plan?.arrivals?.[method] || plan?.arrivals?.elevator || plan?.kiosk || null;
+};
+
+// Saan ilalagay ang pin ng palapag sa itaas. Hindi ito dapat nakapatong sa
+// linya, kaya sinusukat: sa paligid ng simula ng ruta, ang puwestong hindi
+// tumatama sa linya, pinakakaunti ang natatakpan, at hindi humaharang sa mga
+// pangalan ng kwarto — iyon ang pinakamabigat, dahil iyon ang binabasa ng bisita.
+const PIN_NAME_WEIGHT = 8;
+const PIN_DISTANCE_WEIGHT = 8;
+
+const pinOverlap = (a, b) => Math.max(0, Math.min(a.r, b.r) - Math.max(a.l, b.l))
+  * Math.max(0, Math.min(a.b, b.b) - Math.max(a.t, b.t));
+
+// Ang gitna ng kahon, kung saan nakasulat ang pangalan.
+const nameZone = (cx, cy, w = 150, h = 50) => ({ l: cx - w / 2, r: cx + w / 2, t: cy - h / 2, b: cy + h / 2 });
+
+export const pinFor = ({ floor, method, path, label }) => {
+  const nums = String(path).match(/-?\d+/g)?.map(Number);
+  if (!nums || nums.length < 4) return arrivalFor(floor, method);
+
+  const segments = [];
+  for (let i = 0; i + 3 < nums.length; i += 2) {
+    segments.push({
+      l: Math.min(nums[i], nums[i + 2]), r: Math.max(nums[i], nums[i + 2]),
+      t: Math.min(nums[i + 1], nums[i + 3]), b: Math.max(nums[i + 1], nums[i + 3]),
+    });
+  }
+
+  const plan = floorPlans[floor];
+  const covered = [];
+  const names = [];
+  const addBox = ({ left, top, width, height }) => {
+    covered.push({ l: left, t: top, r: left + width, b: top + height });
+    names.push(nameZone(left + width / 2, top + height / 2));
+  };
+  Object.entries(coordinateMapping[floor]).forEach(([key, office]) => {
+    const s = office.style;
+    if (key === 'mayor-main') {
+      // Hugis-L: sa mahabang bahagi sa kaliwa ang pangalan (--l-arm, --l-leg).
+      const arm = s.height * 0.28;
+      const leg = s.width * 0.415;
+      covered.push({ l: s.left, t: s.top, r: s.left + s.width, b: s.top + arm });
+      covered.push({ l: s.left, t: s.top, r: s.left + leg, b: s.top + s.height });
+      names.push(nameZone(s.left + leg / 2, s.top + arm + (s.height - arm) / 2));
+    } else {
+      addBox(s);
+    }
+  });
+  plan.structures.forEach((s) => {
+    if (s.type === 'elevator') {
+      covered.push({ l: s.doors[0], t: s.top, r: s.doors[1] + s.doorW, b: s.top + s.doorH + 20 });
+    } else {
+      addBox(s);
+    }
+  });
+
+  const w = label.length * 8.5 + 40;
+  const h = 40;
+  const dx = w / 2 + 14;
+  const dy = h / 2 + 14;
+  const [sx, sy] = nums;
+  let best = null;
+  [1, 1.8, 2.6].forEach((reach) => {
+    [[0, dy], [0, -dy], [dx, 0], [-dx, 0], [dx, dy], [-dx, dy], [dx, -dy], [-dx, -dy]].forEach(([ox, oy]) => {
+      const x = sx + ox * reach;
+      const y = sy + oy * reach;
+      const pin = { l: x - w / 2, r: x + w / 2, t: y - h / 2, b: y + h / 2 };
+      const pad = { l: pin.l - 10, r: pin.r + 10, t: pin.t - 10, b: pin.b + 10 };
+      if (segments.some((s) => s.r >= pad.l && s.l <= pad.r && s.b >= pad.t && s.t <= pad.b)) return;
+      const score = covered.reduce((sum, c) => sum + pinOverlap(pin, c), 0)
+        + names.reduce((sum, c) => sum + pinOverlap(pin, c) * PIN_NAME_WEIGHT, 0)
+        + Math.hypot(ox * reach, oy * reach) * PIN_DISTANCE_WEIGHT;
+      if (!best || score < best.score) best = { x, y, score };
+    });
+  });
+  return best || arrivalFor(floor, method);
 };
 
 // Ang buong linyang iguguhit. `office` ay null sa palapag na dinaraanan

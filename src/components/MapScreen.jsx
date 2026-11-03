@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { liftStatusLabel } from '../lib/i18n';
-import { floorPlans, routeFor, arrivalFor } from '../lib/coordinateMapping';
+import { floorPlans, routeFor, pinFor } from '../lib/coordinateMapping';
 import Icon from './Icon';
 
 // "Ground Floor", "2nd Floor", "Ika-3 Palapag"… — sa floor tag sa itaas
@@ -84,13 +84,16 @@ export default function MapScreen({
   // ── Kinatatayuan ng bisita at ang linya ──────────────────────────
   // Ang pagbuo ng ruta ay nasa routeFor (coordinateMapping.js). Dito lang
   // pinipili kung ano ang isusulat sa pin.
+  const finalPathData = (selectedOffice || (currentFloor > 1 && kioskLabel))
+    ? routeFor({ floor: currentFloor, officeKey: selectedOfficeKey, office: selectedOffice, method: transportMethod })
+    : '';
+
   let kioskText = '';
   let kioskPos = null;
   if (currentFloor === 1) {
     kioskText = EN ? 'YOU ARE HERE' : 'NARITO KAYO';
     kioskPos = plan.kiosk;
   } else if (selectedOfficeKey || routeStep !== 'idle') {
-    kioskPos = arrivalFor(currentFloor, transportMethod);
     kioskText = kioskLabel || (
       transportMethod === 'stairs'
         ? (EN ? 'ARRIVED VIA STAIRS' : 'DUMATING SA HAGDAN')
@@ -98,11 +101,8 @@ export default function MapScreen({
           ? (EN ? 'ARRIVED VIA ESCALATOR' : 'DUMATING SA ESCALATOR')
           : (EN ? 'ARRIVED VIA ELEVATOR' : 'DUMATING SA ELEVATOR')
     );
+    kioskPos = pinFor({ floor: currentFloor, method: transportMethod, path: finalPathData, label: kioskText });
   }
-
-  const finalPathData = (selectedOffice || (currentFloor > 1 && kioskLabel))
-    ? routeFor({ floor: currentFloor, officeKey: selectedOfficeKey, office: selectedOffice, method: transportMethod })
-    : '';
 
   // ==============================================================
   // PAGSENTRO NG MAPA — sinusukat, hindi hinuhulaan
