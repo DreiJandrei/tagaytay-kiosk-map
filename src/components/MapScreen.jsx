@@ -19,12 +19,14 @@ const FLOOR_CAPTION = {
 };
 
 // Galaw ng camera sa bawat hakbang ng gabay: lapit sa simula ng ruta, sunod
-// sa linya, tapos atras para makita ang buong ruta.
+// sa linya, tapos atras para makita ang buong ruta. Sa huling hakbang, ang
+// buong palapag ang tanaw pagdating sa opisina.
 const CAMERA_APPROACH_MS = 550;
 const CAMERA_MIN_FOLLOW_MS = 1400;
 const CAMERA_MAX_FOLLOW_MS = 3200;
 const CAMERA_PX_PER_MS = 0.4;
 const CAMERA_FOLLOW_ZOOM = 1.3; // gaano kalapit kaysa sa tanaw ng buong ruta
+const CAMERA_ARRIVAL_PAUSE_MS = 700; // sandaling hinto sa opisina bago umatras
 
 export default function MapScreen({
   offices, 
@@ -54,6 +56,8 @@ export default function MapScreen({
   locked = false,
   // Nagbabago sa bawat hakbang ng gabay. Ito ang hudyat ng camera.
   followKey = null,
+  // Huling hakbang na ito: buong palapag ang ipapakita pagdating sa opisina.
+  fullViewOnArrival = false,
   // Tapos na ang galaw ng camera sa hakbang na ito (ibinabalik ang followKey).
   onCameraDone,
   // Hinawakan ng bisita ang mapa habang may gabay — hihinto ang kusang paglipat.
@@ -243,6 +247,8 @@ export default function MapScreen({
   //   1. lumalapit ang camera sa simula ng ruta sa palapag na ito,
   //   2. sinusundan nito ang linya hanggang sa dulo, kasabay ng pagguhit,
   //   3. umaatras nang kaunti para makita ang buong ruta, at doon humihinto.
+  //      Sa huling hakbang, humihinto muna ito sa opisina, tapos ang buong
+  //      palapag na ang tanaw.
   // Sa palapag na walang lalakarin, sa kinatatayuan lang ito tumutuon.
   // ==============================================================
   useEffect(() => {
@@ -270,12 +276,19 @@ export default function MapScreen({
 
     const { zoom: restZoom } = fitBox(frame, box, 1);
     const rest = { zoom: restZoom, pan: panTo(frame, (box.minX + box.maxX) / 2, (box.minY + box.maxY) / 2, restZoom) };
+    // Ang buong palapag, sa bahaging hindi natatakpan ng kard at ng mga buton.
+    const content = fullViewOnArrival ? measureContent() : null;
+    const whole = content && (() => {
+      const { zoom: wholeZoom } = fitBox(frame, content);
+      return { zoom: wholeZoom, pan: panTo(frame, content.cx, content.cy, wholeZoom) };
+    })();
+    const finalView = whole || rest;
     let raf = 0;
     let timer = 0;
     const settleCamera = () => {
       setIsFollowing(false);
-      setZoom(rest.zoom);
-      setPan(rest.pan);
+      setZoom(finalView.zoom);
+      setPan(finalView.pan);
       onCameraDone?.(followKey);
     };
     const stop = () => {
@@ -317,6 +330,7 @@ export default function MapScreen({
         const p = path.getPointAtLength(length * eased);
         setPan(panTo(frame, p.x, p.y, followZoom));
         if (t < 1) raf = requestAnimationFrame(tick);
+        else if (whole) timer = setTimeout(settleCamera, CAMERA_ARRIVAL_PAUSE_MS);
         else settleCamera();
       };
       raf = requestAnimationFrame(tick);

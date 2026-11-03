@@ -1505,6 +1505,7 @@ export default function App() {
           staticView={isVisitorView}
           locked={!!guide}
           followKey={guideFollowKey}
+          fullViewOnArrival={isLastGuideStep}
           onCameraDone={setGuideCameraDone}
           onTakeOver={() => setGuideAuto(false)}
           overlay={guideOverlay}
