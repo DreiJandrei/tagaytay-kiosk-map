@@ -2534,6 +2534,18 @@ img { max-width: 100%; }
   font-size: .8rem; font-weight: 900;
   letter-spacing: 1.2px; text-transform: uppercase;
 }
+.map-guide-auto {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(96,165,250,.32);
+  background: transparent;
+  color: var(--ui-ink-2);
+  font-size: .82rem; font-weight: 800;
+  cursor: pointer;
+}
+.light-theme .map-guide-auto { border-color: #BFDBFE; }
+.map-guide-auto:hover { background: rgba(59,130,246,.2); }
 .map-guide-x {
   width: 36px; height: 36px;
   border-radius: 10px;

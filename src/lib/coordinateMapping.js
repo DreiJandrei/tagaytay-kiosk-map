@@ -36,7 +36,8 @@ export const coordinateMapping = {
       style: { width: 729, height: 131, left: 566, top: 126 }, cssClass: "theme-amber"
     },
     "cultural-hall": {
-      pathData: "M 1017 698 L 1043 698 L 1043 572 L 610 572 L 610 369 L 598 369",
+      // Sa ilalim ng hall ang pasok, sa pagitan nito at ng hagdan.
+      pathData: "M 1017 698 L 1043 698 L 1043 572 L 568 572 L 568 481 L 467 481 L 467 465",
       style: { width: 262, height: 192, left: 336, top: 273 }, cssClass: "theme-cyan"
     },
     "canteen": {

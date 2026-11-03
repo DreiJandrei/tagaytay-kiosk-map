@@ -20,6 +20,8 @@ const PATHS = {
   backspace: <><path d="M9 5h11a1.5 1.5 0 0 1 1.5 1.5v11A1.5 1.5 0 0 1 20 19H9l-6.5-7Z" /><path d="m12.5 9.5 5 5" /><path d="m17.5 9.5-5 5" /></>,
   enter: <><path d="M20 5v6a3 3 0 0 1-3 3H5" /><path d="m9 10-4 4 4 4" /></>,
   shift: <path d="M12 4 4 12.5h4.5V20h7v-7.5H20Z" />,
+  pause: <><path d="M9 5v14" /><path d="M15 5v14" /></>,
+  play: <path d="M7 4.5v15L19 12Z" />,
   plus: <><path d="M12 5v14" /><path d="M5 12h14" /></>,
   clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3.5 2" /></>,
   garden: <><path d="M12 21v-8" /><path d="M12 13c0-4 2.5-7 7-8 0 4.5-2.5 8-7 8Z" /><path d="M12 15c0-3-2-5.5-6.5-6 0 3.5 2.5 6 6.5 6Z" /></>,

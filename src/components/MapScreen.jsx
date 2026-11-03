@@ -54,6 +54,10 @@ export default function MapScreen({
   locked = false,
   // Nagbabago sa bawat hakbang ng gabay. Ito ang hudyat ng camera.
   followKey = null,
+  // Tapos na ang galaw ng camera sa hakbang na ito (ibinabalik ang followKey).
+  onCameraDone,
+  // Hinawakan ng bisita ang mapa habang may gabay — hihinto ang kusang paglipat.
+  onTakeOver,
   // Lumulutang na laman sa itaas-kaliwa ng mapa — dito nakalagay ang
   // step-by-step na gabay, kung saan agad itong nakikita.
   overlay = null,
@@ -235,7 +239,7 @@ export default function MapScreen({
 
   // ==============================================================
   // CAMERA NG STEP-BY-STEP
-  // Ito na lang ang animasyon ng paggabay. Sa bawat Next o Previous:
+  // Ito na lang ang animasyon ng paggabay. Sa bawat hakbang:
   //   1. lumalapit ang camera sa simula ng ruta sa palapag na ito,
   //   2. sinusundan nito ang linya hanggang sa dulo, kasabay ng pagguhit,
   //   3. umaatras nang kaunti para makita ang buong ruta, at doon humihinto.
@@ -266,28 +270,45 @@ export default function MapScreen({
 
     const { zoom: restZoom } = fitBox(frame, box, 1);
     const rest = { zoom: restZoom, pan: panTo(frame, (box.minX + box.maxX) / 2, (box.minY + box.maxY) / 2, restZoom) };
+    let raf = 0;
+    let timer = 0;
     const settleCamera = () => {
       setIsFollowing(false);
       setZoom(rest.zoom);
       setPan(rest.pan);
+      onCameraDone?.(followKey);
+    };
+    const stop = () => {
+      clearTimeout(timer);
+      cancelAnimationFrame(raf);
+      setIsFollowing(false);
+    };
+    // Ito ang tinatawag ng paghila, pinch, at zoom: ang bisita na ang may hawak.
+    stopCamera.current = () => {
+      stop();
+      onCameraDone?.(followKey);
+      onTakeOver?.();
+    };
+    const release = () => {
+      stop();
+      stopCamera.current = null;
     };
 
     const length = path ? path.getTotalLength() : 0;
     hasUserMoved.current = false;
     if (length < 1) {
       settleCamera();
-      return undefined;
+      return release;
     }
 
     const followZoom = Math.min(MAX_ZOOM, restZoom * CAMERA_FOLLOW_ZOOM);
     const start = path.getPointAtLength(0);
     const duration = Math.min(CAMERA_MAX_FOLLOW_MS, Math.max(CAMERA_MIN_FOLLOW_MS, length / CAMERA_PX_PER_MS));
-    let raf = 0;
     setIsFollowing(false);
     setZoom(followZoom);
     setPan(panTo(frame, start.x, start.y, followZoom));
 
-    const timer = setTimeout(() => {
+    timer = setTimeout(() => {
       setIsFollowing(true);
       const began = performance.now();
       const tick = (now) => {
@@ -310,14 +331,7 @@ export default function MapScreen({
     path.style.transition = `stroke-dashoffset ${duration}ms ease-in-out ${CAMERA_APPROACH_MS}ms`;
     path.style.strokeDashoffset = '0';
 
-    const stop = () => {
-      clearTimeout(timer);
-      cancelAnimationFrame(raf);
-      setIsFollowing(false);
-      stopCamera.current = null;
-    };
-    stopCamera.current = stop;
-    return stop;
+    return release;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [followKey]);
 

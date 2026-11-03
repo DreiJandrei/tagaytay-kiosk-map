@@ -150,6 +150,11 @@ const IDLE_MS = 45 * 1000;
 const STILL_THERE_MS = 45 * 1000;
 const TAP_PAUSE_MS = 1500;
 
+// Gaano katagal mananatili ang isang hakbang ng gabay pagkatapos ng camera,
+// bago kusang lumipat sa susunod. Sumusunod sa haba ng teksto para mabasa.
+const GUIDE_MIN_HOLD_MS = 3000;
+const GUIDE_HOLD_MS_PER_CHAR = 30;
+
 // ── Pahinga ng "Forgot password" ─────────────────────────────────
 // May limitasyon ang Supabase sa dami ng email kada oras. Kapag naabot,
 // hindi nito sinasabi kung kailan puwede ulit — kaya isang oras ang
@@ -286,9 +291,13 @@ export default function App() {
   const [transportMethod, setTransportMethod] = useState(() => visitorLink.transport);
 
   // Step-by-step na gabay: { dest: {key, floor, ...office}, method, index }.
-  // Bukas ito mula sa pagpili ng daan hanggang pindutin ang Done. Ang bisita
-  // ang humahawak ng hakbang — walang orasang kusang naglilipat ng palapag.
+  // Bukas ito mula sa pagpili ng daan hanggang pindutin ang Done.
   const [guide, setGuide] = useState(null);
+  // Kusang lumilipat ang hakbang hanggang huling palapag. Humihinto ito kapag
+  // pinindot ang Pause o Previous, o kapag hinawakan ang mapa.
+  const [guideAuto, setGuideAuto] = useState(true);
+  // Aling hakbang na ang tapos nang ipakita ng camera (followKey ng MapScreen).
+  const [guideCameraDone, setGuideCameraDone] = useState(null);
 
   // Itinatakda ng admin (tab na Elevator / Escalator). Kapag hindi
   // 'available' ang elevator, hindi na ito mapipili at sa hagdan
@@ -573,7 +582,9 @@ export default function App() {
       window.removeEventListener('touchstart', resetTimer);
       window.removeEventListener('click', resetTimer);
     };
-  }, [appState, isVisitorView, stillThereDeadline]);
+    // Bawat bagong hakbang ng gabay ay bagong bilang: nanonood pa ang bisita
+    // kahit walang pinipindot, habang kusang lumilipat ang mga palapag.
+  }, [appState, isVisitorView, stillThereDeadline, guide?.index]);
 
   // ── Mga pindot na sa kiosk lang ──────────────────────────────
   // Nakatago na ang mga buton na ito sa tanawin ng bisita (tingnan ang
@@ -849,8 +860,8 @@ export default function App() {
   // ==============================================================
   // STEP-BY-STEP NA GABAY
   // Isa-isang palapag mula sa kiosk hanggang sa pinto ng opisina. Lumalabas
-  // ito agad pagkapili ng daan — wala nang animasyong nauuna rito. Ang
-  // camera ng MapScreen na lang ang gumagalaw, sa bawat Next o Previous.
+  // ito agad pagkapili ng daan — wala nang animasyong nauuna rito. Sinusundan
+  // ng camera ng MapScreen ang linya, tapos kusang lumilipat sa susunod.
   // ==============================================================
   const buildGuideSteps = ({ key: officeKey, title, floor }, method) => {
     const EN = lang === 'EN';
@@ -928,6 +939,7 @@ export default function App() {
     setTransportMethod(method);
     setRouteStep('guide');
     setGuide({ dest, method, index: 0 });
+    setGuideAuto(true);
     showGuideStep(buildGuideSteps(dest, method)[0]);
   };
 
@@ -936,6 +948,7 @@ export default function App() {
   const guideSteps = guide ? buildGuideSteps(guide.dest, guide.method) : [];
   const guideStep = guide ? guideSteps[guide.index] : null;
   const isLastGuideStep = !!guide && guide.index === guideSteps.length - 1;
+  const guideFollowKey = guide ? `${guide.dest.key}|${guide.method}|${guide.index}` : null;
 
   const goToGuideStep = (index) => {
     const step = guideSteps[index];
@@ -943,6 +956,22 @@ export default function App() {
     setGuide({ ...guide, index });
     showGuideStep(step);
   };
+
+  // Pagbalik o pagtalon sa isang palapag: gusto iyong tingnan ng bisita, kaya
+  // hindi ito dapat kusang umalis doon.
+  const pickGuideStep = (index) => {
+    setGuideAuto(false);
+    goToGuideStep(index);
+  };
+
+  // Kusang paglipat: nagsisimula ang bilang kapag tapos na ang camera.
+  useEffect(() => {
+    if (!guide || !guideAuto || isLastGuideStep || guideCameraDone !== guideFollowKey) return undefined;
+    const hold = Math.max(GUIDE_MIN_HOLD_MS, guideStep.body.length * GUIDE_HOLD_MS_PER_CHAR);
+    const timer = setTimeout(() => goToGuideStep(guide.index + 1), hold);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [guideFollowKey, guideAuto, guideCameraDone]);
 
   // Previous sa unang hakbang: balik sa pagpili ng daan. Doon din ang labasan
   // kung mali ang napiling opisina — hindi kailangang tapusin ang buong ruta.
@@ -1092,7 +1121,8 @@ export default function App() {
   };
 
   // ── STEP-BY-STEP SA IBABAW NG MAPA ───────────────────────────
-  // Iisang kard: nasaang hakbang, ano ang gagawin, at Previous/Next. Done lang
+  // Iisang kard: nasaang hakbang, ano ang gagawin, at Previous/Next (kusa rin
+  // itong lumilipat; Next para sa nagmamadali, Pause para sa mabagal). Done lang
   // ang nagsasara nito sa huling hakbang — walang ✕, para hindi ito aksidenteng
   // mawala habang sinusundan ng bisita.
   const guideOverlay = guide ? (
@@ -1103,6 +1133,14 @@ export default function App() {
             ? `Step ${guide.index + 1} of ${guideSteps.length}`
             : `Hakbang ${guide.index + 1} ng ${guideSteps.length}`}
         </span>
+        {!isLastGuideStep && (
+          <button className="map-guide-auto" onClick={() => setGuideAuto((on) => !on)}>
+            <Icon name={guideAuto ? 'pause' : 'play'} />
+            {guideAuto
+              ? (lang === 'EN' ? 'Pause' : 'Ihinto')
+              : (lang === 'EN' ? 'Play' : 'Ituloy')}
+          </button>
+        )}
       </div>
 
       {/* Isang pindutan bawat palapag na dadaanan. Mapipindot ang
@@ -1113,7 +1151,7 @@ export default function App() {
           <button
             key={`${s.floor}-${i}`}
             className={`map-guide-step${i === guide.index ? ' is-now' : ''}${i < guide.index ? ' is-done' : ''}`}
-            onClick={() => goToGuideStep(i)}
+            onClick={() => pickGuideStep(i)}
             title={s.title}
           >
             {s.floor === 1 ? 'GF' : s.floor}
@@ -1132,7 +1170,7 @@ export default function App() {
       <div className="map-guide-nav">
         <button
           className="map-guide-btn"
-          onClick={() => (guide.index === 0 ? backToRouteChoice() : goToGuideStep(guide.index - 1))}
+          onClick={() => (guide.index === 0 ? backToRouteChoice() : pickGuideStep(guide.index - 1))}
         >
           <Icon name="chevronLeft" /> {lang === 'EN' ? 'Previous' : 'Bumalik'}
         </button>
@@ -1466,7 +1504,9 @@ export default function App() {
           // larawan lang ng palapag ang dapat lumabas doon.
           staticView={isVisitorView}
           locked={!!guide}
-          followKey={guide ? `${guide.dest.key}|${guide.method}|${guide.index}` : null}
+          followKey={guideFollowKey}
+          onCameraDone={setGuideCameraDone}
+          onTakeOver={() => setGuideAuto(false)}
           overlay={guideOverlay}
         />
 
