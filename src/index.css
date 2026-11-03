@@ -586,7 +586,7 @@ img { max-width: 100%; }
 /* --- Balangkas ng gusali --- */
 .mock-map-graphic > svg g {
   stroke: #4A7CC4 !important;
-  stroke-width: 6px !important;
+  stroke-width: 3px !important;
   fill: transparent !important;
   filter: none !important;
 }
@@ -2853,7 +2853,6 @@ img { max-width: 100%; }
   letter-spacing: .2px;
   box-shadow: none !important;
 }
-.destination-card .floor-badge::before { content: '📍 '; }
 
 /* --- Mga linya ng detalye --- */
 .office-meta {
@@ -4527,7 +4526,32 @@ button:active { transform: scale(.97); }
 .vkb-key--wide  { flex: 1.6 1 0; }
 .vkb-key--space { flex: 4 1 0; }
 .vkb-key--mod   { flex: 1.5 1 0; font-size: .85rem; letter-spacing: .4px; }
-.vkb-key--clear { flex: 1.3 1 0; font-size: .85rem; color: var(--ui-danger); }
+.vkb-key--edge  { flex: 1 1 0; }
+.vkb-key--enter {
+  flex: 1.9 1 0;
+  font-size: .95rem;
+  background: linear-gradient(180deg, var(--ui-accent), var(--ui-accent-2));
+  border-color: var(--ui-accent);
+  color: var(--ui-accent-on);
+}
+.vkb-key--enter:hover { background: var(--ui-accent-2); }
+.vkb-close--clear { margin-left: 0; color: var(--ui-danger); }
+/* Ang pambukas kapag nakatago ang keyboard sa mga login. */
+.vkb-chip {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 100010;
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 18px;
+  border-radius: var(--ui-r-sm);
+  border: 1px solid var(--ui-line-2);
+  background: var(--ui-panel);
+  color: var(--ui-ink-2);
+  font-weight: 800; font-size: .85rem;
+  cursor: pointer;
+  box-shadow: var(--ui-sh-3);
+}
 .vkb-key--mod.is-on {
   background: linear-gradient(180deg, var(--ui-accent), var(--ui-accent-2));
   border-color: var(--ui-accent);
@@ -4539,7 +4563,7 @@ button:active { transform: scale(.97); }
   .vkb { padding: 8px; gap: 6px; }
   .vkb-row { gap: 5px; }
   .vkb-key { height: 44px; font-size: .95rem; }
-  .vkb-key--mod, .vkb-key--clear { font-size: .72rem; }
+  .vkb-key--mod, .vkb-key--enter { font-size: .72rem; }
   .vkb-title { display: none; }
 }
 
@@ -4562,7 +4586,156 @@ button:active { transform: scale(.97); }
   color: var(--ui-accent-on);
 }
 
-/* Escalator icon (EscalatorIcon.jsx) — kapalit ng 🪜. Kasinlaki ng teksto
-   gaya ng emoji; ang --inline ay pantay sa linya ng teksto. */
-.escalator-icon { display: inline-block; flex-shrink: 0; }
-.escalator-icon--inline { vertical-align: -0.125em; }
+/* Icon.jsx — kasinlaki at kakulay ng teksto, pantay sa linya. */
+.k-icon { display: inline-block; flex-shrink: 0; vertical-align: -0.125em; }
+
+/* ═══════════ PLANO NG BAWAT PALAPAG (coordinateMapping → floorPlans) ═══════════ */
+.map-floor-caption {
+  position: absolute;
+  transform: translate(-50%, -150%);
+  z-index: 6;
+  color: var(--k-300);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.light-theme .map-floor-caption { color: var(--k-700); }
+
+/* Masisikip na kwarto: mas maliit na titik AT padding, para kasya ang pangalan. */
+.room-node[style*="0.75rem"] { padding: 4px 8px !important; line-height: 1.2; }
+
+/* Hugis-L: sa mahabang bahagi sa kaliwa ang pangalan. Ang --l-arm at --l-leg
+   ay nasa style ng kwarto (coordinateMapping), kung saan din ang clip-path. */
+.room-node[style*="--l-arm"] .room-label {
+  position: absolute;
+  left: 0;
+  width: var(--l-leg);
+  top: var(--l-arm);
+  bottom: 0;
+  height: auto;
+  max-height: none;
+  padding: 0 10px;
+}
+
+/* Habang nasa step-by-step: hindi mapipindot ang mga kwarto. */
+.is-guide-locked .room-node { pointer-events: none; }
+.is-guide-locked .floor-chip:disabled { cursor: not-allowed; }
+
+.plan-stairs-l .stair-label {
+  top: auto;
+  bottom: 6px;
+  font-size: .68rem;
+  padding: 2px 6px;
+}
+.stair-label, .escalator-label { letter-spacing: .5px; }
+
+.elev-door {
+  background: linear-gradient(90deg, #9CA3AF 0 48%, #6B7280 48% 52%, #9CA3AF 52%) !important;
+  border-radius: 3px !important;
+}
+.plan-elev-label {
+  position: absolute;
+  transform: translateX(-50%);
+  z-index: 6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(7,18,35,.88);
+  color: var(--k-300);
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .5px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.light-theme .plan-elev-label { background: rgba(255,255,255,.95); color: var(--k-700); }
+
+.plan-exit {
+  position: absolute;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  border-radius: 8px;
+  font-size: .72rem;
+  letter-spacing: .5px;
+  pointer-events: none;
+  outline: 2px dashed rgba(96,165,250,.7);
+  outline-offset: 3px;
+}
+.plan-exit .k-icon { font-size: 1.15rem; }
+
+.plan-entrance {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: .78rem;
+  letter-spacing: .5px;
+  pointer-events: none;
+}
+
+.plan-area {
+  flex-direction: column;
+  gap: 8px;
+  font-size: .85rem;
+  font-weight: 800;
+  letter-spacing: .5px;
+  color: #E3EEFC;
+  pointer-events: none;
+}
+.light-theme .plan-area { color: #0B2A5B; }
+.plan-area .k-icon { font-size: 1.8rem; color: var(--k-300); }
+
+/* Pulang tuldok sa "YOU ARE HERE". */
+.pin-dot {
+  display: inline-block;
+  width: 11px; height: 11px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: #EF4444;
+  vertical-align: -1px;
+}
+
+/* ═══════════ PAG-IISKEDYUL (Admin Panel) ═══════════ */
+.adm-schedule {
+  padding: 14px;
+  border-radius: var(--ui-r-md);
+  border: 1px dashed var(--ui-line-2);
+}
+.adm-schedule .k-input { color-scheme: dark; cursor: pointer; }
+.adm-schedule .adm-form--split { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.adm-modal--sm .adm-schedule .adm-form--split { grid-template-columns: minmax(0, 1fr); }
+.light-theme .adm-schedule .k-input { color-scheme: light; }
+.adm-text-group { display: flex; flex-direction: column; gap: 12px; margin-bottom: 26px; }
+.adm-text-group > .k-btn { align-self: flex-start; width: auto; padding: 11px 22px; font-size: .95rem; }
+.adm-text-group .adm-vid-name { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.adm-vid-pill.is-soon { background: var(--ui-gold-sf); color: var(--ui-gold); }
+.adm-archive { margin-top: 4px; }
+.adm-archive > summary {
+  cursor: pointer;
+  padding: 8px 0;
+  color: var(--ui-ink-2);
+  font-weight: 800;
+  font-size: .9rem;
+}
+.adm-vid-item.is-archived { opacity: .78; }
+
+/* Mas malinaw na blangko ang kahon: hindi kamukha ng tunay na laman ang halimbawa. */
+.k-input::placeholder, .k-textarea::placeholder {
+  color: var(--ui-ink-3);
+  font-weight: 500;
+  font-style: italic;
+  opacity: .6;
+}
+
+/* Status: hanggang kailan ito tatagal. */
+.meta-until { margin-left: 8px; color: var(--ui-ink-3); font-size: .82em; font-weight: 700; }
+
+/* Bilang ng mga anunsyong nagsasalitan sa kard. */
+.welcome-board-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.welcome-board-count { font-weight: 800; font-size: .9rem; opacity: .75; }

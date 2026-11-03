@@ -21,7 +21,7 @@
 -- ── 1 at 2. RLS at karapatan sa bawat table ─────────────────
 -- Ang table na walang policy pagkatapos nito ay sarado sa lahat
 -- (maliban sa Dashboard). Apat lang ang ginagamit ng app — offices,
--- office_details, kiosks_announcements, kiosk_videos — at may policy
+-- office_information, announcement_text, announcement_media — at may policy
 -- na ang mga iyon mula sa admin_only_writes.sql.
 do $$
 declare
@@ -53,9 +53,9 @@ alter default privileges in schema public
 -- lang. Ganito rin ang tsek sa Admin Panel (validateVideoUrl).
 do $$
 begin
-  if to_regclass('public.kiosk_videos') is not null then
-    alter table public.kiosk_videos drop constraint if exists kiosk_videos_source_url_https;
-    alter table public.kiosk_videos
+  if to_regclass('public.announcement_media') is not null then
+    alter table public.announcement_media drop constraint if exists kiosk_videos_source_url_https;
+    alter table public.announcement_media
       add constraint kiosk_videos_source_url_https
       check (source_url ~* '^https://') not valid;
   end if;

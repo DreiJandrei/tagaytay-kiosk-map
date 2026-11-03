@@ -1,9 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import VirtualKeyboard from '../components/VirtualKeyboard';
-import EscalatorIcon from '../components/EscalatorIcon';
-import { isTypable } from '../lib/keyboardUtils';
+import Icon from '../components/Icon';
+import { wantsOnScreenKeyboard } from '../lib/keyboardUtils';
 import {
-  updateOffice, getAnnouncement, patchKioskSettings, changeAdminPasswordWithCurrent, logoutAdmin,
+  scheduleState, toLocalInput, fromLocalInput, formatWhen, scheduleProblem,
+} from '../lib/schedule';
+import {
+  updateOffice, getAnnouncement, changeAdminPasswordWithCurrent, logoutAdmin,
+  parseKioskSettings, readTextItems, saveTextItem, deleteTextItem,
   getLiftStatuses, setLiftStatus,
   getKioskVideos, saveKioskVideo, deleteKioskVideo, placeKioskVideo,
   uploadKioskVideoFile, deleteKioskVideoFile, isUploadedFile,
@@ -22,6 +26,7 @@ const BLANK_VIDEO = {
   id: null, title: '', caption: '', source_url: '',
   video_type: 'facebook', duration_seconds: 45, sort_order: 0, is_active: true,
   orientation: 'landscape', has_sound: false, placement: 'side',
+  starts_local: '', ends_local: '',
 };
 
 // Hangganan ng haba ng dalawang teksto sa welcome screen. Hindi ito basta
@@ -31,10 +36,13 @@ const BLANK_VIDEO = {
 // hindi naman makikita ng bisita.
 const TEXT_LIMITS = { announcement: 300, advisory: 150 };
 
-// Ilang video ang puwedeng nakatala. Salitan itong pinapalabas sa welcome
-// screen, kaya ang bawat dagdag ay dagdag hintay bago maulit ang una —
-// sa lima pa lang, mahigit tatlong minuto na ang buong ikot.
-const MAX_VIDEOS = 5;
+// Ilang video/larawan ang puwedeng nakatala, hindi kasama ang archive. Mas
+// marami na ito kaysa sa dating lima dahil naka-iskedyul na: ang nasa iskedyul
+// lang NGAYON ang umiikot sa welcome screen, hindi ang buong listahan.
+const MAX_VIDEOS = 20;
+
+// Ganoon din sa bawat teksto: opisyal na anunsyo at gumagalaw na paalala.
+const MAX_TEXT_ITEMS = 20;
 
 // Buong screen ang background, kaya landscape lang ang puwede roon — ang
 // patayo ay puro itim na gilid. Dalawang senyas ang tinitingnan: ang
@@ -42,6 +50,41 @@ const MAX_VIDEOS = 5;
 // (`measured_portrait`), na hindi malulusutan sa pagpalit ng dropdown.
 const isPortraitBackground = (v) =>
   !!v && v.placement === 'background' && (v.orientation === 'portrait' || v.measured_portrait === true);
+
+// Pumili ng petsa at oras. Bumubukas ang kalendaryo sa pindot kahit saan sa
+// kahon, hindi lang sa maliit na icon — mahirap tamaan iyon ng daliri.
+const openPicker = (e) => { try { e.currentTarget.showPicker?.(); } catch { /* hindi suportado */ } };
+
+function SchedulePicker({ t, from, until, onFrom, onUntil, hint }) {
+  return (
+    <div className="adm-schedule">
+      <div className="adm-form--split">
+        <div>
+          <label className="k-label">{t('From', 'Simula')}</label>
+          <input
+            type="datetime-local"
+            className="k-input"
+            value={from}
+            onClick={openPicker}
+            onChange={(e) => onFrom(e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="k-label">{t('Until', 'Hanggang')}</label>
+          <input
+            type="datetime-local"
+            className="k-input"
+            value={until}
+            min={from || undefined}
+            onClick={openPicker}
+            onChange={(e) => onUntil(e.target.value)}
+          />
+        </div>
+      </div>
+      <p className="adm-hint">{hint}</p>
+    </div>
+  );
+}
 
 export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang = 'EN', setLang }) {
   // Iisang switch lang ang wika ng buong kiosk — ang header toggle. Dito
@@ -56,31 +99,26 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
   const [showKeyboard, setShowKeyboard] = useState(false);
   const admRef = useRef(null);
 
-  // Awtomatikong lumalabas sa pagpindot ng kahit anong field, para hindi
-  // na kailangang hanapin pa ng staff ang buton. `pointerdown` din, hindi
-  // lang `focusin`: kapag itinago ang keyboard, naka-focus pa rin ang field
-  // — kaya ang muling pindot doon ay walang bagong focus na maibibigay.
+  // Lumalabas lang kapag may pumindot sa field — hindi sa focus lang: may
+  // autoFocus ang ilang kahon, at matatabunan ang mga detalye bago pa may
+  // pumindot. Sa laptop na may sariling keyboard, hindi rin ito lumalabas;
+  // nasa itaas ang buton kung sakaling kailanganin.
   useEffect(() => {
     const root = admRef.current;
     if (!root) return;
-    const open = (e) => { if (isTypable(e.target)) setShowKeyboard(true); };
-    root.addEventListener('focusin', open);
+    const open = (e) => { if (wantsOnScreenKeyboard(e)) setShowKeyboard(true); };
     root.addEventListener('pointerdown', open);
-    return () => {
-      root.removeEventListener('focusin', open);
-      root.removeEventListener('pointerdown', open);
-    };
+    return () => root.removeEventListener('pointerdown', open);
   }, []);
 
-  const [advisoryText, setAdvisoryText] = useState('');
-  const [announcementText, setAnnouncementText] = useState('');
+  // Ang dalawang listahan ng teksto sa welcome screen.
+  const [textItems, setTextItems] = useState({ announcement: [], advisory: [] });
 
-  // Alin sa dalawang teksto ang binubuksan sa lumulutang na editor:
-  // 'announcement', 'advisory', o null kapag sarado. Hiwalay ang draft sa
-  // tunay na teksto — kaya ang Close ay tunay na pagtalikod, hindi lang
-  // pagtago ng nabago na.
+  // Ang binubuksan sa lumulutang na editor. Hiwalay ang draft sa nakatala —
+  // kaya ang Close ay tunay na pagtalikod, hindi lang pagtago ng nabago na.
+  //   { kind, id, text, starts_local, ends_local }, o null kapag sarado.
   const [annEditor, setAnnEditor] = useState(null);
-  const [annDraft, setAnnDraft] = useState('');
+  const [annSnapshot, setAnnSnapshot] = useState('');
 
   // Ang nakatala sa database (`liftSaved`) at ang pinipili pa lang
   // (`liftDraft`), bawat isa ay { elevator, escalator }. Hiwalay sila para
@@ -121,17 +159,16 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
   const [formStatus, setFormStatus] = useState('Available');
   const [formPhone, setFormPhone] = useState('');
   const [formLocal, setFormLocal] = useState('');
+  const [formStatusFrom, setFormStatusFrom] = useState('');
+  const [formStatusUntil, setFormStatusUntil] = useState('');
 
   useEffect(() => {
     const fetchAdminData = async () => {
-      const text = await getAnnouncement();
-      try {
-        const parsed = JSON.parse(text);
-        setAdvisoryText(parsed.advisory || '');
-        setAnnouncementText(parsed.announcement || '');
-      } catch (e) {
-        setAdvisoryText(text);
-      }
+      const settings = parseKioskSettings(await getAnnouncement());
+      setTextItems({
+        announcement: readTextItems(settings, 'announcement'),
+        advisory: readTextItems(settings, 'advisory'),
+      });
     };
     fetchAdminData();
   }, []);
@@ -191,7 +228,10 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     fetchVideos();
   }, []);
 
-  const isVideoListFull = videos.length >= MAX_VIDEOS;
+  // Ang tapos na ay nasa archive, at hindi na binibilang sa hangganan.
+  const currentVideos = videos.filter((v) => scheduleState(v) !== 'ended');
+  const archivedVideos = videos.filter((v) => scheduleState(v) === 'ended');
+  const isVideoListFull = currentVideos.length >= MAX_VIDEOS;
 
   const pickVideo = (video) => {
     // Bagong video lang ang hinaharang ng hangganan — ang pag-edit at
@@ -207,8 +247,14 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     // `position` ang numerong nakikita ng admin sa listahan (1 = una).
     // Ang bago ay nasa dulo, maliban kung baguhin.
     const next = video
-      ? { ...video, position: videos.findIndex((v) => v.id === video.id) + 1 }
-      : { ...BLANK_VIDEO, sort_order: videos.length, position: videos.length + 1 };
+      ? {
+          ...video,
+          // Ang archive ay wala sa bilang: kapag binuksan ulit, nasa dulo ito.
+          position: (currentVideos.findIndex((v) => v.id === video.id) + 1) || currentVideos.length + 1,
+          starts_local: toLocalInput(video.starts_at),
+          ends_local: toLocalInput(video.ends_at),
+        }
+      : { ...BLANK_VIDEO, sort_order: videos.length, position: currentVideos.length + 1 };
     setVideoForm(next);
     setVideoSnapshot(JSON.stringify(next));
     setVideoTypeTouched(!!video);
@@ -351,6 +397,9 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     const problem = validateVideoUrl(videoForm.source_url, videoForm.video_type, lang);
     if (problem) return alert(`${problem}`);
 
+    const whenProblem = scheduleProblem(videoForm.starts_local, videoForm.ends_local, lang);
+    if (whenProblem) return alert(whenProblem);
+
     if (isPortraitBackground(videoForm)) {
       return alert(t(
         'The background only takes LANDSCAPE (wide) videos and pictures.\n\n'
@@ -364,14 +413,27 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
 
     setIsSaving(true);
     try {
-      const saved = await saveKioskVideo(videoForm);
+      const saved = await saveKioskVideo({
+        ...videoForm,
+        starts_at: fromLocalInput(videoForm.starts_local),
+        ends_at: fromLocalInput(videoForm.ends_local),
+      });
       // Isinisingit sa napiling puwesto; umuusog ang iba nang kusa.
       await placeKioskVideo(saved.id, videoForm.position);
       await loadVideos();
       // Pagsasara ng editor: ang bagong row sa listahan — kasama ang
       // LIVE/OFF na pill — ang nagpapatunay na natanggap ang pagbabago.
       setVideoForm(null);
-      if (saved?.placementSkipped) {
+      if (saved?.scheduleSkipped) {
+        alert(t(
+          'Saved — BUT WITHOUT THE SCHEDULE.\n\n'
+          + 'The database has no column for it yet. Open Supabase → SQL Editor → New query, '
+          + 'paste all of supabase/map_update_2026_11.sql, and Run. Then save this again.',
+          'NA-SAVE — PERO WALA ANG ISKEDYUL.\n\n'
+          + 'Wala pang hanay para doon sa database. Buksan ang Supabase → SQL Editor → New query, '
+          + 'i-paste ang buong supabase/map_update_2026_11.sql, tapos Run. Pagkatapos, i-save itong muli.',
+        ));
+      } else if (saved?.placementSkipped) {
         alert(t(
           'Saved — BUT IT WILL STAY IN THE SIDE CARD.\n\n'
           + 'The database has no column for "Where it shows" yet. Open Supabase → SQL Editor '
@@ -453,6 +515,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
       // pa iyon nanggaling.
       setFormPhone(currentOffice.phone || '');
       setFormLocal(currentOffice.local || '');
+      setFormStatusFrom(toLocalInput(currentOffice.statusFrom));
+      setFormStatusUntil(toLocalInput(currentOffice.statusUntil));
       if (Array.isArray(currentOffice.requirements)) {
         setFormRequirements(currentOffice.requirements.join('\n'));
       } else {
@@ -469,6 +533,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
   const handleSaveOffice = async (e) => {
     e.preventDefault();
     if (!selectedOfficeKey) return;
+    const whenProblem = scheduleProblem(formStatusFrom, formStatusUntil, lang);
+    if (whenProblem) return alert(whenProblem);
     setIsSaving(true);
     try {
       const requirementsArray = formRequirements.split('\n').map(line => line.trim()).filter(line => line.length > 0);
@@ -482,15 +548,29 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
         requirements: requirementsArray,
         cssClass: formCssClass,
         status: formStatus,
+        // Walang saysay ang petsa sa Available — iyon na ang balikan.
+        statusFrom: formStatus === 'Available' ? null : fromLocalInput(formStatusFrom),
+        statusUntil: formStatus === 'Available' ? null : fromLocalInput(formStatusUntil),
         phone: formPhone.trim(),
         local: formLocal.trim()
-      });
+      }, selectedFloor);
       if (onDataUpdate) onDataUpdate();
 
       // Hindi puwedeng "nai-save na" kapag may naiwan. Mahirap nang
       // hanapin ang dahilan kung bakit hindi nagbabago ang numero sa
       // kiosk; huwag na itong pataguin sa isang masayang mensahe.
-      if (result?.descriptionTlSkipped) {
+      if (result?.statusScheduleSkipped) {
+        alert(t(
+          'Saved — BUT NOT THE STATUS SCHEDULE.\n\n'
+          + 'The database has no column for it yet. Open Supabase → SQL Editor → New query, '
+          + 'paste all of supabase/map_update_2026_11.sql, and Run. Then save this office again.\n\n'
+          + 'Everything else was saved.',
+          'NA-SAVE — PERO HINDI ANG ISKEDYUL NG STATUS.\n\n'
+          + 'Wala pang hanay para doon sa database. Buksan ang Supabase → SQL Editor → New query, '
+          + 'i-paste ang buong supabase/map_update_2026_11.sql, tapos Run. Pagkatapos, i-save itong muli.\n\n'
+          + 'Ang lahat ng iba ay na-save naman.',
+        ));
+      } else if (result?.descriptionTlSkipped) {
         alert(t(
           'Saved — BUT NOT THE TAGALOG DESCRIPTION.\n\n'
           + 'The database has no column for it yet. Open Supabase → SQL Editor '
@@ -524,32 +604,43 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
       }
     } catch (error) {
       alert(t(
-        'Database error. Check logs.',
-        'May problema sa database. Tingnan ang logs.',
+        // Ang dahilan mismo: walang console na makikita sa TV ng kiosk.
+        `The office was not saved.\n\n${error?.message || error}`,
+        `Hindi na-save ang tanggapan.\n\n${error?.message || error}`,
       ));
     } finally { setIsSaving(false); }
   };
 
   // ── Lumulutang na editor ng teksto ────────────────────────
-  const openAnnEditor = (which) => {
-    const current = which === 'announcement' ? announcementText : advisoryText;
-    // Ginugupit din ang lumang teksto na nauna pa sa hangganan — para ang
-    // nasa kahon ang mismong maisa-save, walang sorpresang nawawala.
-    setAnnDraft(current.slice(0, TEXT_LIMITS[which]));
-    setAnnEditor(which);
+  // `item`: ang bubuksang tala. Walang `id` = bago. Ganito rin ang "gamitin
+  // ulit" sa archive: bagong tala na may parehong teksto, walang petsa.
+  const openAnnEditor = (kind, item = null) => {
+    const draft = {
+      kind,
+      id: item?.id || null,
+      // Ginugupit din ang lumang teksto na nauna pa sa hangganan — para ang
+      // nasa kahon ang mismong maisa-save, walang sorpresang nawawala.
+      text: (item?.text || '').slice(0, TEXT_LIMITS[kind]),
+      starts_local: toLocalInput(item?.starts_at),
+      ends_local: toLocalInput(item?.ends_at),
+    };
+    setAnnEditor(draft);
+    setAnnSnapshot(JSON.stringify(draft));
   };
 
-  const annOriginal = annEditor === 'announcement' ? announcementText : advisoryText;
-  const annLimit = TEXT_LIMITS[annEditor] || TEXT_LIMITS.announcement;
-  const annLeft = annLimit - annDraft.length;
+  const annLimit = annEditor ? TEXT_LIMITS[annEditor.kind] : TEXT_LIMITS.announcement;
+  const annLeft = annLimit - (annEditor?.text.length || 0);
 
   // Ginugupit dito, hindi lang sa `maxLength` ng textarea: ang touchscreen
   // keyboard ay direktang nagtatakda ng value, at hindi nito iginagalang
   // ang maxLength. Isang pigil lang ang dinadaanan ng lahat ng pag-type.
-  const changeAnnDraft = (value) => setAnnDraft(value.slice(0, annLimit));
+  const changeAnnDraft = (field, value) => setAnnEditor((d) => ({
+    ...d,
+    [field]: field === 'text' ? value.slice(0, annLimit) : value,
+  }));
 
   const closeAnnEditor = () => {
-    if (annEditor && annDraft !== annOriginal
+    if (annEditor && JSON.stringify(annEditor) !== annSnapshot
       && !window.confirm(t(
         'You have unsaved changes.\n\nClose anyway and discard them?',
         'May hindi pa nase-save na pagbabago.\n\nIsara pa rin at itapon ito?',
@@ -559,29 +650,75 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
 
   const handleSaveAnnouncement = async (e) => {
     e.preventDefault();
-    // Iisang row lang sa database ang kinalalagyan ng dalawang teksto at ng
-    // kalagayan ng elevator, kaya ang binuksang teksto lang ang binabago —
-    // buo ang iba (tingnan ang patchKioskSettings).
-    // Huling pigil sa haba, sakaling may nakalusot na teksto sa textarea
-    // (hal. galing sa touchscreen keyboard na hindi dumaan sa onChange).
-    const draft = annDraft.slice(0, annLimit);
+    const { kind, id, text, starts_local: startsLocal, ends_local: endsLocal } = annEditor;
+    if (!text.trim()) {
+      return alert(t('Write the text first.', 'Isulat muna ang teksto.'));
+    }
+    const whenProblem = scheduleProblem(startsLocal, endsLocal, lang);
+    if (whenProblem) return alert(whenProblem);
+    const current = textItems[kind].filter((i) => scheduleState(i) !== 'ended' && i.id !== id);
+    if (current.length >= MAX_TEXT_ITEMS) {
+      return alert(t(
+        `${MAX_TEXT_ITEMS} items is the limit. Delete one on the list first.`,
+        `${MAX_TEXT_ITEMS} na tala lang ang hangganan. Burahin muna ang isa sa listahan.`,
+      ));
+    }
 
     setIsSaving(true);
     try {
-      const next = await patchKioskSettings({ [annEditor]: draft });
-      setAdvisoryText(next.advisory || '');
-      setAnnouncementText(next.announcement || '');
+      const items = await saveTextItem(kind, {
+        id,
+        // Huling pigil sa haba, sakaling may nakalusot sa textarea.
+        text: text.slice(0, TEXT_LIMITS[kind]),
+        starts_at: fromLocalInput(startsLocal),
+        ends_at: fromLocalInput(endsLocal),
+      });
+      setTextItems((prev) => ({ ...prev, [kind]: items }));
       setAnnEditor(null);
       alert(t(
-        'Saved! It will show up on the welcome screen within a minute.',
-        'Nai-save na! Makikita ito sa welcome screen sa loob ng isang minuto.',
+        'Saved! The welcome screen follows the schedule within a minute.',
+        'Nai-save na! Susunod ang welcome screen sa iskedyul sa loob ng isang minuto.',
       ));
     } catch (error) {
       alert(t(
-        'Failed to update announcement.',
-        'Hindi na-update ang anunsyo.',
+        `The text was not saved.\n\n${error?.message || error}`,
+        `Hindi na-save ang teksto.\n\n${error?.message || error}`,
       ));
     } finally { setIsSaving(false); }
+  };
+
+  const handleDeleteText = async (kind, item) => {
+    if (!window.confirm(t('Delete this item for good?', 'Burahin nang tuluyan ang talang ito?'))) return;
+    setIsSaving(true);
+    try {
+      const items = await deleteTextItem(kind, item.id);
+      setTextItems((prev) => ({ ...prev, [kind]: items }));
+      setAnnEditor(null);
+    } catch (error) {
+      alert(t(
+        `The item was not deleted.\n\n${error?.message || error}`,
+        `Hindi nabura ang tala.\n\n${error?.message || error}`,
+      ));
+    } finally { setIsSaving(false); }
+  };
+
+  // Iisang hitsura ng kalagayan sa video at sa teksto.
+  const schedulePill = (item) => {
+    const state = scheduleState(item);
+    if (state === 'upcoming') return <span className="adm-vid-pill is-soon">{t('SCHEDULED', 'NAKA-ISKEDYUL')}</span>;
+    if (state === 'ended') return <span className="adm-vid-pill">{t('DONE', 'TAPOS NA')}</span>;
+    return item.is_active === false
+      ? <span className="adm-vid-pill">OFF</span>
+      : <span className="adm-vid-pill is-on">LIVE</span>;
+  };
+
+  const scheduleLine = (item) => {
+    const from = formatWhen(item.starts_at, lang);
+    const until = formatWhen(item.ends_at, lang);
+    if (from && until) return `${from} – ${until}`;
+    if (from) return t(`From ${from}`, `Mula ${from}`);
+    if (until) return t(`Until ${until}`, `Hanggang ${until}`);
+    return t('No schedule — always on', 'Walang iskedyul — laging nakalabas');
   };
 
   const handleSavePassword = async (e) => {
@@ -708,7 +845,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                 'Para sa kiosk na walang pisikal na keyboard',
               )}
             >
-              ⌨️ {showKeyboard ? t('Hide Keyboard', 'Itago ang Keyboard') : 'Keyboard'}
+              <Icon name="keyboard" /> {showKeyboard ? t('Hide Keyboard', 'Itago ang Keyboard') : 'Keyboard'}
             </button>
             <button
               className="adm-exit"
@@ -717,7 +854,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                 onClose();
               }}
             >
-              ✕ {t('Close & Logout', 'Isara at Mag-logout')}
+              <Icon name="close" /> {t('Close & Logout', 'Isara at Mag-logout')}
             </button>
           </div>
         </div>
@@ -732,7 +869,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
           <button className={`adm-tab${activeTab === 'elevator' ? ' active' : ''}`} onClick={() => setActiveTab('elevator')}>
             Elevator / Escalator
             {liftSaved && (liftSaved.elevator !== 'available' || liftSaved.escalator !== 'available')
-              && <span className="adm-tab-alert" aria-hidden="true">⚠️</span>}
+              && <span className="adm-tab-alert" aria-hidden="true"><Icon name="warning" /></span>}
           </button>
           <button className={`adm-tab${activeTab === 'security' ? ' active' : ''}`} onClick={() => setActiveTab('security')}>
             {t('Admin Password', 'Password ng Admin')}
@@ -745,58 +882,109 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
             <p className="adm-hint">
               {EN ? (
                 <>
-                  This is what shows on the welcome screen. Tap <strong>Edit</strong> to
-                  open the writing box. Blank = hidden.
+                  Add as many as you need and set <strong>when each one shows</strong>. They stack up:
+                  everything within its schedule appears on the welcome screen, and finished ones move
+                  to the <strong>Archive</strong> on their own.
                 </>
               ) : (
                 <>
-                  Ito ang lumalabas sa welcome screen. Pindutin ang <strong>Edit</strong> para
-                  buksan ang kahon ng pagsusulat. Blangko = nakatago.
+                  Magdagdag ng kailangan at itakda <strong>kung kailan lalabas ang bawat isa</strong>.
+                  Nagpapatong-patong sila: lalabas sa welcome screen ang lahat ng nasa iskedyul, at kusang
+                  napupunta sa <strong>Archive</strong> ang mga tapos na.
                 </>
               )}
             </p>
 
-            <div className="adm-cards">
-              {[
-                {
-                  key: 'announcement',
-                  label: t('1 · Official Announcement (Board)', '1 · Opisyal na Anunsyo (Board)'),
-                  text: announcementText,
-                  empty: t(
-                    'Empty — the large card stays hidden on the welcome screen.',
-                    'Walang laman — nakatago ang malaking kard sa welcome screen.',
-                  ),
-                },
-                {
-                  key: 'advisory',
-                  label: t('2 · Scrolling Advisory (Marquee)', '2 · Gumagalaw na Paalala (Marquee)'),
-                  text: advisoryText,
-                  empty: t(
-                    'Empty — the scrolling strip at the bottom stays hidden.',
-                    'Walang laman — nakatago ang gumagalaw na guhit sa ilalim.',
-                  ),
-                },
-              ].map((card) => (
-                <div key={card.key} className="adm-card">
+            {[
+              {
+                kind: 'announcement',
+                label: t('1 · Official Announcement (Board)', '1 · Opisyal na Anunsyo (Board)'),
+                add: t('Add Announcement', 'Magdagdag ng Anunsyo'),
+                empty: t(
+                  'Empty — the large card stays hidden on the welcome screen.',
+                  'Walang laman — nakatago ang malaking kard sa welcome screen.',
+                ),
+              },
+              {
+                kind: 'advisory',
+                label: t('2 · Scrolling Advisory (Marquee)', '2 · Gumagalaw na Paalala (Marquee)'),
+                add: t('Add Advisory', 'Magdagdag ng Paalala'),
+                empty: t(
+                  'Empty — the scrolling strip at the bottom stays hidden.',
+                  'Walang laman — nakatago ang gumagalaw na guhit sa ilalim.',
+                ),
+              },
+            ].map(({ kind, label, add, empty }) => {
+              const current = textItems[kind].filter((i) => scheduleState(i) !== 'ended');
+              const archived = textItems[kind].filter((i) => scheduleState(i) === 'ended');
+              return (
+                <div key={kind} className="adm-text-group">
                   <div className="adm-card-head">
-                    <span className="adm-card-label">{card.label}</span>
-                    <span className={`adm-vid-pill${card.text.trim() ? ' is-on' : ''}`}>
-                      {card.text.trim() ? 'LIVE' : t('HIDDEN', 'NAKATAGO')}
+                    <span className="adm-card-label">{label}</span>
+                    <span className={`adm-tally${current.length >= MAX_TEXT_ITEMS ? ' is-full' : ''}`}>
+                      {current.length} / {MAX_TEXT_ITEMS}
                     </span>
                   </div>
-                  <p className={`adm-card-text${card.text.trim() ? '' : ' is-empty'}`}>
-                    {card.text.trim() || card.empty}
-                  </p>
+
+                  <div className="adm-vid-list">
+                    {current.length === 0 && <p className="adm-hint">{empty}</p>}
+                    {current.map((item) => (
+                      <div key={item.id} className="adm-vid-item">
+                        <span className="adm-vid-body">
+                          <span className="adm-vid-name">{item.text}</span>
+                          <span className="adm-vid-meta"><Icon name="clock" /> {scheduleLine(item)}</span>
+                        </span>
+                        {schedulePill(item)}
+                        <button type="button" className="k-btn k-btn--ghost" onClick={() => openAnnEditor(kind, item)}>
+                          {t('Edit', 'I-edit')}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
                   <button
                     type="button"
-                    className="k-btn k-btn--ghost"
-                    onClick={() => openAnnEditor(card.key)}
+                    className={`k-btn k-btn--ghost${current.length >= MAX_TEXT_ITEMS ? ' k-btn--blocked' : ''}`}
+                    disabled={current.length >= MAX_TEXT_ITEMS}
+                    onClick={() => openAnnEditor(kind)}
                   >
-                    {t('Edit', 'I-edit')}
+                    <Icon name="plus" /> {add}
                   </button>
+
+                  {archived.length > 0 && (
+                    <details className="adm-archive">
+                      <summary>{t(`Archive (${archived.length})`, `Archive (${archived.length})`)}</summary>
+                      <div className="adm-vid-list">
+                        {archived.map((item) => (
+                          <div key={item.id} className="adm-vid-item is-archived">
+                            <span className="adm-vid-body">
+                              <span className="adm-vid-name">{item.text}</span>
+                              <span className="adm-vid-meta"><Icon name="clock" /> {scheduleLine(item)}</span>
+                            </span>
+                            {schedulePill(item)}
+                            <button
+                              type="button"
+                              className="k-btn k-btn--ghost"
+                              onClick={() => openAnnEditor(kind, { text: item.text })}
+                            >
+                              {t('Use again', 'Gamitin ulit')}
+                            </button>
+                            <button
+                              type="button"
+                              className="k-btn k-btn--ghost adm-modal-del"
+                              disabled={isSaving}
+                              onClick={() => handleDeleteText(kind, item)}
+                            >
+                              {t('Delete', 'Burahin')}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  )}
                 </div>
-              ))}
-            </div>
+              );
+            })}
 
             <div className="adm-divider" aria-hidden="true" />
 
@@ -804,7 +992,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
               {t('Welcome Screen Videos & Pictures', 'Mga Video at Larawan sa Welcome Screen')}
               {' '}
               <span className={`adm-tally${isVideoListFull ? ' is-full' : ''}`}>
-                {videos.length} / {MAX_VIDEOS}
+                {currentVideos.length} / {MAX_VIDEOS}
               </span>
             </h3>
             <p className="adm-hint">
@@ -815,8 +1003,9 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   card beside the title, or as the full-screen background — pick it in
                   <strong> “Where it shows”</strong>. A picture stays on screen for the number of
                   <strong> seconds you set</strong> below, then the next one comes up.
-                  Up to <strong>{MAX_VIDEOS} items</strong> — past that, the wait before the first
-                  one comes around again is too long.
+                  Set a <strong>schedule</strong> so it only shows on certain dates. Up to
+                  <strong> {MAX_VIDEOS} items</strong>; only the ones within their schedule take turns
+                  on screen, and finished ones move to the Archive.
                 </>
               ) : (
                 <>
@@ -825,14 +1014,15 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   sa gilid ng pamagat, o bilang background na buong screen — piliin sa
                   <strong> “Saan lalabas”</strong>. Ang larawan ay nananatili sa screen sa
                   <strong> bilang ng segundong itinakda mo</strong> sa ibaba, tapos susunod na ang
-                  kasunod. Hanggang <strong>{MAX_VIDEOS} na tala</strong> lang — sa sobra pa riyan,
-                  masyado nang matagal bago maulit ang una.
+                  kasunod. Magtakda ng <strong>iskedyul</strong> para sa ilang petsa lang ito lumabas.
+                  Hanggang <strong>{MAX_VIDEOS} na tala</strong>; ang nasa iskedyul lang ang nagsasalitan
+                  sa screen, at napupunta sa Archive ang mga tapos na.
                 </>
               )}
             </p>
 
             <div className="adm-vid-list">
-                  {videos.length === 0 && (
+                  {currentVideos.length === 0 && (
                     <p className="adm-hint">
                       {t(
                         'Nothing here yet. Tap “Add Video / Picture” below.',
@@ -840,7 +1030,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                       )}
                     </p>
                   )}
-                  {videos.map((video, i) => (
+                  {currentVideos.map((video, i) => (
                     <div key={video.id} className="adm-vid-item">
                       <span className="adm-vid-idx">{i + 1}</span>
                       <span className="adm-vid-body">
@@ -868,10 +1058,9 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                             </span>
                           )}
                         </span>
+                        <span className="adm-vid-meta"><Icon name="clock" /> {scheduleLine(video)}</span>
                       </span>
-                      <span className={`adm-vid-pill${video.is_active ? ' is-on' : ''}`}>
-                        {video.is_active ? 'LIVE' : 'OFF'}
-                      </span>
+                      {schedulePill(video)}
                       <button type="button" className="k-btn k-btn--ghost" onClick={() => pickVideo(video)}>
                         {t('Edit', 'I-edit')}
                       </button>
@@ -885,7 +1074,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
               onClick={() => pickVideo(null)}
               disabled={isVideoListFull}
             >
-              ＋ {t('Add Video / Picture', 'Magdagdag ng Video / Larawan')}
+              <Icon name="plus" /> {t('Add Video / Picture', 'Magdagdag ng Video / Larawan')}
             </button>
             {isVideoListFull && (
               <p className="adm-hint">
@@ -894,6 +1083,32 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   `Puno na ang listahan (${MAX_VIDEOS}). Pindutin ang Edit sa isa at burahin ito para may mabakante.`,
                 )}
               </p>
+            )}
+
+            {archivedVideos.length > 0 && (
+              <details className="adm-archive">
+                <summary>{t(`Archive (${archivedVideos.length})`, `Archive (${archivedVideos.length})`)}</summary>
+                <p className="adm-hint">
+                  {t(
+                    'These have finished showing. Tap Edit to set new dates, or to delete one.',
+                    'Tapos na ang mga ito. Pindutin ang Edit para magtakda ng bagong petsa, o para burahin.',
+                  )}
+                </p>
+                <div className="adm-vid-list">
+                  {archivedVideos.map((video) => (
+                    <div key={video.id} className="adm-vid-item is-archived">
+                      <span className="adm-vid-body">
+                        <span className="adm-vid-name">{video.title || video.source_url}</span>
+                        <span className="adm-vid-meta"><Icon name="clock" /> {scheduleLine(video)}</span>
+                      </span>
+                      {schedulePill(video)}
+                      <button type="button" className="k-btn k-btn--ghost" onClick={() => pickVideo(video)}>
+                        {t('Edit', 'I-edit')}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </details>
             )}
           </div>
         )}
@@ -914,7 +1129,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                         : t('New video', 'Bagong video'))}
                 </h4>
                 <button type="button" className="adm-modal-x" onClick={closeVideoEditor} disabled={isSaving}>
-                  ✕
+                  <Icon name="close" />
                 </button>
               </div>
 
@@ -1083,7 +1298,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                       type="number"
                       className="k-input"
                       min={1}
-                      max={videos.length + (videoForm.id ? 0 : 1)}
+                      max={currentVideos.length + (currentVideos.some((v) => v.id === videoForm.id) ? 0 : 1)}
                       value={videoForm.position}
                       onChange={(e) => setVideoField('position', e.target.value)}
                     />
@@ -1174,6 +1389,20 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   </p>
                 </div>
 
+                <SchedulePicker
+                  t={t}
+                  from={videoForm.starts_local}
+                  until={videoForm.ends_local}
+                  onFrom={(v) => setVideoField('starts_local', v)}
+                  onUntil={(v) => setVideoField('ends_local', v)}
+                  hint={t(
+                    'Blank start = shows right away. Blank end = stays until you delete it. '
+                    + 'When the end passes, it moves to the Archive on its own.',
+                    'Blangkong simula = lalabas agad. Blangkong wakas = mananatili hanggang burahin. '
+                    + 'Paglampas ng wakas, kusa itong mapupunta sa Archive.',
+                  )}
+                />
+
                 <div>
                   <label className="k-label">{t('Caption (optional)', 'Caption (opsyonal)')}</label>
                   <textarea
@@ -1221,24 +1450,24 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                         )
                       : videoForm.placement === 'background'
                       ? t(
-                          'Checked = the background music starts ON. Either way, a round 🔊 button is '
+                          'Checked = the background music starts ON. Either way, a round sound button is '
                           + 'always at the lower right of the welcome screen to turn it on or off. Only '
                           + 'one sound plays at a time: while the announcement video in the card is '
-                          + 'playing sound, the background is quiet — tap the background 🔊 to switch to '
+                          + 'playing sound, the background is quiet — tap the background sound button to switch to '
                           + 'it. If the browser blocks sound at first, one tap on that button is enough.',
                           'Naka-check = bukas ang musika ng background sa umpisa. Alinman dito, laging may '
-                          + 'bilog na 🔊 sa kanang ibaba ng welcome screen para buksan o patayin ito. Iisang '
+                          + 'bilog na buton ng tunog sa kanang ibaba ng welcome screen para buksan o patayin ito. Iisang '
                           + 'tunog lang ang lalabas: habang tumutunog ang anunsyong video sa kard, tahimik '
-                          + 'ang background — pindutin ang 🔊 ng background para ito ang tumunog. Kung '
+                          + 'ang background — pindutin ang buton ng tunog ng background para ito ang tumunog. Kung '
                           + 'haharangin ng browser ang tunog sa umpisa, isang pindot sa buton ay sapat na.',
                         )
                       : t(
-                          'A round 🔊 button appears over the video on the welcome screen. '
+                          'A round sound button appears over the video on the welcome screen. '
                           + 'From there a visitor can turn the sound on or off without starting '
                           + 'the kiosk. If the browser blocks sound at first, one tap on that '
                           + 'button is enough. To have it on from the start with nobody tapping, '
                           + 'see the README (Chrome kiosk flag).',
-                          'Lalabas ang bilog na 🔊 na buton sa ibabaw ng video sa welcome screen. '
+                          'Lalabas ang bilog na buton ng tunog sa ibabaw ng video sa welcome screen. '
                           + 'Doon kayang buksan o patayin ng bisita ang tunog nang hindi nagsisimula '
                           + 'ang kiosk. Kung haharangin ng browser ang tunog sa umpisa, isang pindot '
                           + 'lang sa buton na iyon ay sapat na. Para bukas agad kahit walang pumipindot, '
@@ -1261,7 +1490,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   </button>
                 )}
                 <button type="button" className="k-btn k-btn--ghost" onClick={closeVideoEditor} disabled={isSaving}>
-                  ✕ {t('Close', 'Isara')}
+                  <Icon name="close" /> {t('Close', 'Isara')}
                 </button>
                 <button type="submit" className="k-btn k-btn--primary" disabled={isSaving}>
                   {isSaving
@@ -1282,18 +1511,18 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
             <form className="adm-modal adm-modal--sm" onSubmit={handleSaveAnnouncement}>
               <div className="adm-modal-top">
                 <h4>
-                  {annEditor === 'announcement'
+                  {annEditor.kind === 'announcement'
                     ? t('Official Announcement', 'Opisyal na Anunsyo')
                     : t('Scrolling Advisory', 'Gumagalaw na Paalala')}
                 </h4>
                 <button type="button" className="adm-modal-x" onClick={closeAnnEditor} disabled={isSaving}>
-                  ✕
+                  <Icon name="close" />
                 </button>
               </div>
 
               <div className="adm-modal-body">
                 <label className="k-label">
-                  {annEditor === 'announcement'
+                  {annEditor.kind === 'announcement'
                     ? t(
                         'Text of the large card on the welcome screen',
                         'Teksto ng malaking kard sa welcome screen',
@@ -1307,10 +1536,10 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   className="k-textarea adm-modal-area"
                   autoFocus
                   maxLength={annLimit}
-                  value={annDraft}
-                  onChange={(e) => changeAnnDraft(e.target.value)}
+                  value={annEditor.text}
+                  onChange={(e) => changeAnnDraft('text', e.target.value)}
                   placeholder={
-                    annEditor === 'announcement'
+                    annEditor.kind === 'announcement'
                       ? t('e.g. No classes tomorrow due to the typhoon…', 'hal. Walang pasok bukas dahil sa bagyo…')
                       : t('e.g. Please secure your belongings…', 'hal. Pakiingatan po ang inyong mga gamit…')
                   }
@@ -1319,7 +1548,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                 {/* Bilang ng natitirang titik. Nagbabago ang kulay bago pa
                     maubos para may abiso muna bago tumigil ang pag-type. */}
                 <p className={`adm-count${annLeft === 0 ? ' is-full' : annLeft <= 25 ? ' is-near' : ''}`}>
-                  <span>{annDraft.length} / {annLimit} {t('characters', 'na titik')}</span>
+                  <span>{annEditor.text.length} / {annLimit} {t('characters', 'na titik')}</span>
                   <span>
                     {annLeft === 0
                       ? t('Limit reached.', 'Umabot na sa hangganan.')
@@ -1328,7 +1557,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                 </p>
 
                 <p className="adm-hint">
-                  {annEditor === 'announcement'
+                  {annEditor.kind === 'announcement'
                     ? t(
                         `Only 3 lines fit on the kiosk — anything past that is cut off, so the limit here is ${annLimit} characters.`,
                         `Hanggang 3 linya lang ang kasya sa kiosk — puputulin ang sobra, kaya ${annLimit} na titik lang ang hangganan dito.`,
@@ -1338,17 +1567,35 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                         `Isang linya bawat mensahe. Pinagsasabit ang mga ito ng “•”. Panatilihing maikli — ${annLimit} na titik lang ang hangganan para mabasa pa habang gumagalaw.`,
                       )}
                 </p>
-                <p className="adm-hint">
-                  {t(
-                    'Leave it blank to hide it on the welcome screen.',
-                    'Iwanang blangko para itago ito sa welcome screen.',
+
+                <SchedulePicker
+                  t={t}
+                  from={annEditor.starts_local}
+                  until={annEditor.ends_local}
+                  onFrom={(v) => changeAnnDraft('starts_local', v)}
+                  onUntil={(v) => changeAnnDraft('ends_local', v)}
+                  hint={t(
+                    'Blank start = shows right away. Blank end = stays until you delete it. '
+                    + 'When the end passes, it moves to the Archive on its own.',
+                    'Blangkong simula = lalabas agad. Blangkong wakas = mananatili hanggang burahin. '
+                    + 'Paglampas ng wakas, kusa itong mapupunta sa Archive.',
                   )}
-                </p>
+                />
               </div>
 
               <div className="adm-modal-foot">
+                {annEditor.id && (
+                  <button
+                    type="button"
+                    className="k-btn k-btn--ghost adm-modal-del"
+                    onClick={() => handleDeleteText(annEditor.kind, annEditor)}
+                    disabled={isSaving}
+                  >
+                    {t('Delete', 'Burahin')}
+                  </button>
+                )}
                 <button type="button" className="k-btn k-btn--ghost" onClick={closeAnnEditor} disabled={isSaving}>
-                  ✕ {t('Close', 'Isara')}
+                  <Icon name="close" /> {t('Close', 'Isara')}
                 </button>
                 <button type="submit" className="k-btn k-btn--primary" disabled={isSaving}>
                   {isSaving
@@ -1400,18 +1647,18 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   <div className="adm-form--split">
                     <div>
                       <label className="k-label">{t('Title', 'Pangalan')}</label>
-                      <input type="text" className="k-input" value={formTitle} onChange={(e) => setFormTitle(e.target.value)} required />
+                      <input type="text" className="k-input" value={formTitle} onChange={(e) => setFormTitle(e.target.value)} placeholder={t('ex. Budget Office', 'hal. Budget Office')} required />
                     </div>
                     <div>
                       <label className="k-label">{t('Hours', 'Oras')}</label>
-                      <input type="text" className="k-input" value={formHours} onChange={(e) => setFormHours(e.target.value)} />
+                      <input type="text" className="k-input" value={formHours} onChange={(e) => setFormHours(e.target.value)} placeholder={t('ex. 8:00 AM - 5:00 PM', 'hal. 8:00 AM - 5:00 PM')} />
                     </div>
                   </div>
 
                   <div className="adm-form--split">
                     <div>
                       <label className="k-label">Contact Person</label>
-                      <input type="text" className="k-input" value={formHead} onChange={(e) => setFormHead(e.target.value)} />
+                      <input type="text" className="k-input" value={formHead} onChange={(e) => setFormHead(e.target.value)} placeholder={t('ex. Ms. Juana Dela Cruz', 'hal. Ms. Juana Dela Cruz')} />
                     </div>
                     <div>
                       <label className="k-label">{t('Status', 'Estado')}</label>
@@ -1425,7 +1672,25 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                     </div>
                   </div>
 
-                  {/* Ang numerong lumalabas sa tabi ng 📞 sa kiosk. Dati'y
+                  {/* Iskedyul ng status: kapag lumipas ang "Hanggang", Available
+                      na ulit ito nang kusa — hindi na kailangang balikan. */}
+                  {formStatus !== 'Available' && (
+                    <SchedulePicker
+                      t={t}
+                      from={formStatusFrom}
+                      until={formStatusUntil}
+                      onFrom={setFormStatusFrom}
+                      onUntil={setFormStatusUntil}
+                      hint={t(
+                        'Blank start = takes effect now. When the end passes, the office goes back to '
+                        + 'Available on its own. Blank end = stays until you change it.',
+                        'Blangkong simula = ngayon na. Paglampas ng wakas, kusang babalik sa Available '
+                        + 'ang tanggapan. Blangkong wakas = mananatili hanggang palitan.',
+                      )}
+                    />
+                  )}
+
+                  {/* Ang numerong lumalabas sa kiosk. Dati'y
                       nasa code lang ito (defaultOfficeData.js) at kailangan
                       pang may humawak niyon tuwing may bagong numero —
                       tingnan ang supabase/office_phones.sql. */}
@@ -1440,26 +1705,26 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                         className="k-input"
                         value={formPhone}
                         onChange={(e) => setFormPhone(e.target.value)}
-                        placeholder="(046) 483-9372"
+                        placeholder={t('ex. (046) 483-9372', 'hal. (046) 483-9372')}
                       />
                     </div>
                     <div>
-                      <label className="k-label">{t('Local', 'Local')}</label>
+                      <label className="k-label">{t('Room No.', 'Blg. ng Silid')}</label>
                       <input
                         type="text"
                         inputMode="numeric"
                         className="k-input"
                         value={formLocal}
                         onChange={(e) => setFormLocal(e.target.value)}
-                        placeholder="106"
+                        placeholder={t('ex. 106', 'hal. 106')}
                       />
                     </div>
                   </div>
                   <p className="adm-hint">
                     {formPhone.trim()
                       ? t(
-                          `The kiosk will show: ${formPhone.trim()}${formLocal.trim() ? ` · local ${formLocal.trim()}` : ''}`,
-                          `Ipapakita ng kiosk: ${formPhone.trim()}${formLocal.trim() ? ` · local ${formLocal.trim()}` : ''}`,
+                          `The kiosk will show: ${formPhone.trim()}${formLocal.trim() ? ` · Room No. ${formLocal.trim()}` : ''}`,
+                          `Ipapakita ng kiosk: ${formPhone.trim()}${formLocal.trim() ? ` · Blg. ng Silid ${formLocal.trim()}` : ''}`,
                         )
                       : t(
                           'Leave this blank and the kiosk will not show a phone line for this office at all.',
@@ -1506,7 +1771,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
             ) : [
               {
                 lift: 'elevator',
-                icon: '🛗',
+                icon: <Icon name="elevator" />,
                 title: t('Elevator Status', 'Kalagayan ng Elevator'),
                 hint: t(
                   'When the elevator is not working, the kiosk greys out the Elevator choice, '
@@ -1520,7 +1785,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
               },
               {
                 lift: 'escalator',
-                icon: <EscalatorIcon className="escalator-icon--inline" />,
+                icon: <Icon name="escalator" />,
                 title: t('Escalator Status', 'Kalagayan ng Escalator'),
                 hint: t(
                   'When the escalator is not working, the kiosk greys out the Escalator choice '

@@ -1,5 +1,16 @@
 import { supabase } from './supabase';
 import { bumpSearchCount } from './kioskDevice';
+import { isLiveNow, scheduleState } from './schedule';
+
+// Ang mga pangalan sa database. Hindi ito ang orihinal na pangalan sa unang
+// bersyon ng kiosk, kaya iisang lugar na lang ang babaguhin kung sakali:
+//   office_details        → office_information
+//   kiosks_announcements  → announcement_text
+//   kiosk_videos          → announcement_media
+//   offices.badge         → offices.location
+const OFFICE_DETAILS = 'office_information';
+const ANNOUNCEMENTS = 'announcement_text';
+const VIDEOS = 'announcement_media';
 
 // ==============================================================
 // HINDI PA NAPAPATAKBO ANG supabase/office_phones.sql
@@ -20,6 +31,17 @@ const isMissingPhoneColumn = (error) => isMissingColumn(error, ['phone', 'local'
 
 // Ganoon din para sa Tagalog na paliwanag — supabase/office_about_tl.sql.
 const isMissingDescriptionTlColumn = (error) => isMissingColumn(error, ['description_tl']);
+
+// At sa iskedyul — supabase/map_update_2026_11.sql.
+const isMissingStatusScheduleColumn = (error) => isMissingColumn(error, ['status_from', 'status_until']);
+const isMissingVideoScheduleColumn = (error) => isMissingColumn(error, ['starts_at', 'ends_at']);
+
+// May mga lumang pangalan sa database na may emoji pa ("🚧 UNDER
+// CONSTRUCTION"). Dito sila nililinis para pareho ang lalabas sa mapa, sa
+// listahan, at sa Admin Panel — kaya malinis din ito pagka-save.
+const stripEmoji = (text) => String(text ?? '')
+  .replace(/[\p{Extended_Pictographic}\uFE0F]/gu, '')
+  .trim();
 
 // ==============================================================
 // 1. SUPABASE AUTHENTICATION
@@ -109,7 +131,7 @@ export const initializeDatabase = async (seedData) => {
           office_key: officeKey, 
           floor: floorNum, 
           title: item.title || '', 
-          badge: item.badge || '',
+          location: item.badge || '',
           css_class: item.cssClass || '',
           search_count: 0
         });
@@ -132,7 +154,7 @@ export const initializeDatabase = async (seedData) => {
     const { error: insertError1 } = await supabase.from('offices').insert(officesToInsert);
     if (insertError1) throw insertError1;
 
-    let { error: insertError2 } = await supabase.from('office_details').insert(detailsToInsert);
+    let { error: insertError2 } = await supabase.from(OFFICE_DETAILS).insert(detailsToInsert);
 
     // Gaya ng nasa updateOffice: kapag wala pang hanay para sa telepono,
     // huwag ipatumba ang buong pagbibinhi ng bagong database — ang lahat
@@ -144,7 +166,7 @@ export const initializeDatabase = async (seedData) => {
       );
       /* eslint-disable-next-line no-unused-vars */
       const withoutPhone = detailsToInsert.map(({ phone, local, ...rest }) => rest);
-      ({ error: insertError2 } = await supabase.from('office_details').insert(withoutPhone));
+      ({ error: insertError2 } = await supabase.from(OFFICE_DETAILS).insert(withoutPhone));
     }
     if (insertError2) throw insertError2;
 
@@ -160,12 +182,12 @@ export const initializeDatabase = async (seedData) => {
 // ==============================================================
 export const getAllOffices = async () => {
   try {
-    const { data, error } = await supabase.from('offices').select('*, office_details(*)');
+    const { data, error } = await supabase.from('offices').select(`*, ${OFFICE_DETAILS}(*)`);
     if (error) throw error;
 
     const structuredData = {};
     data.forEach(row => {
-      const details = row.office_details || {};
+      const details = row[OFFICE_DETAILS] || {};
       const safeDetails = Array.isArray(details) ? details[0] : details;
       
       if (!structuredData[row.floor]) structuredData[row.floor] = {};
@@ -185,8 +207,8 @@ export const getAllOffices = async () => {
       }
 
       const office = {
-        title: row.title,
-        badge: row.badge,
+        title: stripEmoji(row.title),
+        badge: row.location,
         hours: safeDetails?.hours || '',
         head: safeDetails?.head || '',
         description: safeDetails?.description || '',
@@ -225,6 +247,11 @@ export const getAllOffices = async () => {
         office.descriptionTl = safeDetails.description_tl;
       }
 
+      // Iskedyul ng status. Kapag NULL, walang petsa: nananatili ang status
+      // hanggang palitan (tingnan ang effectiveStatus sa schedule.js).
+      office.statusFrom = safeDetails?.status_from || null;
+      office.statusUntil = safeDetails?.status_until || null;
+
       structuredData[row.floor][row.office_key] = office;
     });
     return structuredData;
@@ -238,16 +265,29 @@ export const getAllOffices = async () => {
 // 4. BULLETPROOF UPDATE FUNCTION
 // ==============================================================
 
-export const updateOffice = async (officeKey, updates) => {
+export const updateOffice = async (officeKey, updates, floor) => {
   try {
-    const { error: err1 } = await supabase.from('offices').update({
-      title: updates.title, 
-      badge: updates.badge, 
+    const officeFields = {
+      title: updates.title,
+      location: updates.badge,
       css_class: updates.cssClass
-    }).eq('office_key', officeKey);
+    };
+    const { data: updatedRows, error: err1 } = await supabase.from('offices')
+      .update(officeFields).eq('office_key', officeKey).select('office_key');
     if (err1) throw err1;
 
-    const { data: existingDetail, error: checkErr } = await supabase.from('office_details').select('office_key').eq('office_key', officeKey).maybeSingle();
+    // Ito ang dahilan ng "Database error" sa Info Desk at Guard Post: nasa
+    // code sila pero walang row sa `offices`, dahil isang beses lang nagbibinhi
+    // ang initializeDatabase. Walang error ang UPDATE na walang natamaan — sa
+    // sumunod na INSERT sa detalye sumasabog, dahil sa foreign key. Kaya
+    // ginagawa muna ang row. Ganoon din sa bawat bagong kwarto sa mapa.
+    if (!updatedRows?.length) {
+      const { error: insertErr } = await supabase.from('offices')
+        .insert({ office_key: officeKey, floor, search_count: 0, ...officeFields });
+      if (insertErr) throw insertErr;
+    }
+
+    const { data: existingDetail, error: checkErr } = await supabase.from(OFFICE_DETAILS).select('office_key').eq('office_key', officeKey).maybeSingle();
     if (checkErr) throw checkErr;
 
     // Mula sa admin, ang blangkong kahon ay '' — sinadyang pagwalis
@@ -259,19 +299,22 @@ export const updateOffice = async (officeKey, updates) => {
       description: updates.description,
       description_tl: updates.descriptionTl ?? '',
       status: updates.status,
+      status_from: updates.statusFrom ?? null,
+      status_until: updates.statusUntil ?? null,
       requirements: updates.requirements,
       phone: updates.phone ?? '',
       local: updates.local ?? ''
     };
 
     const writeDetails = (fields) => (existingDetail
-      ? supabase.from('office_details').update(fields).eq('office_key', officeKey)
-      : supabase.from('office_details').insert({ office_key: officeKey, ...fields }));
+      ? supabase.from(OFFICE_DETAILS).update(fields).eq('office_key', officeKey)
+      : supabase.from(OFFICE_DETAILS).insert({ office_key: officeKey, ...fields }));
 
     let fields = detailFields;
     let { error: err2 } = await writeDetails(fields);
     let phoneSkipped = false;
     let descriptionTlSkipped = false;
+    let statusScheduleSkipped = false;
 
     // Kapag hindi pa napatakbo ang supabase/office_phones.sql, wala pang
     // hanay para sa telepono — at tatanggihan ng database ang BUONG
@@ -291,8 +334,8 @@ export const updateOffice = async (officeKey, updates) => {
     //
     // Ganoon din ang Tagalog na paliwanag (supabase/office_about_tl.sql).
     // Isa-isang hanay lang ang nirereklamo ng database bawat tanggi, kaya
-    // dalawang beses itong puwedeng umikot kapag parehong wala pa.
-    for (let attempt = 0; err2 && attempt < 2; attempt++) {
+    // ilang beses itong puwedeng umikot kapag marami pang wala.
+    for (let attempt = 0; err2 && attempt < 3; attempt++) {
       if (!phoneSkipped && isMissingPhoneColumn(err2)) {
         console.warn(
           'Wala pang hanay na phone/local ang office_details — na-save ang '
@@ -311,6 +354,15 @@ export const updateOffice = async (officeKey, updates) => {
         const { description_tl, ...rest } = fields;
         fields = rest;
         descriptionTlSkipped = true;
+      } else if (!statusScheduleSkipped && isMissingStatusScheduleColumn(err2)) {
+        console.warn(
+          'Wala pang hanay na status_from/status_until — na-save ang lahat '
+          + 'maliban sa iskedyul. Patakbuhin ang supabase/map_update_2026_11.sql.',
+        );
+        /* eslint-disable-next-line no-unused-vars */
+        const { status_from, status_until, ...rest } = fields;
+        fields = rest;
+        statusScheduleSkipped = true;
       } else {
         break;
       }
@@ -318,7 +370,7 @@ export const updateOffice = async (officeKey, updates) => {
     }
     if (err2) throw err2;
 
-    return { success: true, phoneSkipped, descriptionTlSkipped };
+    return { success: true, phoneSkipped, descriptionTlSkipped, statusScheduleSkipped };
   } catch (error) { 
     console.error(`Error updating office ${officeKey}:`, error); 
     throw error; 
@@ -343,7 +395,7 @@ export const incrementSearchCount = async (officeKey) => {
 // ==============================================================
 export const getAnnouncement = async () => {
   try {
-    const { data, error } = await supabase.from('kiosks_announcements').select('announcement_text').eq('id', 1).maybeSingle();
+    const { data, error } = await supabase.from(ANNOUNCEMENTS).select('announcement_text').eq('id', 1).maybeSingle();
     if (error) throw error; 
     return data ? data.announcement_text : "";
   } catch (error) { return ""; }
@@ -351,15 +403,15 @@ export const getAnnouncement = async () => {
 
 export const updateAnnouncement = async (text) => {
   try {
-    const { data: existing, error: checkErr } = await supabase.from('kiosks_announcements').select('id').eq('id', 1).maybeSingle();
+    const { data: existing, error: checkErr } = await supabase.from(ANNOUNCEMENTS).select('id').eq('id', 1).maybeSingle();
     if (checkErr) throw checkErr;
 
     // Hindi nagtatapon ang supabase-js kapag tinanggihan ang pagsulat —
     // nasa `error` ito. Kung hindi titingnan, "nai-save na" ang sasabihin
     // sa admin kahit walang nagbago.
     const { error: writeErr } = existing
-      ? await supabase.from('kiosks_announcements').update({ announcement_text: text }).eq('id', 1)
-      : await supabase.from('kiosks_announcements').insert([{ id: 1, announcement_text: text }]);
+      ? await supabase.from(ANNOUNCEMENTS).update({ announcement_text: text }).eq('id', 1)
+      : await supabase.from(ANNOUNCEMENTS).insert([{ id: 1, announcement_text: text }]);
     if (writeErr) throw writeErr;
     return true;
   } catch (error) {
@@ -369,9 +421,9 @@ export const updateAnnouncement = async (text) => {
 };
 
 // Iisang JSON sa iisang row ang lahat ng setting ng welcome screen at ng
-// elevator: { advisory, announcement, elevator }. Ang lumang row na payak
-// na teksto lang ay ang advisory noon pa.
-const parseKioskSettings = (text) => {
+// elevator: { announcements, advisories, elevator, escalator }. Ang lumang row
+// na payak na teksto lang ay ang advisory noon pa.
+export const parseKioskSettings = (text) => {
   if (!text) return {};
   try {
     const parsed = JSON.parse(text);
@@ -387,12 +439,67 @@ const parseKioskSettings = (text) => {
 // magbubura ng anunsyo sa susunod na pag-save ng elevator.
 export const patchKioskSettings = async (patch) => {
   const { data, error } = await supabase
-    .from('kiosks_announcements').select('announcement_text').eq('id', 1).maybeSingle();
+    .from(ANNOUNCEMENTS).select('announcement_text').eq('id', 1).maybeSingle();
   if (error) throw error;
   const next = { ...parseKioskSettings(data?.announcement_text), ...patch };
   await updateAnnouncement(JSON.stringify(next));
   return next;
 };
+
+// ==============================================================
+// 6a. NAKA-ISKEDYUL NA TEKSTO SA WELCOME SCREEN
+// ==============================================================
+// Listahan na ang dalawang teksto, hindi na iisang teksto bawat isa: bawat
+// tala ay { id, text, starts_at, ends_at }. Nagpapatong-patong sila, at
+// lumalabas lang ang tala sa loob ng iskedyul nito. Ang lumipas na ay archive.
+export const TEXT_KINDS = { announcement: 'announcements', advisory: 'advisories' };
+
+// Hanggang ilang tapos na tala ang tinatandaan bawat uri. Iisang row lang ang
+// pinaglalagyan nila, kaya hindi ito puwedeng lumaki nang walang hangganan.
+const MAX_ARCHIVED_TEXTS = 30;
+
+// Ang row na hindi pa nagagalaw mula noong iisang teksto pa lang ang bawat
+// isa: `announcement` / `advisory`. Isang talang walang iskedyul iyon — kaya
+// walang nawawala sa kasalukuyang anunsyo.
+export const readTextItems = (settings, kind) => {
+  const items = settings?.[TEXT_KINDS[kind]];
+  if (Array.isArray(items)) return items;
+  const legacy = settings?.[kind];
+  return typeof legacy === 'string' && legacy.trim()
+    ? [{ id: `legacy-${kind}`, text: legacy, starts_at: null, ends_at: null }]
+    : [];
+};
+
+const pruneArchive = (items, now = Date.now()) => {
+  const ended = items
+    .filter((i) => scheduleState(i, now) === 'ended')
+    .sort((a, b) => new Date(b.ends_at) - new Date(a.ends_at))
+    .slice(MAX_ARCHIVED_TEXTS);
+  const drop = new Set(ended.map((i) => i.id));
+  return items.filter((i) => !drop.has(i.id));
+};
+
+const writeTextItems = async (kind, change) => {
+  const { data, error } = await supabase
+    .from(ANNOUNCEMENTS).select('announcement_text').eq('id', 1).maybeSingle();
+  if (error) throw error;
+  const settings = parseKioskSettings(data?.announcement_text);
+  const items = pruneArchive(change(readTextItems(settings, kind)));
+  // Binubura ang lumang teksto: ang listahan na ang masusunod.
+  const next = { ...settings, [TEXT_KINDS[kind]]: items, [kind]: '' };
+  await updateAnnouncement(JSON.stringify(next));
+  return items;
+};
+
+export const saveTextItem = (kind, item) => {
+  const saved = { ...item, id: item.id || `${kind}-${Date.now()}` };
+  return writeTextItems(kind, (items) => (items.some((i) => i.id === saved.id)
+    ? items.map((i) => (i.id === saved.id ? saved : i))
+    : [...items, saved]));
+};
+
+export const deleteTextItem = (kind, id) =>
+  writeTextItems(kind, (items) => items.filter((i) => i.id !== id));
 
 // ==============================================================
 // 6b. KALAGAYAN NG ELEVATOR AT ESCALATOR
@@ -429,7 +536,7 @@ export const setLiftStatus = async (lift, status) => {
 export const getKioskVideos = async ({ activeOnly = false } = {}) => {
   try {
     let query = supabase
-      .from('kiosk_videos')
+      .from(VIDEOS)
       .select('*')
       .order('sort_order', { ascending: true })
       .order('id', { ascending: true });
@@ -438,7 +545,9 @@ export const getKioskVideos = async ({ activeOnly = false } = {}) => {
 
     const { data, error } = await query;
     if (error) throw error;
-    return data || [];
+    // Ang kiosk (`activeOnly`) ay ang nasa iskedyul ngayon lang ang kukunin.
+    // Isang minuto ang pagitan ng paghila, kaya iyon din ang tumpak ng iskedyul.
+    return activeOnly ? (data || []).filter((v) => isLiveNow(v)) : (data || []);
   } catch (error) {
     console.error('Error fetching kiosk videos:', error);
     return [];
@@ -458,11 +567,13 @@ export const saveKioskVideo = async (video) => {
       orientation: video.orientation === 'portrait' ? 'portrait' : 'landscape',
       has_sound: video.has_sound === true,
       placement: video.placement === 'background' ? 'background' : 'side',
+      starts_at: video.starts_at || null,
+      ends_at: video.ends_at || null,
     };
 
     const write = (fields) => (video.id
-      ? supabase.from('kiosk_videos').update(fields).eq('id', video.id).select().single()
-      : supabase.from('kiosk_videos').insert([fields]).select().single());
+      ? supabase.from(VIDEOS).update(fields).eq('id', video.id).select().single()
+      : supabase.from(VIDEOS).insert([fields]).select().single());
 
     let { data, error } = await write(payload);
 
@@ -470,14 +581,27 @@ export const saveKioskVideo = async (video) => {
     // hanay para sa `placement`. Ise-save pa rin ang lahat ng iba (lalabas
     // ito sa gilid, gaya ng dati), at sasabihan ang admin.
     let placementSkipped = false;
-    if (error && isMissingColumn(error, ['placement'])) {
-      /* eslint-disable-next-line no-unused-vars */
-      const { placement, ...withoutPlacement } = payload;
-      ({ data, error } = await write(withoutPlacement));
-      placementSkipped = !error;
+    let scheduleSkipped = false;
+    let fields = payload;
+    for (let attempt = 0; error && attempt < 2; attempt++) {
+      if (!placementSkipped && isMissingColumn(error, ['placement'])) {
+        /* eslint-disable-next-line no-unused-vars */
+        const { placement, ...rest } = fields;
+        fields = rest;
+        placementSkipped = true;
+      } else if (!scheduleSkipped && isMissingVideoScheduleColumn(error)) {
+        // Hindi pa napapatakbo ang supabase/map_update_2026_11.sql.
+        /* eslint-disable-next-line no-unused-vars */
+        const { starts_at, ends_at, ...rest } = fields;
+        fields = rest;
+        scheduleSkipped = true;
+      } else {
+        break;
+      }
+      ({ data, error } = await write(fields));
     }
     if (error) throw error;
-    return { ...data, placementSkipped };
+    return { ...data, placementSkipped, scheduleSkipped };
   } catch (error) {
     console.error('Save Kiosk Video Error:', error);
     throw error;
@@ -488,19 +612,22 @@ export const saveKioskVideo = async (video) => {
 // kusang umuusog ang lahat ng iba. Hindi na kailangang i-edit isa-isa ang
 // iba para lang makasingit: ang bagong pang-2 ay itinutulak ang dating
 // pang-2 sa pang-3, at iba pa. Pagkatapos nito, laging 0, 1, 2… ang
-// sort_order — walang dobleng numero, walang puwang.
+// sort_order — walang dobleng numero, walang puwang. Ang tapos na (archive)
+// ay wala sa bilang ng admin, kaya sa dulo sila laging nakapuwesto.
 export const placeKioskVideo = async (id, position) => {
   const { data, error } = await supabase
-    .from('kiosk_videos')
-    .select('id, sort_order')
+    .from(VIDEOS)
+    .select('*')
     .order('sort_order', { ascending: true })
     .order('id', { ascending: true });
   if (error) throw error;
 
   const rows = data || [];
   const others = rows.filter((r) => r.id !== id);
-  const at = Math.min(others.length, Math.max(0, (Number(position) || 1) - 1));
-  const ordered = [...others.slice(0, at), { id }, ...others.slice(at)];
+  const current = others.filter((r) => scheduleState(r) !== 'ended');
+  const archived = others.filter((r) => scheduleState(r) === 'ended');
+  const at = Math.min(current.length, Math.max(0, (Number(position) || 1) - 1));
+  const ordered = [...current.slice(0, at), { id }, ...current.slice(at), ...archived];
 
   // Ang nagbago lang ang isinusulat.
   const before = new Map(rows.map((r) => [r.id, r.sort_order]));
@@ -510,7 +637,7 @@ export const placeKioskVideo = async (id, position) => {
 
   for (const r of changes) {
     const { error: updateError } = await supabase
-      .from('kiosk_videos')
+      .from(VIDEOS)
       .update({ sort_order: r.sort_order })
       .eq('id', r.id);
     if (updateError) throw updateError;
@@ -574,7 +701,7 @@ export const deleteKioskVideoFile = async (publicUrl) => {
 
 export const deleteKioskVideo = async (id) => {
   try {
-    const { error } = await supabase.from('kiosk_videos').delete().eq('id', id);
+    const { error } = await supabase.from(VIDEOS).delete().eq('id', id);
     if (error) throw error;
     return true;
   } catch (error) {

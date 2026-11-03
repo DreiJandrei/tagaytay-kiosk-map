@@ -2,6 +2,8 @@
 // background na video (kaliwang ibaba, patayo) at ang City Updates na kard
 // (sa ulo ng kard, pahiga) — at may kanya-kanya silang lakas.
 
+import Icon from './Icon';
+
 const VOLUME_STEP = 10;
 
 // Nasa loob ito ng welcome screen na nagsisimula ng kiosk sa anumang pindot,
@@ -18,7 +20,7 @@ export function VolumeToggle({ open, onToggle, className = '', label }) {
       aria-expanded={open}
       aria-label={open ? `Itago ang lakas ng tunog ${label}` : `Ipakita ang lakas ng tunog ${label}`}
     >
-      <span aria-hidden="true">{open ? '✕' : '🎚️'}</span>
+      <Icon name={open ? 'close' : 'sliders'} />
     </button>
   );
 }

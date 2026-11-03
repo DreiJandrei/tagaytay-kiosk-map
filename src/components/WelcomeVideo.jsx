@@ -4,6 +4,7 @@ import { getKioskVideos } from '../lib/api';
 import { buildEmbedUrl, detectVideoType } from '../lib/videoUtils';
 import { VolumePanel, VolumeToggle } from './VolumeControl';
 import { useAutoHide } from '../lib/volume';
+import Icon from './Icon';
 
 // Kasabay ng announcement ang paghila ng bagong listahan, para agad
 // lumitaw sa kiosk ang bagong post nang hindi kailangang i-restart.
@@ -406,7 +407,7 @@ export default function WelcomeVideo({
             onClick={toggleSound}
             aria-label={soundOn ? 'Patayin ang tunog ng background' : 'Buksan ang tunog ng background'}
           >
-            <span aria-hidden="true">{soundOn ? '🔊' : '🔇'}</span>
+            <Icon name={soundOn ? 'volume' : 'volumeOff'} />
           </button>,
           soundSlot,
         )
@@ -444,7 +445,7 @@ export default function WelcomeVideo({
             onClick={toggleSound}
             aria-label={soundOn ? 'Patayin ang tunog' : 'Buksan ang tunog'}
           >
-            <span aria-hidden="true">{soundOn ? '🔊' : '🔇'}</span>
+            <Icon name={soundOn ? 'volume' : 'volumeOff'} />
           </button>
         )}
         {soundOn && onVolumeChange && (

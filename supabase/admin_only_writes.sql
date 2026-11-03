@@ -68,7 +68,7 @@ declare
   t text;
   p record;
 begin
-  foreach t in array array['offices', 'office_details', 'kiosks_announcements', 'kiosk_videos'] loop
+  foreach t in array array['offices', 'office_information', 'announcement_text', 'announcement_media'] loop
     if to_regclass('public.' || t) is null then
       raise notice 'Walang table na %, nilaktawan.', t;
       continue;
@@ -85,7 +85,7 @@ begin
     end loop;
 
     -- Pagbasa: lahat. Sa video, ang naka-off ay sa admin lang.
-    if t = 'kiosk_videos' then
+    if t = 'announcement_media' then
       execute format(
         'create policy "public_read" on public.%I for select to anon, authenticated '
         'using (is_active = true or public.is_kiosk_admin())', t);
@@ -141,5 +141,5 @@ notify pgrst, 'reload schema';
 select tablename, policyname, cmd, roles
 from pg_policies
 where schemaname = 'public'
-  and tablename in ('offices', 'office_details', 'kiosks_announcements', 'kiosk_videos')
+  and tablename in ('offices', 'office_information', 'announcement_text', 'announcement_media')
 order by tablename, policyname;

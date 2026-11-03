@@ -9,7 +9,7 @@
 -- sa admin lang.
 -- ============================================================
 
-create table if not exists public.kiosk_videos (
+create table if not exists public.announcement_media (
   id               bigint generated always as identity primary key,
   title            text        not null default '',
   caption          text        not null default '',
@@ -43,29 +43,29 @@ create table if not exists public.kiosk_videos (
 );
 
 -- Para sa table na nagawa na bago naidagdag ang mga column na ito.
-alter table public.kiosk_videos
+alter table public.announcement_media
   add column if not exists orientation text not null default 'landscape';
 
 -- Ang lumang check ay tatlong uri lang ang kilala, kaya tatanggihan nito
 -- ang unang larawan na ise-save ng admin. Ibinabagsak muna ang luma bago
 -- ilagay ang bagong bersyon — hindi kasi puwedeng baguhin ang isang
 -- check constraint nang hindi ito inaalis.
-alter table public.kiosk_videos
+alter table public.announcement_media
   drop constraint if exists kiosk_videos_type_check;
 
-alter table public.kiosk_videos
+alter table public.announcement_media
   add constraint kiosk_videos_type_check
   check (video_type in ('facebook', 'youtube', 'file', 'image'));
 
 -- Hinaharangan ng browser ang tunog hangga't walang pumipindot sa screen,
 -- kaya laging nagsisimulang tahimik ang video. Senyas lang ito ng gusto
 -- ng admin — hindi garantiya na may tunog agad.
-alter table public.kiosk_videos
+alter table public.announcement_media
   add column if not exists has_sound boolean not null default false;
 
 do $$
 begin
-  alter table public.kiosk_videos
+  alter table public.announcement_media
     add constraint kiosk_videos_orientation_check
     check (orientation in ('landscape', 'portrait'));
 exception
@@ -74,12 +74,12 @@ end $$;
 
 -- Saan lalabas ang video: sa kard sa gilid, o buong screen sa likod.
 -- Lahat ng dati nang nakatala ay 'side' — doon sila lumalabas noon pa.
-alter table public.kiosk_videos
+alter table public.announcement_media
   add column if not exists placement text not null default 'side';
 
 do $$
 begin
-  alter table public.kiosk_videos
+  alter table public.announcement_media
     add constraint kiosk_videos_placement_check
     check (placement in ('side', 'background'));
 exception
@@ -88,46 +88,46 @@ end $$;
 
 -- Ito ang eksaktong pagkakasunod-sunod na hinihingi ng welcome screen.
 create index if not exists kiosk_videos_order_idx
-  on public.kiosk_videos (is_active, sort_order, id);
+  on public.announcement_media (is_active, sort_order, id);
 
 -- ── Row Level Security ─────────────────────────────────────
-alter table public.kiosk_videos enable row level security;
+alter table public.announcement_media enable row level security;
 
 -- Nakabukas ang pagbasa: anonymous ang kiosk, walang naka-login doon.
-drop policy if exists "kiosk_videos_public_read" on public.kiosk_videos;
+drop policy if exists "kiosk_videos_public_read" on public.announcement_media;
 create policy "kiosk_videos_public_read"
-  on public.kiosk_videos
+  on public.announcement_media
   for select
   to anon, authenticated
   using (is_active = true);
 
 -- Nakikita ng naka-login na admin pati ang naka-off na video.
-drop policy if exists "kiosk_videos_admin_read_all" on public.kiosk_videos;
+drop policy if exists "kiosk_videos_admin_read_all" on public.announcement_media;
 create policy "kiosk_videos_admin_read_all"
-  on public.kiosk_videos
+  on public.announcement_media
   for select
   to authenticated
   using (true);
 
 -- Ang naka-login na admin lang ang makakapagbago.
-drop policy if exists "kiosk_videos_admin_insert" on public.kiosk_videos;
+drop policy if exists "kiosk_videos_admin_insert" on public.announcement_media;
 create policy "kiosk_videos_admin_insert"
-  on public.kiosk_videos
+  on public.announcement_media
   for insert
   to authenticated
   with check (true);
 
-drop policy if exists "kiosk_videos_admin_update" on public.kiosk_videos;
+drop policy if exists "kiosk_videos_admin_update" on public.announcement_media;
 create policy "kiosk_videos_admin_update"
-  on public.kiosk_videos
+  on public.announcement_media
   for update
   to authenticated
   using (true)
   with check (true);
 
-drop policy if exists "kiosk_videos_admin_delete" on public.kiosk_videos;
+drop policy if exists "kiosk_videos_admin_delete" on public.announcement_media;
 create policy "kiosk_videos_admin_delete"
-  on public.kiosk_videos
+  on public.announcement_media
   for delete
   to authenticated
   using (true);

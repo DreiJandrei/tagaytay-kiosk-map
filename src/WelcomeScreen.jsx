@@ -5,11 +5,14 @@ import WelcomeVideo from './components/WelcomeVideo';
 import HowToUse from './components/HowToUse';
 import { VolumePanel, VolumeToggle } from './components/VolumeControl';
 import { useAutoHide, useStoredVolume } from './lib/volume';
-import { getAnnouncement } from './lib/api';
+import { getAnnouncement, parseKioskSettings, readTextItems } from './lib/api';
+import { isLiveNow } from './lib/schedule';
+
+// Kapag maraming anunsyo ang sabay na nasa iskedyul, salitan sila sa kard.
+const BOARD_ROTATE_MS = 12000;
 
 export default function WelcomeScreen({ onStart }) {
-  const [advisory, setAdvisory] = useState("");
-  const [announcement, setAnnouncement] = useState("");
+  const [settings, setSettings] = useState({});
   const [now, setNow] = useState(new Date());
   // Ang layer sa likod na pinagguguhitan ng video (tingnan ang
   // WelcomeVideo). State at hindi ref: kailangang mag-render ulit ang
@@ -40,18 +43,7 @@ export default function WelcomeScreen({ onStart }) {
 
   useEffect(() => {
     const fetchAnnouncement = async () => {
-      const text = await getAnnouncement();
-      if (text) {
-        try {
-          // JSON Trick: Binabasa ang dalawang field mula sa iisang database row
-          const parsed = JSON.parse(text);
-          setAdvisory(parsed.advisory || "");
-          setAnnouncement(parsed.announcement || "");
-        } catch (e) {
-          // Backward compatibility kung normal text lang ang nasa database
-          setAdvisory(text);
-        }
-      }
+      setSettings(parseKioskSettings(await getAnnouncement()));
     };
 
     fetchAnnouncement();
@@ -65,8 +57,21 @@ export default function WelcomeScreen({ onStart }) {
     return () => clearInterval(clock);
   }, []);
 
-  const hasAdvisory = advisory && advisory.trim() !== "";
-  const hasAnnouncement = announcement && announcement.trim() !== "";
+  // Sinusuri bawat segundo gamit ang orasan sa itaas, kaya sa takdang oras
+  // mismo lumalabas at nawawala ang bawat tala — hindi na hihintayin ang
+  // susunod na paghila mula sa database.
+  const nowMs = now.getTime();
+  const liveTexts = (kind) => readTextItems(settings, kind)
+    .filter((item) => item.text?.trim() && isLiveNow(item, nowMs));
+  const liveAnnouncements = liveTexts('announcement');
+  const liveAdvisories = liveTexts('advisory');
+  const advisoryLines = liveAdvisories.flatMap((item) => item.text.split('\n').filter((l) => l.trim()));
+  const hasAdvisory = advisoryLines.length > 0;
+  const hasAnnouncement = liveAnnouncements.length > 0;
+  const boardIndex = hasAnnouncement ? Math.floor(nowMs / BOARD_ROTATE_MS) % liveAnnouncements.length : 0;
+  // Pareho ang bilis ng pagbasa kahit humaba ang teksto: habang dumarami ang
+  // nagpapatong na paalala, humahaba rin ang isang ikot.
+  const marqueeSeconds = Math.max(20, Math.round(advisoryLines.join(' ').length / 6));
 
   const timeText = now.toLocaleTimeString('en-PH', {
     hour: '2-digit', minute: '2-digit', hour12: true
@@ -187,8 +192,13 @@ export default function WelcomeScreen({ onStart }) {
           <div className="welcome-board">
             <div className="welcome-board-head">
               <h2>Official Announcement</h2>
+              {liveAnnouncements.length > 1 && (
+                <span className="welcome-board-count">{boardIndex + 1}/{liveAnnouncements.length}</span>
+              )}
             </div>
-            <div className="welcome-board-body">{announcement}</div>
+            <div className="welcome-board-body" key={liveAnnouncements[boardIndex].id}>
+              {liveAnnouncements[boardIndex].text}
+            </div>
           </div>
         )}
 
@@ -226,9 +236,9 @@ export default function WelcomeScreen({ onStart }) {
       {/* Layer 3: gumagalaw na advisory sa pinakailalim */}
       {hasAdvisory && (
         <div className="announcement-bar">
-          <div className="marquee">
+          <div className="marquee" style={{ animationDuration: `${marqueeSeconds}s` }}>
             <span className="advisory-tag">ADVISORY:</span>
-            {advisory.split('\n').map((line, index, array) => (
+            {advisoryLines.map((line, index, array) => (
               <React.Fragment key={index}>
                 {line}
                 {index !== array.length - 1 && (

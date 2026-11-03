@@ -19,7 +19,7 @@
 -- nag-save.
 -- ════════════════════════════════════════════════════════════════
 
-alter table office_details add column if not exists description_tl text;
+alter table office_information add column if not exists description_tl text;
 
 -- ── Pagpapaalam sa API ──────────────────────────────────────────
 notify pgrst, 'reload schema';

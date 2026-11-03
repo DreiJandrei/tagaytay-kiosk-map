@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { isTypable } from '../lib/keyboardUtils';
+import Icon from './Icon';
 
 // ==========================================================
 // FLOATING TOUCHSCREEN KEYBOARD
@@ -14,18 +15,21 @@ import { isTypable } from '../lib/keyboardUtils';
 // prototype, saka nagpapaputok ng `input` event na bubbling —
 // iyon ang nababasa ng React bilang tunay na pag-type.
 
+// Kapareho ng ayos ng keyboard ng laptop at ng telepono, para hindi na
+// hanapin ng staff ang mga key: numero sa itaas na may Backspace sa dulo,
+// Enter sa dulo ng A–L, Shift sa simula ng Z–M, at Space sa gitna ng ilalim.
 const LETTER_ROWS = [
   ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
   ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
-  ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ':'],
-  ['z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '-'],
+  ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
+  ['z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.'],
 ];
 
 const SYMBOL_ROWS = [
   ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
-  ['!', '@', '#', '₱', '%', '&', '*', '(', ')', '/'],
-  ['-', '_', '=', '+', ':', ';', "'", '"', '?', '~'],
-  ['.', ',', '<', '>', '[', ']', '{', '}', '|', '\\'],
+  ['@', '#', '₱', '%', '&', '*', '(', ')', '-', '/'],
+  ['_', '=', '+', ':', ';', "'", '"', '?', '!'],
+  ['<', '>', '[', ']', '{', '}', '|', '\\', '~'],
 ];
 
 // Isinusulat ang bagong halaga sa paraang nakikita ng React.
@@ -41,7 +45,7 @@ const setNativeValue = (el, value) => {
 
 // Sa isang-linyang field, ang Enter sa tunay na keyboard ay hindi titik —
 // ipinapasa nito ang form na kinabibilangan ng field. Ito ang tumutulad
-// doon, kaya sa admin login ay sapat nang pindutin ang ⏎ para makapasok;
+// doon, kaya sa admin login ay sapat nang pindutin ang Enter para makapasok;
 // hindi na kailangang abutin pa ang Login na buton.
 const submitOwningForm = (el) => {
   const form = el.form;
@@ -214,52 +218,66 @@ export default function VirtualKeyboard({ scopeRef, onClose, lang = 'EN' }) {
         title={lang === 'EN' ? 'Swipe this bar to move the keyboard' : 'I-swipe ang bar na ito para ilipat ang keyboard'}
       >
         <span className="vkb-grip">
-          ⠿ <span className="vkb-title">
+          <Icon name="keyboard" /> <span className="vkb-title">
             {lang === 'EN' ? 'Touchscreen Keyboard' : 'Keyboard sa Touchscreen'}
           </span>
         </span>
         <span className="vkb-hint">
           {lang === 'EN' ? 'Swipe to move' : 'I-swipe para ilipat'}
         </span>
+        {/* Wala nito sa tunay na keyboard, kaya nasa bar sa itaas — hindi
+            katabi ng Space, kung saan isang maling pindot ay bura ng lahat. */}
+        <button type="button" className="vkb-close vkb-close--clear" onClick={() => press('CLEAR')}>
+          {lang === 'EN' ? 'Clear all' : 'Burahin lahat'}
+        </button>
         <button type="button" className="vkb-close" onClick={onClose}>
-          {lang === 'EN' ? 'Hide' : 'Itago'} ✕
+          {lang === 'EN' ? 'Hide' : 'Itago'} <Icon name="close" />
         </button>
       </div>
 
       {rows.map((row, i) => (
         <div className="vkb-row" key={i}>
+          {i === 3 && (
+            <button
+              type="button"
+              className={`vkb-key vkb-key--mod${shift ? ' is-on' : ''}`}
+              onClick={() => setShift((s) => !s)}
+              disabled={symbols}
+            >
+              <Icon name="shift" /> Shift
+            </button>
+          )}
           {row.map((k) => (
             <button type="button" key={k} className="vkb-key" onClick={() => press(k)}>
               {shift && !symbols ? k.toUpperCase() : k}
             </button>
           ))}
           {i === 0 && (
-            <button type="button" className="vkb-key vkb-key--wide" onClick={() => press('BACKSPACE')}>
-              ⌫
+            <button type="button" className="vkb-key vkb-key--wide" onClick={() => press('BACKSPACE')} aria-label="Backspace">
+              <Icon name="backspace" />
+            </button>
+          )}
+          {i === 2 && (
+            <button type="button" className="vkb-key vkb-key--enter" onClick={() => press('ENTER')}>
+              <Icon name="enter" /> Enter
+            </button>
+          )}
+          {i === 3 && (
+            <button
+              type="button"
+              className={`vkb-key vkb-key--mod${symbols ? ' is-on' : ''}`}
+              onClick={() => setSymbols((s) => !s)}
+            >
+              {symbols ? 'ABC' : '?123'}
             </button>
           )}
         </div>
       ))}
 
       <div className="vkb-row">
-        <button
-          type="button"
-          className={`vkb-key vkb-key--mod${shift ? ' is-on' : ''}`}
-          onClick={() => setShift((s) => !s)}
-          disabled={symbols}
-        >
-          ⇧ Shift
-        </button>
-        <button
-          type="button"
-          className={`vkb-key vkb-key--mod${symbols ? ' is-on' : ''}`}
-          onClick={() => setSymbols((s) => !s)}
-        >
-          {symbols ? 'ABC' : '?123'}
-        </button>
+        <button type="button" className="vkb-key vkb-key--edge" onClick={() => press('@')}>@</button>
         <button type="button" className="vkb-key vkb-key--space" onClick={() => press('SPACE')}>{lang === 'EN' ? 'Space' : 'Espasyo'}</button>
-        <button type="button" className="vkb-key vkb-key--mod" onClick={() => press('ENTER')}>⏎ Enter</button>
-        <button type="button" className="vkb-key vkb-key--clear" onClick={() => press('CLEAR')}>{lang === 'EN' ? 'Clear' : 'Linis'}</button>
+        <button type="button" className="vkb-key vkb-key--edge" onClick={() => press('-')}>-</button>
       </div>
     </div>
   );

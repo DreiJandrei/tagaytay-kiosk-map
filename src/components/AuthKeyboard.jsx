@@ -1,29 +1,31 @@
 import { useEffect, useState } from 'react';
 import VirtualKeyboard from './VirtualKeyboard';
-import { isTypable } from '../lib/keyboardUtils';
+import Icon from './Icon';
+import { wantsOnScreenKeyboard } from '../lib/keyboardUtils';
 
 // Keyboard para sa mga auth modal at sa lock screen. Hiwalay na component
-// para ang pag-unmount nito (pagsara ng modal) ang mag-reset ng "hidden" —
-// kaya hindi na kailangan ng useEffect na nagse-setState, na nagdudulot ng
-// cascading renders.
+// para ang pag-unmount nito (pagsara ng modal) ang mag-reset ng estado.
+//
+// Nakatago ito hanggang may pumindot sa field. Hindi sapat ang focus: may
+// autoFocus ang unang field — para makapag-type agad ang may keyboard —
+// kaya kapag focus ang hudyat, lalabas ito bago pa may pumindot at matatabunan
+// ang form. Ang maliit na buton ay para sa mga pagkakataong hindi mabasa kung
+// daliri ang pumindot.
 export default function AuthKeyboard({ scopeRef, lang }) {
-  const [hidden, setHidden] = useState(false);
+  const [open, setOpen] = useState(false);
 
-  // Kapag itinago, babalik ito sa susunod na pindot sa field. `pointerdown`
-  // din, hindi lang `focusin`: naka-focus pa rin ang password field matapos
-  // itago ang keyboard, kaya walang bagong focus na mangyayari sa pindot.
   useEffect(() => {
     const root = scopeRef.current;
     if (!root) return;
-    const show = (e) => { if (isTypable(e.target)) setHidden(false); };
-    root.addEventListener('focusin', show);
+    const show = (e) => { if (wantsOnScreenKeyboard(e)) setOpen(true); };
     root.addEventListener('pointerdown', show);
-    return () => {
-      root.removeEventListener('focusin', show);
-      root.removeEventListener('pointerdown', show);
-    };
+    return () => root.removeEventListener('pointerdown', show);
   }, [scopeRef]);
 
-  if (hidden) return null;
-  return <VirtualKeyboard scopeRef={scopeRef} onClose={() => setHidden(true)} lang={lang} />;
+  if (open) return <VirtualKeyboard scopeRef={scopeRef} onClose={() => setOpen(false)} lang={lang} />;
+  return (
+    <button type="button" className="vkb-chip" onClick={() => setOpen(true)}>
+      <Icon name="keyboard" /> {lang === 'EN' ? 'Keyboard' : 'Keyboard'}
+    </button>
+  );
 }

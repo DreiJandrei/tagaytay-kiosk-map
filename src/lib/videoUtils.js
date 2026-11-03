@@ -12,7 +12,7 @@ export function getVideoTypes(lang = 'EN') {
   const EN = lang === 'EN';
   return [
     { value: 'facebook', label: 'Facebook post / video' },
-    { value: 'youtube', label: '▶️ YouTube video' },
+    { value: 'youtube', label: 'YouTube video' },
     {
       value: 'file',
       label: EN ? 'Direct video file (.mp4)' : 'Direktang video file (.mp4)',

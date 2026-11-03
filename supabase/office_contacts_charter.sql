@@ -54,27 +54,27 @@
 -- (ang PIO at ang tanggapan ng Mayor).
 
 -- Ground floor sa kiosk
-update office_details set phone = '(046) 888-9500', "local" = '307'      where office_key = 'pio-1';
-update office_details set phone = '(046) 888-9500', "local" = '307'      where office_key = 'pio-2';
-update office_details set phone = '(046) 888-9500', "local" = '312'      where office_key = 'tourism-office';
+update office_information set phone = '(046) 888-9500', "local" = '307'      where office_key = 'pio-1';
+update office_information set phone = '(046) 888-9500', "local" = '307'      where office_key = 'pio-2';
+update office_information set phone = '(046) 888-9500', "local" = '312'      where office_key = 'tourism-office';
 
 -- Ika-2 palapag sa kiosk
-update office_details set phone = '(046) 888-9500', "local" = '105'      where office_key = 'city-eng';
-update office_details set phone = '(046) 888-9500', "local" = '324'      where office_key = 'planning';
+update office_information set phone = '(046) 888-9500', "local" = '105'      where office_key = 'city-eng';
+update office_information set phone = '(046) 888-9500', "local" = '324'      where office_key = 'planning';
 
 -- Ika-3 palapag sa kiosk
-update office_details set phone = '(046) 888-9500', "local" = '208'      where office_key = 'budget-office';
-update office_details set phone = '(046) 888-9500', "local" = '217'      where office_key = 'accounting-office';
-update office_details set phone = '(046) 888-9500', "local" = '203'      where office_key = 'treasure-office';
+update office_information set phone = '(046) 888-9500', "local" = '208'      where office_key = 'budget-office';
+update office_information set phone = '(046) 888-9500', "local" = '217'      where office_key = 'accounting-office';
+update office_information set phone = '(046) 888-9500', "local" = '203'      where office_key = 'treasure-office';
 
 -- Ika-5 palapag sa kiosk
-update office_details set phone = '(046) 888-9500', "local" = '308'      where office_key = 'legal-office';
-update office_details set phone = '(046) 888-9500', "local" = '305'      where office_key = 'hr-office';
-update office_details set phone = '(046) 888-9500', "local" = '211'      where office_key = 'admin-office';
+update office_information set phone = '(046) 888-9500', "local" = '308'      where office_key = 'legal-office';
+update office_information set phone = '(046) 888-9500', "local" = '305'      where office_key = 'hr-office';
+update office_information set phone = '(046) 888-9500', "local" = '211'      where office_key = 'admin-office';
 
 -- Ika-7 palapag sa kiosk
-update office_details set phone = '(046) 888-9500', "local" = '318-320'  where office_key = 'mayor-main';
-update office_details set phone = '(046) 888-9500', "local" = '318-320'  where office_key = 'mayor-receiving';
+update office_information set phone = '(046) 888-9500', "local" = '318-320'  where office_key = 'mayor-main';
+update office_information set phone = '(046) 888-9500', "local" = '318-320'  where office_key = 'mayor-receiving';
 
 
 -- ── 2. CONTACT PERSON ───────────────────────────────────────────
@@ -88,12 +88,12 @@ update office_details set phone = '(046) 888-9500', "local" = '318-320'  where o
 -- ng tao — kaya ligtas silang patakbuhin.
 
 -- Dating "Mr. Noel Baybay" — tama ang tao, kulang ang titulo at inisyal.
-update office_details set head = 'Engr. Noel C. Baybay'
+update office_information set head = 'Engr. Noel C. Baybay'
   where office_key = 'city-eng';
 
 -- Dating "Engr. Emma Pello" — "Emilma U. Pello" ang buong pangalan.
 -- Ang CPDC ay City Planning & Development Coordinator.
-update office_details set head = 'Engr. Emilma U. Pello'
+update office_information set head = 'Engr. Emilma U. Pello'
   where office_key = 'planning';
 
 
@@ -108,14 +108,14 @@ update office_details set head = 'Engr. Emilma U. Pello'
 --   Charter:  Atty. Edwin Alden V. Uy, City Legal Officer
 --             (may "Atty. Ronald M. Aala, Attorney V" din — kapangalan
 --              ng nasa kiosk, pero hindi siya ang puno ng tanggapan)
--- update office_details set head = 'Atty. Edwin Alden V. Uy' where office_key = 'legal-office';
+-- update office_information set head = 'Atty. Edwin Alden V. Uy' where office_key = 'legal-office';
 --
 -- MAYOR'S OFFICE
 --   Kiosk:    Analus Angcaya
 --   Charter:  Hon. Abraham N. Tolentino, City Mayor
 --   Tandaan: "Contact Person" ang tawag dito sa kiosk — maaaring tama
 --   ang kawani at hindi ang Mayor mismo ang dapat makausap dito.
--- update office_details set head = 'Hon. Abraham N. Tolentino' where office_key = 'mayor-main';
+-- update office_information set head = 'Hon. Abraham N. Tolentino' where office_key = 'mayor-main';
 
 
 -- ── 4. Pagpapaalam sa API ───────────────────────────────────────
@@ -123,7 +123,7 @@ notify pgrst, 'reload schema';
 
 -- ── 5. Pagtingin kung tumama ────────────────────────────────────
 -- Labintatlong hanay ang inaasahan sa telepono.
--- select office_key, head, phone, "local" from office_details
+-- select office_key, head, phone, "local" from office_information
 --  where office_key in ('pio-1','pio-2','tourism-office','city-eng','planning',
 --    'budget-office','accounting-office','treasure-office','legal-office',
 --    'hr-office','admin-office','mayor-main','mayor-receiving')

@@ -17,7 +17,7 @@ import StillThereModal from './components/StillThereModal';
 import './index.css';
 
 import { QRCodeSVG } from 'qrcode.react';
-import EscalatorIcon from './components/EscalatorIcon';
+import Icon from './components/Icon';
 
 import { getAllOffices, initializeDatabase, incrementSearchCount, loginAdmin, resetPasswordEmail, logoutAdmin, onAuthChange, changeAdminPassword, getLiftStatuses } from './lib/api';
 import { checkKioskSession, onKioskSessionChange } from './lib/kioskDevice';
@@ -30,6 +30,8 @@ import { defaultOfficeData } from './lib/defaultOfficeData';
 import { isRecoveryLink } from './lib/recoveryFlag';
 import { buildVisitorLink, readVisitorLink } from './lib/visitorLink';
 import { floorName, localizeBadge, localizeHours, officeDescription, liftStatusLabel } from './lib/i18n';
+import { effectiveStatus, formatWhen } from './lib/schedule';
+import { wantsOnScreenKeyboard } from './lib/keyboardUtils';
 
 // Ang bumuo ng kiosk, sa ganitong pagkakasunod-sunod sa About.
 const TEAM = [
@@ -75,13 +77,21 @@ const hasText = (v) => typeof v === 'string' && v.trim() !== '';
 // silang isinusulat — dalawang lugar na dapat sabay baguhin tuwing may
 // bagong hanay.
 function OfficeMeta({ office, lang }) {
+  // Ang status ngayon, hindi ang nakatala: kapag lumipas na ang petsang itinakda
+  // ng admin, Available na ulit ito kahit walang gumagalaw sa database.
+  const status = effectiveStatus(office);
   return (
     <div className="office-meta">
       {/* Laging nandito ang estado: may takdang halaga ito (Available)
           kahit hindi pa nagagalaw, kaya hindi ito nabibitin. */}
       <p className="meta-row">
         <strong>{lang === 'EN' ? 'Status' : 'Estado'}</strong>
-        <StatusPill status={office.status} lang={lang} />
+        <StatusPill status={status} lang={lang} />
+        {status !== 'Available' && office.statusUntil && (
+          <small className="meta-until">
+            {lang === 'EN' ? 'until' : 'hanggang'} {formatWhen(office.statusUntil, lang)}
+          </small>
+        )}
       </p>
 
       {hasText(office.hours) && (
@@ -94,7 +104,7 @@ function OfficeMeta({ office, lang }) {
 
       {hasText(office.phone) && (
         <p className="meta-row"><strong>{lang === 'EN' ? 'Direct Line' : 'Telepono'}</strong>
-          {office.phone}{hasText(office.local) ? ` · local ${office.local}` : ''}
+          {office.phone}{hasText(office.local) ? ` · ${lang === 'EN' ? 'Room No.' : 'Blg. ng Silid'} ${office.local}` : ''}
         </p>
       )}
     </div>
@@ -108,8 +118,8 @@ function OfficeMeta({ office, lang }) {
 function QrCard({ link, lang }) {
   const EN = lang === 'EN';
   const steps = EN
-    ? ['Open the camera on your phone.', 'Point it at this QR code and hold still.', 'Tap the link that pops up — the map opens.']
-    : ['Buksan ang camera ng inyong phone.', 'Itutok sa QR code na ito at huwag gumalaw.', 'Pindutin ang link na lalabas — bubukas ang mapa.'];
+    ? ['Open the camera on your phone.', 'Point it at this QR code and hold still.', 'Tap the link.']
+    : ['Buksan ang camera ng inyong phone.', 'Itutok sa QR code na ito at huwag gumalaw.', 'Pindutin ang link.'];
   return (
     <div className="qr-card">
       <span className="qr-title">{EN ? 'Scan for live mobile map' : 'I-scan para sa live mobile map'}</span>
@@ -202,6 +212,9 @@ export default function App() {
   const [selectedOfficeKey, setSelectedOfficeKey] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showKeyboard, setShowKeyboard] = useState(false);
+  // Daliri ba ang pumindot sa kahon ng paghahanap? Sa laptop na may sariling
+  // keyboard, ang listahan lang ng madalas hanapin ang bumubukas.
+  const [keyboardNeeded, setKeyboardNeeded] = useState(true);
   // Shift ng keyboard sa paghahanap — isang titik lang ang malaki, gaya ng
   // sa telepono. Hindi naman case-sensitive ang paghahanap; para lang ito
   // kamukha ng karaniwang keyboard.
@@ -272,6 +285,11 @@ export default function App() {
   const [destinationData, setDestinationData] = useState(null);
   const [transportMethod, setTransportMethod] = useState(() => visitorLink.transport);
 
+  // Step-by-step na gabay: { dest: {key, floor, ...office}, method, index }.
+  // Bukas ito mula sa pagpili ng daan hanggang pindutin ang Done. Ang bisita
+  // ang humahawak ng hakbang — walang orasang kusang naglilipat ng palapag.
+  const [guide, setGuide] = useState(null);
+
   // Itinatakda ng admin (tab na Elevator / Escalator). Kapag hindi
   // 'available' ang elevator, hindi na ito mapipili at sa hagdan
   // nagsisimula ang bawat ruta. Ganoon din ang escalator: hindi na ito
@@ -291,27 +309,6 @@ export default function App() {
     const timer = setInterval(load, 60000);
     return () => { alive = false; clearInterval(timer); };
   }, []);
-
-  // Hindi sapat na naka-disable lang ang buton sa pagpili ng daan. Puwedeng
-  // nakasakay pa rin ang escalator/elevator: napili ito bago nasira (isang
-  // minuto ang paghila), naiwan mula sa naunang ruta, o galing sa QR link.
-  // Kaya dito inililipat ang daan sa gumaganang paraan — at muling
-  // iginuguhit ng mapa ang ruta mula roon.
-  useEffect(() => {
-    let next = null;
-    if (transportMethod === 'escalator' && escalatorOut) next = elevatorOut ? 'stairs' : 'elevator';
-    else if (transportMethod === 'elevator' && elevatorOut) next = 'stairs';
-    if (!next) return;
-    setTransportMethod(next);
-    // Habang naglalakad pa papunta sa sasakyan, ang tunguhin sa Ground
-    // Floor ay ang mismong sasakyan — kaya kailangang ilipat din iyon.
-    if (routeStep === 'go-to-transport') setSelectedOfficeKey(next === 'stairs' ? 'stairs-up' : 'elevator-up');
-  }, [transportMethod, escalatorOut, elevatorOut, routeStep]);
-
-  // Step-by-step na balikan ng ruta. Kapag bukas ito, ang bumibisita na
-  // ang humahawak ng palapag — hindi na ang awtomatikong orasan. Dito
-  // nakaimbak ang pinanggalingan para maibalik kapag isinara.
-  const [guide, setGuide] = useState(null);
 
   useEffect(() => {
     const { data: authSubscription } = onAuthChange((event, session) => {
@@ -435,6 +432,7 @@ export default function App() {
     }
   }, [isVisitorView, visitorLink, liveOfficeDatabase]);
 
+  const officeSignature = useRef('');
   const fetchKioskData = async () => {
     try {
       const dbData = await getAllOffices();
@@ -448,6 +446,11 @@ export default function App() {
         });
       });
 
+      // Ikinukumpara muna: isang bagong object tuwing minuto ay magpapaikot ng
+      // buong mapa at magbabalik sa gitna ng tanaw kahit walang nagbago.
+      const signature = JSON.stringify(completeData);
+      if (signature === officeSignature.current) return;
+      officeSignature.current = signature;
       setLiveOfficeDatabase(completeData);
     } catch (error) {
       throw error;
@@ -469,6 +472,16 @@ export default function App() {
     };
     setupKiosk();
   }, []);
+
+  // Kasabay ng anunsyo ang paghila ng status at detalye ng tanggapan, para
+  // makarating sa nakabukas nang kiosk ang pagbabago ng admin. Hindi habang
+  // bukas ang Admin Panel: doon, babalik sa dati ang form na tina-type.
+  useEffect(() => {
+    if (isVisitorView || showAdmin) return undefined;
+    const timer = setInterval(() => { fetchKioskData().catch(() => {}); }, 60000);
+    return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isVisitorView, showAdmin]);
 
   useEffect(() => {
     if (theme === 'light') document.documentElement.classList.add('light-theme');
@@ -675,34 +688,27 @@ export default function App() {
     }
   };
 
+  // Ang panimulang daan: elevator, o hagdan kapag sira ang elevator.
+  const defaultTransport = elevatorOut ? 'stairs' : 'elevator';
+
   const handleSelectOffice = (key, floor) => {
     // Isang ruta lang ang ipinapakita ng link na na-scan — ang pinili
     // sa kiosk. Hindi paglilibot sa direktoryo ang telepono.
     if (isVisitorView) return;
+    // Tinatapos muna ang step-by-step bago pumili ng iba.
+    if (guide) return;
 
     const targetOffice = liveOfficeDatabase[floor]?.[key];
-    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 1024;
 
-    // Bagong opisina ang pinili — paglabas na iyon sa hakbang-hakbang na
-    // gabay. Kung maiiwan itong bukas, nakapako sa `backTo` ang ipinapakita
-    // sa gilid: ang opisinang PINAGSIMULAN ng gabay, hindi ang bagong
-    // pinindot. Kaya nagbabago ang ruta sa mapa pero hindi ang pangalan sa
-    // sidebar — at sa opisinang nasa itaas, dalawang panel pa ang sabay na
-    // lumalabas (ang gabay at ang bagong pagpili ng daan).
-    setGuide(null);
-
-    // Ang panimulang daan: elevator, o hagdan kapag sira ang elevator.
-    const defaultTransport = elevatorOut ? 'stairs' : 'elevator';
-
-    if (floor === 1 || isMobile) {
+    if (floor === 1) {
       setCurrentFloor(floor);
       setSelectedOfficeKey(key);
       setRouteStep('arrived');
       setDestinationData(null);
       // Walang sasakyan papunta sa 1st Floor. Kung maiiwan ang daang
       // pinili sa NAKARAANG opisina (hal. escalator), iyon ang naisusulat
-      // sa QR at ginagamit ng gabay — kaya ibinabalik sa panimula.
-      if (floor === 1) setTransportMethod(defaultTransport);
+      // sa QR — kaya ibinabalik sa panimula.
+      setTransportMethod(defaultTransport);
     } else {
       setDestinationData({ key, floor, ...targetOffice });
       setCurrentFloor(1);
@@ -738,59 +744,12 @@ export default function App() {
   //    apat na segundo.
   // ==============================================================
   const handlePickFloor = (floor) => {
-    if (isVisitorView) return;
+    if (isVisitorView || guide) return;
     setCurrentFloor(floor);
     setSelectedOfficeKey(null);
     setRouteStep('idle');
     setDestinationData(null);
-    setGuide(null);
   };
-
-  useEffect(() => {
-    let timeoutId;
-    if (routeStep === 'go-to-transport' && destinationData) {
-      if (transportMethod === 'elevator') {
-        timeoutId = setTimeout(() => {
-          setCurrentFloor(destinationData.floor);
-          setSelectedOfficeKey(destinationData.key);
-          setRouteStep('arrived');
-        }, 4000);
-      } else if (transportMethod === 'escalator') {
-        timeoutId = setTimeout(() => {
-          setCurrentFloor(destinationData.floor);
-          setSelectedOfficeKey(destinationData.key);
-          setRouteStep('arrived');
-        }, 4000);
-      } else if (transportMethod === 'stairs') {
-        timeoutId = setTimeout(() => {
-          setRouteStep('climbing-stairs');
-          setCurrentFloor(2); 
-        }, 4000);
-      }
-    }
-    return () => clearTimeout(timeoutId);
-  }, [routeStep, destinationData, transportMethod]);
-
-  useEffect(() => {
-    let timeoutId;
-    if (routeStep === 'climbing-stairs' && destinationData) {
-      if (currentFloor < destinationData.floor) {
-        // Mas matagal sa 2nd at 5th Floor: may lalakarin doon papunta sa
-        // ibang hagdan (tingnan ang MapScreen), hindi lang tuloy-tuloy na akyat.
-        timeoutId = setTimeout(() => {
-          setCurrentFloor(prev => prev + 1);
-        }, currentFloor === 2 || currentFloor === 5 ? 5000 : 1500);
-      } else {
-        // `>=`, hindi `===`. Kung sakaling makalampas ang palapag sa
-        // paroroonan, walang sasalo sa dating `===` at doon titigil ang
-        // pag-akyat habambuhay — mananatiling "papunta pa" ang kiosk at
-        // wala nang darating. Ang lampas ay itinuturing nang dating.
-        setSelectedOfficeKey(destinationData.key);
-        setRouteStep('arrived');
-      }
-    }
-    return () => clearTimeout(timeoutId);
-  }, [routeStep, currentFloor, destinationData]);
 
   const getFlatOffices = () => {
     const flatList = [];
@@ -813,7 +772,7 @@ export default function App() {
     .slice(0, 4);
 
   const handleSearchSelect = async (key, floor) => {
-    if (isVisitorView) return;
+    if (isVisitorView || guide) return;
     handleSelectOffice(key, floor);
     setSearchQuery("");
     setShowKeyboard(false);
@@ -889,13 +848,11 @@ export default function App() {
 
   // ==============================================================
   // STEP-BY-STEP NA GABAY
-  // Isa-isang palapag mula sa kiosk hanggang sa pinto ng opisina.
-  // Hindi ito bagong ruta — ang mismong linyang ginuguhit ng mapa ang
-  // ipinapakita sa bawat hakbang, kaya walang pagkakaiba sa totoong
-  // dadaanan. Ang bago lang ay ang bumibisita na ang humahawak ng
-  // pihit, kaya kaya na niyang balikan ang nalampasan.
+  // Isa-isang palapag mula sa kiosk hanggang sa pinto ng opisina. Lumalabas
+  // ito agad pagkapili ng daan — wala nang animasyong nauuna rito. Ang
+  // camera ng MapScreen na lang ang gumagalaw, sa bawat Next o Previous.
   // ==============================================================
-  const buildGuideSteps = (officeKey, office, floor, method) => {
+  const buildGuideSteps = ({ key: officeKey, title, floor }, method) => {
     const EN = lang === 'EN';
     const ride = method === 'elevator' ? 'Elevator' : method === 'escalator' ? 'Escalator' : 'Stairs';
     const rideTL = ride === 'Stairs' ? 'Hagdan' : ride;
@@ -912,7 +869,7 @@ export default function App() {
     }];
 
     const arrive = {
-      title: EN ? `Arrive at ${office.title}` : `Dumating sa ${office.title}`,
+      title: EN ? `Arrive at ${title}` : `Dumating sa ${title}`,
     };
 
     if (method === 'stairs') {
@@ -931,17 +888,16 @@ export default function App() {
           floor: f,
           officeKey: null,
           title: EN ? 'Take the stairs up' : 'Umakyat sa hagdan',
-          // Sa 2nd at 5th Floor, hindi tumutuloy paakyat ang hagdang
-          // dinatnan — nasa ilalim ng Small Library (2nd) o sa gitna,
-          // paglabas ng elevator (5th), ang paakyat.
+          // Sa 2nd Floor, nasa ilalim ng Mini Library ang paakyat. Sa 4th, nasa
+          // gitna, sa ilalim ng elevator. Sa iba, tuloy-tuloy ang hagdan.
           body: f === 2
             ? (EN
-              ? 'You arrive on Floor 2. These stairs only go down from here — follow the line to the other stairs below the Small Library to keep climbing.'
-              : 'Darating po kayo sa Palapag 2. Pababa na lang ang hagdang ito — sundan ang linya papunta sa kabilang hagdan sa ilalim ng Small Library para tumuloy paakyat.')
-            : f === 5
+              ? 'You arrive on Floor 2. These stairs only go down from here — follow the line to the other stairs below the Mini Library to keep climbing.'
+              : 'Darating po kayo sa Palapag 2. Pababa na lang ang hagdang ito — sundan ang linya papunta sa kabilang hagdan sa ilalim ng Mini Library para tumuloy paakyat.')
+            : f === 4
             ? (EN
-              ? 'You arrive on Floor 5. The stairs up to Floor 6 are in the middle, right outside the elevator — follow the line there.'
-              : 'Darating po kayo sa Palapag 5. Nasa gitna ang hagdan paakyat sa Palapag 6, paglabas mismo ng elevator — sundan ang linya papunta roon.')
+              ? 'You arrive on Floor 4. The stairs up to Floor 5 are in the middle, right below the elevator — follow the line there.'
+              : 'Darating po kayo sa Palapag 4. Nasa gitna ang hagdan paakyat sa Palapag 5, sa ilalim mismo ng elevator — sundan ang linya papunta roon.')
             : (EN
               ? `You pass Floor ${f}. Keep climbing — the stairs continue up from the same spot.`
               : `Dadaanan po ninyo ang Palapag ${f}. Tuloy lang paakyat — dito rin nagpapatuloy ang hagdan.`),
@@ -961,47 +917,70 @@ export default function App() {
     return steps;
   };
 
-  const openGuide = () => {
-    if (isVisitorView) return;
-    if (!selectedOfficeKey || !selectedOffice || currentFloor <= 1) return;
-    const steps = buildGuideSteps(selectedOfficeKey, selectedOffice, currentFloor, transportMethod);
-    // Nagsisimula sa "Start here" sa Ground Floor, tapos Next nang Next
-    // hanggang sa pinto — ganito binabasa ang direksyon.
-    setGuide({
-      steps,
-      index: 0,
-      backTo: { floor: currentFloor, officeKey: selectedOfficeKey },
-    });
-    setCurrentFloor(steps[0].floor);
-    setSelectedOfficeKey(steps[0].officeKey);
-  };
-
-  const goToGuideStep = (index) => {
-    if (!guide) return;
-    const step = guide.steps[index];
-    if (!step) return;
-    setGuide({ ...guide, index });
+  const showGuideStep = (step) => {
     setCurrentFloor(step.floor);
     setSelectedOfficeKey(step.officeKey);
   };
 
-  const closeGuide = () => {
-    if (!guide) return;
-    setCurrentFloor(guide.backTo.floor);
-    setSelectedOfficeKey(guide.backTo.officeKey);
-    setGuide(null);
+  // Pagkapili ng daan sa "How would you like to go up?".
+  const startGuide = (dest, method) => {
+    if (isVisitorView) return;
+    setTransportMethod(method);
+    setRouteStep('guide');
+    setGuide({ dest, method, index: 0 });
+    showGuideStep(buildGuideSteps(dest, method)[0]);
   };
 
-  // Ang pinanggalingang tunguhin ng gabay. Hindi ito ang kasalukuyang
-  // napipili: nagiging blangko iyon sa mga palapag na dinaraanan lang,
-  // at nagiging "Stairs to Upper Floors" sa unang hakbang.
-  const guideDestination = guide
-    ? liveOfficeDatabase[guide.backTo.floor]?.[guide.backTo.officeKey]
-    : null;
+  // Binubuo sa bawat render, hindi iniimbak: kung magpalit ng wika ang bisita
+  // sa gitna ng gabay, sa bagong wika na rin ang mga hakbang.
+  const guideSteps = guide ? buildGuideSteps(guide.dest, guide.method) : [];
+  const guideStep = guide ? guideSteps[guide.index] : null;
+  const isLastGuideStep = !!guide && guide.index === guideSteps.length - 1;
+
+  const goToGuideStep = (index) => {
+    const step = guideSteps[index];
+    if (!guide || !step) return;
+    setGuide({ ...guide, index });
+    showGuideStep(step);
+  };
+
+  // Previous sa unang hakbang: balik sa pagpili ng daan. Doon din ang labasan
+  // kung mali ang napiling opisina — hindi kailangang tapusin ang buong ruta.
+  const backToRouteChoice = () => {
+    setGuide(null);
+    setCurrentFloor(1);
+    setSelectedOfficeKey(null);
+    setRouteStep('choose-transport');
+  };
+
+  // Done: parang bagong bukas ang mapa, handa para sa susunod na bisita.
+  const finishGuide = () => {
+    setGuide(null);
+    setCurrentFloor(1);
+    setSelectedOfficeKey(null);
+    setRouteStep('idle');
+    setDestinationData(null);
+    setTransportMethod(defaultTransport);
+  };
+
+  // Hindi sapat na naka-disable lang ang buton sa pagpili ng daan. Puwedeng
+  // nakasakay pa rin ang escalator/elevator: napili ito bago nasira (isang
+  // minuto ang paghila), naiwan mula sa naunang ruta, o galing sa QR link.
+  // Kaya dito inililipat ang daan sa gumaganang paraan — at muling
+  // iginuguhit ng mapa ang ruta mula roon.
+  useEffect(() => {
+    let next = null;
+    if (transportMethod === 'escalator' && escalatorOut) next = elevatorOut ? 'stairs' : 'elevator';
+    else if (transportMethod === 'elevator' && elevatorOut) next = 'stairs';
+    if (!next) return;
+    setTransportMethod(next);
+    // Kapag may gabay nang nakabukas, panibago ito gamit ang gumaganang daan.
+    if (guide) startGuide(guide.dest, next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transportMethod, escalatorOut, elevatorOut]);
 
   // Sa palapag na dinaraanan lang, walang tunguhin — kaya mali ang
   // “ARRIVED” na nakasulat sa pin. Ito ang tamang sasabihin doon.
-  const guideStep = guide ? guide.steps[guide.index] : null;
   const guideKioskLabel = guideStep && guideStep.officeKey === null
     ? (lang === 'EN'
       ? `PASSING FLOOR ${guideStep.floor}`
@@ -1103,9 +1082,9 @@ export default function App() {
   const keyLabel = (key) => {
     const EN = lang === 'EN';
     switch (key) {
-      case 'BACKSPACE': return EN ? '⌫ Backspace' : '⌫ Bura';
-      case 'ENTER': return EN ? '⏎ Enter' : '⏎ Enter';
-      case 'SHIFT': return '⇧ Shift';
+      case 'BACKSPACE': return <><Icon name="backspace" /> {EN ? 'Backspace' : 'Bura'}</>;
+      case 'ENTER': return <><Icon name="enter" /> Enter</>;
+      case 'SHIFT': return <><Icon name="shift" /> Shift</>;
       case 'SPACE': return EN ? 'Space' : 'Espasyo';
       case 'CLEAR': return EN ? 'Clear' : 'Linis';
       default: return /^[A-Z]$/.test(key) && !kbShift ? key.toLowerCase() : key;
@@ -1113,35 +1092,24 @@ export default function App() {
   };
 
   // ── STEP-BY-STEP SA IBABAW NG MAPA ───────────────────────────
-  // Nasa itaas-kaliwa ng mapa, lumulutang gaya ng zoom. Dati'y maliit
-  // na pindutan ito sa sidebar at makitid na hanay sa ilalim ng zoom —
-  // hindi napapansin, at hiwalay pa ang numero sa sinasabi ng hakbang.
-  // Ngayon, iisang kard: nasaang hakbang, ano ang gagawin, at
-  // Previous/Next.
-  //
-  // Sa kiosk lang, at sa mga opisinang nasa itaas lang — sa ground
-  // floor, walang palapag na dadaanan.
-  const canOpenGuide = !isVisitorView && !guide && selectedOffice && currentFloor > 1
-    && (routeStep === 'arrived'
-      || (routeStep === 'idle' && selectedOfficeKey && selectedOfficeKey !== 'elevator-up' && selectedOfficeKey !== 'stairs-up'));
-  const isLastGuideStep = guide && guide.index === guide.steps.length - 1;
-
+  // Iisang kard: nasaang hakbang, ano ang gagawin, at Previous/Next. Done lang
+  // ang nagsasara nito sa huling hakbang — walang ✕, para hindi ito aksidenteng
+  // mawala habang sinusundan ng bisita.
   const guideOverlay = guide ? (
     <div className="map-guide">
       <div className="map-guide-head">
         <span className="map-guide-cap">
           {lang === 'EN'
-            ? `Step ${guide.index + 1} of ${guide.steps.length}`
-            : `Hakbang ${guide.index + 1} ng ${guide.steps.length}`}
+            ? `Step ${guide.index + 1} of ${guideSteps.length}`
+            : `Hakbang ${guide.index + 1} ng ${guideSteps.length}`}
         </span>
-        <button className="map-guide-x" onClick={closeGuide} title={lang === 'EN' ? 'Close' : 'Isara'}>✕</button>
       </div>
 
       {/* Isang pindutan bawat palapag na dadaanan. Mapipindot ang
           kahit alin — pagbalik sa isang palapag nang hindi paulit-ulit
           ang pag-atras. */}
       <div className="map-guide-steps">
-        {guide.steps.map((s, i) => (
+        {guideSteps.map((s, i) => (
           <button
             key={`${s.floor}-${i}`}
             className={`map-guide-step${i === guide.index ? ' is-now' : ''}${i < guide.index ? ' is-done' : ''}`}
@@ -1155,7 +1123,7 @@ export default function App() {
 
       <div className="map-guide-now" key={guide.index}>
         <div className="map-guide-text">
-          <span className="map-guide-floor">{floorName(guideStep.floor, lang)}</span>
+          <span className="map-guide-floor">{guideStep.floor === 1 ? 'Ground Floor' : floorName(guideStep.floor, lang)}</span>
           <h3>{guideStep.title}</h3>
           <p>{guideStep.body}</p>
         </div>
@@ -1164,29 +1132,21 @@ export default function App() {
       <div className="map-guide-nav">
         <button
           className="map-guide-btn"
-          disabled={guide.index === 0}
-          onClick={() => goToGuideStep(guide.index - 1)}
+          onClick={() => (guide.index === 0 ? backToRouteChoice() : goToGuideStep(guide.index - 1))}
         >
-          ◀ {lang === 'EN' ? 'Previous' : 'Bumalik'}
+          <Icon name="chevronLeft" /> {lang === 'EN' ? 'Previous' : 'Bumalik'}
         </button>
         {isLastGuideStep ? (
-          <button className="map-guide-btn is-primary" onClick={closeGuide}>
-            ✓ {lang === 'EN' ? 'Done' : 'Tapos na'}
+          <button className="map-guide-btn is-primary" onClick={finishGuide}>
+            <Icon name="check" /> {lang === 'EN' ? 'Done' : 'Tapos na'}
           </button>
         ) : (
           <button className="map-guide-btn is-primary" onClick={() => goToGuideStep(guide.index + 1)}>
-            {lang === 'EN' ? 'Next' : 'Susunod'} ▶
+            {lang === 'EN' ? 'Next' : 'Susunod'} <Icon name="chevronRight" />
           </button>
         )}
       </div>
     </div>
-  ) : canOpenGuide ? (
-    <button className="map-guide-open" onClick={openGuide}>
-      <span className="map-guide-open-text">
-        <strong>{lang === 'EN' ? 'Step-by-step directions' : 'Hakbang-hakbang na direksyon'}</strong>
-        <small>{lang === 'EN' ? 'See the way floor by floor' : 'Tingnan ang daan bawat palapag'}</small>
-      </span>
-    </button>
   ) : null;
 
   return (
@@ -1281,17 +1241,20 @@ export default function App() {
               isang tanong na nasagot na; wala siyang hahanapin dito. */}
           {!isVisitorView && (
             <div className={`sb-search${showKeyboard ? ' is-active' : ''}`}>
-              <span className="sb-search-icon">🔍</span>
+              <span className="sb-search-icon"><Icon name="search" /></span>
               <input
                 type="text"
                 className="sb-search-input"
-                placeholder={lang === 'EN' ? 'Tap to search offices…' : 'Pindutin para maghanap…'}
+                placeholder={guide
+                  ? (lang === 'EN' ? 'Finish the directions first…' : 'Tapusin muna ang direksyon…')
+                  : (lang === 'EN' ? 'Tap to search offices…' : 'Pindutin para maghanap…')}
                 value={searchQuery}
+                disabled={!!guide}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onClick={() => setShowKeyboard(true)}
+                onPointerDown={(e) => { setKeyboardNeeded(wantsOnScreenKeyboard(e)); setShowKeyboard(true); }}
               />
               {searchQuery && (
-                <button className="sb-search-clear" onClick={(e) => { e.stopPropagation(); setSearchQuery(""); }}>✕</button>
+                <button className="sb-search-clear" onClick={(e) => { e.stopPropagation(); setSearchQuery(""); }}><Icon name="close" /></button>
               )}
             </div>
           )}
@@ -1384,7 +1347,7 @@ export default function App() {
                 <div className="destination-card">
                   <p className="label">{lang === 'EN' ? 'Destination' : 'Paroroonan'}</p>
                   <h1 className="office-title">{destinationData.title}</h1>
-                  <span className="floor-badge">{localizeBadge(destinationData.badge, lang) || floorName(destinationData.floor, lang)}</span>
+                  <span className="floor-badge"><Icon name="pin" /> {localizeBadge(destinationData.badge, lang) || floorName(destinationData.floor, lang)}</span>
                 </div>
 
                 {/* Sunod agad sa pangalan: ano ang ginagawa ng tanggapang
@@ -1392,7 +1355,7 @@ export default function App() {
                     oras at pinuno, kaya nasa itaas ito ng .office-meta. */}
                 {hasText(officeDescription(destinationData, lang)) && (
                   <div className="office-about">
-                    <strong>ℹ️ {lang === 'EN' ? 'About this Office' : 'Tungkol sa Opisina'}</strong>
+                    <strong><Icon name="info" /> {lang === 'EN' ? 'About this Office' : 'Tungkol sa Opisina'}</strong>
                     <div className="office-about-body">{officeDescription(destinationData, lang)}</div>
                   </div>
                 )}
@@ -1410,77 +1373,27 @@ export default function App() {
               </div>
             )}
 
-            {routeStep === 'go-to-transport' && destinationData && (
-              <div>
-                <div className="route-status">
-                  <h2>{lang === 'EN' ? 'Showing route on the Ground Floor' : 'Ipinapakita ang ruta sa Ground Floor'}</h2>
-                  <p>
-                    {lang === 'EN' ? 'Please proceed to the ' : 'Pumunta po sa '}
-                    {transportMethod === 'elevator' ? 'Elevator' : transportMethod === 'escalator' ? 'Escalator' : (lang === 'EN' ? 'Stairs' : 'Hagdan')}.
-                  </p>
-                </div>
-                <div className="route-status-step">
-                  {lang === 'EN'
-                        ? (transportMethod === 'elevator'
-                          ? `Going up to Floor ${destinationData.floor}…`
-                          : transportMethod === 'escalator'
-                            ? 'Taking the escalator to Floor 2…'
-                            : 'Walking to the stairs…')
-                        : (transportMethod === 'elevator'
-                          ? `Paakyat sa Palapag ${destinationData.floor}…`
-                          : transportMethod === 'escalator'
-                            ? 'Sumasakay sa escalator papuntang Palapag 2…'
-                            : 'Naglalakad papunta sa hagdan…')}
-                </div>
-              </div>
-            )}
-
-            {routeStep === 'climbing-stairs' && destinationData && (
-              <div>
-                <div className="route-status route-status--gold">
-                  <h2>{lang === 'EN' ? 'Climbing stairs…' : 'Umaakyat sa hagdan…'}</h2>
-                  <p>{lang === 'EN' ? `Currently passing Floor ${currentFloor}` : `Kasalukuyang nasa Palapag ${currentFloor}`}</p>
-                  {currentFloor === 2 && (
-                    <p>{lang === 'EN'
-                      ? 'Walk to the other stairs below the Small Library to keep going up.'
-                      : 'Lumakad papunta sa kabilang hagdan sa ilalim ng Small Library para tumuloy paakyat.'}</p>
-                  )}
-                  {currentFloor === 5 && (
-                    <p>{lang === 'EN'
-                      ? 'Walk to the stairs in the middle, right outside the elevator, to keep going up.'
-                      : 'Lumakad papunta sa hagdan sa gitna, paglabas ng elevator, para tumuloy paakyat.'}</p>
-                  )}
-                </div>
-                <div className="route-status-step">{lang === 'EN' ? 'Target' : 'Papunta sa'}: {floorName(destinationData.floor, lang)}</div>
-              </div>
-            )}
-
-            {/* Nasa lumulutang na kard sa itaas-kaliwa ng mapa ang mismong
-                gabay (tingnan ang guideOverlay). Dito naiiwan ang
-                paalala kung saan pupunta — nagpapalit-palit kasi ang
-                napipili habang binabalikan ang mga palapag, kaya ang
-                pinanggalingang tunguhin ang ipinapakita, hindi iyon. */}
+            {/* Habang nasa gabay: ang detalye ng pinupuntahan at ang QR. Nasa
+                kard sa ibabaw ng mapa ang mismong mga hakbang (guideOverlay). */}
             {guide && (
               <div className="sb-detail">
-                {guideDestination && (
-                  <div className="destination-card">
-                    <p className="label">{lang === 'EN' ? 'Destination' : 'Paroroonan'}</p>
-                    <h1 className="office-title">{guideDestination.title}</h1>
-                    <span className="floor-badge">
-                      {localizeBadge(guideDestination.badge, lang) || floorName(guide.backTo.floor, lang)}
-                    </span>
-                  </div>
-                )}
+                <div className="destination-card">
+                  <p className="label">{lang === 'EN' ? 'Destination' : 'Paroroonan'}</p>
+                  <h1 className="office-title">{guide.dest.title}</h1>
+                  <span className="floor-badge">
+                    <Icon name="pin" /> {localizeBadge(guide.dest.badge, lang) || floorName(guide.dest.floor, lang)}
+                  </span>
+                </div>
 
-                <button className="guide-done" onClick={closeGuide}>
-                  ✓ {lang === 'EN' ? 'Done — back to the office' : 'Tapos na — balik sa opisina'}
-                </button>
+                {!guide.dest.isDirectionOnly && <OfficeMeta office={guide.dest} lang={lang} />}
+
+                <QrCard link={destinationQrLink} lang={lang} />
               </div>
             )}
 
             {!guide && (routeStep === 'arrived' || (routeStep === 'idle' && selectedOfficeKey && selectedOfficeKey !== 'elevator-up' && selectedOfficeKey !== 'stairs-up')) && selectedOffice && (
               <div className="sb-detail">
-                {/* Wala ang hanay na ito sa telepono. Ang "⬅️ Floor N
+                {/* Wala ang hanay na ito sa telepono. Ang "Floor N
                     list" ay nagbubura ng napiling opisina at nag-iiwan
                     ng BUONG DIREKTORYO — ito mismo ang pinasukan ng
                     nag-evaluate. Ang gabay naman ay paglipat-lipat ng
@@ -1500,14 +1413,14 @@ export default function App() {
                 <div className="destination-card">
                   <p className="label">{lang === 'EN' ? 'Destination' : 'Paroroonan'}</p>
                   <h1 className="office-title">{selectedOffice.title}</h1>
-                  <span className="floor-badge">{localizeBadge(selectedOffice.badge, lang)}</span>
+                  <span className="floor-badge"><Icon name="pin" /> {localizeBadge(selectedOffice.badge, lang)}</span>
                 </div>
 
                 {/* Tingnan ang nasa itaas: sunod sa pangalan ang paliwanag
                     tungkol sa tanggapan, bago ang estado at oras. */}
                 {hasText(officeDescription(selectedOffice, lang)) && (
                   <div className="office-about">
-                    <strong>ℹ️ {lang === 'EN' ? 'About this Office' : 'Tungkol sa Opisina'}</strong>
+                    <strong><Icon name="info" /> {lang === 'EN' ? 'About this Office' : 'Tungkol sa Opisina'}</strong>
                     <div className="office-about-body">{officeDescription(selectedOffice, lang)}</div>
                   </div>
                 )}
@@ -1552,6 +1465,8 @@ export default function App() {
           // Kaya ito ang malinaw na senyas na nasa telepono na ito, at
           // larawan lang ng palapag ang dapat lumabas doon.
           staticView={isVisitorView}
+          locked={!!guide}
+          followKey={guide ? `${guide.dest.key}|${guide.method}|${guide.index}` : null}
           overlay={guideOverlay}
         />
 
@@ -1564,12 +1479,12 @@ export default function App() {
           </div>
         )}
 
-        {showKeyboard && (
+        {showKeyboard && keyboardNeeded && (
           <div className="kiosk-virtual-keyboard">
             <div className="kb-head">
-              <span className="kb-title">⌨️ {lang === 'EN' ? 'Kiosk touchscreen keyboard' : 'Keyboard ng kiosk'}</span>
+              <span className="kb-title"><Icon name="keyboard" /> {lang === 'EN' ? 'Kiosk touchscreen keyboard' : 'Keyboard ng kiosk'}</span>
               <button className="kb-hide" onClick={() => setShowKeyboard(false)}>
-                {lang === 'EN' ? 'Hide keyboard' : 'Itago'} ✕
+                {lang === 'EN' ? 'Hide keyboard' : 'Itago'} <Icon name="close" />
               </button>
             </div>
             {keyboardRows.map((row, rowIndex) => (
@@ -1631,13 +1546,13 @@ export default function App() {
               <button
                 className={`route-opt${elevatorOut ? ' is-out' : ''}`}
                 disabled={elevatorOut}
-                onClick={() => { setSelectedOfficeKey('elevator-up'); setTransportMethod('elevator'); setRouteStep('go-to-transport'); }}
+                onClick={() => startGuide(destinationData, 'elevator')}
               >
-                <span className="route-opt-ico">🛗</span>
+                <span className="route-opt-ico"><Icon name="elevator" /></span>
                 <span className="route-opt-name">{lang === 'EN' ? 'Elevator' : 'Elevator'}</span>
                 {elevatorOut ? (
                   <span className="route-opt-sub route-opt-warn">
-                    ⚠️ {liftStatusLabel(elevatorStatus, lang)}
+                    <Icon name="warning" /> {liftStatusLabel(elevatorStatus, lang)}
                     {lang === 'EN' ? ' — not available right now' : ' — hindi magagamit sa ngayon'}
                   </span>
                 ) : (
@@ -1653,13 +1568,13 @@ export default function App() {
                 <button
                   className={`route-opt${escalatorOut ? ' is-out' : ''}`}
                   disabled={escalatorOut}
-                  onClick={() => { setSelectedOfficeKey('elevator-up'); setTransportMethod('escalator'); setRouteStep('go-to-transport'); }}
+                  onClick={() => startGuide(destinationData, 'escalator')}
                 >
-                  <span className="route-opt-ico"><EscalatorIcon /></span>
+                  <span className="route-opt-ico"><Icon name="escalator" /></span>
                   <span className="route-opt-name">{lang === 'EN' ? 'Escalator' : 'Escalator'}</span>
                   {escalatorOut ? (
                     <span className="route-opt-sub route-opt-warn">
-                      ⚠️ {liftStatusLabel(escalatorStatus, lang)}
+                      <Icon name="warning" /> {liftStatusLabel(escalatorStatus, lang)}
                       {lang === 'EN' ? ' — not available right now' : ' — hindi magagamit sa ngayon'}
                     </span>
                   ) : (
@@ -1672,9 +1587,9 @@ export default function App() {
 
               <button
                 className="route-opt"
-                onClick={() => { setSelectedOfficeKey('stairs-up'); setTransportMethod('stairs'); setRouteStep('go-to-transport'); }}
+                onClick={() => startGuide(destinationData, 'stairs')}
               >
-                <span className="route-opt-ico">🚶</span>
+                <span className="route-opt-ico"><Icon name="stairs" /></span>
                 <span className="route-opt-name">{lang === 'EN' ? 'Stairs' : 'Hagdan'}</span>
                 <span className="route-opt-sub">
                   {lang === 'EN'
@@ -1686,8 +1601,8 @@ export default function App() {
 
             <p className="route-pick-hint">
               {lang === 'EN'
-                ? 'Pick one and the route will be drawn on the map.'
-                : 'Pumili po at iguguhit na ang ruta sa mapa.'}
+                ? 'Pick one and the step-by-step directions will open.'
+                : 'Pumili po at bubukas na ang hakbang-hakbang na direksyon.'}
             </p>
 
             <button
@@ -1697,7 +1612,7 @@ export default function App() {
               // blangko ang sidebar pagkatapos kanselahin.
               onClick={() => { setRouteStep('idle'); setDestinationData(null); setSelectedOfficeKey(null); }}
             >
-              ✕ {lang === 'EN' ? 'Never mind — back to the office list' : 'Hindi na — balik sa listahan'}
+              <Icon name="close" /> {lang === 'EN' ? 'Never mind — back to the office list' : 'Hindi na — balik sa listahan'}
             </button>
           </div>
         </div>
@@ -1712,7 +1627,7 @@ export default function App() {
                 <span className="k-modal-eyebrow">City Government of Tagaytay</span>
                 <h2 className="k-modal-title">{lang === 'EN' ? 'About the Kiosk' : 'Tungkol sa Kiosk'}</h2>
               </div>
-              <button className="k-close" onClick={() => setShowAbout(false)}>✕</button>
+              <button className="k-close" onClick={() => setShowAbout(false)}><Icon name="close" /></button>
             </div>
 
             <p className="k-modal-text k-modal-text--justify">

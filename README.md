@@ -201,6 +201,38 @@ ang bagong anunsyo at video.
 
 ---
 
+## Pagbabago ng Nobyembre 2026 (kailangang patakbuhin minsan)
+
+Supabase → **SQL Editor** → **New query** → i-paste ang buong
+`supabase/map_update_2026_11.sql` → **Run**. Ligtas itong ulitin.
+
+Ang ginagawa nito:
+
+- Inilalagay sa `offices` ang **Information Desk, Guard Post, Control Unit,
+  Zoning Office, at Waiting Area**. Wala ang unang dalawa roon noon — iyon ang
+  dahilan ng "Database error" kapag ine-edit sila.
+- Dinadagdag ang hanay ng **iskedyul**: `starts_at` / `ends_at` sa
+  `announcement_media`, at `status_from` / `status_until` sa `office_information`.
+- Nililinis ang pangalan at detalye: walang emoji, City Treasurer, at ginagawang
+  Character's Office ang dating Building Official sa 3rd Floor.
+
+Habang hindi pa ito napapatakbo, gumagana pa rin ang Admin Panel — sinasabi lang
+nito kung aling bahagi ang hindi na-save.
+
+**Mga pangalan ng table.** `office_information`, `announcement_text`,
+`announcement_media`, at `offices.location` ang nasa database. Nasa itaas ng
+`src/lib/api.js` ang mga ito; doon lang babaguhin kung sakaling magpalit ulit.
+
+**Mapa.** Nasa `src/lib/coordinateMapping.js` ang lahat ng puwesto at ruta
+(`coordinateMapping` at `floorPlans`).
+
+**Iskedyul at archive.** Walang gumagalaw sa database kapag lumipas ang petsa:
+kinakalkula lang ito mula sa orasan ng kiosk (`src/lib/schedule.js`). Kaya
+**dapat tama ang oras ng mini PC**. Ang mga anunsyo at paalala ay nasa iisang
+row pa rin bilang JSON, at hanggang 30 tapos na tala bawat uri ang natatandaan.
+
+---
+
 ## Telepono ng mga tanggapan (kailangang patakbuhin minsan)
 
 Para mapalitan ang contact number mula sa Admin Panel, kailangan munang
@@ -210,7 +242,7 @@ may hanay para doon sa database. **Minsan lang ito:**
 2. I-paste ang buong `supabase/office_phones.sql`
 3. **Run**
 
-Nagdadagdag ito ng `phone` at `local` sa `office_details`, at inililipat
+Nagdadagdag ito ng `phone` at `local` sa `office_information`, at inililipat
 ang mga numerong dati'y nasa `src/lib/defaultOfficeData.js`. Ligtas itong
 ulit-ulitin.
 
@@ -228,10 +260,10 @@ ng manu-manong pag-type sa Admin Panel. **Patakbuhin ito pagkatapos ng
 Pinagmulan ang `office-info.pdf` (direktoryo kada palapag), at `(046)
 483-937x` ang numero roon.
 
-Dalawang tanggapan sa PDF ang hindi kasama — **Zoning Office** at
-**Character Office**. Wala silang silid sa mapa, kaya walang maituturo
-ang kiosk para sa kanila; kailangan munang maipuwesto sila bago sila
-bigyan ng contact card.
+Dalawang tanggapan sa PDF ang hindi kasama sa file na iyon — **Zoning
+Office** at **Character Office**. May silid na sila sa mapa ngayon; ang
+`map_update_2026_11.sql` ang naglalagay ng contact ng Zoning. Wala pang contact
+ang Character Office sa PDF, kaya sa Admin Panel ito ilalagay.
 
 #### Ang naunang bersyon: Citizen's Charter 2025
 
@@ -281,7 +313,7 @@ Hinaharangan ng lahat ng browser ang tunog hangga't walang pumipindot sa
 screen. Kaya kahit naka-ON ang "🔊 Buksan ang tunog" sa Admin Panel,
 maaaring tahimik pa rin ang unang video pagkatapos ng restart.
 
-May bilog na 🔊 na buton sa ibabaw ng video sa welcome screen. Doon
+May bilog na buton ng tunog sa ibabaw ng video sa welcome screen. Doon
 kayang buksan o patayin ng bisita ang tunog — at hindi nagsisimula ang
 kiosk kapag iyon ang pinindot (ang pindot sa kahit saang iba ay
 nagsisimula pa rin gaya ng dati).

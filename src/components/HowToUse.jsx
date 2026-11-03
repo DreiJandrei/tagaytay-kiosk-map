@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import Icon from './Icon';
 
 // Kusang nagsasara kapag iniwan ng bisita — para hindi maiwang nakatakip
 // ang tutorial sa idle screen hanggang sa susunod na tao.
@@ -13,13 +14,13 @@ const CONTENT = {
       [null, 'Touch the screen', 'Tap anywhere on this screen to start.'],
       [null, 'Find the office', 'Type its name in the search box, or pick it from the list.'],
       [null, 'Choose how to go up', 'If the office is upstairs, pick the elevator, escalator, or stairs.'],
-      [null, 'Follow the map', 'The line on the map shows the way to the office.'],
+      [null, 'Follow the steps', 'Tap Next to go through the directions floor by floor, then Done at the end.'],
       [null, 'Take the map with you', 'Scan the QR code with your phone camera to keep the directions.'],
     ],
     screenHead: 'On this screen',
     screen: [
-      ['🔊', 'Sound', 'Tap the round 🔊 button at the bottom left to turn the sound on or off.'],
-      ['🎚️', 'Volume', 'Tap 🎚️ above the sound button to show the slider. Drag it up or down, or press + and −. Tap ✕ to hide it.'],
+      [<Icon name="volume" />, 'Sound', 'Tap the round sound button at the bottom left to turn the sound on or off.'],
+      [<Icon name="sliders" />, 'Volume', 'Tap the slider button above the sound button to show the slider. Drag it up or down, or press + and −. Tap it again to hide it.'],
       ['•', 'More announcements', 'Swipe the announcement card left or right to see the others.'],
     ],
     topHead: 'Buttons at the top of the map',
@@ -39,13 +40,13 @@ const CONTENT = {
       [null, 'Pindutin ang screen', 'Pindutin kahit saan sa screen na ito para magsimula.'],
       [null, 'Hanapin ang opisina', 'I-type ang pangalan nito sa search, o piliin sa listahan.'],
       [null, 'Piliin kung paano aakyat', 'Kung nasa itaas ang opisina, pumili: elevator, escalator, o hagdan.'],
-      [null, 'Sundan ang mapa', 'Ang guhit sa mapa ang daan papunta sa opisina.'],
+      [null, 'Sundan ang mga hakbang', 'Pindutin ang Susunod para sa direksyon bawat palapag, tapos Tapos na sa dulo.'],
       [null, 'Dalhin ang mapa', 'I-scan ang QR code gamit ang camera ng phone para dala mo ang direksyon.'],
     ],
     screenHead: 'Sa screen na ito',
     screen: [
-      ['🔊', 'Tunog', 'Pindutin ang bilog na 🔊 sa kaliwang ibaba para buksan o patayin ang tunog.'],
-      ['🎚️', 'Lakas ng tunog', 'Pindutin ang 🎚️ sa ibabaw ng buton ng tunog para lumabas ang slider. I-drag pataas o pababa, o pindutin ang + at −. Pindutin ang ✕ para itago.'],
+      [<Icon name="volume" />, 'Tunog', 'Pindutin ang bilog na buton ng tunog sa kaliwang ibaba para buksan o patayin ang tunog.'],
+      [<Icon name="sliders" />, 'Lakas ng tunog', 'Pindutin ang buton ng slider sa ibabaw ng buton ng tunog para lumabas ang slider. I-drag pataas o pababa, o pindutin ang + at −. Pindutin ulit para itago.'],
       ['•', 'Iba pang anunsyo', 'I-swipe pakaliwa o pakanan ang kard ng anunsyo para makita ang iba.'],
     ],
     topHead: 'Mga buton sa itaas ng mapa',

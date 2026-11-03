@@ -97,6 +97,13 @@ export const defaultOfficeData = {
       descriptionTl: "Ang Breastfeeding Room ay pribado, malinis, at komportableng silid para sa mga inang kailangang magpasuso o maglabas ng gatas habang nasa City Hall. Bukas ito sa mga empleyado at bisita, bilang suporta sa mga programa ng lungsod para sa kalusugan ng ina at sanggol.",
       requirements: ["Registration at Concourse Desk Required"]
     },
+    "control-unit": {
+      title: "CONTROL UNIT",
+      badge: "1st Floor - East Wing Utilities",
+      hours: "8:00 AM - 5:00 PM",
+      head: "",
+      requirements: []
+    },
     "restroom-cr": {
       title: "Restroom (CR)",
       badge: "1st Floor - Utilities Section",
@@ -105,7 +112,7 @@ export const defaultOfficeData = {
       requirements: []
     },
     "info-desk": {
-      title: "Info Desk",
+      title: "INFORMATION DESK",
       badge: "1st Floor - Main Lobby (Left of Entrance)",
       hours: "8:00 AM - 5:00 PM (Mon-Fri)",
       phone: "(046) 483-9372",
@@ -116,7 +123,7 @@ export const defaultOfficeData = {
       requirements: ["Valid ID for Visitor Logbook"]
     },
     "guard": {
-      title: "Guard Post",
+      title: "GUARD POST",
       badge: "1st Floor - Main Entrance (Right Side)",
       hours: "Open 24/7",
       head: "Civil Security Unit",
@@ -126,15 +133,6 @@ export const defaultOfficeData = {
     }
   },
   2: {
-    "bldg-official": {
-      title: "Office of the Building Official",
-      badge: "2nd Floor - West",
-      hours: "8:00 AM - 5:00 PM",
-      head: "Building Official",
-      description: "The Office of the Building Official reviews and approves building, electrical, plumbing, and occupancy permits within Tagaytay City. It inspects ongoing construction for compliance with the National Building Code and city ordinances, and acts on reports of unsafe or unauthorized structures.",
-      descriptionTl: "Sinusuri at inaaprubahan ng Office of the Building Official ang mga building, electrical, plumbing, at occupancy permit sa Lungsod ng Tagaytay. Ini-inspeksyon nito ang mga ginagawang konstruksyon kung sumusunod sa National Building Code at sa mga ordinansa ng lungsod, at inaaksyunan ang mga ulat tungkol sa mga mapanganib o walang pahintulot na istruktura.",
-      requirements: ["Permit Forms", "Valid ID"]
-    },
     "city-eng": {
       title: "City Engineering Office",
       badge: "2nd Floor - West",
@@ -167,6 +165,14 @@ export const defaultOfficeData = {
       descriptionTl: "Ang Bids and Awards Committee ang nagsasagawa ng pagbili ng mga kagamitan, proyektong pang-imprastruktura, at serbisyong pagkonsulta para sa pamahalaang lungsod. Naglalabas ito ng mga bidding document, nagdaraos ng mga pre-bid conference at pampublikong pagbubukas ng bid, at sinusuri ang mga alok alinsunod sa Government Procurement Reform Act.",
       requirements: ["Bidding Documents"]
     },
+    "zoning": {
+      title: "ZONING OFFICE",
+      badge: "2nd Floor - East",
+      hours: "8:00 AM - 5:00 PM",
+      phone: "(046) 483-9373",
+      head: "Ms. Celsa Manalo",
+      requirements: []
+    },
     "planning": {
       title: "City Planning and Development Office",
       badge: "2nd Floor - East",
@@ -194,24 +200,25 @@ export const defaultOfficeData = {
       requirements: []
     },
     "library": {
-      title: "Small Library",
+      title: "MINI LIBRARY",
       badge: "2nd Floor - South",
       hours: "8:00 AM - 5:00 PM",
       head: "City Librarian",
-      description: "The Small Library is a quiet reading area inside City Hall, holding reference materials, local publications, and records on the history and governance of Tagaytay. It is open to students, researchers, and residents who wish to read or study on site.",
-      descriptionTl: "Ang Small Library ay tahimik na babasahan sa loob ng City Hall, na may mga sangguniang aklat, lokal na publikasyon, at mga talaan tungkol sa kasaysayan at pamamahala ng Tagaytay. Bukas ito sa mga estudyante, mananaliksik, at residenteng nais magbasa o mag-aral dito.",
+      description: "The Mini Library is a quiet reading area inside City Hall, holding reference materials, local publications, and records on the history and governance of Tagaytay. It is open to students, researchers, and residents who wish to read or study on site.",
+      descriptionTl: "Ang Mini Library ay tahimik na babasahan sa loob ng City Hall, na may mga sangguniang aklat, lokal na publikasyon, at mga talaan tungkol sa kasaysayan at pamamahala ng Tagaytay. Bukas ito sa mga estudyante, mananaliksik, at residenteng nais magbasa o mag-aral dito.",
       requirements: ["Library Card"]
     }
   },
   3: {
+    // Dating Office of the Building Official ang kwartong ito; iisa pa rin ang
+    // key para buo ang bilang ng hanap at ang tala sa database. Walang opisyal
+    // na paliwanag o contact pa — sa Admin Panel ilalagay kapag mayroon na.
     "building-official": {
-      title: "OFFICE OF THE BUILDING OFFICIAL",
+      title: "CHARACTER'S OFFICE",
       badge: "3rd Floor - West",
       hours: "8:00 AM - 5:00 PM",
-      head: "Building Official",
-      description: "The Office of the Building Official reviews and approves building, electrical, plumbing, and occupancy permits within Tagaytay City. It inspects ongoing construction for compliance with the National Building Code and city ordinances, and acts on reports of unsafe or unauthorized structures.",
-      descriptionTl: "Sinusuri at inaaprubahan ng Office of the Building Official ang mga building, electrical, plumbing, at occupancy permit sa Lungsod ng Tagaytay. Ini-inspeksyon nito ang mga ginagawang konstruksyon kung sumusunod sa National Building Code at sa mga ordinansa ng lungsod, at inaaksyunan ang mga ulat tungkol sa mga mapanganib o walang pahintulot na istruktura.",
-      requirements: ["Permit Forms"]
+      head: "",
+      requirements: []
     },
     "budget-office": {
       title: "BUDGET OFFICE",
@@ -234,7 +241,7 @@ export const defaultOfficeData = {
       requirements: []
     },
     "treasure-office": {
-      title: "CITY TREASURE OFFICE",
+      title: "CITY TREASURER OFFICE",
       badge: "3rd Floor - East",
       hours: "8:00 AM - 5:00 PM",
       phone: "(046) 483-9377",
@@ -384,6 +391,13 @@ export const defaultOfficeData = {
       description: "The Office of the Mayor is the seat of the city's executive leadership, where the policies, programs, and official decisions for Tagaytay are made. It handles appointments with the Mayor, the signing of official documents, and matters raised from the other city offices.",
       descriptionTl: "Ang Office of the Mayor ang sentro ng ehekutibong pamumuno ng lungsod, kung saan binubuo ang mga patakaran, programa, at opisyal na desisyon para sa Tagaytay. Inaasikaso nito ang mga appointment sa Mayor, ang paglagda sa mga opisyal na dokumento, at ang mga usaping idinudulog mula sa ibang tanggapan ng lungsod.",
       requirements: ["Appointment"]
+    },
+    "waiting-area": {
+      title: "WAITING AREA",
+      badge: "7th Floor",
+      hours: "8:00 AM - 5:00 PM",
+      head: "",
+      requirements: []
     },
     "mayor-receiving": {
       title: "MAYOR'S OFFICE - RECEIVING",
