@@ -4650,7 +4650,7 @@ button:active { transform: scale(.97); }
 .plan-elev-label {
   position: absolute;
   transform: translateX(-50%);
-  z-index: 6;
+  z-index: 30; /* sa ibabaw ng linya ng ruta, na dumaraan papunta sa pinto */
   padding: 2px 6px;
   border-radius: 4px;
   background: rgba(7,18,35,.88);

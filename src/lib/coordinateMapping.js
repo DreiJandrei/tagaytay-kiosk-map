@@ -17,15 +17,17 @@
 
 export const coordinateMapping = {
   1: {
+    // Sa harap ng pinto dumarating ang elevator (nasa ilalim ng dalawang pinto).
     "elevator-up": {
-      pathData: "M 1017 698 L 1043 698 L 1043 577 L 1160 577",
+      pathData: "M 1017 698 L 1043 698 L 1043 629 L 1212 629 L 1212 599",
       style: { display: 'none' },
       isDirectionOnly: true,
       title: "Elevator to Upper Floors",
       badge: "Vertical Transport"
     },
+    // Paakyat pakanan ang hagdan: papasok sa kaliwang dulo, tapos pakanan ang lakad.
     "stairs-up": {
-      pathData: "M 1017 698 L 1043 698 L 1043 572 L 432 572 L 432 559",
+      pathData: "M 1017 698 L 1043 698 L 1043 572 L 347 572 L 347 545 L 516 545",
       style: { display: 'none' },
       isDirectionOnly: true,
       title: "Stairs to Upper Floors",
@@ -121,27 +123,27 @@ export const coordinateMapping = {
   },
   3: {
     "building-official": {
-      pathData: "M 486 642 L 486 486 L 420 486",
+      pathData: "M 486 574 L 486 486 L 420 486",
       style: { width: 194, height: 294, left: 226, top: 338 }, cssClass: ""
     },
     "budget-office": {
-      pathData: "M 486 642 L 486 345 L 546 345 L 546 321",
+      pathData: "M 486 574 L 486 345 L 546 345 L 546 321",
       style: { width: 206, height: 163, left: 442, top: 158 }, cssClass: ""
     },
     "internal-audit": {
-      pathData: "M 486 642 L 486 345 L 743 345 L 743 321",
+      pathData: "M 486 574 L 486 345 L 743 345 L 743 321",
       style: { width: 148, height: 163, left: 670, top: 158 }, cssClass: ""
     },
     "treasure-office": {
-      pathData: "M 486 642 L 845 642",
+      pathData: "M 486 574 L 845 574",
       style: { width: 225, height: 408, left: 845, top: 295 }, cssClass: ""
     },
     "accounting-office": {
-      pathData: "M 486 642 L 638 642 L 638 700",
+      pathData: "M 486 574 L 638 574 L 638 700",
       style: { width: 369, height: 236, left: 452, top: 700 }, cssClass: ""
     },
     "restroom-cr-3": {
-      pathData: "M 486 642 L 486 413 L 529 413",
+      pathData: "M 486 574 L 486 413 L 529 413",
       style: { width: 195, height: 87, left: 529, top: 370 }, cssClass: "", isDirectionOnly: true
     },
   },
@@ -223,23 +225,25 @@ export const coordinateMapping = {
 //   wall / box    — panlabas na pader (hugis-L ang Ground Floor)
 //   caption       — kung saan nakasulat ang pangalan ng palapag
 //   kiosk         — kinatatayuan ng bisita (Ground Floor lang)
-//   arrivals      — saan lumalabas sa bawat paraan ng pag-akyat
-//   passThrough   — lalakarin sa palapag na dinaraanan lang papunta sa
-//                   kasunod na hagdan. 2nd: mula sa malapad na hagdan papunta
-//                   sa hagdan sa ilalim ng Mini Library. 4th: mula sa hagdan
-//                   sa sulok papunta sa hagdan sa gitna. Sa ibang palapag,
-//                   doon din nagpapatuloy ang hagdan — walang lalakarin.
+//   arrivals      — saan lumalabas sa bawat paraan ng pag-akyat: x/y ang pin,
+//                   at sa pinto ng elevator o sa hagdan mismo nagsisimula ang
+//                   `path`, para kita kung saan nanggaling ang bisita
+//   passThrough   — linya sa palapag na dinaraanan lang, hanggang sa pag-akyat
+//                   sa kasunod na hagdan. 2nd: mula sa malapad na hagdan papunta
+//                   sa hagdan sa ilalim ng Mini Library. 4th: mula sa hagdan sa
+//                   sulok papunta sa hagdan sa gitna. Sa 3rd, 5th at 6th, doon
+//                   din nagpapatuloy ang hagdan — ang pag-akyat lang ang guhit.
 //   overrides     — ruta na hindi kayang dumaan sa hub nang hindi umiikot
 export const floorPlans = {
   1: {
     wall: "M 282 600 L 920 600 L 920 845 L 1357 845 L 1357 100 L 224 100 L 224 600 L 243 600",
     caption: { x: 790, y: 100 },
     kiosk: {"x": 1017, "y": 698},
-    escalatorPath: "M 1017 698 L 1043 698 L 1043 659 L 1125 659",
+    escalatorPath: "M 1017 698 L 1043 698 L 1043 629 L 1251 629 L 1251 655",
     structures: [
       {"type": "stairs", "left": 321, "top": 496, "width": 225, "height": 63},
       {"type": "elevator", "doors": [1170, 1216], "top": 555, "doorW": 36, "doorH": 44},
-      {"type": "escalator", "left": 1125, "top": 629, "width": 161, "height": 60},
+      {"type": "escalator", "left": 1125, "top": 640, "width": 161, "height": 59},
       {"type": "garden", "left": 463, "top": 624, "width": 435, "height": 217},
       {"type": "parking", "left": 311, "top": 859, "width": 265, "height": 121},
       {"type": "entrance", "left": 1130, "top": 927, "width": 175, "height": 30},
@@ -249,13 +253,13 @@ export const floorPlans = {
     box: {"x": 120, "y": 110, "w": 1059, "h": 862},
     caption: { x: 649, y: 110 },
     arrivals: {
-      elevator: { x: 928, y: 555, path: "M 928 555 L 780 555 L 780 306" },
-      stairs: { x: 525, y: 470, path: "M 525 470 L 525 306 L 780 306" },
+      elevator: { x: 928, y: 555, path: "M 928 508 L 928 555 L 780 555 L 780 306" },
+      stairs: { x: 350, y: 470, path: "M 350 470 L 350 306 L 780 306" },
       escalator: { x: 844, y: 662, path: "M 844 662 L 780 662 L 780 306" },
     },
-    passThrough: "M 525 470 L 525 934 L 319 934",
+    passThrough: "M 350 470 L 525 470 L 525 934 L 242 934 L 242 873",
     overrides: {
-      "library": { stairs: "M 525 470 L 525 734 L 501 734" },
+      "library": { stairs: "M 350 470 L 350 639" },
     },
     structures: [
       {"type": "stairs", "left": 212, "top": 423, "width": 274, "height": 93},
@@ -269,8 +273,12 @@ export const floorPlans = {
     box: {"x": 160, "y": 110, "w": 954, "h": 864},
     caption: { x: 636, y: 110 },
     arrivals: {
-      elevator: { x: 614, y: 591, path: "M 614 591 L 614 642 L 486 642" },
-      stairs: { x: 362, y: 921, path: "M 362 921 L 430 921 L 430 642 L 486 642" },
+      elevator: { x: 614, y: 574, path: "M 614 525 L 614 574 L 486 574" },
+      stairs: { x: 362, y: 921, path: "M 316 921 L 430 921 L 430 642 L 486 642 L 486 574" },
+    },
+    passThrough: "M 316 921 L 264 921 L 264 860",
+    overrides: {
+      "accounting-office": { stairs: "M 316 921 L 430 921 L 430 659 L 638 659 L 638 700" },
     },
     structures: [
       {"type": "stairs-l", "left": 238, "top": 843, "width": 104, "height": 103, "armW": 49},
@@ -282,10 +290,10 @@ export const floorPlans = {
     box: {"x": 160, "y": 110, "w": 954, "h": 864},
     caption: { x: 636, y: 110 },
     arrivals: {
-      elevator: { x: 634, y: 567, path: "M 634 567 L 478 567" },
-      stairs: { x: 359, y: 914, path: "M 359 914 L 442 914 L 442 567 L 478 567" },
+      elevator: { x: 631, y: 567, path: "M 631 540 L 631 567 L 478 567" },
+      stairs: { x: 362, y: 914, path: "M 313 914 L 442 914 L 442 567 L 478 567" },
     },
-    passThrough: "M 359 914 L 442 914 L 442 676 L 600 676 L 600 659",
+    passThrough: "M 313 914 L 442 914 L 442 676 L 546 676 L 546 642 L 656 642",
     structures: [
       {"type": "stairs", "left": 519, "top": 578, "width": 163, "height": 81},
       {"type": "stairs-l", "left": 235, "top": 836, "width": 103, "height": 104, "armW": 49},
@@ -297,9 +305,10 @@ export const floorPlans = {
     box: {"x": 160, "y": 110, "w": 954, "h": 864},
     caption: { x: 636, y: 110 },
     arrivals: {
-      elevator: { x: 646, y: 564, path: "M 646 564 L 476 564" },
-      stairs: { x: 493, y: 618, path: "M 493 618 L 476 618 L 476 564" },
+      elevator: { x: 644, y: 564, path: "M 644 533 L 644 564 L 476 564" },
+      stairs: { x: 493, y: 618, path: "M 544 618 L 476 618 L 476 564" },
     },
+    passThrough: "M 544 642 L 655 642",
     structures: [
       {"type": "stairs", "left": 514, "top": 576, "width": 164, "height": 83},
       {"type": "elevator", "doors": [594, 650], "top": 479, "doorW": 48, "doorH": 54},
@@ -310,9 +319,10 @@ export const floorPlans = {
     box: {"x": 270, "y": 110, "w": 785, "h": 853},
     caption: { x: 662, y: 110 },
     arrivals: {
-      elevator: { x: 785, y: 461, path: "M 785 461 L 596 461" },
-      stairs: { x: 619, y: 592, path: "M 619 592 L 596 592 L 596 461" },
+      elevator: { x: 785, y: 461, path: "M 785 405 L 785 461 L 596 461" },
+      stairs: { x: 578, y: 592, path: "M 673 592 L 596 592 L 596 461" },
     },
+    passThrough: "M 673 618 L 794 618",
     structures: [
       {"type": "stairs", "left": 637, "top": 547, "width": 191, "height": 92},
       {"type": "elevator", "doors": [731, 790], "top": 348, "doorW": 49, "doorH": 58},
@@ -323,8 +333,8 @@ export const floorPlans = {
     box: {"x": 270, "y": 110, "w": 785, "h": 869},
     caption: { x: 662, y: 110 },
     arrivals: {
-      elevator: { x: 815, y: 515, path: "M 815 515 L 639 515" },
-      stairs: { x: 662, y: 623, path: "M 662 623 L 639 623 L 639 515" },
+      elevator: { x: 815, y: 515, path: "M 815 454 L 815 515 L 639 515" },
+      stairs: { x: 639, y: 623, path: "M 716 623 L 639 623 L 639 515" },
     },
     structures: [
       {"type": "stairs", "left": 680, "top": 578, "width": 189, "height": 92},
