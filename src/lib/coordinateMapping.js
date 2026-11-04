@@ -222,7 +222,9 @@ export const coordinateMapping = {
 };
 
 // Ang lahat ng hindi tanggapan sa bawat palapag.
-//   wall / box    — panlabas na pader (hugis-L ang Ground Floor)
+//   wall / box    — panlabas na pader (hugis-L ang Ground Floor). Sa Ground Floor,
+//                   ang puwang sa ilalim, sa pagitan ng Information Desk at Guard
+//                   Post, ang pinto ng main entrance; nasa tapat nito ang `entrance`
 //   walls         — pader ng mga kwarto (mapp.pdf); ang puwang sa linya ang pinto,
 //                   at doon pumapasok ang ruta ng bawat tanggapan
 //   caption       — kung saan nakasulat ang pangalan ng palapag
@@ -235,7 +237,7 @@ export const coordinateMapping = {
 //                   din nagpapatuloy ang hagdan — ang pag-akyat lang ang guhit.
 export const floorPlans = {
   1: {
-    wall: "M 300 600 L 950 600 L 950 845 L 1387 845 L 1387 100 L 254 100 L 254 600 L 262 600",
+    wall: "M 300 600 L 950 600 L 950 845 L 1114 845 M 1192 845 L 1387 845 L 1387 100 L 254 100 L 254 600 L 262 600",
     walls: "M 584 107 L 1334 107 M 584 107 L 584 257 M 1334 107 L 1334 257 M 584 257 L 1033 257 M 1107 257 L 1334 257 M 265 264 L 638 264 M 265 264 L 265 466 M 638 264 L 638 466 M 265 466 L 427 466 M 479 466 L 638 466 M 644 264 L 739 264 M 644 264 L 644 539 M 739 264 L 739 539 M 644 539 L 675 539 M 712 539 L 756 539 M 808 539 L 918 539 M 918 458 L 918 539 M 876 264 L 1029 264 M 876 264 L 876 336 M 749 336 L 1029 336 M 749 397 L 1029 397 M 749 336 L 749 458 M 739 458 L 1029 458 M 1029 264 L 1029 287 M 1029 316 L 1029 353 M 1029 382 L 1029 412 M 1029 441 L 1029 458 M 1112 264 L 1334 264 M 1112 264 L 1112 301 M 1112 336 L 1112 348 M 1334 264 L 1334 348 M 1112 348 L 1334 348 M 1112 358 L 1334 358 M 1112 358 L 1112 446 M 1334 358 L 1334 446 M 1112 446 L 1262 446 M 1313 446 L 1334 446 M 1139 471 L 1208 471 M 1267 471 L 1334 471 M 1139 471 L 1139 539 M 1334 471 L 1334 539 M 1139 539 L 1334 539 M 1181 539 L 1181 615 M 1301 539 L 1301 615 M 1181 615 L 1208 615 M 1274 615 L 1301 615 M 959 715 L 1026 715 M 1068 715 L 1106 715 M 959 715 L 959 838 M 1106 715 L 1106 838 M 959 838 L 1106 838 M 1199 732 L 1315 732 M 1199 828 L 1315 828 M 1315 732 L 1315 828 M 1199 732 L 1199 765 M 1199 795 L 1199 828 M 15 709 L 209 709 M 270 709 L 297 709 M 15 709 L 15 962 M 297 709 L 297 962 M 15 962 L 297 962",
     caption: { x: 820, y: 100 },
     kiosk: {"x":1047,"y":698},
@@ -246,7 +248,7 @@ export const floorPlans = {
       {"type":"escalator","left":1151,"top":639,"width":162,"height":61},
       {"type":"garden","left":493,"top":624,"width":435,"height":217},
       {"type":"parking","left":341,"top":859,"width":265,"height":121},
-      {"type":"entrance","left":1160,"top":927,"width":175,"height":30},
+      {"type":"entrance","left":1062,"top":855,"width":180,"height":30},
     ],
   },
   2: {

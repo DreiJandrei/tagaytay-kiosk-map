@@ -612,12 +612,21 @@ export default function MapScreen({
             <Icon name="parking" /><span>{EN ? 'PARKING AREA' : 'PARADAHAN'}</span>
           </div>
         );
-      case 'entrance':
+      case 'entrance': {
+        // Sa tapat ng pinto: EXIT at ENTRANCE na magkatabi, at ang hagdan sa labas.
+        const half = (s.width - 6) / 2;
         return (
-          <div key={i} className="exit-badge entrance-badge plan-entrance" style={box}>
-            {EN ? 'MAIN ENTRANCE' : 'PANGUNAHING PASUKAN'}
-          </div>
+          <React.Fragment key={i}>
+            <div className="exit-badge plan-entrance" style={{ left: s.left, top: s.top, width: half, height: s.height }}>
+              {EN ? 'EXIT' : 'LABASAN'}
+            </div>
+            <div className="exit-badge entrance-badge plan-entrance" style={{ left: s.left + half + 6, top: s.top, width: half, height: s.height }}>
+              {EN ? 'ENTRANCE' : 'PASUKAN'}
+            </div>
+            <div className="structural-element entrance-steps" style={{ left: s.left, top: s.top + s.height + 6, width: s.width, height: 40 }} />
+          </React.Fragment>
         );
+      }
       default:
         return null;
     }
