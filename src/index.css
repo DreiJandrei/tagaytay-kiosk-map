@@ -4604,6 +4604,8 @@ button:active { transform: scale(.97); }
 .k-icon { display: inline-block; flex-shrink: 0; vertical-align: -0.125em; }
 
 /* ═══════════ PLANO NG BAWAT PALAPAG (coordinateMapping → floorPlans) ═══════════ */
+.mock-map-graphic > svg g .plan-partition { stroke: #5C7EA8; stroke-width: 2.5; }
+.light-theme .mock-map-graphic > svg g .plan-partition { stroke: #7C8FA8; }
 .map-floor-caption {
   position: absolute;
   transform: translate(-50%, -150%);

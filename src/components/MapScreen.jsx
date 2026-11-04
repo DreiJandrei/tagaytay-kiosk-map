@@ -156,6 +156,12 @@ export default function MapScreen({
       minX = Math.min(minX, wall.x); maxX = Math.max(maxX, wall.x + wall.width);
       minY = Math.min(minY, wall.y - 44); maxY = Math.max(maxY, wall.y + wall.height);
     }
+    // Sa Ground Floor, lumalampas sa panlabas na pader ang pader ng Canteen.
+    const inner = canvas.querySelector('.plan-partition')?.getBBox?.();
+    if (inner?.width) {
+      minX = Math.min(minX, inner.x); maxX = Math.max(maxX, inner.x + inner.width);
+      minY = Math.min(minY, inner.y); maxY = Math.max(maxY, inner.y + inner.height);
+    }
     if (!isFinite(minX) || maxX - minX < 50 || maxY - minY < 50) return null;
     return { minX, minY, maxX, maxY, cx: (minX + maxX) / 2, cy: (minY + maxY) / 2 };
   };
@@ -753,6 +759,7 @@ export default function MapScreen({
               {plan.wall
                 ? <path className="plan-wall" d={plan.wall} />
                 : <rect className="plan-wall" x={plan.box.x} y={plan.box.y} width={plan.box.w} height={plan.box.h} rx="12" />}
+              <path className="plan-partition" d={plan.walls} />
             </g>
           </svg>
 
