@@ -13,7 +13,7 @@ export const isTypable = (el) =>
 // Bakit may pagsusuri pa sa buong screen: may mga touch frame sa TV na mouse
 // ang iniuulat ng Windows. Naka---kiosk (buong screen) ang kiosk, at wala
 // itong ibang keyboard, kaya doon lumalabas pa rin ito kahit "mouse" ang pindot.
-const isFullScreenWindow = () =>
+export const isFullScreenWindow = () =>
   window.innerHeight >= window.screen.height - 1 && window.innerWidth >= window.screen.width - 1;
 
 export const wantsOnScreenKeyboard = (e) =>

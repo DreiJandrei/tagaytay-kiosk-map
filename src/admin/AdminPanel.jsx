@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import VirtualKeyboard from '../components/VirtualKeyboard';
 import Icon from '../components/Icon';
-import { wantsOnScreenKeyboard } from '../lib/keyboardUtils';
+import { wantsOnScreenKeyboard, isFullScreenWindow } from '../lib/keyboardUtils';
 import {
   scheduleState, toLocalInput, fromLocalInput, formatWhen, scheduleProblem,
 } from '../lib/schedule';
@@ -86,6 +86,10 @@ function SchedulePicker({ t, from, until, onFrom, onUntil, hint }) {
   );
 }
 
+// Naka-buong screen ang kiosk (--kiosk sa start-kiosk.bat) at daliri ang pampindot
+// nito. Ang laptop ay nasa karaniwang window, at mouse o trackpad ang gamit.
+const isKioskScreen = () => isFullScreenWindow() || window.matchMedia('(pointer: coarse)').matches;
+
 export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang = 'EN', setLang }) {
   // Iisang switch lang ang wika ng buong kiosk — ang header toggle. Dito
   // lang ito sinasalain: `t(english, tagalog)`. Walang teksto sa panel na
@@ -93,7 +97,15 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
   const EN = lang === 'EN';
   const t = (en, tl) => (EN ? en : tl);
 
-  const [activeTab, setActiveTab] = useState('announcements');
+  const [selectedTab, setActiveTab] = useState('announcements');
+  // Sa laptop lang ang pagpapalit ng password: walang tab nito sa kiosk.
+  const [onKioskScreen, setOnKioskScreen] = useState(isKioskScreen);
+  useEffect(() => {
+    const check = () => setOnKioskScreen(isKioskScreen());
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+  const activeTab = onKioskScreen && selectedTab === 'security' ? 'announcements' : selectedTab;
 
   // Kiosk touchscreen keyboard — walang pisikal na keyboard sa terminal.
   const [showKeyboard, setShowKeyboard] = useState(false);
@@ -871,9 +883,11 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
             {liftSaved && (liftSaved.elevator !== 'available' || liftSaved.escalator !== 'available')
               && <span className="adm-tab-alert" aria-hidden="true"><Icon name="warning" /></span>}
           </button>
-          <button className={`adm-tab${activeTab === 'security' ? ' active' : ''}`} onClick={() => setActiveTab('security')}>
-            {t('Admin Password', 'Password ng Admin')}
-          </button>
+          {!onKioskScreen && (
+            <button className={`adm-tab${activeTab === 'security' ? ' active' : ''}`} onClick={() => setActiveTab('security')}>
+              {t('Admin Password', 'Password ng Admin')}
+            </button>
+          )}
         </div>
 
         {activeTab === 'announcements' && (
