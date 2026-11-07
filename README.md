@@ -29,7 +29,7 @@ bisitang nag-scan ng QR.
 device at i-type ang email ng `+device` na account. Hindi ito naka-link
 saanman sa kiosk. Sa Gmail ng lungsod dumarating ang reset link.
 
-**Admin login.** Pindutin ang seal sa itaas-kaliwa nang **eksaktong 15
+**Admin login.** Pindutin ang seal sa itaas-kaliwa nang **eksaktong 8
 beses**, tapos huminto. Kulang o sobra, walang lalabas. Hindi ito ang
 kandado; ang password at ang database rules iyon. Para lang ito hindi
 aksidenteng lumabas ang login sa harap ng bisita.

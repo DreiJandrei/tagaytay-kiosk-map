@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import tagaytaySeal from './assets/tagaytay-seal.jpg';
+import tagaytaySeal from './assets/tagaytay-seal.png';
 import cctLogo from './assets/cct-logo.jpg';
 import scsLogo from './assets/scs-logo.jpg';
 import photoFranz from './assets/team/franz.jpg';
@@ -139,15 +139,15 @@ function QrCard({ link, lang }) {
   );
 }
 
-// ── Admin login: eksaktong 15 pindot sa seal ─────────────────────
+// ── Admin login: eksaktong 8 pindot sa seal ─────────────────────
 // Binibilang ang pindot hanggang huminto nang TAP_PAUSE_MS. Saka lang
-// tinitingnan: eksaktong 15 → lalabas ang login. Kulang o sobra → walang
+// tinitingnan: eksaktong 8 → lalabas ang login. Kulang o sobra → walang
 // nangyayari, at walang anumang senyas kung bakit. Ang batang naglalaro
 // sa seal ay halos laging lalampas.
 //
 // Hindi ito ang kandado — ang password at ang Supabase RLS iyon. Ito ay
 // para hindi aksidenteng lumabas ang login sa harap ng bisita.
-const ADMIN_TAPS = 15;
+const ADMIN_TAPS = 8;
 
 // Walang pumipindot nang IDLE_MS → "Nandiyan pa ba kayo?". Walang sumagot
 // sa loob ng STILL_THERE_MS → balik sa welcome screen.
@@ -600,7 +600,7 @@ export default function App() {
   // nananatiling naroon sa DOM kung saan kayang pindutin.
 
   const handleLogoTap = () => {
-    // Eksaktong 15 pindot sa seal ang nagbubukas ng admin login (tingnan
+    // Eksaktong 8 pindot sa seal ang nagbubukas ng admin login (tingnan
     // ang ADMIN_TAPS sa itaas). Hindi ito dapat umabot sa telepono ng
     // kahit sinong nakakita ng QR.
     if (isVisitorView) return;

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import tagaytaySeal from '../assets/tagaytay-seal.jpg';
+import tagaytaySeal from '../assets/tagaytay-seal.png';
 import AuthKeyboard from './AuthKeyboard';
 import { unlockKiosk } from '../lib/kioskDevice';
 import {

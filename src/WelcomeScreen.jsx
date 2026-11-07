@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import tagaytaySeal from './assets/tagaytay-seal.jpg';
+import tagaytaySeal from './assets/tagaytay-seal.png';
 import cityhallBg from './assets/cityhall.jpg';
 import WelcomeVideo from './components/WelcomeVideo';
 import HowToUse from './components/HowToUse';

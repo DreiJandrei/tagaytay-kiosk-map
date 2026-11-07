@@ -709,3 +709,41 @@ export const deleteKioskVideo = async (id) => {
     throw error;
   }
 };
+// ==============================================================
+// 10. ACTIVITY LOGS — sino ang nag-edit ng ano, at kailan
+// ==============================================================
+// Table: supabase/activity_logs.sql. Ang database ang naglalagay ng oras
+// at email (trigger), kaya `action`, `target` at `details` lang ang
+// ipinapadala rito.
+const ACTIVITY_LOGS = 'activity_logs';
+
+// 42P01 — sagot ng Postgres sa table na wala; PGRST205 — ng PostgREST.
+const isMissingTable = (error) => error?.code === '42P01' || error?.code === 'PGRST205';
+
+// Hindi kailanman ipinapatumba ang mismong pag-save: kapag hindi naitala,
+// nai-save pa rin ang pagbabago. Sa console lang ang babala.
+export const logActivity = async (action, target, details = {}) => {
+  try {
+    const { error } = await supabase.from(ACTIVITY_LOGS).insert({ action, target, details });
+    if (error) throw error;
+  } catch (error) {
+    console.warn(
+      isMissingTable(error)
+        ? 'Wala pang activity_logs table — patakbuhin ang supabase/activity_logs.sql.'
+        : 'Hindi naitala sa activity log:',
+      error,
+    );
+  }
+};
+
+// `{ logs, missing }` — `missing` kapag hindi pa napapatakbo ang SQL, para
+// masabi ito ng Admin Panel sa halip na blangkong listahan lang.
+export const getActivityLogs = async (limit = 200) => {
+  const { data, error } = await supabase.from(ACTIVITY_LOGS)
+    .select('*').order('created_at', { ascending: false }).limit(limit);
+  if (error) {
+    if (isMissingTable(error)) return { logs: [], missing: true };
+    throw error;
+  }
+  return { logs: data || [], missing: false };
+};

@@ -11,6 +11,7 @@ import {
   getLiftStatuses, setLiftStatus,
   getKioskVideos, saveKioskVideo, deleteKioskVideo, placeKioskVideo,
   uploadKioskVideoFile, deleteKioskVideoFile, isUploadedFile,
+  logActivity, getActivityLogs,
 } from '../lib/api';
 import {
   getVideoTypes, getOrientations, detectVideoType, validateVideoUrl,
@@ -90,6 +91,25 @@ function SchedulePicker({ t, from, until, onFrom, onUntil, hint }) {
 // nito. Ang laptop ay nasa karaniwang window, at mouse o trackpad ang gamit.
 const isKioskScreen = () => isFullScreenWindow() || window.matchMedia('(pointer: coarse)').matches;
 
+// Iisa ang admin account, kaya ito ang nagsasabi sa activity log kung saan
+// ginawa ang pagbabago: sa mismong kiosk, o sa laptop.
+const deviceLabel = () => (isKioskScreen() ? 'Kiosk' : 'Laptop');
+
+// ── Pangalan ng tanggapan: bawal ang kapareho ──────────────────
+// Pinaghahambing nang walang pakialam sa malaki/maliit na titik at sa
+// sobrang espasyo: "City Treasurer  office" = "CITY TREASURER OFFICE".
+const normalizeTitle = (title) => String(title || '').trim().replace(/\s+/g, ' ').toUpperCase();
+
+// Mga pangalang talagang marami sa gusali — pangalan ng uri ng kwarto,
+// hindi ng iisang tanggapan. Hindi hinaharang ang mga ito.
+const REPEATABLE_TITLES = new Set(['UNDER CONSTRUCTION', 'COMFORT ROOM', 'RESTROOM (CR)', 'WAITING AREA']);
+
+// Hindi ito mga tanggapan — mga daanan sa mapa.
+const NOT_OFFICES = new Set(['elevator-up', 'stairs-up']);
+
+// Ang mga field na itinatala sa activity log kapag nagbago.
+const OFFICE_LOG_FIELDS = ['title', 'hours', 'head', 'status', 'phone', 'local', 'description', 'descriptionTl'];
+
 export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang = 'EN', setLang }) {
   // Iisang switch lang ang wika ng buong kiosk — ang header toggle. Dito
   // lang ito sinasalain: `t(english, tagalog)`. Walang teksto sa panel na
@@ -143,6 +163,19 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSavingPassword, setIsSavingPassword] = useState(false);
+
+  // Activity log: binabasa tuwing binubuksan ang tab, para laging bago.
+  // `missing` = hindi pa napapatakbo ang supabase/activity_logs.sql.
+  const [activity, setActivity] = useState({ logs: [], missing: false, loading: false, error: '' });
+  const loadActivity = async () => {
+    setActivity((a) => ({ ...a, loading: true, error: '' }));
+    try {
+      const { logs, missing } = await getActivityLogs();
+      setActivity({ logs, missing, loading: false, error: '' });
+    } catch (error) {
+      setActivity((a) => ({ ...a, loading: false, error: error?.message || String(error) }));
+    }
+  };
 
   const [selectedFloor, setSelectedFloor] = useState(1);
   const [selectedOfficeKey, setSelectedOfficeKey] = useState(null);
@@ -199,6 +232,10 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     setIsSaving(true);
     try {
       const status = await setLiftStatus(lift, liftDraft[lift]);
+      logActivity('lift.update', lift === 'elevator' ? 'Elevator' : 'Escalator', {
+        changes: { status: { from: liftSaved?.[lift] ?? null, to: status } },
+        device: deviceLabel(),
+      });
       setLiftSaved((prev) => ({ ...prev, [lift]: status }));
       alert(status === 'available'
         ? t(
@@ -432,6 +469,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
       });
       // Isinisingit sa napiling puwesto; umuusog ang iba nang kusa.
       await placeKioskVideo(saved.id, videoForm.position);
+      logActivity(videoForm.id ? 'video.update' : 'video.create',
+        videoForm.title || videoForm.source_url, { device: deviceLabel() });
       await loadVideos();
       // Pagsasara ng editor: ang bagong row sa listahan — kasama ang
       // LIVE/OFF na pill — ang nagpapatunay na natanggap ang pagbabago.
@@ -481,6 +520,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     setIsSaving(true);
     try {
       await deleteKioskVideo(videoForm.id);
+      logActivity('video.delete', name, { device: deviceLabel() });
       // Best-effort: hindi dapat mabigo ang buong pagbura dahil lang sa
       // naiwang file sa storage. Panlabas na link — walang gagawin.
       try {
@@ -513,7 +553,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
 
   useEffect(() => {
     if (currentOffice) {
-      setFormTitle(currentOffice.title || '');
+      // Malalaking titik na agad, kahit may lumang pangalang may maliit pa.
+      setFormTitle((currentOffice.title || '').toUpperCase());
       setFormHours(currentOffice.hours || '');
       setFormHead(currentOffice.head || '');
       setFormDescription(currentOffice.description || '');
@@ -547,11 +588,35 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     if (!selectedOfficeKey) return;
     const whenProblem = scheduleProblem(formStatusFrom, formStatusUntil, lang);
     if (whenProblem) return alert(whenProblem);
+
+    // Bawal ang pangalang gamit na ng ibang tanggapan, sa kahit anong
+    // palapag. Kapag pinalitan lang ang pangalan tinitingnan — may mga
+    // dati nang magkapangalan, at dapat ma-edit pa rin ang ibang detalye nila.
+    // Huling pigil sa malalaking titik, sakaling may nakalusot sa kahon.
+    const title = formTitle.trim().replace(/\s+/g, ' ').toUpperCase();
+    const wanted = normalizeTitle(title);
+    if (wanted !== normalizeTitle(currentOffice?.title) && !REPEATABLE_TITLES.has(wanted)) {
+      for (const [floor, offices] of Object.entries(officeDatabase || {})) {
+        const clash = Object.entries(offices || {}).find(([key, office]) =>
+          key !== selectedOfficeKey && !NOT_OFFICES.has(key) && normalizeTitle(office?.title) === wanted);
+        if (clash) {
+          return alert(t(
+            `“${title}” already exists on Floor ${floor}.\n\n`
+            + 'Two offices cannot have the same name — visitors would not know which one to go to. '
+            + 'Use a different name.',
+            `Mayroon nang “${title}” sa Palapag ${floor}.\n\n`
+            + 'Hindi puwedeng magkapareho ang pangalan ng dalawang tanggapan — malilito ang bisita '
+            + 'kung alin ang pupuntahan. Gumamit ng ibang pangalan.',
+          ));
+        }
+      }
+    }
+
     setIsSaving(true);
     try {
       const requirementsArray = formRequirements.split('\n').map(line => line.trim()).filter(line => line.length > 0);
       const result = await updateOffice(selectedOfficeKey, {
-        title: formTitle,
+        title,
         hours: formHours,
         head: formHead,
         description: formDescription,
@@ -566,6 +631,25 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
         phone: formPhone.trim(),
         local: formLocal.trim()
       }, selectedFloor);
+
+      // Ang nabago lang ang itinatala, bawat isa ay { from, to }.
+      const after = {
+        title, hours: formHours, head: formHead, status: formStatus,
+        phone: formPhone.trim(), local: formLocal.trim(),
+        description: formDescription, descriptionTl: formDescriptionTl,
+      };
+      const changes = {};
+      OFFICE_LOG_FIELDS.forEach((field) => {
+        const from = String(currentOffice?.[field] ?? '');
+        const to = String(after[field] ?? '');
+        if (from !== to) changes[field] = { from, to };
+      });
+      if (Object.keys(changes).length) {
+        logActivity('office.update', title, {
+          office_key: selectedOfficeKey, floor: selectedFloor, changes, device: deviceLabel(),
+        });
+      }
+
       if (onDataUpdate) onDataUpdate();
 
       // Hindi puwedeng "nai-save na" kapag may naiwan. Mahirap nang
@@ -686,6 +770,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
         ends_at: fromLocalInput(endsLocal),
       });
       setTextItems((prev) => ({ ...prev, [kind]: items }));
+      logActivity(id ? `${kind}.update` : `${kind}.create`, text.slice(0, 80), { device: deviceLabel() });
       setAnnEditor(null);
       alert(t(
         'Saved! The welcome screen follows the schedule within a minute.',
@@ -704,6 +789,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     setIsSaving(true);
     try {
       const items = await deleteTextItem(kind, item.id);
+      logActivity(`${kind}.delete`, (item.text || '').slice(0, 80), { device: deviceLabel() });
       setTextItems((prev) => ({ ...prev, [kind]: items }));
       setAnnEditor(null);
     } catch (error) {
@@ -712,6 +798,39 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
         `Hindi nabura ang tala.\n\n${error?.message || error}`,
       ));
     } finally { setIsSaving(false); }
+  };
+
+  // ── Pagbasa ng activity log ───────────────────────────────
+  const logActionLabel = (action) => ({
+    'office.update': t('Edited office', 'Binago ang tanggapan'),
+    'lift.update': t('Changed status', 'Pinalitan ang kalagayan'),
+    'video.create': t('Added video/picture', 'Nagdagdag ng video/larawan'),
+    'video.update': t('Edited video/picture', 'Binago ang video/larawan'),
+    'video.delete': t('Deleted video/picture', 'Binura ang video/larawan'),
+    'announcement.create': t('Added announcement', 'Nagdagdag ng anunsyo'),
+    'announcement.update': t('Edited announcement', 'Binago ang anunsyo'),
+    'announcement.delete': t('Deleted announcement', 'Binura ang anunsyo'),
+    'advisory.create': t('Added advisory', 'Nagdagdag ng paalala'),
+    'advisory.update': t('Edited advisory', 'Binago ang paalala'),
+    'advisory.delete': t('Deleted advisory', 'Binura ang paalala'),
+  }[action] || action);
+
+  const logFieldLabel = (field) => ({
+    title: t('Name', 'Pangalan'),
+    hours: t('Hours', 'Oras'),
+    head: 'Contact Person',
+    status: t('Status', 'Estado'),
+    phone: t('Direct Line', 'Telepono'),
+    local: t('Room No.', 'Blg. ng Silid'),
+    description: t('Description (English)', 'Paglalarawan (Ingles)'),
+    descriptionTl: t('Description (Tagalog)', 'Paglalarawan (Tagalog)'),
+  }[field] || field);
+
+  // Mahahabang paliwanag: simula lang ang ipinapakita.
+  const logValue = (value) => {
+    const text = String(value ?? '').trim();
+    if (!text) return t('(blank)', '(blangko)');
+    return text.length > 70 ? `“${text.slice(0, 70)}…”` : `“${text}”`;
   };
 
   // Iisang hitsura ng kalagayan sa video at sa teksto.
@@ -882,6 +1001,12 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
             Elevator / Escalator
             {liftSaved && (liftSaved.elevator !== 'available' || liftSaved.escalator !== 'available')
               && <span className="adm-tab-alert" aria-hidden="true"><Icon name="warning" /></span>}
+          </button>
+          <button
+            className={`adm-tab${activeTab === 'activity' ? ' active' : ''}`}
+            onClick={() => { setActiveTab('activity'); loadActivity(); }}
+          >
+            {t('Activity Log', 'Talaan ng Pagbabago')}
           </button>
           {!onKioskScreen && (
             <button className={`adm-tab${activeTab === 'security' ? ' active' : ''}`} onClick={() => setActiveTab('security')}>
@@ -1661,7 +1786,27 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   <div className="adm-form--split">
                     <div>
                       <label className="k-label">{t('Title', 'Pangalan')}</label>
-                      <input type="text" className="k-input" value={formTitle} onChange={(e) => setFormTitle(e.target.value)} placeholder={t('ex. Budget Office', 'hal. Budget Office')} required />
+                      {/* Malalaking titik lang ang pangalan — ginagawa na
+                          habang nagta-type, pati sa touchscreen keyboard.
+                          Ibinabalik ang cursor sa puwesto nito; kung hindi,
+                          tumatalon ito sa dulo tuwing may binabagong titik. */}
+                      <input
+                        type="text"
+                        className="k-input"
+                        value={formTitle}
+                        onChange={(e) => {
+                          const el = e.target;
+                          const { selectionStart: start, selectionEnd: end } = el;
+                          setFormTitle(el.value.toUpperCase());
+                          requestAnimationFrame(() => {
+                            try { el.setSelectionRange(start, end); } catch { /* wala nang focus */ }
+                          });
+                        }}
+                        placeholder={t('ex. BUDGET OFFICE', 'hal. BUDGET OFFICE')}
+                        autoCapitalize="characters"
+                        required
+                      />
+                      <p className="adm-hint">{t('Capital letters only.', 'Malalaking titik lang.')}</p>
                     </div>
                     <div>
                       <label className="k-label">{t('Hours', 'Oras')}</label>
@@ -1854,6 +1999,79 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                 </form>
               </section>
             ))}
+          </div>
+        )}
+
+        {activeTab === 'activity' && (
+          <div className="adm-pane">
+            <div className="adm-log-head">
+              <h3>{t('Activity Log', 'Talaan ng Pagbabago')}</h3>
+              <button
+                type="button"
+                className="k-btn k-btn--ghost"
+                onClick={loadActivity}
+                disabled={activity.loading}
+              >
+                {activity.loading ? t('Loading…', 'Binabasa…') : t('Refresh', 'I-refresh')}
+              </button>
+            </div>
+            <p className="adm-hint">
+              {t(
+                'Every change made in this Admin Panel, newest first: what was changed, when, and where '
+                + '(on the kiosk or on a laptop). Entries cannot be edited or deleted from here.',
+                'Bawat pagbabagong ginawa sa Admin Panel, pinakabago ang nasa itaas: ano ang binago, '
+                + 'kailan, at saan (sa kiosk o sa laptop). Hindi mabubura o mababago ang mga tala mula rito.',
+              )}
+            </p>
+
+            {activity.missing ? (
+              <p className="adm-hint adm-vid-warn">
+                {t(
+                  'The activity log is not set up yet. Open Supabase → SQL Editor → New query, '
+                  + 'paste all of supabase/activity_logs.sql, and Run.',
+                  'Hindi pa naka-set up ang talaan. Buksan ang Supabase → SQL Editor → New query, '
+                  + 'i-paste ang buong supabase/activity_logs.sql, tapos Run.',
+                )}
+              </p>
+            ) : activity.error ? (
+              <p className="adm-hint adm-vid-warn">
+                {t('Could not load the log.', 'Hindi mabasa ang talaan.')} {activity.error}
+              </p>
+            ) : !activity.loading && activity.logs.length === 0 ? (
+              <p className="adm-hint">{t('No changes recorded yet.', 'Wala pang naitalang pagbabago.')}</p>
+            ) : (
+              <div className="adm-vid-list">
+                {activity.logs.map((log) => {
+                  const changes = Object.entries(log.details?.changes || {});
+                  return (
+                    <div key={log.id} className="adm-vid-item adm-log-item">
+                      <div className="adm-vid-body">
+                        <span className="adm-vid-name">
+                          {logActionLabel(log.action)}{log.target ? `: ${log.target}` : ''}
+                        </span>
+                        {changes.length > 0 && (
+                          <ul className="adm-log-changes">
+                            {changes.map(([field, { from, to }]) => (
+                              <li key={field}>
+                                <strong>{logFieldLabel(field)}:</strong>{' '}
+                                <span className="adm-log-from">{logValue(from)}</span>
+                                {' → '}
+                                <span className="adm-log-to">{logValue(to)}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        <span className="adm-vid-meta">
+                          {formatWhen(log.created_at, lang)}
+                          {log.details?.device ? ` · ${log.details.device}` : ''}
+                          {log.actor_email ? ` · ${log.actor_email}` : ''}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import tagaytaySeal from '../assets/tagaytay-seal.jpg';
+import tagaytaySeal from '../assets/tagaytay-seal.png';
 import {
   checkKioskSession, sendKioskResetEmail, setKioskPassword, forgetKioskOnThisDevice,
 } from '../lib/kioskDevice';
