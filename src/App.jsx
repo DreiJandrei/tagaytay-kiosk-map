@@ -1475,6 +1475,22 @@ export default function App() {
                   <span className="floor-badge"><Icon name="pin" /> {localizeBadge(selectedOffice.badge, lang)}</span>
                 </div>
 
+                {/* Sa telepono lang: larawan ito ng ruta, hindi live na gabay.
+                    Sinasabi kung saan ito nagsisimula at kanino lalapit
+                    kapag naligaw. */}
+                {isVisitorView && (
+                  <div className="visitor-reference-note">
+                    <strong><Icon name="info" /> {lang === 'EN' ? 'For reference only' : 'Para sa sanggunian lamang'}</strong>
+                    <span>
+                      {lang === 'EN'
+                        ? `This map is a guide to help you find ${selectedOffice.title}. `
+                          + 'It does not track where you are. If you get lost, ask the Information Desk or a guard.'
+                        : `Gabay ang mapang ito para mahanap ninyo ang ${selectedOffice.title}. `
+                          + 'Hindi nito nasusundan kung nasaan kayo. Kung maligaw, magtanong sa Information Desk o sa guwardiya.'}
+                    </span>
+                  </div>
+                )}
+
                 {/* Tingnan ang nasa itaas: sunod sa pangalan ang paliwanag
                     tungkol sa tanggapan, bago ang estado at oras. */}
                 {hasText(officeDescription(selectedOffice, lang)) && (
@@ -1904,7 +1920,6 @@ export default function App() {
           onClose={() => setShowAdmin(false)}
           onDataUpdate={() => { fetchKioskData(); }}
           lang={lang}
-          setLang={setLang}
         />
       )}
 

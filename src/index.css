@@ -456,18 +456,19 @@ img { max-width: 100%; }
 /* =========================================
    ANNOUNCEMENT MARQUEE
    ========================================= */
+/* Nasa pinakaitaas ng welcome screen, para ito ang unang mabasa. */
 .announcement-bar {
   position: absolute;
-  bottom: 0;
+  top: 0;
   left: 0;
   width: 100vw;
   background: rgba(30, 58, 138, 0.95); /* BAGO: Deep Blue Theme ni Mayor */
-  border-top: 2px solid #60A5FA;       /* BAGO: Light blue na linya sa ibabaw para mas lutang */
+  border-bottom: 2px solid #60A5FA;    /* Light blue na linya sa ilalim para mas lutang */
   color: white;
   padding: 15px 0;
   overflow: hidden;
   white-space: nowrap;
-  box-shadow: 0 -10px 30px rgba(0,0,0,0.4);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
   z-index: 100;
   backdrop-filter: blur(10px);
 }
@@ -1033,8 +1034,8 @@ img { max-width: 100%; }
   padding: 28px 40px 32px; box-sizing: border-box;
   overflow: hidden;
 }
-/* Nakapatong ang marquee sa ibaba, kaya iniiwasan ang lugar nito. */
-.welcome-content.has-advisory { padding-bottom: 92px; }
+/* Nakapatong ang marquee sa itaas, kaya iniiwasan ang lugar nito. */
+.welcome-content.has-advisory { padding-top: 92px; }
 
 .welcome-main {
   flex: 1; min-height: 0;
@@ -1416,7 +1417,7 @@ img { max-width: 100%; }
 @media (max-height: 900px) {
   .welcome-screen { --vid-pad: 18px; }
   .welcome-content { padding: 18px 32px 22px; }
-  .welcome-content.has-advisory { padding-bottom: 74px; }
+  .welcome-content.has-advisory { padding-top: 74px; }
   .welcome-main { gap: 14px; }
   .welcome-topbar { padding-bottom: 12px; font-size: .9rem; }
   .welcome-time { font-size: 1.2rem; }
@@ -1484,8 +1485,8 @@ img { max-width: 100%; }
       (100vh - var(--strip-top) - var(--strip-bottom) - var(--strip-chrome)) * 9 / 16
       + var(--vid-pad) * 2 + 2px));
   }
-  /* Iniiwasan ang gumagalaw na advisory sa ilalim. */
-  .welcome-screen.has-side-portrait:has(.announcement-bar) { --strip-bottom: 92px; }
+  /* Iniiwasan ang gumagalaw na advisory sa itaas. */
+  .welcome-screen.has-side-portrait:has(.announcement-bar) { --strip-top: 92px; }
 
   .welcome-screen.has-side-portrait .welcome-content {
     padding-right: calc(var(--strip-w) + var(--strip-right) + 32px);
@@ -1522,11 +1523,11 @@ img { max-width: 100%; }
     --strip-right: 24px;
     --strip-chrome: 150px;
   }
-  .welcome-screen.has-side-portrait:has(.announcement-bar) { --strip-bottom: 74px; }
+  .welcome-screen.has-side-portrait:has(.announcement-bar) { --strip-top: 74px; }
 }
 
 .announcement-bar {
-  border-top: 4px solid var(--k-500) !important;
+  border-bottom: 4px solid var(--k-500) !important;
   background: rgba(7,18,35,.95) !important;
 }
 .advisory-tag { color: var(--k-300); margin-right: 16px; font-weight: 900; letter-spacing: 1px; }
@@ -1613,7 +1614,6 @@ img { max-width: 100%; }
   animation: fadeIn .8s ease both;
 }
 .welcome-volume:not(:has(button, input)) { display: none; }
-.welcome-screen:has(.announcement-bar) .welcome-volume { bottom: 96px; }
 .welcome-volume-slot { display: contents; }
 .welcome-bg-sound { width: 60px; height: 60px; font-size: 1.5rem; }
 /* ── Lakas ng tunog (VolumeControl.jsx) ───────────────────────
@@ -1706,7 +1706,6 @@ img { max-width: 100%; }
 
 @media (max-height: 900px) {
   .welcome-volume { left: 24px; bottom: 24px; padding: 6px; gap: 10px; }
-  .welcome-screen:has(.announcement-bar) .welcome-volume { bottom: 82px; }
   .welcome-bg-sound { width: 50px; height: 50px; font-size: 1.25rem; }
   .vol-toggle { width: 40px; height: 40px; font-size: 1.1rem; }
   .welcome-video-vol-toggle { width: 42px; height: 42px; font-size: 1.1rem; }
@@ -3188,6 +3187,32 @@ img { max-width: 100%; }
   z-index: 99999;
 }
 .screenshot-hint strong { display: block; font-size: 1rem; font-weight: 900; margin-bottom: 2px; }
+
+/* Telepono ng bisita: paalala na larawan lang ng ruta ang mapa. */
+.visitor-reference-note {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+  padding: 13px 16px;
+  border-radius: var(--ui-r-md);
+  border: 1px solid var(--ui-gold);
+  border-left-width: 4px;
+  background: var(--ui-gold-sf);
+  color: var(--ui-ink);
+  line-height: 1.5;
+}
+.visitor-reference-note strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ui-gold);
+  font-size: .82rem;
+  font-weight: 900;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+}
+.visitor-reference-note span { font-size: .9rem; font-weight: 600; }
 .screenshot-hint span { font-size: .82rem; font-weight: 700; line-height: 1.25; }
 
 /* ═══════════ 6. KONTROL NG MAPA (hindi ginalaw) ═══════════ */

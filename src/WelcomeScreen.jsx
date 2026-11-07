@@ -109,7 +109,7 @@ export default function WelcomeScreen({ onStart }) {
       <div className="welcome-glow" aria-hidden="true" />
 
       {/* Layer 2: nilalaman. Nagbabago ang taas ng kahon kapag may
-          gumagalaw na advisory sa ilalim, para walang natatakpan. */}
+          gumagalaw na advisory sa itaas, para walang natatakpan. */}
       <div className={`welcome-content${hasAdvisory ? ' has-advisory' : ''}`}>
 
         {/* Itaas: petsa at oras */}
@@ -166,7 +166,8 @@ export default function WelcomeScreen({ onStart }) {
             <span className="welcome-prompt-line" aria-hidden="true" />
           </div>
 
-          <p className="welcome-subprompt">Pindutin kahit saan sa screen upang magsimula</p>
+          {/* Salin ng nasa itaas, kaya naka-panaklong. */}
+          <p className="welcome-subprompt">(Pindutin kahit saan sa screen upang magsimula)</p>
         </div>
 
         {/* Kanan: mga anunsyong video (naka-"Anunsyo" sa Admin Panel).
@@ -233,7 +234,7 @@ export default function WelcomeScreen({ onStart }) {
 
       {showHelp && <HowToUse onClose={() => setShowHelp(false)} />}
 
-      {/* Layer 3: gumagalaw na advisory sa pinakailalim */}
+      {/* Layer 3: gumagalaw na advisory sa pinakaitaas */}
       {hasAdvisory && (
         <div className="announcement-bar">
           <div className="marquee" style={{ animationDuration: `${marqueeSeconds}s` }}>

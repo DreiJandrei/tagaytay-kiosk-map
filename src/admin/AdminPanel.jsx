@@ -110,9 +110,10 @@ const NOT_OFFICES = new Set(['elevator-up', 'stairs-up']);
 // Ang mga field na itinatala sa activity log kapag nagbago.
 const OFFICE_LOG_FIELDS = ['title', 'hours', 'head', 'status', 'phone', 'local', 'description', 'descriptionTl'];
 
-export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang = 'EN', setLang }) {
-  // Iisang switch lang ang wika ng buong kiosk — ang header toggle. Dito
-  // lang ito sinasalain: `t(english, tagalog)`. Walang teksto sa panel na
+export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang = 'EN' }) {
+  // Iisang switch lang ang wika ng buong kiosk — ang header toggle sa home
+  // screen; walang hiwalay na toggle dito. Dito lang ito sinasalain:
+  // `t(english, tagalog)`. Walang teksto sa panel na
   // nakapako sa isang wika, kaya hindi na nahahaluan ang napiling wika.
   const EN = lang === 'EN';
   const t = (en, tl) => (EN ? en : tl);
@@ -955,18 +956,6 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
             </span>
           </h2>
           <div className="adm-top-actions">
-            {/* Kapareho ng toggle sa header ng kiosk — iisa ang state,
-                kaya hindi na kailangang lumabas muna para magpalit. */}
-            {setLang && (
-              <button
-                type="button"
-                className="adm-kb-toggle"
-                onClick={() => setLang(EN ? 'TL' : 'EN')}
-                title={t('Switch to Tagalog', 'Lumipat sa English')}
-              >
-                {t('English', 'Tagalog')}
-              </button>
-            )}
             <button
               type="button"
               className={`adm-kb-toggle${showKeyboard ? ' is-on' : ''}`}
