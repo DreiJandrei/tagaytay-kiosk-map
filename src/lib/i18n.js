@@ -63,6 +63,7 @@ const HOURS_PHRASES = [
   [/\(Event Dependent\)/i, '(Depende sa okasyon)'],
   [/\(Mon-Fri\)/i, '(Lunes–Biyernes)'],
   [/\(Mon-Sat\)/i, '(Lunes–Sabado)'],
+  [/\(Daily\)/i, '(Araw-araw)'],
 ];
 
 export const localizeHours = (hours, lang) => {

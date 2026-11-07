@@ -4230,6 +4230,10 @@ button:active { transform: scale(.97); }
 .adm-vid-warn { color: var(--ui-danger); font-weight: 800; }
 .adm-tab-alert { margin-left: 6px; }
 
+/* Oras ng tanggapan: bukas, sara, at mga araw sa iisang hanay. */
+.adm-hours { display: flex; flex-direction: column; gap: 8px; }
+.adm-hours-row { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 18px; }
+
 /* Activity log */
 .adm-log-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .adm-log-head .k-btn { width: auto; padding: 9px 18px; font-size: .88rem; }

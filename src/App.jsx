@@ -30,8 +30,9 @@ import { defaultOfficeData } from './lib/defaultOfficeData';
 import { isRecoveryLink } from './lib/recoveryFlag';
 import { buildVisitorLink, readVisitorLink } from './lib/visitorLink';
 import { floorName, localizeBadge, localizeHours, officeDescription, liftStatusLabel } from './lib/i18n';
-import { effectiveStatus, formatWhen } from './lib/schedule';
+import { effectiveStatus, isClosedByHours, formatWhen } from './lib/schedule';
 import { wantsOnScreenKeyboard } from './lib/keyboardUtils';
+import { searchOffices } from './lib/search';
 
 // Laki ng teksto sa header: 100% hanggang 140%, tig-10% bawat pindot.
 const TEXT_SCALE_MIN = 100;
@@ -85,6 +86,9 @@ function OfficeMeta({ office, lang }) {
   // Ang status ngayon, hindi ang nakatala: kapag lumipas na ang petsang itinakda
   // ng admin, Available na ulit ito kahit walang gumagalaw sa database.
   const status = effectiveStatus(office);
+  // Sarado dahil lampas sa oras: walang "hanggang" — ang oras sa ibaba na
+  // ang nagsasabi kung kailan babalik.
+  const closedByHours = isClosedByHours(office.hours);
   return (
     <div className="office-meta">
       {/* Laging nandito ang estado: may takdang halaga ito (Available)
@@ -92,7 +96,7 @@ function OfficeMeta({ office, lang }) {
       <p className="meta-row">
         <strong>{lang === 'EN' ? 'Status' : 'Estado'}</strong>
         <StatusPill status={status} lang={lang} />
-        {status !== 'Available' && office.statusUntil && (
+        {status !== 'Available' && !closedByHours && office.statusUntil && (
           <small className="meta-until">
             {lang === 'EN' ? 'until' : 'hanggang'} {formatWhen(office.statusUntil, lang)}
           </small>
@@ -780,9 +784,8 @@ export default function App() {
     return flatList;
   };
 
-  const filteredSearchOptions = searchQuery.trim() === "" ? [] : getFlatOffices().filter(off => 
-    (off.title || "").toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Pati acronym: "tcdo", "hrmo", "cr" (tingnan ang lib/search.js).
+  const filteredSearchOptions = searchQuery.trim() === "" ? [] : searchOffices(getFlatOffices(), searchQuery);
 
   const popularSearches = getFlatOffices()
     .sort((a, b) => (b.searchCount || 0) - (a.searchCount || 0))

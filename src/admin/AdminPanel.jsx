@@ -4,6 +4,7 @@ import Icon from '../components/Icon';
 import { wantsOnScreenKeyboard, isFullScreenWindow } from '../lib/keyboardUtils';
 import {
   scheduleState, toLocalInput, fromLocalInput, formatWhen, scheduleProblem,
+  parseHours, formatHours,
 } from '../lib/schedule';
 import {
   updateOffice, getAnnouncement, changeAdminPasswordWithCurrent, logoutAdmin,
@@ -204,7 +205,9 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
   const [isUploading, setIsUploading] = useState(false);
 
   const [formTitle, setFormTitle] = useState('');
-  const [formHours, setFormHours] = useState('');
+  // Ang oras, hati-hati na: { mode, opens, closes, days, text } — tingnan
+  // ang parseHours sa schedule.js. Teksto pa rin ito pagka-save.
+  const [formHours, setFormHours] = useState(() => parseHours(''));
   const [formHead, setFormHead] = useState('');
   const [formDescription, setFormDescription] = useState('');
   // Tagalog na bersyon ng paliwanag. Iisang kahon lang sa form: ang wika
@@ -577,7 +580,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     if (currentOffice) {
       // Malalaking titik na agad, kahit may lumang pangalang may maliit pa.
       setFormTitle((currentOffice.title || '').toUpperCase());
-      setFormHours(currentOffice.hours || '');
+      setFormHours(parseHours(currentOffice.hours));
       setFormHead(currentOffice.head || '');
       setFormDescription(currentOffice.description || '');
       setFormDescriptionTl(currentOffice.descriptionTl || '');
@@ -634,12 +637,20 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
       }
     }
 
+    if (formHours.mode === 'regular' && formHours.opens === formHours.closes) {
+      return alert(t(
+        'The opening and closing time cannot be the same.',
+        'Hindi puwedeng magkapareho ang oras ng pagbukas at pagsara.',
+      ));
+    }
+    const hours = formatHours(formHours);
+
     setIsSaving(true);
     try {
       const requirementsArray = formRequirements.split('\n').map(line => line.trim()).filter(line => line.length > 0);
       const result = await updateOffice(selectedOfficeKey, {
         title,
-        hours: formHours,
+        hours,
         head: formHead,
         description: formDescription,
         descriptionTl: formDescriptionTl,
@@ -656,7 +667,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
 
       // Ang nabago lang ang itinatala, bawat isa ay { from, to }.
       const after = {
-        title, hours: formHours, head: formHead, status: formStatus,
+        title, hours, head: formHead, status: formStatus,
         phone: formPhone.trim(), local: formLocal.trim(),
         description: formDescription, descriptionTl: formDescriptionTl,
       };
@@ -1820,9 +1831,82 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                     </div>
                     <div>
                       <label className="k-label">{t('Hours', 'Oras')}</label>
-                      <input type="text" className="k-input" value={formHours} onChange={(e) => setFormHours(e.target.value)} placeholder={t('ex. 8:00 AM - 5:00 PM', 'hal. 8:00 AM - 5:00 PM')} />
+                      {/* Pinipili, hindi isinusulat — para mabasa ng kiosk
+                          kung bukas pa ang tanggapan (tingnan ang
+                          effectiveStatus sa schedule.js). */}
+                      <select
+                        className="k-select"
+                        value={formHours.mode}
+                        onChange={(e) => {
+                          const mode = e.target.value;
+                          setFormHours((h) => (mode === 'regular'
+                            ? { opens: '08:00', closes: '17:00', days: 'Mon-Fri', ...h, mode, text: '' }
+                            : { ...h, mode, text: mode === h.mode ? h.text : '' }));
+                        }}
+                      >
+                        <option value="regular">{t('Set opening & closing time', 'Itakda ang oras ng bukas at sara')}</option>
+                        <option value="24/7">{t('Open 24/7', 'Bukas 24/7')}</option>
+                        <option value="reservation">{t('By reservation', 'Sa reserbasyon')}</option>
+                        <option value="closed">{t('Closed for renovation', 'Sarado — inaayos')}</option>
+                        <option value="none">{t('Not set', 'Walang nakatakda')}</option>
+                        {/* Lumang tekstong hindi mabasa: ipinapakita lang,
+                            hindi binubura hangga't walang ibang pinipili. */}
+                        {formHours.mode === 'custom' && (
+                          <option value="custom">{t('Keep', 'Panatilihin')}: {formHours.text}</option>
+                        )}
+                      </select>
                     </div>
                   </div>
+
+                  {formHours.mode === 'regular' && (
+                    <div className="adm-hours">
+                      <div className="adm-hours-row">
+                        <div>
+                          <label className="k-label">{t('Opens', 'Bukas')}</label>
+                          <input
+                            type="time"
+                            className="k-input"
+                            value={formHours.opens}
+                            onClick={openPicker}
+                            onChange={(e) => e.target.value && setFormHours((h) => ({ ...h, opens: e.target.value }))}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="k-label">{t('Closes', 'Sara')}</label>
+                          <input
+                            type="time"
+                            className="k-input"
+                            value={formHours.closes}
+                            onClick={openPicker}
+                            onChange={(e) => e.target.value && setFormHours((h) => ({ ...h, closes: e.target.value }))}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="k-label">{t('Days', 'Mga Araw')}</label>
+                          <select
+                            className="k-select"
+                            value={formHours.days}
+                            onChange={(e) => setFormHours((h) => ({ ...h, days: e.target.value }))}
+                          >
+                            <option value="Mon-Fri">{t('Monday – Friday', 'Lunes – Biyernes')}</option>
+                            <option value="Mon-Sat">{t('Monday – Saturday', 'Lunes – Sabado')}</option>
+                            <option value="Daily">{t('Every day', 'Araw-araw')}</option>
+                            <option value="Event Dependent">{t('Depends on events', 'Depende sa okasyon')}</option>
+                          </select>
+                        </div>
+                      </div>
+                      <p className="adm-hint">
+                        {t(
+                          `The kiosk will show: ${formatHours(formHours)}. Outside these hours the office shows `
+                          + 'as Out of Office on its own, and goes back to its status when it opens.',
+                          `Ipapakita ng kiosk: ${formatHours(formHours)}. Labas sa oras na ito, kusang magiging `
+                          + 'Out of Office ang tanggapan, at babalik sa status nito pagbukas.',
+                        )}
+                      </p>
+                    </div>
+                  )}
 
                   <div className="adm-form--split">
                     <div>
