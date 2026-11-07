@@ -21,12 +21,19 @@ const FLOOR_CAPTION = {
 // Galaw ng camera sa bawat hakbang ng gabay: lapit sa simula ng ruta, sunod
 // sa linya, tapos atras para makita ang buong ruta. Sa huling hakbang, ang
 // buong palapag ang tanaw pagdating sa opisina.
-const CAMERA_APPROACH_MS = 550;
-const CAMERA_MIN_FOLLOW_MS = 1400;
-const CAMERA_MAX_FOLLOW_MS = 3200;
-const CAMERA_PX_PER_MS = 0.4;
+// Mabagal ito nang sadya: ang arrow at ang camera ay sabay na gumagalaw,
+// at dapat masundan ng mata ng bisita kung saan siya liliko.
+const CAMERA_APPROACH_MS = 1100;
+const CAMERA_MIN_FOLLOW_MS = 2800;
+const CAMERA_MAX_FOLLOW_MS = 6500;
+const CAMERA_PX_PER_MS = 0.2;
 const CAMERA_FOLLOW_ZOOM = 1.3; // gaano kalapit kaysa sa tanaw ng buong ruta
 const CAMERA_ARRIVAL_PAUSE_MS = 700; // sandaling hinto sa opisina bago umatras
+
+// Hugis ng arrow sa ruta, nakaturo sa kanan (+x) — doon ito iniikot ayon
+// sa direksyon ng linya. Ang halo ay mas malaking kopya sa likod nito.
+const ROUTE_ARROW = 'M16 0 L-10 -13 L-4 0 L-10 13 Z';
+const ROUTE_ARROW_HALO = 'M24 0 L-16 -20 L-8 0 L-16 20 Z';
 
 export default function MapScreen({
   offices, 
@@ -78,7 +85,13 @@ export default function MapScreen({
   // Habang sinusundan ng camera ang linya: bawat frame ang galaw, kaya wala
   // ring transition. Hiwalay sa isGesturing para hindi "grabbing" ang cursor.
   const [isFollowing, setIsFollowing] = useState(false);
+  // Paglapit at pag-atras ng camera sa gabay: mas mahaba ang transition
+  // kaysa sa karaniwang zoom, para hindi biglang tumalon ang mapa.
+  const [isGliding, setIsGliding] = useState(false);
   const stopCamera = useRef(null);
+  // Ang arrow ng direksyon habang may gabay. Ang camera ang naglalagay
+  // nito sa bawat frame, kaya laging nasa gitna ng screen ang dulo ng arrow.
+  const arrowRef = useRef(null);
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 1024;
 
@@ -289,10 +302,25 @@ export default function MapScreen({
       return { zoom: wholeZoom, pan: panTo(frame, content.cx, content.cy, wholeZoom) };
     })();
     const finalView = whole || rest;
+    const length = path ? path.getTotalLength() : 0;
+
+    // Inilalagay ang arrow sa `at` na layo sa ruta, nakaharap sa direksyon
+    // ng linya roon.
+    const placeArrow = (at) => {
+      const arrow = arrowRef.current;
+      if (!arrow || length < 1) return;
+      const p = path.getPointAtLength(at);
+      const ahead = path.getPointAtLength(Math.min(length, at + 2));
+      const behind = path.getPointAtLength(Math.max(0, at - 2));
+      const angle = Math.atan2(ahead.y - behind.y, ahead.x - behind.x) * 180 / Math.PI;
+      arrow.setAttribute('transform', `translate(${p.x} ${p.y}) rotate(${angle})`);
+    };
+
     let raf = 0;
     let timer = 0;
     const settleCamera = () => {
       setIsFollowing(false);
+      setIsGliding(true);
       setZoom(finalView.zoom);
       setPan(finalView.pan);
       onCameraDone?.(followKey);
@@ -301,10 +329,13 @@ export default function MapScreen({
       clearTimeout(timer);
       cancelAnimationFrame(raf);
       setIsFollowing(false);
+      setIsGliding(false);
     };
     // Ito ang tinatawag ng paghila, pinch, at zoom: ang bisita na ang may hawak.
+    // Diretso na sa dulo ang arrow, para nakaturo pa rin ito sa opisina.
     stopCamera.current = () => {
       stop();
+      placeArrow(length);
       onCameraDone?.(followKey);
       onTakeOver?.();
     };
@@ -313,7 +344,6 @@ export default function MapScreen({
       stopCamera.current = null;
     };
 
-    const length = path ? path.getTotalLength() : 0;
     hasUserMoved.current = false;
     if (length < 1) {
       settleCamera();
@@ -324,16 +354,22 @@ export default function MapScreen({
     const start = path.getPointAtLength(0);
     const duration = Math.min(CAMERA_MAX_FOLLOW_MS, Math.max(CAMERA_MIN_FOLLOW_MS, length / CAMERA_PX_PER_MS));
     setIsFollowing(false);
+    setIsGliding(true);
     setZoom(followZoom);
     setPan(panTo(frame, start.x, start.y, followZoom));
+    placeArrow(0);
 
+    // Sabay ang arrow at ang camera: iisang punto sa ruta bawat frame.
     timer = setTimeout(() => {
+      setIsGliding(false);
       setIsFollowing(true);
       const began = performance.now();
       const tick = (now) => {
         const t = Math.min(1, (now - began) / duration);
         const eased = t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2;
-        const p = path.getPointAtLength(length * eased);
+        const at = length * eased;
+        const p = path.getPointAtLength(at);
+        placeArrow(at);
         setPan(panTo(frame, p.x, p.y, followZoom));
         if (t < 1) raf = requestAnimationFrame(tick);
         else if (whole) timer = setTimeout(settleCamera, CAMERA_ARRIVAL_PAUSE_MS);
@@ -341,15 +377,6 @@ export default function MapScreen({
       };
       raf = requestAnimationFrame(tick);
     }, CAMERA_APPROACH_MS);
-
-    // Kasabay ng camera ang pagguhit ng linya.
-    path.style.animation = 'none';
-    path.style.transition = 'none';
-    path.style.strokeDasharray = length;
-    path.style.strokeDashoffset = length;
-    path.getBoundingClientRect();
-    path.style.transition = `stroke-dashoffset ${duration}ms ease-in-out ${CAMERA_APPROACH_MS}ms`;
-    path.style.strokeDashoffset = '0';
 
     return release;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -533,7 +560,11 @@ export default function MapScreen({
   // .map-canvas-container sa index.css kung bakit ito ang nagpapatalas.
   const mapTransformStyle = {
     transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-    transition: isGesturing || isFollowing ? 'none' : 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
+    transition: isGesturing || isFollowing
+      ? 'none'
+      : isGliding
+        ? `transform ${CAMERA_APPROACH_MS}ms cubic-bezier(0.45, 0, 0.25, 1)`
+        : 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
   };
 
   const outTag = (status) => (
@@ -806,16 +837,22 @@ export default function MapScreen({
           <svg className="path-overlay" width="100%" height="100%">
             <path d={finalPathData} className="route-underlay" />
             <path ref={pathRef} d={finalPathData} className="marching-route-line" />
-            {finalPathData && (
-              <g key={finalPathData} className="route-runner-group">
-                <circle className="route-runner-halo" r="16">
-                  <animateMotion dur="3s" repeatCount="indefinite" path={finalPathData} rotate="auto" />
-                </circle>
-                <circle className="route-runner" r="7">
-                  <animateMotion dur="3s" repeatCount="indefinite" path={finalPathData} rotate="auto" />
-                </circle>
+            {/* Arrow ng direksyon. Sa gabay, ang camera ang naglalagay nito
+                (kasabay ng pag-zoom sa ruta). Sa labas ng gabay — Ground
+                Floor at telepono ng bisita — paulit-ulit itong naglalakad
+                sa ruta nang mabagal. */}
+            {finalPathData && (followKey ? (
+              <g key={`${finalPathData}|${followKey}`} ref={arrowRef} className="route-arrow route-arrow--follow">
+                <path className="route-arrow-halo" d={ROUTE_ARROW_HALO} />
+                <path className="route-arrow-head" d={ROUTE_ARROW} />
               </g>
-            )}
+            ) : (
+              <g key={finalPathData} className="route-arrow route-arrow--loop">
+                <animateMotion dur="6s" repeatCount="indefinite" path={finalPathData} rotate="auto" />
+                <path className="route-arrow-halo" d={ROUTE_ARROW_HALO} />
+                <path className="route-arrow-head" d={ROUTE_ARROW} />
+              </g>
+            ))}
           </svg>
 
           {kioskPos && (

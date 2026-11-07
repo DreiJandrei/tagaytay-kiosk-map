@@ -899,11 +899,22 @@ img { max-width: 100%; }
   animation: routeMarch .9s linear infinite !important;
 }
 
-/* Gumagalaw na ilaw na sumusunod sa daan */
-.route-runner { fill: #FFFFFF; filter: drop-shadow(0 0 10px var(--k-cyan)); }
-.route-runner-halo { fill: rgba(34,211,238,.35); animation: runnerBreathe 1.4s ease-in-out infinite; }
+/* Arrow na naglalakad sa daan, nakaturo kung saan pupunta.
+   Walang CSS transform dito — sinasapawan nito ang `transform` na
+   inilalagay ng camera sa arrow. */
+.route-arrow-head {
+  fill: #FFFFFF;
+  stroke: var(--k-cyan);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 8px var(--k-cyan));
+}
+.route-arrow-halo { fill: rgba(34,211,238,.35); animation: runnerBreathe 1.4s ease-in-out infinite; }
 @keyframes runnerBreathe { 0%,100% { opacity:.75 } 50% { opacity:.25 } }
-.route-runner-group { animation: fadeIn .7s .5s ease both; }
+.route-arrow--loop { animation: fadeIn .7s .5s ease both; }
+/* Nakatago hanggang mailagay ng camera — kung hindi, sisilip ito sa
+   itaas-kaliwa ng mapa sa unang frame. */
+.route-arrow--follow:not([transform]) { visibility: hidden; }
 
 /* Lumalapag na destination pin */
 .pin-destination { animation: pinDrop .75s cubic-bezier(.34,1.56,.64,1) both !important; }
@@ -2115,19 +2126,64 @@ img { max-width: 100%; }
 .hdr-btn-glyph { font-size: 1.2rem; line-height: 1; }
 .hdr-btn-label { white-space: nowrap; }
 
-/* Pananda ng laki ng teksto: maliit na A katabi ng malaki, nakapantay
-   ang mga paa ng letra (baseline) — doon nakikita ang pagkakaiba ng
-   taas. Titik ito at hindi emoji, kaya pareho ang hitsura sa lahat ng
-   makina at sumasabay sa kulay ng buton kapag naka-ON. */
-.hdr-btn-glyph--size {
+/* Laki ng teksto, gaya ng zoom sa Word: [A−] 120% [A+] sa iisang kahon.
+   Naka-px ang sukat ng kahon at ng porsiyento — hindi ito lumalaki
+   kasabay ng teksto, kaya hindi gumagalaw ang buton habang pinipindot. */
+.hdr-zoom {
+  height: 58px;
   display: inline-flex;
-  align-items: baseline;
-  gap: 1px;
-  font-weight: 900;
-  letter-spacing: -.5px;
+  align-items: stretch;
+  border-radius: var(--ui-r-md);
+  border: 1px solid var(--ui-btn-line);
+  background: var(--ui-btn);
+  box-shadow: var(--ui-btn-sh);
+  overflow: hidden;
 }
-.hdr-btn-glyph--size .glyph-a-sm { font-size: .68em; opacity: .75; }
-.hdr-btn-glyph--size .glyph-a-lg { font-size: 1.12em; }
+.hdr-zoom-btn,
+.hdr-zoom-value {
+  border: none;
+  background: transparent;
+  color: var(--ui-ink);
+  cursor: pointer;
+  font-weight: 900;
+  transition: background .15s ease, color .15s ease;
+}
+.hdr-zoom-btn {
+  width: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hdr-zoom-btn:active:not(:disabled),
+.hdr-zoom-value:active { background: var(--ui-gold-sf); }
+.hdr-zoom-btn:disabled { opacity: .3; cursor: default; }
+.hdr-zoom-glyph { font-size: 18px; line-height: 1; letter-spacing: -.5px; }
+.hdr-zoom-glyph--lg { font-size: 24px; }
+.hdr-zoom-glyph small { font-size: .7em; margin-left: 1px; }
+.hdr-zoom-value {
+  min-width: 92px;
+  padding: 0 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-left: 1px solid var(--ui-btn-line);
+  border-right: 1px solid var(--ui-btn-line);
+}
+.hdr-zoom-value.is-on {
+  background: linear-gradient(160deg, var(--ui-accent-2), #1E3A8A);
+  color: #FFFFFF;
+}
+.hdr-zoom-pct { font-size: 20px; line-height: 1; font-variant-numeric: tabular-nums; }
+.hdr-zoom-caption {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: .7;
+}
 
 .hdr-sep {
   width: 1px; height: 40px;
@@ -2300,6 +2356,22 @@ img { max-width: 100%; }
   text-transform: uppercase;
 }
 .sb-panel--gold .result-badge { color: var(--ui-gold); }
+/* "19 searches" — iisang label, hindi nahahati sa dalawang linya. */
+.result-count {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--ui-gold-sf);
+  border: 1px solid var(--ui-gold);
+  color: var(--ui-gold);
+  font-size: .78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
 .result-title {
   font-size: 1.12rem;
   font-weight: 800;
@@ -4432,7 +4504,7 @@ button:active { transform: scale(.97); }
   filter: drop-shadow(0 0 6px rgba(239,68,68,.85))
           drop-shadow(0 0 18px rgba(239,68,68,.45)) !important;
 }
-.route-runner { filter: drop-shadow(0 0 8px rgba(255,255,255,.9)); }
+.route-arrow-head { filter: drop-shadow(0 0 8px rgba(255,255,255,.9)) drop-shadow(0 0 6px var(--k-cyan)); }
 
 /* ---------- 8. Paggalang sa reduced-motion (accessibility) ---------- */
 @media (prefers-reduced-motion: reduce) {

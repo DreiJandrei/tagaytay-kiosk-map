@@ -33,6 +33,11 @@ import { floorName, localizeBadge, localizeHours, officeDescription, liftStatusL
 import { effectiveStatus, formatWhen } from './lib/schedule';
 import { wantsOnScreenKeyboard } from './lib/keyboardUtils';
 
+// Laki ng teksto sa header: 100% hanggang 140%, tig-10% bawat pindot.
+const TEXT_SCALE_MIN = 100;
+const TEXT_SCALE_MAX = 140;
+const TEXT_SCALE_STEP = 10;
+
 // Ang bumuo ng kiosk, sa ganitong pagkakasunod-sunod sa About.
 const TEAM = [
   { name: 'Franz Jandrei Valderama', photo: photoFranz },
@@ -241,7 +246,8 @@ export default function App() {
   }, [showKeyboard]);
 
   const [lang, setLang] = useState('EN');     
-  const [textSize, setTextSize] = useState('normal'); 
+  // Laki ng teksto sa porsiyento, gaya ng zoom sa Word: 100% ang normal.
+  const [textScale, setTextScale] = useState(TEXT_SCALE_MIN);
 
   const [showAdmin, setShowAdmin] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false); 
@@ -498,9 +504,8 @@ export default function App() {
   }, [theme]);
 
   useEffect(() => {
-    if (textSize === 'large') document.documentElement.style.fontSize = '120%'; 
-    else document.documentElement.style.fontSize = '100%';
-  }, [textSize]);
+    document.documentElement.style.fontSize = `${textScale}%`;
+  }, [textScale]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -533,6 +538,7 @@ export default function App() {
     setShowRecoveryModal(false);
     setRecoveryPassword('');
     setCurrentFloor(1);
+    setTextScale(TEXT_SCALE_MIN);
     setStillThereDeadline(null);
     logoutAdmin();
   };
@@ -1095,7 +1101,6 @@ export default function App() {
   }
 
   const isDarkMode = theme === 'dark';
-  const isLarge = textSize === 'large';
 
   const dateLabel = new Date().toLocaleDateString(lang === 'EN' ? 'en-PH' : 'fil-PH', { weekday: 'short', month: 'short', day: 'numeric' });
 
@@ -1225,28 +1230,35 @@ export default function App() {
             <span className="hdr-btn-label">{lang === 'EN' ? 'About' : 'Tungkol'}</span>
           </button>
 
-          <button
-            className={`hdr-btn${isLarge ? ' is-on' : ''}`}
-            onClick={() => setTextSize(textSize === 'normal' ? 'large' : 'normal')}
-            title={lang === 'EN'
-              ? (isLarge ? 'Back to normal text size' : 'Make the text bigger')
-              : (isLarge ? 'Ibalik sa normal na laki ng teksto' : 'Palakihin ang teksto')}
-          >
-            {/* Maliit na A katabi ng malaking A — ito ang karaniwang
-                pananda ng laki ng teksto. Mas malinaw ito kaysa sa
-                emoji na 🔠, na hindi naman pampalaki ang ibig sabihin. */}
-            <span className="hdr-btn-glyph hdr-btn-glyph--size" aria-hidden="true">
-              <span className="glyph-a-sm">A</span>
-              <span className="glyph-a-lg">A</span>
-            </span>
-            <span className="hdr-btn-label">
-              {/* Pandiwa — ang sinasabi ay ang MANGYAYARI kapag pinindot,
-                  hindi ang kasalukuyang laki. */}
-              {lang === 'EN'
-                ? (isLarge ? 'Reset to Normal' : 'Make Text Bigger')
-                : (isLarge ? 'Ibalik sa Normal' : 'Palakihin ang Teksto')}
-            </span>
-          </button>
+          {/* Laki ng teksto, gaya ng zoom sa Word: − at + sa magkabilang
+              gilid, at sa gitna ang porsiyento. Ang pindot sa porsiyento
+              ay pagbalik sa 100%. */}
+          <div className="hdr-zoom" role="group" aria-label={lang === 'EN' ? 'Text size' : 'Laki ng teksto'}>
+            <button
+              className="hdr-zoom-btn"
+              onClick={() => setTextScale(s => Math.max(TEXT_SCALE_MIN, s - TEXT_SCALE_STEP))}
+              disabled={textScale <= TEXT_SCALE_MIN}
+              title={lang === 'EN' ? 'Smaller text' : 'Paliitin ang teksto'}
+            >
+              <span className="hdr-zoom-glyph" aria-hidden="true">A<small>−</small></span>
+            </button>
+            <button
+              className={`hdr-zoom-value${textScale > TEXT_SCALE_MIN ? ' is-on' : ''}`}
+              onClick={() => setTextScale(TEXT_SCALE_MIN)}
+              title={lang === 'EN' ? 'Back to normal text size' : 'Ibalik sa normal na laki ng teksto'}
+            >
+              <span className="hdr-zoom-pct">{textScale}%</span>
+              <span className="hdr-zoom-caption">{lang === 'EN' ? 'Text Size' : 'Laki ng Teksto'}</span>
+            </button>
+            <button
+              className="hdr-zoom-btn"
+              onClick={() => setTextScale(s => Math.min(TEXT_SCALE_MAX, s + TEXT_SCALE_STEP))}
+              disabled={textScale >= TEXT_SCALE_MAX}
+              title={lang === 'EN' ? 'Bigger text' : 'Palakihin ang teksto'}
+            >
+              <span className="hdr-zoom-glyph hdr-zoom-glyph--lg" aria-hidden="true">A<small>+</small></span>
+            </button>
+          </div>
 
           <button className="hdr-btn" onClick={() => setLang(lang === 'EN' ? 'TL' : 'EN')}>
             <span className="hdr-btn-label">{lang === 'EN' ? 'English' : 'Tagalog'}</span>
@@ -1328,8 +1340,17 @@ export default function App() {
                     className="result-row"
                     onClick={() => handleSearchSelect(officeItem.key, officeItem.floor)}
                   >
-                    <span className="result-badge">{localizeBadge(officeItem.badge, lang)} • {officeItem.searchCount || 0} {lang === 'EN' ? 'searches' : 'hanap'}</span>
+                    <span className="result-badge">{localizeBadge(officeItem.badge, lang)}</span>
                     <span className="result-title">{officeItem.title}</span>
+                    {/* Iisang label ang bilang at ang salita, para mabasa
+                        bilang "ilang beses nang hinanap" at hindi hiwalay
+                        na numero sa tabi ng palapag. */}
+                    <span className="result-count">
+                      <Icon name="search" />
+                      {lang === 'EN'
+                        ? `${officeItem.searchCount || 0} ${officeItem.searchCount === 1 ? 'search' : 'searches'}`
+                        : `${officeItem.searchCount || 0} beses hinanap`}
+                    </span>
                   </div>
                 ))}
               </section>
