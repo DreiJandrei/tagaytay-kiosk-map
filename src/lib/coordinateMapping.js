@@ -48,23 +48,23 @@ export const coordinateMapping = {
     },
     "pio-1": {
       pathData: "M 1047 698 L 1047 562 L 695 562 L 695 534",
-      style: { width: 84, height: 264, left: 652, top: 270, fontSize: '0.75rem' }, cssClass: "theme-purple", mapLabel: "PIO A"
+      style: { width: 84, height: 264, left: 652, top: 270, fontSize: '12px' }, cssClass: "theme-purple", mapLabel: "PIO A"
     },
     "pio-2": {
       pathData: "M 1047 698 L 1047 562 L 783 562 L 783 534",
-      style: { width: 174, height: 70, left: 741, top: 464, fontSize: '0.75rem' }, cssClass: "theme-purple", mapLabel: "PIO B"
+      style: { width: 174, height: 70, left: 741, top: 464, fontSize: '12px' }, cssClass: "theme-purple", mapLabel: "PIO B"
     },
     "csu-office": {
       pathData: "M 1047 698 L 1047 302 L 1019 302",
-      style: { width: 131, height: 65, left: 888, top: 270, fontSize: '0.75rem' }, cssClass: "theme-teal"
+      style: { width: 131, height: 65, left: 888, top: 270, fontSize: '12px' }, cssClass: "theme-teal"
     },
     "barangay-affairs": {
       pathData: "M 1047 698 L 1047 370 L 1022 370",
-      style: { width: 264, height: 51, left: 758, top: 340, fontSize: '0.75rem' }, cssClass: "theme-teal"
+      style: { width: 264, height: 51, left: 758, top: 340, fontSize: '12px' }, cssClass: "theme-teal"
     },
     "tourism-office": {
       pathData: "M 1047 698 L 1047 426 L 1022 426",
-      style: { width: 264, height: 52, left: 758, top: 402, fontSize: '0.75rem' }, cssClass: "theme-teal"
+      style: { width: 264, height: 52, left: 758, top: 402, fontSize: '12px' }, cssClass: "theme-teal"
     },
     "breastfeeding-room": {
       pathData: "M 1047 698 L 1047 326 L 1121 326",
@@ -72,19 +72,19 @@ export const coordinateMapping = {
     },
     "control-unit": {
       pathData: "M 1047 698 L 1047 458 L 1275 458 L 1275 439",
-      style: { width: 204, height: 76, left: 1121, top: 363, fontSize: '0.75rem' }, cssClass: "theme-cyan"
+      style: { width: 204, height: 76, left: 1121, top: 363, fontSize: '12px' }, cssClass: "theme-cyan"
     },
     "restroom-cr": {
       pathData: "M 1047 698 L 1047 458 L 1223 458 L 1223 478",
-      style: { width: 177, height: 54, left: 1149, top: 478, fontSize: '0.75rem' }, cssClass: "theme-gray", isDirectionOnly: true
+      style: { width: 177, height: 54, left: 1149, top: 478, fontSize: '12px' }, cssClass: "theme-gray", isDirectionOnly: true
     },
     "info-desk": {
       pathData: "M 1047 698 L 1047 723",
-      style: { width: 130, height: 105, left: 970, top: 723, fontSize: '0.75rem' }, cssClass: "theme-blue"
+      style: { width: 130, height: 105, left: 970, top: 723, fontSize: '12px' }, cssClass: "theme-blue"
     },
     "guard": {
       pathData: "M 1047 698 L 1131 698 L 1131 782 L 1210 782",
-      style: { width: 97, height: 80, left: 1210, top: 742, fontSize: '0.75rem' }, cssClass: "theme-indigo"
+      style: { width: 97, height: 80, left: 1210, top: 742, fontSize: '12px' }, cssClass: "theme-indigo"
     },
   },
   2: {
@@ -98,7 +98,7 @@ export const coordinateMapping = {
     },
     "bac": {
       routes: { elevator: "M 928 508 L 928 575 L 568 575 L 568 277", stairs: "M 474 470 L 568 470 L 568 277", escalator: "M 865 663 L 649 663 L 649 307 L 569 307 L 569 277" },
-      style: { width: 150, height: 138, left: 494, top: 139, fontSize: '0.75rem' }, cssClass: ""
+      style: { width: 150, height: 138, left: 494, top: 139, fontSize: '12px' }, cssClass: ""
     },
     "planning": {
       routes: { elevator: "M 928 508 L 928 575 L 696 575 L 696 277", stairs: "M 474 470 L 696 470 L 696 277", escalator: "M 865 663 L 697 663 L 697 277" },
@@ -106,11 +106,11 @@ export const coordinateMapping = {
     },
     "zoning": {
       routes: { elevator: "M 928 508 L 928 575 L 784 575 L 784 307 L 968 307 L 968 277", stairs: "M 349 433 L 349 305 L 965 305 L 965 277", escalator: "M 865 663 L 781 663 L 781 307 L 965 307 L 965 277" },
-      style: { width: 177, height: 138, left: 834, top: 139, fontSize: '0.75rem' }, cssClass: ""
+      style: { width: 177, height: 138, left: 834, top: 139, fontSize: '12px' }, cssClass: ""
     },
     "back-ext": {
       routes: { elevator: "M 928 508 L 928 575 L 784 575 L 784 307 L 1088 307 L 1088 277", stairs: "M 349 433 L 349 305 L 1077 305 L 1077 277", escalator: "M 865 663 L 781 663 L 781 307 L 1077 307 L 1077 277" },
-      style: { width: 126, height: 138, left: 1026, top: 139, fontSize: '0.75rem' }, cssClass: ""
+      style: { width: 126, height: 138, left: 1026, top: 139, fontSize: '12px' }, cssClass: ""
     },
     "restroom-cr-2": {
       routes: { elevator: "M 928 508 L 928 575 L 784 575 L 784 307 L 908 307 L 908 334", stairs: "M 349 433 L 349 305 L 909 305 L 909 334", escalator: "M 865 663 L 781 663 L 781 307 L 909 307 L 909 334" },

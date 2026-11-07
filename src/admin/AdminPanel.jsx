@@ -42,6 +42,17 @@ const TEXT_LIMITS = { announcement: 300, advisory: 150 };
 // lang NGAYON ang umiikot sa welcome screen, hindi ang buong listahan.
 const MAX_VIDEOS = 20;
 
+// Mga file na puwedeng i-upload: video at larawan lang. Kasama ang mga
+// extension, hindi lang ang MIME type — sa Windows, ang extension ang
+// sinusunod ng file dialog para itago ang ibang file (PDF, Word, atbp.).
+const UPLOAD_TYPES = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'image/jpeg', 'image/png', 'image/webp'];
+const UPLOAD_EXTENSIONS = ['.mp4', '.webm', '.ogg', '.ogv', '.mov', '.jpg', '.jpeg', '.png', '.webp'];
+const UPLOAD_ACCEPT = [...UPLOAD_TYPES, ...UPLOAD_EXTENSIONS].join(',');
+// Walang MIME type ang ilang file sa Windows (hal. .mov), kaya extension
+// din ang tinitingnan.
+const isAllowedUpload = (file) => UPLOAD_TYPES.includes(file.type)
+  || UPLOAD_EXTENSIONS.some((ext) => file.name.toLowerCase().endsWith(ext));
+
 // Ganoon din sa bawat teksto: opisyal na anunsyo at gumagalaw na paalala.
 const MAX_TEXT_ITEMS = 20;
 
@@ -343,6 +354,16 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     const file = e.target.files?.[0];
     e.target.value = ''; // para mapili ulit ang parehong file kung kailangan
     if (!file) return;
+
+    // Puwede pa ring piliin ang "All files" sa dialog — kaya sinusuri ulit.
+    if (!isAllowedUpload(file)) {
+      return alert(t(
+        `“${file.name}” is not a video or picture.\n\n`
+        + 'Only these can be uploaded: MP4, WebM, OGG, MOV videos and JPG, PNG, WebP pictures.',
+        `Hindi video o larawan ang “${file.name}”.\n\n`
+        + 'Ito lang ang puwedeng i-upload: MP4, WebM, OGG, MOV na video at JPG, PNG, WebP na larawan.',
+      ));
+    }
 
     // Iisa lang ang buton ng upload — ang file mismo ang nagsasabi kung
     // video ba ito o larawan, para walang dagdag na pipiliin ang staff.
@@ -1307,7 +1328,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   <label className={`adm-upload${isUploading ? ' is-busy' : ''}`}>
                     <input
                       type="file"
-                      accept="video/mp4,video/webm,video/ogg,video/quicktime,image/jpeg,image/png,image/webp"
+                      accept={UPLOAD_ACCEPT}
                       onChange={handleVideoFileUpload}
                       disabled={isUploading}
                     />
