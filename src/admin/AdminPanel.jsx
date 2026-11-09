@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
 import VirtualKeyboard from '../components/VirtualKeyboard';
 import Icon from '../components/Icon';
 import { wantsOnScreenKeyboard, isFullScreenWindow } from '../lib/keyboardUtils';
@@ -14,7 +13,6 @@ import {
   getKioskVideos, saveKioskVideo, deleteKioskVideo, placeKioskVideo,
   uploadKioskVideoFile, deleteKioskVideoFile, isUploadedFile,
   logActivity, getActivityLogs,
-  getAdmin2fa, startAdmin2faSetup, finishAdmin2faSetup, disableAdmin2fa, isWrongCode, needsAal2,
 } from '../lib/api';
 import {
   getVideoTypes, getOrientations, detectVideoType, validateVideoUrl,
@@ -178,31 +176,9 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSavingPassword, setIsSavingPassword] = useState(false);
-  // Code ng authenticator sa pagpapalit ng password — kailangan ito ng
-  // Supabase kapag naka-on ang 2FA.
-  const [passwordCode, setPasswordCode] = useState('');
-
-  // 2FA. Binabasa tuwing binubuksan ang tab na Security.
-  //   twoFa:      { loading, enabled, factorId, error }
-  //   twoFaSetup: { factorId, uri, secret } habang sine-set up, o null
-  const [twoFa, setTwoFa] = useState({ loading: false, enabled: false, factorId: null, error: '' });
-  const [twoFaSetup, setTwoFaSetup] = useState(null);
-  const [twoFaCode, setTwoFaCode] = useState('');
-  const [twoFaBusy, setTwoFaBusy] = useState(false);
-
   // Activity log: binabasa tuwing binubuksan ang tab, para laging bago.
   // `missing` = hindi pa napapatakbo ang supabase/activity_logs.sql.
   const [activity, setActivity] = useState({ logs: [], missing: false, loading: false, error: '' });
-  const loadTwoFa = async () => {
-    setTwoFa((s) => ({ ...s, loading: true, error: '' }));
-    try {
-      const { enabled, factorId } = await getAdmin2fa();
-      setTwoFa({ loading: false, enabled, factorId, error: '' });
-    } catch (error) {
-      setTwoFa((s) => ({ ...s, loading: false, error: error?.message || String(error) }));
-    }
-  };
-
   const loadActivity = async () => {
     setActivity((a) => ({ ...a, loading: true, error: '' }));
     try {
@@ -872,8 +848,6 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     'advisory.create': t('Added advisory', 'Nagdagdag ng paalala'),
     'advisory.update': t('Edited advisory', 'Binago ang paalala'),
     'advisory.delete': t('Deleted advisory', 'Binura ang paalala'),
-    '2fa.enable': t('Turned on 2FA', 'In-on ang 2FA'),
-    '2fa.disable': t('Reset 2FA', 'Ni-reset ang 2FA'),
   }[action] || action);
 
   const logFieldLabel = (field) => ({
@@ -964,12 +938,11 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
 
     setIsSavingPassword(true);
     try {
-      await changeAdminPasswordWithCurrent(currentPassword, newPassword, twoFa.enabled ? passwordCode : '');
+      await changeAdminPasswordWithCurrent(currentPassword, newPassword);
       writeLoginGuard(ADMIN_GUARD_KEY, FRESH_GUARD);
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      setPasswordCode('');
       alert(t(
         'Admin Password updated securely in the cloud!\n\nYou will now be logged out. Please login again using your new password.',
         'Ligtas nang na-update ang Admin Password sa cloud!\n\nMa-lo-log out po kayo ngayon. Mag-login ulit gamit ang bagong password.',
@@ -994,21 +967,6 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
           `Mali ang kasalukuyang password. ${left} subok na lang bago ma-lock.`,
         ));
       }
-      if (isWrongCode(error)) {
-        setPasswordCode('');
-        return alert(t(
-          'Wrong authenticator code. Check the app and try again.',
-          'Mali ang code ng authenticator. Tingnan ang app at subukan ulit.',
-        ));
-      }
-      if (needsAal2(error)) {
-        // Naka-on pala ang 2FA (hal. sa ibang device) — ipakita ang kahon.
-        loadTwoFa();
-        return alert(t(
-          'Two-step verification is on. Enter the 6-digit code from the authenticator app, then save again.',
-          'Naka-on ang 2-step verification. Ilagay ang 6 na numero mula sa authenticator app, saka i-save ulit.',
-        ));
-      }
       alert(t(
         'Failed to update password. Check the internet connection and make sure you are still logged in.',
         'Hindi na-update ang password. Tingnan ang koneksyon sa internet at siguraduhing naka-login pa kayo.',
@@ -1016,55 +974,6 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     } finally {
       setIsSavingPassword(false);
     }
-  };
-
-  const handleStartTwoFa = async () => {
-    setTwoFaBusy(true);
-    try {
-      setTwoFaSetup(await startAdmin2faSetup());
-      setTwoFaCode('');
-    } catch (error) {
-      alert(t(
-        `Could not start the setup.\n\n${error?.message || error}`,
-        `Hindi masimulan ang setup.\n\n${error?.message || error}`,
-      ));
-    } finally { setTwoFaBusy(false); }
-  };
-
-  // Iisang form para sa pag-on (may twoFaSetup) at pag-off (wala).
-  const handleTwoFaCode = async (e) => {
-    e.preventDefault();
-    const turningOn = !!twoFaSetup;
-    if (!turningOn && !window.confirm(t(
-      'Reset two-step verification?\n\nUse this when changing phones. The next login will ask to set it up again on the new phone.',
-      'I-reset ang 2-step verification?\n\nGamitin ito kapag magpapalit ng telepono. Sa susunod na login, ipapa-set up ulit ito sa bagong telepono.',
-    ))) return;
-    setTwoFaBusy(true);
-    try {
-      if (turningOn) {
-        await finishAdmin2faSetup(twoFaSetup.factorId, twoFaCode);
-        setTwoFaSetup(null);
-      } else {
-        await disableAdmin2fa(twoFa.factorId, twoFaCode);
-      }
-      setTwoFaCode('');
-      logActivity(turningOn ? '2fa.enable' : '2fa.disable', '', { device: deviceLabel() });
-      await loadTwoFa();
-      alert(turningOn
-        ? t(
-            'Two-step verification is set up.\n\nThe code will be asked when logging in, once every 12 hours on each device.',
-            'Naka-set up na ang 2-step verification.\n\nHihingin ang code sa pag-login, isang beses bawat 12 oras sa bawat device.',
-          )
-        : t(
-            'Two-step verification was reset. The next login will ask to set it up again.',
-            'Na-reset na ang 2-step verification. Sa susunod na login, ipapa-set up ulit ito.',
-          ));
-    } catch (error) {
-      setTwoFaCode('');
-      alert(isWrongCode(error)
-        ? t('Wrong code. Check the authenticator app and try again.', 'Mali ang code. Tingnan ang authenticator app at subukan ulit.')
-        : t(`Not saved.\n\n${error?.message || error}`, `Hindi na-save.\n\n${error?.message || error}`));
-    } finally { setTwoFaBusy(false); }
   };
 
   return (
@@ -1123,7 +1032,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
             {t('Activity Log', 'Talaan ng Pagbabago')}
           </button>
           {!onKioskScreen && (
-            <button className={`adm-tab${activeTab === 'security' ? ' active' : ''}`} onClick={() => { setActiveTab('security'); loadTwoFa(); }}>
+            <button className={`adm-tab${activeTab === 'security' ? ' active' : ''}`} onClick={() => setActiveTab('security')}>
               {t('Admin Password', 'Password ng Admin')}
             </button>
           )}
@@ -2337,23 +2246,6 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   minLength="6"
                 />
               </div>
-              {twoFa.enabled && (
-                <div>
-                  <label className="k-label">
-                    {t('Code from the authenticator app', 'Code mula sa authenticator app')}
-                  </label>
-                  <input
-                    type="text"
-                    className="k-input"
-                    value={passwordCode}
-                    onChange={(e) => setPasswordCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    placeholder={t('6-digit code…', '6 na numero…')}
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    required
-                  />
-                </div>
-              )}
               <button type="submit" className="k-btn k-btn--primary" disabled={isSavingPassword}>
                 {isSavingPassword
                   ? `${t('Checking…', 'Sinusuri…')}`
@@ -2364,96 +2256,14 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
             <h3 style={{ marginTop: '32px' }}>{t('Two-Step Verification (2FA)', '2-Step Verification (2FA)')}</h3>
             <p className="adm-hint">
               {t(
-                'Required. Besides the password, logging in asks for a 6-digit code from an authenticator '
-                + 'app (Google Authenticator, Microsoft Authenticator…) on the admin phone. The code is asked '
-                + 'only once every 12 hours on each device. Changing phones? Reset it below. Lost the phone? '
-                + 'Delete the MFA factor of the admin user in Supabase → Authentication → Users.',
-                'Required. Bukod sa password, hihingi ang login ng 6 na numero mula sa authenticator app '
-                + '(Google Authenticator, Microsoft Authenticator…) sa telepono ng admin. Isang beses lang '
-                + 'ito hinihingi bawat 12 oras sa bawat device. Magpapalit ng telepono? I-reset sa ibaba. '
-                + 'Nawala ang telepono? Burahin ang MFA factor ng admin user sa Supabase → Authentication → Users.',
+                'Always on. After the password, logging in sends a code to the Gmail of the admin account. '
+                + 'The code is asked only once every 12 hours on each device. Keep that Gmail secure — '
+                + 'whoever can open it can also reset the password.',
+                'Laging naka-on. Pagkatapos ng password, may code na ipinapadala sa Gmail ng admin account. '
+                + 'Isang beses lang ito hinihingi bawat 12 oras sa bawat device. Ingatan ang Gmail na iyon — '
+                + 'ang sinumang makakabukas niyon ay kaya ring mag-reset ng password.',
               )}
             </p>
-
-            {twoFa.loading ? (
-              <p className="adm-hint">{t('Checking…', 'Sinusuri…')}</p>
-            ) : twoFa.error ? (
-              <p className="adm-hint">
-                {t('Could not read the 2FA status: ', 'Hindi mabasa ang kalagayan ng 2FA: ')}{twoFa.error}{' '}
-                <button type="button" className="k-btn k-btn--link" onClick={loadTwoFa}>{t('Try again', 'Subukan ulit')}</button>
-              </p>
-            ) : (
-              <form className="adm-form" onSubmit={handleTwoFaCode} style={{ maxWidth: '480px', flex: 'none' }}>
-                <p className="adm-hint">
-                  <strong>
-                    {twoFa.enabled
-                      ? t('Status: SET UP', 'Kalagayan: NAKA-SET UP')
-                      : t('Status: NOT SET UP — the next login will ask for it', 'Kalagayan: HINDI PA NAKA-SET UP — hihingin ito sa susunod na login')}
-                  </strong>
-                </p>
-
-                {!twoFa.enabled && !twoFaSetup && (
-                  <button type="button" className="k-btn k-btn--primary" onClick={handleStartTwoFa} disabled={twoFaBusy}>
-                    {twoFaBusy ? t('Starting…', 'Sinisimulan…') : t('Set Up Now', 'I-set Up Ngayon')}
-                  </button>
-                )}
-
-                {twoFaSetup && (
-                  <div>
-                    <label className="k-label">
-                      {t(
-                        '1 · Scan this with the authenticator app on the admin phone',
-                        '1 · I-scan ito gamit ang authenticator app sa telepono ng admin',
-                      )}
-                    </label>
-                    <div style={{ background: '#fff', padding: '12px', display: 'inline-block', borderRadius: '8px' }}>
-                      <QRCodeSVG value={twoFaSetup.uri} size={180} />
-                    </div>
-                    <p className="adm-hint">
-                      {t('Cannot scan? Type this key in the app: ', 'Hindi ma-scan? I-type ang key na ito sa app: ')}
-                      <code style={{ wordBreak: 'break-all' }}>{twoFaSetup.secret}</code>
-                    </p>
-                  </div>
-                )}
-
-                {(twoFaSetup || twoFa.enabled) && (
-                  <div>
-                    <label className="k-label">
-                      {twoFaSetup
-                        ? t('2 · Enter the 6-digit code shown in the app', '2 · Ilagay ang 6 na numerong nasa app')
-                        : t('Code from the app (to reset)', 'Code mula sa app (para i-reset)')}
-                    </label>
-                    <input
-                      type="text"
-                      className="k-input"
-                      value={twoFaCode}
-                      onChange={(e) => setTwoFaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                      placeholder={t('6-digit code…', '6 na numero…')}
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      required
-                    />
-                  </div>
-                )}
-
-                {twoFaSetup && (
-                  <div className="k-btn-row">
-                    <button type="button" className="k-btn k-btn--ghost" onClick={() => { setTwoFaSetup(null); setTwoFaCode(''); }} disabled={twoFaBusy}>
-                      {t('Cancel', 'Kanselahin')}
-                    </button>
-                    <button type="submit" className="k-btn k-btn--primary" disabled={twoFaBusy || twoFaCode.length !== 6}>
-                      {twoFaBusy ? t('Checking…', 'Sinusuri…') : t('Verify & Save', 'I-verify at I-save')}
-                    </button>
-                  </div>
-                )}
-
-                {twoFa.enabled && (
-                  <button type="submit" className="k-btn k-btn--ghost" disabled={twoFaBusy || twoFaCode.length !== 6}>
-                    {twoFaBusy ? t('Checking…', 'Sinusuri…') : t('Reset 2FA (new phone)', 'I-reset ang 2FA (bagong telepono)')}
-                  </button>
-                )}
-              </form>
-            )}
           </div>
         )}
       </div>

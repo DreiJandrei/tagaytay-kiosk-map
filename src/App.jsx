@@ -19,7 +19,7 @@ import './index.css';
 import { QRCodeSVG } from 'qrcode.react';
 import Icon from './components/Icon';
 
-import { getAllOffices, initializeDatabase, incrementSearchCount, loginAdmin, verifyAdminCode, isWrongCode, needsAal2, resetPasswordEmail, logoutAdmin, onAuthChange, changeAdminPassword, getLiftStatuses } from './lib/api';
+import { getAllOffices, initializeDatabase, incrementSearchCount, loginAdmin, sendAdminCode, verifyAdminCode, isWrongCode, isEmailRateLimited, resetPasswordEmail, logoutAdmin, onAuthChange, changeAdminPassword, getLiftStatuses } from './lib/api';
 import { checkKioskSession, onKioskSessionChange } from './lib/kioskDevice';
 import {
   ADMIN_GUARD_KEY, MAX_LOGIN_ATTEMPTS, FRESH_GUARD,
@@ -173,6 +173,8 @@ const RESET_COOLDOWN_KEY = 'tagaytay-reset-cooldown';
 const RESET_LIMIT_WAIT_MS = 60 * 60 * 1000;
 // Pagkatapos ng matagumpay na padala — ang default na pagitan ng Supabase.
 const RESET_AFTER_SEND_MS = 60 * 1000;
+// Ganoon din sa code ng 2FA na ipinapadala sa Gmail.
+const CODE_RESEND_MS = 60 * 1000;
 
 const readResetCooldown = () => {
   try { return Number(localStorage.getItem(RESET_COOLDOWN_KEY)) || 0; } catch { return 0; }
@@ -261,13 +263,13 @@ export default function App() {
   const [adminEmailInput, setAdminEmailInput] = useState('');
   const [adminPasswordInput, setAdminPasswordInput] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  // Ikalawang hakbang ng login (2FA): ang factor na hinihingan ng code.
+  // Ikalawang hakbang ng login (2FA): ang Gmail na pinadalhan ng code.
   // null = nasa password pa.
-  const [adminMfaFactor, setAdminMfaFactor] = useState(null);
+  const [adminCodeEmail, setAdminCodeEmail] = useState(null);
   const [adminCodeInput, setAdminCodeInput] = useState('');
-  // Unang beses pa lang: { uri, secret } ng QR na ii-scan. null kapag
-  // naka-set up na ang authenticator.
-  const [adminMfaSetup, setAdminMfaSetup] = useState(null);
+  // Kailan puwedeng ipadala ulit ang code. Isang beses lang bawat minuto
+  // ang tinatanggap ng Supabase.
+  const [codeResendAt, setCodeResendAt] = useState(0);
   // Para "Mali ang code" lang kapag code nga ang mali — hindi ang mga
   // maling password bago nito.
   const [adminCodeWrong, setAdminCodeWrong] = useState(false);
@@ -278,9 +280,6 @@ export default function App() {
   // keyboard ang terminal — kung wala ito, hindi makakapasok ang admin.
   const authModalRef = useRef(null);
   const [recoveryPassword, setRecoveryPassword] = useState('');
-  // Naka-on ang 2FA: tatanggihan ang bagong password hangga't walang code.
-  const [recoveryNeedsCode, setRecoveryNeedsCode] = useState(false);
-  const [recoveryCode, setRecoveryCode] = useState('');
 
   const logoTaps = useRef({ count: 0, timer: null });
   useEffect(() => () => clearTimeout(logoTaps.current.timer), []);
@@ -291,6 +290,7 @@ export default function App() {
   const loginLocked = loginGuard.lockUntil > guardNow;
   const [resetCooldownUntil, setResetCooldownUntil] = useState(readResetCooldown);
   const resetLocked = resetCooldownUntil > guardNow;
+  const codeResendLocked = codeResendAt > guardNow;
   const startResetCooldown = (ms) => {
     const until = Date.now() + ms;
     setResetCooldownUntil(until);
@@ -303,10 +303,10 @@ export default function App() {
   // Countdown ng lock sa admin login at ng pahinga ng reset — tumatakbo
   // lang habang bukas ang login at may binibilang pa.
   useEffect(() => {
-    if (!showAdminLogin || !(loginLocked || resetLocked)) return;
+    if (!showAdminLogin || !(loginLocked || resetLocked || codeResendLocked)) return;
     const id = setInterval(() => setGuardNow(Date.now()), 1000);
     return () => clearInterval(id);
-  }, [showAdminLogin, loginLocked, resetLocked]);
+  }, [showAdminLogin, loginLocked, resetLocked, codeResendLocked]);
   const [showAbout, setShowAbout] = useState(false); 
 
   const [routeStep, setRouteStep] = useState('idle');
@@ -550,15 +550,12 @@ export default function App() {
     setShowAdminLogin(false);
     setAdminEmailInput('');
     setAdminPasswordInput('');
-    setAdminMfaFactor(null);
-    setAdminMfaSetup(null);
+    setAdminCodeEmail(null);
     setAdminCodeInput('');
     setShowPassword(false);
     setShowAbout(false);
     setShowRecoveryModal(false);
     setRecoveryPassword('');
-    setRecoveryNeedsCode(false);
-    setRecoveryCode('');
     setCurrentFloor(1);
     setTextScale(TEXT_SCALE_MIN);
     setStillThereDeadline(null);
@@ -654,14 +651,20 @@ export default function App() {
       if (result.needsCode) {
         // Hindi pa binubura ang bilang ng mali: kapag binura dito, walang
         // hangganan ang hula sa code ng sinumang may password.
-        setAdminMfaFactor(result.factorId);
-        setAdminMfaSetup(result.setup);
+        setAdminCodeEmail(result.email);
+        setAdminCodeInput('');
         setAdminCodeWrong(false);
+        setCodeResendAt(Date.now() + CODE_RESEND_MS);
+        setGuardNow(Date.now());
         return;
       }
       finishAdminLogin();
     } catch (error) {
       setAdminPasswordInput('');
+      if (isEmailRateLimited(error)) {
+        alert(codeRateLimitMessage());
+        return;
+      }
       if (!isWrongPassword(error)) {
         // Hindi ito binibilang — hindi kasalanan ng nagta-type ang internet.
         alert(lang === 'EN'
@@ -676,29 +679,46 @@ export default function App() {
     }
   };
 
+  const codeRateLimitMessage = () => (lang === 'EN'
+    ? 'Too many codes sent.\n\nSupabase limits how many emails can be sent. Wait a while, then try again.'
+    : 'Sobrang dami nang naipadalang code.\n\nMay limitasyon ang Supabase sa dami ng email na maipapadala. Maghintay muna, saka subukan ulit.');
+
   const finishAdminLogin = () => {
     updateLoginGuard(FRESH_GUARD);
     setShowAdminLogin(false);
     setAdminEmailInput('');
     setAdminPasswordInput('');
-    setAdminMfaFactor(null);
-    setAdminMfaSetup(null);
+    setAdminCodeEmail(null);
     setAdminCodeInput('');
     setShowPassword(false);
     setShowAdmin(true);
   };
 
   const closeAdminLogin = () => {
-    // Nakapasok na ang password sa ikalawang hakbang — huwag iwanang
-    // naka-login ang kalahating session.
-    if (adminMfaFactor) logoutAdmin();
     setShowAdminLogin(false);
     setAdminEmailInput('');
     setAdminPasswordInput('');
-    setAdminMfaFactor(null);
-    setAdminMfaSetup(null);
+    setAdminCodeEmail(null);
     setAdminCodeInput('');
     setShowPassword(false);
+  };
+
+  const handleResendCode = async () => {
+    if (codeResendAt > Date.now()) return;
+    try {
+      await sendAdminCode(adminCodeEmail);
+      setCodeResendAt(Date.now() + CODE_RESEND_MS);
+      setGuardNow(Date.now());
+      alert(lang === 'EN'
+        ? 'A new code was sent. Use the newest email.'
+        : 'Nagpadala ng bagong code. Ang pinakabagong email ang gamitin.');
+    } catch (error) {
+      alert(isEmailRateLimited(error)
+        ? codeRateLimitMessage()
+        : (lang === 'EN'
+          ? 'Could not send the code. Check the internet connection and try again.'
+          : 'Hindi maipadala ang code. Tingnan ang koneksyon sa internet at subukan ulit.'));
+    }
   };
 
   const handleAdminCode = async (e) => {
@@ -706,7 +726,7 @@ export default function App() {
     if (loginGuard.lockUntil > Date.now()) return;
     setIsLoggingIn(true);
     try {
-      await verifyAdminCode(adminMfaFactor, adminCodeInput);
+      await verifyAdminCode(adminCodeEmail, adminCodeInput);
       finishAdminLogin();
     } catch (error) {
       setAdminCodeInput('');
@@ -722,11 +742,7 @@ export default function App() {
       updateLoginGuard(next);
       setGuardNow(Date.now());
       // Naka-lock na, o hindi pala admin: balik sa simula.
-      if (next.lockUntil > Date.now() || isWrongPassword(error)) {
-        await logoutAdmin();
-        setAdminMfaFactor(null);
-        setAdminMfaSetup(null);
-      }
+      if (next.lockUntil > Date.now() || isWrongPassword(error)) setAdminCodeEmail(null);
     } finally {
       setIsLoggingIn(false);
     }
@@ -1854,29 +1870,15 @@ export default function App() {
               }
               try {
                 setIsLoggingIn(true);
-                await changeAdminPassword(recoveryPassword, recoveryNeedsCode ? recoveryCode : '');
+                await changeAdminPassword(recoveryPassword);
                 alert(lang === 'EN'
                   ? 'Password successfully changed! You can now login.'
                   : 'Matagumpay na napalitan ang password! Maaari na kayong mag-login.');
                 setShowRecoveryModal(false);
                 setRecoveryPassword('');
-                setRecoveryNeedsCode(false);
-                setRecoveryCode('');
                 await logoutAdmin(); 
                 setShowAdminLogin(true); 
               } catch (err) {
-                if (needsAal2(err)) {
-                  setRecoveryNeedsCode(true);
-                  return alert(lang === 'EN'
-                    ? 'Two-step verification is on.\n\nEnter the 6-digit code from the authenticator app on the admin phone, then save again.'
-                    : 'Naka-on ang 2-step verification.\n\nIlagay ang 6 na numero mula sa authenticator app sa telepono ng admin, saka i-save ulit.');
-                }
-                if (isWrongCode(err)) {
-                  setRecoveryCode('');
-                  return alert(lang === 'EN'
-                    ? 'Wrong code. Check the authenticator app and try again.'
-                    : 'Mali ang code. Tingnan ang authenticator app at subukan ulit.');
-                }
                 alert(lang === 'EN'
                   ? 'Failed to update password. Link might be expired.'
                   : 'Hindi na-update ang password. Baka expired na ang link.');
@@ -1902,21 +1904,6 @@ export default function App() {
                 </button>
               </div>
 
-              {recoveryNeedsCode && (
-                <div className="k-field">
-                  <input
-                    type="text"
-                    className="k-input"
-                    value={recoveryCode}
-                    onChange={(e) => setRecoveryCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    placeholder={lang === 'EN' ? '6-digit code from the authenticator app' : '6 na numero mula sa authenticator app'}
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    required
-                  />
-                </div>
-              )}
-
               <button type="submit" className="k-btn k-btn--ok" disabled={isLoggingIn}>
                 {lang === 'EN'
                   ? (isLoggingIn ? 'Saving…' : 'Save New Password')
@@ -1932,46 +1919,29 @@ export default function App() {
         <div className="k-overlay">
           <div className="k-modal k-modal--sm" ref={authModalRef} style={{ textAlign: 'center' }}>
             <h2 className="k-modal-title" style={{ marginBottom: '10px' }}>
-              {adminMfaSetup
-                ? (lang === 'EN' ? 'Set Up Two-Step Verification' : 'I-set Up ang 2-Step Verification')
-                : adminMfaFactor
+              {adminCodeEmail
                 ? (lang === 'EN' ? 'Two-Step Verification' : '2-Step Verification')
                 : (lang === 'EN' ? 'Admin Access' : 'Pagpasok ng Admin')}
             </h2>
             <p className="k-modal-text k-modal-text--center">
-              {adminMfaSetup
+              {adminCodeEmail
                 ? (lang === 'EN'
-                  ? 'Required before entering the Admin Panel. Scan this with an authenticator app (Google Authenticator, Microsoft Authenticator…) on the admin phone, then enter the 6-digit code it shows.'
-                  : 'Kailangan bago makapasok sa Admin Panel. I-scan ito gamit ang authenticator app (Google Authenticator, Microsoft Authenticator…) sa telepono ng admin, saka ilagay ang 6 na numerong lalabas.')
-                : adminMfaFactor
-                ? (lang === 'EN'
-                  ? 'Open the authenticator app on the admin phone and enter the 6-digit code. This is asked only once every 12 hours on this device.'
-                  : 'Buksan ang authenticator app sa telepono ng admin at ilagay ang 6 na numero. Isang beses lang ito hinihingi bawat 12 oras sa device na ito.')
+                  ? `A code was sent to ${adminCodeEmail}. Open Gmail and enter it below. This is asked only once every 12 hours on this device.`
+                  : `May code na ipinadala sa ${adminCodeEmail}. Buksan ang Gmail at ilagay ito sa ibaba. Isang beses lang ito hinihingi bawat 12 oras sa device na ito.`)
                 : (lang === 'EN'
                   ? 'Enter the admin email and password.'
                   : 'Ilagay ang email at password ng admin.')}
             </p>
 
-            {adminMfaFactor ? (
+            {adminCodeEmail ? (
               <form onSubmit={handleAdminCode}>
-                {adminMfaSetup && (
-                  <div className="k-field">
-                    <div style={{ background: '#fff', padding: '12px', display: 'inline-block', borderRadius: '8px' }}>
-                      <QRCodeSVG value={adminMfaSetup.uri} size={180} />
-                    </div>
-                    <p className="k-modal-text k-modal-text--center" style={{ fontSize: '0.85em' }}>
-                      {lang === 'EN' ? 'Cannot scan? Type this key in the app: ' : 'Hindi ma-scan? I-type ang key na ito sa app: '}
-                      <code style={{ wordBreak: 'break-all' }}>{adminMfaSetup.secret}</code>
-                    </p>
-                  </div>
-                )}
                 <div className="k-field">
                   <input
                     type="text"
                     className="k-input"
                     value={adminCodeInput}
-                    onChange={(e) => setAdminCodeInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    placeholder={lang === 'EN' ? '6-digit code…' : '6 na numero…'}
+                    onChange={(e) => setAdminCodeInput(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                    placeholder={lang === 'EN' ? 'Code from Gmail…' : 'Code mula sa Gmail…'}
                     inputMode="numeric"
                     autoComplete="one-time-code"
                     style={{ textAlign: 'center', letterSpacing: '0.3em' }}
@@ -1995,16 +1965,24 @@ export default function App() {
                   </p>
                 )}
 
-                <div className="k-btn-row">
+                <div className="k-btn-row" style={{ marginBottom: '14px' }}>
                   <button type="button" className="k-btn k-btn--ghost" onClick={closeAdminLogin}>
                     {lang === 'EN' ? 'Cancel' : 'Kanselahin'}
                   </button>
-                  <button type="submit" className="k-btn k-btn--primary" disabled={isLoggingIn || loginLocked || adminCodeInput.length !== 6}>
+                  <button type="submit" className="k-btn k-btn--primary" disabled={isLoggingIn || loginLocked || adminCodeInput.length < 6}>
                     {lang === 'EN'
-                      ? (isLoggingIn ? 'Checking…' : adminMfaSetup ? 'Verify & Enter' : 'Verify')
-                      : (isLoggingIn ? 'Sinusuri…' : adminMfaSetup ? 'I-verify at Pumasok' : 'I-verify')}
+                      ? (isLoggingIn ? 'Checking…' : 'Verify')
+                      : (isLoggingIn ? 'Sinusuri…' : 'I-verify')}
                   </button>
                 </div>
+
+                <button type="button" className="k-btn k-btn--link" onClick={handleResendCode} disabled={codeResendLocked || loginLocked}>
+                  {codeResendLocked
+                    ? (lang === 'EN'
+                      ? `No email? Resend in ${formatCountdown(codeResendAt - guardNow)}`
+                      : `Walang dumating? Ipadala ulit sa loob ng ${formatCountdown(codeResendAt - guardNow)}`)
+                    : (lang === 'EN' ? 'No email? Resend the code' : 'Walang dumating? Ipadala ulit ang code')}
+                </button>
               </form>
             ) : (
             <form onSubmit={handleAdminLogin}>

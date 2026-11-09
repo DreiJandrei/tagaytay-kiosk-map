@@ -19,9 +19,9 @@ export const supabase = createClient(VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, 
 // PANSURI NG KASALUKUYANG PASSWORD
 // ==========================================================
 // Sa pagpapalit ng password sa Admin Panel. Kapag ang `supabase` mismo
-// ang nag-login ulit para suriin ang password, mapapalitan ang session
-// ng bago na hindi pa dumaan sa 2FA — at tatanggihan ng Supabase ang
-// pagpapalit ng password. Kaya hiwalay ito, at walang iniimbak.
+// ang nag-login ulit para suriin ang password, mapapalitan ang session ng
+// admin (na dumaan sa code sa Gmail) ng bago na password lang. Kaya
+// hiwalay ito, at walang iniimbak.
 export const passwordChecker = createClient(VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, {
   auth: {
     storageKey: 'tagaytay-password-check',
