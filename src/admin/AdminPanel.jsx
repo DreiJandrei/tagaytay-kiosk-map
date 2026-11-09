@@ -873,7 +873,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     'advisory.update': t('Edited advisory', 'Binago ang paalala'),
     'advisory.delete': t('Deleted advisory', 'Binura ang paalala'),
     '2fa.enable': t('Turned on 2FA', 'In-on ang 2FA'),
-    '2fa.disable': t('Turned off 2FA', 'In-off ang 2FA'),
+    '2fa.disable': t('Reset 2FA', 'Ni-reset ang 2FA'),
   }[action] || action);
 
   const logFieldLabel = (field) => ({
@@ -1036,8 +1036,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     e.preventDefault();
     const turningOn = !!twoFaSetup;
     if (!turningOn && !window.confirm(t(
-      'Turn off two-step verification?\n\nLogging in will only need the password again.',
-      'I-off ang 2-step verification?\n\nPassword na lang ulit ang kailangan sa pag-login.',
+      'Reset two-step verification?\n\nUse this when changing phones. The next login will ask to set it up again on the new phone.',
+      'I-reset ang 2-step verification?\n\nGamitin ito kapag magpapalit ng telepono. Sa susunod na login, ipapa-set up ulit ito sa bagong telepono.',
     ))) return;
     setTwoFaBusy(true);
     try {
@@ -1052,10 +1052,13 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
       await loadTwoFa();
       alert(turningOn
         ? t(
-            'Two-step verification is on.\n\nThe code will be asked when logging in, once every 12 hours on each device.',
-            'Naka-on na ang 2-step verification.\n\nHihingin ang code sa pag-login, isang beses bawat 12 oras sa bawat device.',
+            'Two-step verification is set up.\n\nThe code will be asked when logging in, once every 12 hours on each device.',
+            'Naka-set up na ang 2-step verification.\n\nHihingin ang code sa pag-login, isang beses bawat 12 oras sa bawat device.',
           )
-        : t('Two-step verification is off.', 'Naka-off na ang 2-step verification.'));
+        : t(
+            'Two-step verification was reset. The next login will ask to set it up again.',
+            'Na-reset na ang 2-step verification. Sa susunod na login, ipapa-set up ulit ito.',
+          ));
     } catch (error) {
       setTwoFaCode('');
       alert(isWrongCode(error)
@@ -2361,14 +2364,14 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
             <h3 style={{ marginTop: '32px' }}>{t('Two-Step Verification (2FA)', '2-Step Verification (2FA)')}</h3>
             <p className="adm-hint">
               {t(
-                'Besides the password, logging in asks for a 6-digit code from an authenticator app '
-                + '(Google Authenticator, Microsoft Authenticator…) on the admin phone. The code is asked '
-                + 'only once every 12 hours on each device. Lost the phone? Delete the MFA factor of the '
-                + 'admin user in Supabase → Authentication → Users.',
-                'Bukod sa password, hihingi ang login ng 6 na numero mula sa authenticator app '
+                'Required. Besides the password, logging in asks for a 6-digit code from an authenticator '
+                + 'app (Google Authenticator, Microsoft Authenticator…) on the admin phone. The code is asked '
+                + 'only once every 12 hours on each device. Changing phones? Reset it below. Lost the phone? '
+                + 'Delete the MFA factor of the admin user in Supabase → Authentication → Users.',
+                'Required. Bukod sa password, hihingi ang login ng 6 na numero mula sa authenticator app '
                 + '(Google Authenticator, Microsoft Authenticator…) sa telepono ng admin. Isang beses lang '
-                + 'ito hinihingi bawat 12 oras sa bawat device. Nawala ang telepono? Burahin ang MFA factor '
-                + 'ng admin user sa Supabase → Authentication → Users.',
+                + 'ito hinihingi bawat 12 oras sa bawat device. Magpapalit ng telepono? I-reset sa ibaba. '
+                + 'Nawala ang telepono? Burahin ang MFA factor ng admin user sa Supabase → Authentication → Users.',
               )}
             </p>
 
@@ -2383,13 +2386,15 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
               <form className="adm-form" onSubmit={handleTwoFaCode} style={{ maxWidth: '480px', flex: 'none' }}>
                 <p className="adm-hint">
                   <strong>
-                    {twoFa.enabled ? t('Status: ON', 'Kalagayan: NAKA-ON') : t('Status: OFF', 'Kalagayan: NAKA-OFF')}
+                    {twoFa.enabled
+                      ? t('Status: SET UP', 'Kalagayan: NAKA-SET UP')
+                      : t('Status: NOT SET UP — the next login will ask for it', 'Kalagayan: HINDI PA NAKA-SET UP — hihingin ito sa susunod na login')}
                   </strong>
                 </p>
 
                 {!twoFa.enabled && !twoFaSetup && (
                   <button type="button" className="k-btn k-btn--primary" onClick={handleStartTwoFa} disabled={twoFaBusy}>
-                    {twoFaBusy ? t('Starting…', 'Sinisimulan…') : t('Turn On 2FA', 'I-on ang 2FA')}
+                    {twoFaBusy ? t('Starting…', 'Sinisimulan…') : t('Set Up Now', 'I-set Up Ngayon')}
                   </button>
                 )}
 
@@ -2416,7 +2421,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                     <label className="k-label">
                       {twoFaSetup
                         ? t('2 · Enter the 6-digit code shown in the app', '2 · Ilagay ang 6 na numerong nasa app')
-                        : t('Code from the app (to turn it off)', 'Code mula sa app (para i-off)')}
+                        : t('Code from the app (to reset)', 'Code mula sa app (para i-reset)')}
                     </label>
                     <input
                       type="text"
@@ -2437,14 +2442,14 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                       {t('Cancel', 'Kanselahin')}
                     </button>
                     <button type="submit" className="k-btn k-btn--primary" disabled={twoFaBusy || twoFaCode.length !== 6}>
-                      {twoFaBusy ? t('Checking…', 'Sinusuri…') : t('Verify & Turn On', 'I-verify at I-on')}
+                      {twoFaBusy ? t('Checking…', 'Sinusuri…') : t('Verify & Save', 'I-verify at I-save')}
                     </button>
                   </div>
                 )}
 
                 {twoFa.enabled && (
                   <button type="submit" className="k-btn k-btn--ghost" disabled={twoFaBusy || twoFaCode.length !== 6}>
-                    {twoFaBusy ? t('Checking…', 'Sinusuri…') : t('Turn Off 2FA', 'I-off ang 2FA')}
+                    {twoFaBusy ? t('Checking…', 'Sinusuri…') : t('Reset 2FA (new phone)', 'I-reset ang 2FA (bagong telepono)')}
                   </button>
                 )}
               </form>

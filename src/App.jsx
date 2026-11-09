@@ -265,6 +265,9 @@ export default function App() {
   // null = nasa password pa.
   const [adminMfaFactor, setAdminMfaFactor] = useState(null);
   const [adminCodeInput, setAdminCodeInput] = useState('');
+  // Unang beses pa lang: { uri, secret } ng QR na ii-scan. null kapag
+  // naka-set up na ang authenticator.
+  const [adminMfaSetup, setAdminMfaSetup] = useState(null);
   // Para "Mali ang code" lang kapag code nga ang mali — hindi ang mga
   // maling password bago nito.
   const [adminCodeWrong, setAdminCodeWrong] = useState(false);
@@ -548,6 +551,7 @@ export default function App() {
     setAdminEmailInput('');
     setAdminPasswordInput('');
     setAdminMfaFactor(null);
+    setAdminMfaSetup(null);
     setAdminCodeInput('');
     setShowPassword(false);
     setShowAbout(false);
@@ -651,6 +655,7 @@ export default function App() {
         // Hindi pa binubura ang bilang ng mali: kapag binura dito, walang
         // hangganan ang hula sa code ng sinumang may password.
         setAdminMfaFactor(result.factorId);
+        setAdminMfaSetup(result.setup);
         setAdminCodeWrong(false);
         return;
       }
@@ -677,6 +682,7 @@ export default function App() {
     setAdminEmailInput('');
     setAdminPasswordInput('');
     setAdminMfaFactor(null);
+    setAdminMfaSetup(null);
     setAdminCodeInput('');
     setShowPassword(false);
     setShowAdmin(true);
@@ -690,6 +696,7 @@ export default function App() {
     setAdminEmailInput('');
     setAdminPasswordInput('');
     setAdminMfaFactor(null);
+    setAdminMfaSetup(null);
     setAdminCodeInput('');
     setShowPassword(false);
   };
@@ -718,6 +725,7 @@ export default function App() {
       if (next.lockUntil > Date.now() || isWrongPassword(error)) {
         await logoutAdmin();
         setAdminMfaFactor(null);
+        setAdminMfaSetup(null);
       }
     } finally {
       setIsLoggingIn(false);
@@ -1924,12 +1932,18 @@ export default function App() {
         <div className="k-overlay">
           <div className="k-modal k-modal--sm" ref={authModalRef} style={{ textAlign: 'center' }}>
             <h2 className="k-modal-title" style={{ marginBottom: '10px' }}>
-              {adminMfaFactor
+              {adminMfaSetup
+                ? (lang === 'EN' ? 'Set Up Two-Step Verification' : 'I-set Up ang 2-Step Verification')
+                : adminMfaFactor
                 ? (lang === 'EN' ? 'Two-Step Verification' : '2-Step Verification')
                 : (lang === 'EN' ? 'Admin Access' : 'Pagpasok ng Admin')}
             </h2>
             <p className="k-modal-text k-modal-text--center">
-              {adminMfaFactor
+              {adminMfaSetup
+                ? (lang === 'EN'
+                  ? 'Required before entering the Admin Panel. Scan this with an authenticator app (Google Authenticator, Microsoft Authenticator…) on the admin phone, then enter the 6-digit code it shows.'
+                  : 'Kailangan bago makapasok sa Admin Panel. I-scan ito gamit ang authenticator app (Google Authenticator, Microsoft Authenticator…) sa telepono ng admin, saka ilagay ang 6 na numerong lalabas.')
+                : adminMfaFactor
                 ? (lang === 'EN'
                   ? 'Open the authenticator app on the admin phone and enter the 6-digit code. This is asked only once every 12 hours on this device.'
                   : 'Buksan ang authenticator app sa telepono ng admin at ilagay ang 6 na numero. Isang beses lang ito hinihingi bawat 12 oras sa device na ito.')
@@ -1940,6 +1954,17 @@ export default function App() {
 
             {adminMfaFactor ? (
               <form onSubmit={handleAdminCode}>
+                {adminMfaSetup && (
+                  <div className="k-field">
+                    <div style={{ background: '#fff', padding: '12px', display: 'inline-block', borderRadius: '8px' }}>
+                      <QRCodeSVG value={adminMfaSetup.uri} size={180} />
+                    </div>
+                    <p className="k-modal-text k-modal-text--center" style={{ fontSize: '0.85em' }}>
+                      {lang === 'EN' ? 'Cannot scan? Type this key in the app: ' : 'Hindi ma-scan? I-type ang key na ito sa app: '}
+                      <code style={{ wordBreak: 'break-all' }}>{adminMfaSetup.secret}</code>
+                    </p>
+                  </div>
+                )}
                 <div className="k-field">
                   <input
                     type="text"
@@ -1976,8 +2001,8 @@ export default function App() {
                   </button>
                   <button type="submit" className="k-btn k-btn--primary" disabled={isLoggingIn || loginLocked || adminCodeInput.length !== 6}>
                     {lang === 'EN'
-                      ? (isLoggingIn ? 'Checking…' : 'Verify')
-                      : (isLoggingIn ? 'Sinusuri…' : 'I-verify')}
+                      ? (isLoggingIn ? 'Checking…' : adminMfaSetup ? 'Verify & Enter' : 'Verify')
+                      : (isLoggingIn ? 'Sinusuri…' : adminMfaSetup ? 'I-verify at Pumasok' : 'I-verify')}
                   </button>
                 </div>
               </form>

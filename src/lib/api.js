@@ -51,35 +51,55 @@ const stripEmoji = (text) => String(text ?? '')
 // kung admin nga (is_kiosk_admin sa supabase/admin_only_writes.sql): ang
 // account ng kiosk ay may tamang password din, pero hindi admin.
 //
-// May 2FA (authenticator app sa telepono) kapag naka-on sa tab na
-// Security. Ang code ay hinihingi lang isang beses bawat 12 oras sa
-// bawat device — tingnan ang MFA_TRUST_MS sa ibaba.
+// REQUIRED ang 2FA (authenticator app sa telepono). Ang code ay hinihingi
+// lang isang beses bawat 12 oras sa bawat device — tingnan ang
+// MFA_TRUST_MS sa ibaba. Wala pang authenticator ang admin? Ipapa-set up
+// muna bago papasukin.
 //
-// Ibinabalik: { needsCode: false } kapag tapos na, o
-// { needsCode: true, factorId } kapag kailangan pa ng code
-// (verifyAdminCode ang susunod).
+// Ibinabalik:
+//   { needsCode: false }                    — tapos na, papasok na
+//   { needsCode: true, factorId, setup }    — kailangan pa ng code
+//     (verifyAdminCode ang susunod). `setup` = { uri, secret } kapag
+//     unang beses pa lang — ang QR na ii-scan; null kapag naka-set up na.
 export const loginAdmin = async (email, password) => {
   const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
   if (error) throw error;
   let factor;
   try {
+    if (!(await isAdminAccount())) return rejectNonAdmin();
     factor = await getVerifiedTotp();
-  } catch (factorError) {
+    if (!factor) {
+      const { factorId, uri, secret } = await startAdmin2faSetup();
+      return { needsCode: true, factorId, setup: { uri, secret } };
+    }
+  } catch (stepError) {
+    if (stepError?.code === 'invalid_credentials') throw stepError;
     await supabase.auth.signOut({ scope: 'local' });
-    throw factorError;
+    throw stepError;
   }
-  if (factor && !hasMfaTrust(data.user.id)) return { needsCode: true, factorId: factor.id };
+  const askCode = { needsCode: true, factorId: factor.id, setup: null };
+  if (!hasMfaTrust(data.user.id)) return askCode;
   if (await confirmAdmin()) return { needsCode: false };
   // Pinagkakatiwalaan pa ng device na ito, pero sarado na ang 12 oras sa
   // database (hal. hindi naitala doon ang huling code). Code na lang ulit.
-  if (factor) {
-    clearMfaTrust();
-    return { needsCode: true, factorId: factor.id };
-  }
-  return rejectNonAdmin();
+  clearMfaTrust();
+  return askCode;
+};
+
+// Admin account ba ito, bago pa ang 2FA? Hindi pa ito ang karapatang
+// magsulat — is_kiosk_admin pa rin iyon. Kung hindi pa napapatakbo ang
+// supabase/admin_2fa.sql, ang lumang is_kiosk_admin (email lang) ang
+// tinatanong.
+const isAdminAccount = async () => {
+  let { data, error } = await supabase.rpc('is_kiosk_admin_account');
+  if (error?.code === 'PGRST202') ({ data, error } = await supabase.rpc('is_kiosk_admin'));
+  if (error) throw error;
+  return data === true;
 };
 
 // Ang ikalawang hakbang ng login: ang 6 na numero mula sa authenticator.
+// Ganito rin tinatapos ang unang setup — ang unang tamang code ang
+// nagbubukas ng authenticator.
 export const verifyAdminCode = async (factorId, code) => {
   await verifyTotp(factorId, code);
   if (await confirmAdmin()) return;
@@ -184,8 +204,9 @@ export const startAdmin2faSetup = async () => {
 // Ikalawang hakbang: ang unang code mula sa app. Dito pa lang ito naka-on.
 export const finishAdmin2faSetup = (factorId, code) => verifyTotp(factorId, code);
 
-// Pag-off. Kailangan ng code kahit naka-login na: hindi dapat kayang
-// patayin ng sinumang nakadaan sa naiwang bukas na admin.
+// Pag-reset (hal. bagong telepono): sa susunod na login, ipapa-set up ulit.
+// Kailangan ng code kahit naka-login na: hindi dapat kayang i-reset ng
+// sinumang nakadaan sa naiwang bukas na admin.
 export const disableAdmin2fa = async (factorId, code) => {
   await verifyTotp(factorId, code);
   const { error } = await supabase.auth.mfa.unenroll({ factorId });
