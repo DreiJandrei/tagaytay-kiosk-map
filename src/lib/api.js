@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase, passwordChecker } from './supabase';
 import { bumpSearchCount } from './kioskDevice';
 import { isLiveNow, scheduleState } from './schedule';
 
@@ -50,17 +50,147 @@ const stripEmoji = (text) => String(text ?? '')
 // ng kahit sino sa browser. Pagkapasok, ang database mismo ang tinatanong
 // kung admin nga (is_kiosk_admin sa supabase/admin_only_writes.sql): ang
 // account ng kiosk ay may tamang password din, pero hindi admin.
+//
+// May 2FA (authenticator app sa telepono) kapag naka-on sa tab na
+// Security. Ang code ay hinihingi lang isang beses bawat 12 oras sa
+// bawat device — tingnan ang MFA_TRUST_MS sa ibaba.
+//
+// Ibinabalik: { needsCode: false } kapag tapos na, o
+// { needsCode: true, factorId } kapag kailangan pa ng code
+// (verifyAdminCode ang susunod).
 export const loginAdmin = async (email, password) => {
   const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
   if (error) throw error;
-  const { data: isAdmin, error: rpcError } = await supabase.rpc('is_kiosk_admin');
-  if (rpcError || isAdmin !== true) {
+  let factor;
+  try {
+    factor = await getVerifiedTotp();
+  } catch (factorError) {
     await supabase.auth.signOut({ scope: 'local' });
-    if (rpcError) throw rpcError;
-    // Gaya ng maling password, para iisa ang bilang at mensahe.
-    throw Object.assign(new Error('Invalid login credentials'), { code: 'invalid_credentials' });
+    throw factorError;
   }
-  return data;
+  if (factor && !hasMfaTrust(data.user.id)) return { needsCode: true, factorId: factor.id };
+  if (await confirmAdmin()) return { needsCode: false };
+  // Pinagkakatiwalaan pa ng device na ito, pero sarado na ang 12 oras sa
+  // database (hal. hindi naitala doon ang huling code). Code na lang ulit.
+  if (factor) {
+    clearMfaTrust();
+    return { needsCode: true, factorId: factor.id };
+  }
+  return rejectNonAdmin();
+};
+
+// Ang ikalawang hakbang ng login: ang 6 na numero mula sa authenticator.
+export const verifyAdminCode = async (factorId, code) => {
+  await verifyTotp(factorId, code);
+  if (await confirmAdmin()) return;
+  return rejectNonAdmin();
+};
+
+const confirmAdmin = async () => {
+  const { data: isAdmin, error } = await supabase.rpc('is_kiosk_admin');
+  if (error) {
+    await supabase.auth.signOut({ scope: 'local' });
+    throw error;
+  }
+  return isAdmin === true;
+};
+
+const rejectNonAdmin = async () => {
+  await supabase.auth.signOut({ scope: 'local' });
+  // Gaya ng maling password, para iisa ang bilang at mensahe.
+  throw Object.assign(new Error('Invalid login credentials'), { code: 'invalid_credentials' });
+};
+
+// ── 2FA ──────────────────────────────────────────────────────
+// Ang "pinagkakatiwalaan" ay nasa localStorage ng device: { userId, until }.
+// Hindi ito ang tunay na kandado — kahit sino ay kayang baguhin iyon.
+// Ang database ang may huling salita (supabase/admin_2fa.sql): tatanggapin
+// lang ang login na walang code kung may nag-code sa admin account sa loob
+// ng huling 12 oras.
+const MFA_TRUST_KEY = 'tagaytay-admin-2fa-trust';
+const MFA_TRUST_MS = 12 * 60 * 60 * 1000;
+
+const hasMfaTrust = (userId) => {
+  try {
+    const t = JSON.parse(localStorage.getItem(MFA_TRUST_KEY));
+    return t?.userId === userId && Number(t.until) > Date.now();
+  } catch { return false; }
+};
+
+const saveMfaTrust = (userId) => {
+  try {
+    localStorage.setItem(MFA_TRUST_KEY, JSON.stringify({ userId, until: Date.now() + MFA_TRUST_MS }));
+  } catch { /* walang storage — hihingi lang ulit ng code */ }
+};
+
+const clearMfaTrust = () => {
+  try { localStorage.removeItem(MFA_TRUST_KEY); } catch { /* walang storage */ }
+};
+
+// Ang authenticator na natapos nang i-set up. `null` kapag naka-off ang 2FA.
+const getVerifiedTotp = async () => {
+  const { data, error } = await supabase.auth.mfa.listFactors();
+  if (error) throw error;
+  return (data?.all || []).find((f) => f.factor_type === 'totp' && f.status === 'verified') || null;
+};
+
+// Sinusuri ang code. Kapag tama, aal2 na ang session at nagsisimula ang
+// 12 oras — sa device na ito at sa database.
+const verifyTotp = async (factorId, code) => {
+  const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId, code: String(code).trim() });
+  if (error) throw error;
+  // Hindi hinaharang ang login kapag pumalya ito (o hindi pa napapatakbo
+  // ang SQL): ang kapalit lang ay hihingi ulit ng code sa susunod.
+  const { error: markError } = await supabase.rpc('mark_admin_mfa_verified');
+  if (markError) console.warn('Hindi naitala ang 2FA sa database:', markError.message);
+  const { data: { session } = {} } = await supabase.auth.getSession();
+  if (session?.user?.id) saveMfaTrust(session.user.id);
+};
+
+// Maling code — ito lang ang binibilang na mali, gaya ng maling password.
+export const isWrongCode = (error) =>
+  error?.code === 'mfa_verification_failed'
+  || /invalid totp code/i.test(error?.message || '');
+
+// Tinanggihan ng Supabase dahil kailangan munang dumaan sa 2FA ang session.
+export const needsAal2 = (error) =>
+  error?.code === 'insufficient_aal' || /aal2/i.test(error?.message || '');
+
+// Para sa tab na Security.
+export const getAdmin2fa = async () => {
+  const factor = await getVerifiedTotp();
+  return { enabled: !!factor, factorId: factor?.id || null };
+};
+
+// Unang hakbang ng pag-on: ang QR na ii-scan ng authenticator app.
+export const startAdmin2faSetup = async () => {
+  // Burahin ang naiwang hindi natapos na setup — tatanggihan ng Supabase
+  // ang bagong may parehong pangalan.
+  const { data, error } = await supabase.auth.mfa.listFactors();
+  if (error) throw error;
+  for (const f of (data?.all || []).filter((x) => x.status === 'unverified')) {
+    const { error: unenrollError } = await supabase.auth.mfa.unenroll({ factorId: f.id });
+    if (unenrollError) throw unenrollError;
+  }
+  const { data: enrolled, error: enrollError } = await supabase.auth.mfa.enroll({
+    factorType: 'totp',
+    issuer: 'Tagaytay Kiosk',
+    friendlyName: 'Tagaytay Kiosk Admin',
+  });
+  if (enrollError) throw enrollError;
+  return { factorId: enrolled.id, uri: enrolled.totp.uri, secret: enrolled.totp.secret };
+};
+
+// Ikalawang hakbang: ang unang code mula sa app. Dito pa lang ito naka-on.
+export const finishAdmin2faSetup = (factorId, code) => verifyTotp(factorId, code);
+
+// Pag-off. Kailangan ng code kahit naka-login na: hindi dapat kayang
+// patayin ng sinumang nakadaan sa naiwang bukas na admin.
+export const disableAdmin2fa = async (factorId, code) => {
+  await verifyTotp(factorId, code);
+  const { error } = await supabase.auth.mfa.unenroll({ factorId });
+  if (error) throw error;
+  clearMfaTrust();
 };
 
 export const resetPasswordEmail = async (email) => {
@@ -76,7 +206,14 @@ export const resetPasswordEmail = async (email) => {
   return data;
 };
 
-export const changeAdminPassword = async (newPassword) => {
+// Kapag naka-on ang 2FA, tatanggihan ng Supabase ang pagpapalit ng
+// password hangga't hindi dumadaan sa code ang session (needsAal2).
+// Kaya puwedeng ibigay ang `code`: sinusuri muna iyon bago magpalit.
+export const changeAdminPassword = async (newPassword, code = '') => {
+  if (code) {
+    const factor = await getVerifiedTotp();
+    if (factor) await verifyTotp(factor.id, code);
+  }
   const { data, error } = await supabase.auth.updateUser({ password: newPassword });
   if (error) throw error;
   return data;
@@ -84,20 +221,22 @@ export const changeAdminPassword = async (newPassword) => {
 
 // Pagpapalit mula sa Admin Panel: sinusuri muna ang KASALUKUYANG
 // password, para hindi ito mapalitan ng sinumang nakadaan sa naiwang
-// bukas na admin. Sinusubukang mag-login ulit gamit iyon — kapag mali,
-// iyon ang error na ibinabato (tingnan ang isWrongPassword).
+// bukas na admin. Sa hiwalay na client ito nag-lo-login (passwordChecker)
+// para hindi mapalitan ang session ng admin — kapag mali, iyon ang error
+// na ibinabato (tingnan ang isWrongPassword).
 // Ang recovery link ay hindi dumadaan dito: hindi na alam ng gumagamit
 // niyon ang dating password, kaya changeAdminPassword pa rin doon.
-export const changeAdminPasswordWithCurrent = async (currentPassword, newPassword) => {
+export const changeAdminPasswordWithCurrent = async (currentPassword, newPassword, code = '') => {
   const { data: { user } = {}, error: userError } = await supabase.auth.getUser();
   if (userError) throw userError;
   if (!user?.email) throw new Error('Not logged in');
-  const { error: verifyError } = await supabase.auth.signInWithPassword({
+  const { error: verifyError } = await passwordChecker.auth.signInWithPassword({
     email: user.email,
     password: currentPassword,
   });
   if (verifyError) throw verifyError;
-  return changeAdminPassword(newPassword);
+  await passwordChecker.auth.signOut({ scope: 'local' });
+  return changeAdminPassword(newPassword, code);
 };
 
 export const logoutAdmin = async () => {

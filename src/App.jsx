@@ -19,7 +19,7 @@ import './index.css';
 import { QRCodeSVG } from 'qrcode.react';
 import Icon from './components/Icon';
 
-import { getAllOffices, initializeDatabase, incrementSearchCount, loginAdmin, resetPasswordEmail, logoutAdmin, onAuthChange, changeAdminPassword, getLiftStatuses } from './lib/api';
+import { getAllOffices, initializeDatabase, incrementSearchCount, loginAdmin, verifyAdminCode, isWrongCode, needsAal2, resetPasswordEmail, logoutAdmin, onAuthChange, changeAdminPassword, getLiftStatuses } from './lib/api';
 import { checkKioskSession, onKioskSessionChange } from './lib/kioskDevice';
 import {
   ADMIN_GUARD_KEY, MAX_LOGIN_ATTEMPTS, FRESH_GUARD,
@@ -261,6 +261,13 @@ export default function App() {
   const [adminEmailInput, setAdminEmailInput] = useState('');
   const [adminPasswordInput, setAdminPasswordInput] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  // Ikalawang hakbang ng login (2FA): ang factor na hinihingan ng code.
+  // null = nasa password pa.
+  const [adminMfaFactor, setAdminMfaFactor] = useState(null);
+  const [adminCodeInput, setAdminCodeInput] = useState('');
+  // Para "Mali ang code" lang kapag code nga ang mali — hindi ang mga
+  // maling password bago nito.
+  const [adminCodeWrong, setAdminCodeWrong] = useState(false);
   
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
 
@@ -268,6 +275,9 @@ export default function App() {
   // keyboard ang terminal — kung wala ito, hindi makakapasok ang admin.
   const authModalRef = useRef(null);
   const [recoveryPassword, setRecoveryPassword] = useState('');
+  // Naka-on ang 2FA: tatanggihan ang bagong password hangga't walang code.
+  const [recoveryNeedsCode, setRecoveryNeedsCode] = useState(false);
+  const [recoveryCode, setRecoveryCode] = useState('');
 
   const logoTaps = useRef({ count: 0, timer: null });
   useEffect(() => () => clearTimeout(logoTaps.current.timer), []);
@@ -537,10 +547,14 @@ export default function App() {
     setShowAdminLogin(false);
     setAdminEmailInput('');
     setAdminPasswordInput('');
+    setAdminMfaFactor(null);
+    setAdminCodeInput('');
     setShowPassword(false);
     setShowAbout(false);
     setShowRecoveryModal(false);
     setRecoveryPassword('');
+    setRecoveryNeedsCode(false);
+    setRecoveryCode('');
     setCurrentFloor(1);
     setTextScale(TEXT_SCALE_MIN);
     setStillThereDeadline(null);
@@ -630,13 +644,17 @@ export default function App() {
     setIsLoggingIn(true);
     
     try {
-      await loginAdmin(adminEmailInput, adminPasswordInput);
-      updateLoginGuard(FRESH_GUARD);
-      setShowAdminLogin(false);
-      setAdminEmailInput('');
+      const result = await loginAdmin(adminEmailInput, adminPasswordInput);
       setAdminPasswordInput('');
       setShowPassword(false);
-      setShowAdmin(true); 
+      if (result.needsCode) {
+        // Hindi pa binubura ang bilang ng mali: kapag binura dito, walang
+        // hangganan ang hula sa code ng sinumang may password.
+        setAdminMfaFactor(result.factorId);
+        setAdminCodeWrong(false);
+        return;
+      }
+      finishAdminLogin();
     } catch (error) {
       setAdminPasswordInput('');
       if (!isWrongPassword(error)) {
@@ -648,6 +666,59 @@ export default function App() {
       }
       updateLoginGuard(guardAfterFailure(loginGuard));
       setGuardNow(Date.now());
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const finishAdminLogin = () => {
+    updateLoginGuard(FRESH_GUARD);
+    setShowAdminLogin(false);
+    setAdminEmailInput('');
+    setAdminPasswordInput('');
+    setAdminMfaFactor(null);
+    setAdminCodeInput('');
+    setShowPassword(false);
+    setShowAdmin(true);
+  };
+
+  const closeAdminLogin = () => {
+    // Nakapasok na ang password sa ikalawang hakbang — huwag iwanang
+    // naka-login ang kalahating session.
+    if (adminMfaFactor) logoutAdmin();
+    setShowAdminLogin(false);
+    setAdminEmailInput('');
+    setAdminPasswordInput('');
+    setAdminMfaFactor(null);
+    setAdminCodeInput('');
+    setShowPassword(false);
+  };
+
+  const handleAdminCode = async (e) => {
+    e.preventDefault();
+    if (loginGuard.lockUntil > Date.now()) return;
+    setIsLoggingIn(true);
+    try {
+      await verifyAdminCode(adminMfaFactor, adminCodeInput);
+      finishAdminLogin();
+    } catch (error) {
+      setAdminCodeInput('');
+      if (!isWrongCode(error) && !isWrongPassword(error)) {
+        alert(lang === 'EN'
+          ? 'Could not reach the server. Check the internet connection and try again.'
+          : 'Hindi maabot ang server. Tingnan ang koneksyon sa internet at subukan ulit.');
+        return;
+      }
+      // Iisang bilang ang maling password at maling code.
+      setAdminCodeWrong(true);
+      const next = guardAfterFailure(loginGuard);
+      updateLoginGuard(next);
+      setGuardNow(Date.now());
+      // Naka-lock na, o hindi pala admin: balik sa simula.
+      if (next.lockUntil > Date.now() || isWrongPassword(error)) {
+        await logoutAdmin();
+        setAdminMfaFactor(null);
+      }
     } finally {
       setIsLoggingIn(false);
     }
@@ -1775,15 +1846,29 @@ export default function App() {
               }
               try {
                 setIsLoggingIn(true);
-                await changeAdminPassword(recoveryPassword);
+                await changeAdminPassword(recoveryPassword, recoveryNeedsCode ? recoveryCode : '');
                 alert(lang === 'EN'
                   ? 'Password successfully changed! You can now login.'
                   : 'Matagumpay na napalitan ang password! Maaari na kayong mag-login.');
                 setShowRecoveryModal(false);
                 setRecoveryPassword('');
+                setRecoveryNeedsCode(false);
+                setRecoveryCode('');
                 await logoutAdmin(); 
                 setShowAdminLogin(true); 
               } catch (err) {
+                if (needsAal2(err)) {
+                  setRecoveryNeedsCode(true);
+                  return alert(lang === 'EN'
+                    ? 'Two-step verification is on.\n\nEnter the 6-digit code from the authenticator app on the admin phone, then save again.'
+                    : 'Naka-on ang 2-step verification.\n\nIlagay ang 6 na numero mula sa authenticator app sa telepono ng admin, saka i-save ulit.');
+                }
+                if (isWrongCode(err)) {
+                  setRecoveryCode('');
+                  return alert(lang === 'EN'
+                    ? 'Wrong code. Check the authenticator app and try again.'
+                    : 'Mali ang code. Tingnan ang authenticator app at subukan ulit.');
+                }
                 alert(lang === 'EN'
                   ? 'Failed to update password. Link might be expired.'
                   : 'Hindi na-update ang password. Baka expired na ang link.');
@@ -1809,6 +1894,21 @@ export default function App() {
                 </button>
               </div>
 
+              {recoveryNeedsCode && (
+                <div className="k-field">
+                  <input
+                    type="text"
+                    className="k-input"
+                    value={recoveryCode}
+                    onChange={(e) => setRecoveryCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder={lang === 'EN' ? '6-digit code from the authenticator app' : '6 na numero mula sa authenticator app'}
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    required
+                  />
+                </div>
+              )}
+
               <button type="submit" className="k-btn k-btn--ok" disabled={isLoggingIn}>
                 {lang === 'EN'
                   ? (isLoggingIn ? 'Saving…' : 'Save New Password')
@@ -1824,14 +1924,64 @@ export default function App() {
         <div className="k-overlay">
           <div className="k-modal k-modal--sm" ref={authModalRef} style={{ textAlign: 'center' }}>
             <h2 className="k-modal-title" style={{ marginBottom: '10px' }}>
-              {lang === 'EN' ? 'Admin Access' : 'Pagpasok ng Admin'}
+              {adminMfaFactor
+                ? (lang === 'EN' ? 'Two-Step Verification' : '2-Step Verification')
+                : (lang === 'EN' ? 'Admin Access' : 'Pagpasok ng Admin')}
             </h2>
             <p className="k-modal-text k-modal-text--center">
-              {lang === 'EN'
-                ? 'Enter the admin email and password.'
-                : 'Ilagay ang email at password ng admin.'}
+              {adminMfaFactor
+                ? (lang === 'EN'
+                  ? 'Open the authenticator app on the admin phone and enter the 6-digit code. This is asked only once every 12 hours on this device.'
+                  : 'Buksan ang authenticator app sa telepono ng admin at ilagay ang 6 na numero. Isang beses lang ito hinihingi bawat 12 oras sa device na ito.')
+                : (lang === 'EN'
+                  ? 'Enter the admin email and password.'
+                  : 'Ilagay ang email at password ng admin.')}
             </p>
 
+            {adminMfaFactor ? (
+              <form onSubmit={handleAdminCode}>
+                <div className="k-field">
+                  <input
+                    type="text"
+                    className="k-input"
+                    value={adminCodeInput}
+                    onChange={(e) => setAdminCodeInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder={lang === 'EN' ? '6-digit code…' : '6 na numero…'}
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    style={{ textAlign: 'center', letterSpacing: '0.3em' }}
+                    disabled={loginLocked}
+                    required
+                    autoFocus
+                  />
+                </div>
+
+                {loginLocked ? (
+                  <p className="k-login-guard is-locked" role="alert">
+                    {lang === 'EN'
+                      ? `Too many wrong tries. Try again in ${formatCountdown(loginGuard.lockUntil - guardNow)}.`
+                      : `Sobrang daming maling subok. Subukan ulit sa loob ng ${formatCountdown(loginGuard.lockUntil - guardNow)}.`}
+                  </p>
+                ) : loginGuard.fails > 0 && (
+                  <p className="k-login-guard" role="alert">
+                    {lang === 'EN'
+                      ? `${adminCodeWrong ? 'Wrong code. ' : ''}${MAX_LOGIN_ATTEMPTS - loginGuard.fails} ${MAX_LOGIN_ATTEMPTS - loginGuard.fails === 1 ? 'try' : 'tries'} left before it locks.`
+                      : `${adminCodeWrong ? 'Mali ang code. ' : ''}${MAX_LOGIN_ATTEMPTS - loginGuard.fails} subok na lang bago ma-lock.`}
+                  </p>
+                )}
+
+                <div className="k-btn-row">
+                  <button type="button" className="k-btn k-btn--ghost" onClick={closeAdminLogin}>
+                    {lang === 'EN' ? 'Cancel' : 'Kanselahin'}
+                  </button>
+                  <button type="submit" className="k-btn k-btn--primary" disabled={isLoggingIn || loginLocked || adminCodeInput.length !== 6}>
+                    {lang === 'EN'
+                      ? (isLoggingIn ? 'Checking…' : 'Verify')
+                      : (isLoggingIn ? 'Sinusuri…' : 'I-verify')}
+                  </button>
+                </div>
+              </form>
+            ) : (
             <form onSubmit={handleAdminLogin}>
 
               <div className="k-field">
@@ -1891,7 +2041,7 @@ export default function App() {
                 <button
                   type="button"
                   className="k-btn k-btn--ghost"
-                  onClick={() => { setShowAdminLogin(false); setAdminEmailInput(''); setAdminPasswordInput(''); setShowPassword(false); }}
+                  onClick={closeAdminLogin}
                 >
                   {lang === 'EN' ? 'Cancel' : 'Kanselahin'}
                 </button>
@@ -1913,6 +2063,7 @@ export default function App() {
               </button>
 
             </form>
+            )}
           </div>
         </div>
       )}

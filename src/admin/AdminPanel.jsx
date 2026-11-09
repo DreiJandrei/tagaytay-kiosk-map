@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import VirtualKeyboard from '../components/VirtualKeyboard';
 import Icon from '../components/Icon';
 import { wantsOnScreenKeyboard, isFullScreenWindow } from '../lib/keyboardUtils';
@@ -13,6 +14,7 @@ import {
   getKioskVideos, saveKioskVideo, deleteKioskVideo, placeKioskVideo,
   uploadKioskVideoFile, deleteKioskVideoFile, isUploadedFile,
   logActivity, getActivityLogs,
+  getAdmin2fa, startAdmin2faSetup, finishAdmin2faSetup, disableAdmin2fa, isWrongCode, needsAal2,
 } from '../lib/api';
 import {
   getVideoTypes, getOrientations, detectVideoType, validateVideoUrl,
@@ -176,10 +178,31 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSavingPassword, setIsSavingPassword] = useState(false);
+  // Code ng authenticator sa pagpapalit ng password — kailangan ito ng
+  // Supabase kapag naka-on ang 2FA.
+  const [passwordCode, setPasswordCode] = useState('');
+
+  // 2FA. Binabasa tuwing binubuksan ang tab na Security.
+  //   twoFa:      { loading, enabled, factorId, error }
+  //   twoFaSetup: { factorId, uri, secret } habang sine-set up, o null
+  const [twoFa, setTwoFa] = useState({ loading: false, enabled: false, factorId: null, error: '' });
+  const [twoFaSetup, setTwoFaSetup] = useState(null);
+  const [twoFaCode, setTwoFaCode] = useState('');
+  const [twoFaBusy, setTwoFaBusy] = useState(false);
 
   // Activity log: binabasa tuwing binubuksan ang tab, para laging bago.
   // `missing` = hindi pa napapatakbo ang supabase/activity_logs.sql.
   const [activity, setActivity] = useState({ logs: [], missing: false, loading: false, error: '' });
+  const loadTwoFa = async () => {
+    setTwoFa((s) => ({ ...s, loading: true, error: '' }));
+    try {
+      const { enabled, factorId } = await getAdmin2fa();
+      setTwoFa({ loading: false, enabled, factorId, error: '' });
+    } catch (error) {
+      setTwoFa((s) => ({ ...s, loading: false, error: error?.message || String(error) }));
+    }
+  };
+
   const loadActivity = async () => {
     setActivity((a) => ({ ...a, loading: true, error: '' }));
     try {
@@ -749,7 +772,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
       id: item?.id || null,
       // Ginugupit din ang lumang teksto na nauna pa sa hangganan — para ang
       // nasa kahon ang mismong maisa-save, walang sorpresang nawawala.
-      text: (item?.text || '').slice(0, TEXT_LIMITS[kind]),
+      // Malalaking titik din ang luma, gaya ng bago.
+      text: (item?.text || '').toUpperCase().slice(0, TEXT_LIMITS[kind]),
       starts_local: toLocalInput(item?.starts_at),
       ends_local: toLocalInput(item?.ends_at),
     };
@@ -763,9 +787,10 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
   // Ginugupit dito, hindi lang sa `maxLength` ng textarea: ang touchscreen
   // keyboard ay direktang nagtatakda ng value, at hindi nito iginagalang
   // ang maxLength. Isang pigil lang ang dinadaanan ng lahat ng pag-type.
+  // Malalaking titik lang ang teksto, gaya ng pangalan ng opisina.
   const changeAnnDraft = (field, value) => setAnnEditor((d) => ({
     ...d,
-    [field]: field === 'text' ? value.slice(0, annLimit) : value,
+    [field]: field === 'text' ? value.toUpperCase().slice(0, annLimit) : value,
   }));
 
   const closeAnnEditor = () => {
@@ -797,8 +822,9 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     try {
       const items = await saveTextItem(kind, {
         id,
-        // Huling pigil sa haba, sakaling may nakalusot sa textarea.
-        text: text.slice(0, TEXT_LIMITS[kind]),
+        // Huling pigil sa haba at sa maliit na titik, sakaling may
+        // nakalusot sa textarea.
+        text: text.toUpperCase().slice(0, TEXT_LIMITS[kind]),
         starts_at: fromLocalInput(startsLocal),
         ends_at: fromLocalInput(endsLocal),
       });
@@ -846,6 +872,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     'advisory.create': t('Added advisory', 'Nagdagdag ng paalala'),
     'advisory.update': t('Edited advisory', 'Binago ang paalala'),
     'advisory.delete': t('Deleted advisory', 'Binura ang paalala'),
+    '2fa.enable': t('Turned on 2FA', 'In-on ang 2FA'),
+    '2fa.disable': t('Turned off 2FA', 'In-off ang 2FA'),
   }[action] || action);
 
   const logFieldLabel = (field) => ({
@@ -936,11 +964,12 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
 
     setIsSavingPassword(true);
     try {
-      await changeAdminPasswordWithCurrent(currentPassword, newPassword);
+      await changeAdminPasswordWithCurrent(currentPassword, newPassword, twoFa.enabled ? passwordCode : '');
       writeLoginGuard(ADMIN_GUARD_KEY, FRESH_GUARD);
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
+      setPasswordCode('');
       alert(t(
         'Admin Password updated securely in the cloud!\n\nYou will now be logged out. Please login again using your new password.',
         'Ligtas nang na-update ang Admin Password sa cloud!\n\nMa-lo-log out po kayo ngayon. Mag-login ulit gamit ang bagong password.',
@@ -965,6 +994,21 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
           `Mali ang kasalukuyang password. ${left} subok na lang bago ma-lock.`,
         ));
       }
+      if (isWrongCode(error)) {
+        setPasswordCode('');
+        return alert(t(
+          'Wrong authenticator code. Check the app and try again.',
+          'Mali ang code ng authenticator. Tingnan ang app at subukan ulit.',
+        ));
+      }
+      if (needsAal2(error)) {
+        // Naka-on pala ang 2FA (hal. sa ibang device) — ipakita ang kahon.
+        loadTwoFa();
+        return alert(t(
+          'Two-step verification is on. Enter the 6-digit code from the authenticator app, then save again.',
+          'Naka-on ang 2-step verification. Ilagay ang 6 na numero mula sa authenticator app, saka i-save ulit.',
+        ));
+      }
       alert(t(
         'Failed to update password. Check the internet connection and make sure you are still logged in.',
         'Hindi na-update ang password. Tingnan ang koneksyon sa internet at siguraduhing naka-login pa kayo.',
@@ -972,6 +1016,52 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     } finally {
       setIsSavingPassword(false);
     }
+  };
+
+  const handleStartTwoFa = async () => {
+    setTwoFaBusy(true);
+    try {
+      setTwoFaSetup(await startAdmin2faSetup());
+      setTwoFaCode('');
+    } catch (error) {
+      alert(t(
+        `Could not start the setup.\n\n${error?.message || error}`,
+        `Hindi masimulan ang setup.\n\n${error?.message || error}`,
+      ));
+    } finally { setTwoFaBusy(false); }
+  };
+
+  // Iisang form para sa pag-on (may twoFaSetup) at pag-off (wala).
+  const handleTwoFaCode = async (e) => {
+    e.preventDefault();
+    const turningOn = !!twoFaSetup;
+    if (!turningOn && !window.confirm(t(
+      'Turn off two-step verification?\n\nLogging in will only need the password again.',
+      'I-off ang 2-step verification?\n\nPassword na lang ulit ang kailangan sa pag-login.',
+    ))) return;
+    setTwoFaBusy(true);
+    try {
+      if (turningOn) {
+        await finishAdmin2faSetup(twoFaSetup.factorId, twoFaCode);
+        setTwoFaSetup(null);
+      } else {
+        await disableAdmin2fa(twoFa.factorId, twoFaCode);
+      }
+      setTwoFaCode('');
+      logActivity(turningOn ? '2fa.enable' : '2fa.disable', '', { device: deviceLabel() });
+      await loadTwoFa();
+      alert(turningOn
+        ? t(
+            'Two-step verification is on.\n\nThe code will be asked when logging in, once every 12 hours on each device.',
+            'Naka-on na ang 2-step verification.\n\nHihingin ang code sa pag-login, isang beses bawat 12 oras sa bawat device.',
+          )
+        : t('Two-step verification is off.', 'Naka-off na ang 2-step verification.'));
+    } catch (error) {
+      setTwoFaCode('');
+      alert(isWrongCode(error)
+        ? t('Wrong code. Check the authenticator app and try again.', 'Mali ang code. Tingnan ang authenticator app at subukan ulit.')
+        : t(`Not saved.\n\n${error?.message || error}`, `Hindi na-save.\n\n${error?.message || error}`));
+    } finally { setTwoFaBusy(false); }
   };
 
   return (
@@ -1030,7 +1120,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
             {t('Activity Log', 'Talaan ng Pagbabago')}
           </button>
           {!onKioskScreen && (
-            <button className={`adm-tab${activeTab === 'security' ? ' active' : ''}`} onClick={() => setActiveTab('security')}>
+            <button className={`adm-tab${activeTab === 'security' ? ' active' : ''}`} onClick={() => { setActiveTab('security'); loadTwoFa(); }}>
               {t('Admin Password', 'Password ng Admin')}
             </button>
           )}
@@ -1697,11 +1787,21 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   autoFocus
                   maxLength={annLimit}
                   value={annEditor.text}
-                  onChange={(e) => changeAnnDraft('text', e.target.value)}
+                  onChange={(e) => {
+                    // Gaya ng Title ng opisina: ibinabalik ang cursor sa
+                    // puwesto nito pagkatapos gawing malaking titik.
+                    const el = e.target;
+                    const { selectionStart: start, selectionEnd: end } = el;
+                    changeAnnDraft('text', el.value);
+                    requestAnimationFrame(() => {
+                      try { el.setSelectionRange(start, end); } catch { /* wala nang focus */ }
+                    });
+                  }}
+                  autoCapitalize="characters"
                   placeholder={
                     annEditor.kind === 'announcement'
-                      ? t('e.g. No classes tomorrow due to the typhoon…', 'hal. Walang pasok bukas dahil sa bagyo…')
-                      : t('e.g. Please secure your belongings…', 'hal. Pakiingatan po ang inyong mga gamit…')
+                      ? t('e.g. NO CLASSES TOMORROW DUE TO THE TYPHOON…', 'hal. WALANG PASOK BUKAS DAHIL SA BAGYO…')
+                      : t('e.g. PLEASE SECURE YOUR BELONGINGS…', 'hal. PAKIINGATAN PO ANG INYONG MGA GAMIT…')
                   }
                 />
 
@@ -1719,12 +1819,12 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                 <p className="adm-hint">
                   {annEditor.kind === 'announcement'
                     ? t(
-                        `Only 3 lines fit on the kiosk — anything past that is cut off, so the limit here is ${annLimit} characters.`,
-                        `Hanggang 3 linya lang ang kasya sa kiosk — puputulin ang sobra, kaya ${annLimit} na titik lang ang hangganan dito.`,
+                        `Capital letters only. Only 3 lines fit on the kiosk — anything past that is cut off, so the limit here is ${annLimit} characters.`,
+                        `Malalaking titik lang. Hanggang 3 linya lang ang kasya sa kiosk — puputulin ang sobra, kaya ${annLimit} na titik lang ang hangganan dito.`,
                       )
                     : t(
-                        `One line per message. They are strung together with “•”. Keep it short — the limit is ${annLimit} characters so it can still be read while it scrolls.`,
-                        `Isang linya bawat mensahe. Pinagsasabit ang mga ito ng “•”. Panatilihing maikli — ${annLimit} na titik lang ang hangganan para mabasa pa habang gumagalaw.`,
+                        `Capital letters only. One line per message. They are strung together with “•”. Keep it short — the limit is ${annLimit} characters so it can still be read while it scrolls.`,
+                        `Malalaking titik lang. Isang linya bawat mensahe. Pinagsasabit ang mga ito ng “•”. Panatilihing maikli — ${annLimit} na titik lang ang hangganan para mabasa pa habang gumagalaw.`,
                       )}
                 </p>
 
@@ -2234,12 +2334,121 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   minLength="6"
                 />
               </div>
+              {twoFa.enabled && (
+                <div>
+                  <label className="k-label">
+                    {t('Code from the authenticator app', 'Code mula sa authenticator app')}
+                  </label>
+                  <input
+                    type="text"
+                    className="k-input"
+                    value={passwordCode}
+                    onChange={(e) => setPasswordCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder={t('6-digit code…', '6 na numero…')}
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    required
+                  />
+                </div>
+              )}
               <button type="submit" className="k-btn k-btn--primary" disabled={isSavingPassword}>
                 {isSavingPassword
                   ? `${t('Checking…', 'Sinusuri…')}`
                   : `${t('Save Password to Cloud', 'I-save ang Password sa Cloud')}`}
               </button>
             </form>
+
+            <h3 style={{ marginTop: '32px' }}>{t('Two-Step Verification (2FA)', '2-Step Verification (2FA)')}</h3>
+            <p className="adm-hint">
+              {t(
+                'Besides the password, logging in asks for a 6-digit code from an authenticator app '
+                + '(Google Authenticator, Microsoft Authenticator…) on the admin phone. The code is asked '
+                + 'only once every 12 hours on each device. Lost the phone? Delete the MFA factor of the '
+                + 'admin user in Supabase → Authentication → Users.',
+                'Bukod sa password, hihingi ang login ng 6 na numero mula sa authenticator app '
+                + '(Google Authenticator, Microsoft Authenticator…) sa telepono ng admin. Isang beses lang '
+                + 'ito hinihingi bawat 12 oras sa bawat device. Nawala ang telepono? Burahin ang MFA factor '
+                + 'ng admin user sa Supabase → Authentication → Users.',
+              )}
+            </p>
+
+            {twoFa.loading ? (
+              <p className="adm-hint">{t('Checking…', 'Sinusuri…')}</p>
+            ) : twoFa.error ? (
+              <p className="adm-hint">
+                {t('Could not read the 2FA status: ', 'Hindi mabasa ang kalagayan ng 2FA: ')}{twoFa.error}{' '}
+                <button type="button" className="k-btn k-btn--link" onClick={loadTwoFa}>{t('Try again', 'Subukan ulit')}</button>
+              </p>
+            ) : (
+              <form className="adm-form" onSubmit={handleTwoFaCode} style={{ maxWidth: '480px', flex: 'none' }}>
+                <p className="adm-hint">
+                  <strong>
+                    {twoFa.enabled ? t('Status: ON', 'Kalagayan: NAKA-ON') : t('Status: OFF', 'Kalagayan: NAKA-OFF')}
+                  </strong>
+                </p>
+
+                {!twoFa.enabled && !twoFaSetup && (
+                  <button type="button" className="k-btn k-btn--primary" onClick={handleStartTwoFa} disabled={twoFaBusy}>
+                    {twoFaBusy ? t('Starting…', 'Sinisimulan…') : t('Turn On 2FA', 'I-on ang 2FA')}
+                  </button>
+                )}
+
+                {twoFaSetup && (
+                  <div>
+                    <label className="k-label">
+                      {t(
+                        '1 · Scan this with the authenticator app on the admin phone',
+                        '1 · I-scan ito gamit ang authenticator app sa telepono ng admin',
+                      )}
+                    </label>
+                    <div style={{ background: '#fff', padding: '12px', display: 'inline-block', borderRadius: '8px' }}>
+                      <QRCodeSVG value={twoFaSetup.uri} size={180} />
+                    </div>
+                    <p className="adm-hint">
+                      {t('Cannot scan? Type this key in the app: ', 'Hindi ma-scan? I-type ang key na ito sa app: ')}
+                      <code style={{ wordBreak: 'break-all' }}>{twoFaSetup.secret}</code>
+                    </p>
+                  </div>
+                )}
+
+                {(twoFaSetup || twoFa.enabled) && (
+                  <div>
+                    <label className="k-label">
+                      {twoFaSetup
+                        ? t('2 · Enter the 6-digit code shown in the app', '2 · Ilagay ang 6 na numerong nasa app')
+                        : t('Code from the app (to turn it off)', 'Code mula sa app (para i-off)')}
+                    </label>
+                    <input
+                      type="text"
+                      className="k-input"
+                      value={twoFaCode}
+                      onChange={(e) => setTwoFaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      placeholder={t('6-digit code…', '6 na numero…')}
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      required
+                    />
+                  </div>
+                )}
+
+                {twoFaSetup && (
+                  <div className="k-btn-row">
+                    <button type="button" className="k-btn k-btn--ghost" onClick={() => { setTwoFaSetup(null); setTwoFaCode(''); }} disabled={twoFaBusy}>
+                      {t('Cancel', 'Kanselahin')}
+                    </button>
+                    <button type="submit" className="k-btn k-btn--primary" disabled={twoFaBusy || twoFaCode.length !== 6}>
+                      {twoFaBusy ? t('Checking…', 'Sinusuri…') : t('Verify & Turn On', 'I-verify at I-on')}
+                    </button>
+                  </div>
+                )}
+
+                {twoFa.enabled && (
+                  <button type="submit" className="k-btn k-btn--ghost" disabled={twoFaBusy || twoFaCode.length !== 6}>
+                    {twoFaBusy ? t('Checking…', 'Sinusuri…') : t('Turn Off 2FA', 'I-off ang 2FA')}
+                  </button>
+                )}
+              </form>
+            )}
           </div>
         )}
       </div>
