@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import tagaytaySeal from './assets/tagaytay-seal.png';
 import cityhallBg from './assets/cityhall.jpg';
 import WelcomeVideo from './components/WelcomeVideo';
@@ -10,6 +10,64 @@ import { isLiveNow } from './lib/schedule';
 
 // Kapag maraming anunsyo ang sabay na nasa iskedyul, salitan sila sa kard.
 const BOARD_ROTATE_MS = 12000;
+
+// Gaano katagal sa kard ang isang anunsyo: sapat para mabasa ang buo
+// habang umaakyat (mga 16 na titik bawat segundo), at hindi bababa sa
+// BOARD_ROTATE_MS para sa maiikli.
+const boardSlotMs = (item) => Math.max(BOARD_ROTATE_MS, 4000 + item.text.length * 60);
+
+// Alin ang nasa kard ngayon, kailan ito nagsimula, at gaano katagal.
+// Galing sa orasan lang, kaya pareho ang pagkakasunod kahit mag-refresh.
+const pickBoardSlot = (items, nowMs) => {
+  const slots = items.map(boardSlotMs);
+  const cycle = slots.reduce((a, b) => a + b, 0);
+  let start = nowMs - (nowMs % cycle);
+  let index = 0;
+  while (nowMs >= start + slots[index]) {
+    start += slots[index];
+    index += 1;
+  }
+  return { index, start, duration: slots[index] };
+};
+
+// Ang teksto sa kard. Kapag mas mahaba kaysa sa kasya, umaakyat ito sa
+// buong tagal ng anunsyo (tingnan ang .welcome-board-scroll sa CSS).
+// `elapsed`: ilang ms na ang lumipas sa slot nang lumabas ito — para tama
+// ang puwesto kahit kabubukas lang ng welcome screen sa gitna ng slot.
+function BoardText({ text, duration, elapsed }) {
+  const boxRef = useRef(null);
+  const textRef = useRef(null);
+  const [distance, setDistance] = useState(0);
+  const [delay] = useState(-elapsed);
+
+  useLayoutEffect(() => {
+    const box = boxRef.current;
+    const inner = textRef.current;
+    if (!box || !inner) return undefined;
+    const measure = () => setDistance(Math.max(0, inner.offsetHeight - box.clientHeight));
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(box);
+    observer.observe(inner);
+    return () => observer.disconnect();
+  }, [text]);
+
+  return (
+    <div className="welcome-board-body" ref={boxRef}>
+      <div
+        ref={textRef}
+        className={distance > 0 ? 'welcome-board-scroll' : undefined}
+        style={distance > 0 ? {
+          '--board-scroll': `-${distance}px`,
+          animationDuration: `${duration}ms`,
+          animationDelay: `${delay}ms`,
+        } : undefined}
+      >
+        {text}
+      </div>
+    </div>
+  );
+}
 
 export default function WelcomeScreen({ onStart }) {
   const [settings, setSettings] = useState({});
@@ -68,7 +126,8 @@ export default function WelcomeScreen({ onStart }) {
   const advisoryLines = liveAdvisories.flatMap((item) => item.text.split('\n').filter((l) => l.trim()));
   const hasAdvisory = advisoryLines.length > 0;
   const hasAnnouncement = liveAnnouncements.length > 0;
-  const boardIndex = hasAnnouncement ? Math.floor(nowMs / BOARD_ROTATE_MS) % liveAnnouncements.length : 0;
+  const board = hasAnnouncement ? pickBoardSlot(liveAnnouncements, nowMs) : null;
+  const boardIndex = board ? board.index : 0;
   // Pareho ang bilis ng pagbasa kahit humaba ang teksto: habang dumarami ang
   // nagpapatong na paalala, humahaba rin ang isang ikot.
   const marqueeSeconds = Math.max(20, Math.round(advisoryLines.join(' ').length / 6));
@@ -197,9 +256,12 @@ export default function WelcomeScreen({ onStart }) {
                 <span className="welcome-board-count">{boardIndex + 1}/{liveAnnouncements.length}</span>
               )}
             </div>
-            <div className="welcome-board-body" key={liveAnnouncements[boardIndex].id}>
-              {liveAnnouncements[boardIndex].text}
-            </div>
+            <BoardText
+              key={`${liveAnnouncements[boardIndex].id}-${board.start}`}
+              text={liveAnnouncements[boardIndex].text}
+              duration={board.duration}
+              elapsed={nowMs - board.start}
+            />
           </div>
         )}
 

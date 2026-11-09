@@ -1258,13 +1258,23 @@ img { max-width: 100%; }
 }
 .welcome-board-icon { font-size: 1.9rem; }
 .welcome-board-body {
+  --board-lines: 3;
   color: #EAF4FF; font-size: 1.15rem; line-height: 1.6;
   font-weight: 500; white-space: pre-line;
   min-height: 0; overflow: hidden;
-  /* Pinuputol ang sobrang mahabang anunsyo imbes na siksikin pataas ang
-     hero at ang video na nasa itaas nito. */
-  display: -webkit-box; -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3; line-clamp: 3;
+  /* Hanggang ilang linya lang ang taas ng kard, imbes na siksikin pataas
+     ang hero at ang video na nasa itaas nito. Ang mas mahaba ay dahan-
+     dahang umaakyat sa loob (.welcome-board-scroll). */
+  max-height: calc(1.6em * var(--board-lines));
+}
+/* Mahabang anunsyo: sandaling nakahinto sa simula para mabasa ang unang
+   linya, saka dahan-dahang umaakyat hanggang lumabas ang huli, at nakahinto
+   ulit doon. Ang tagal at kung gaano kalayo ay itinatakda ng BoardText sa
+   WelcomeScreen.jsx — kasinghaba ng oras ng anunsyo sa kard. */
+.welcome-board-scroll { animation: boardScroll linear both; }
+@keyframes boardScroll {
+  0%, 12% { transform: translateY(0); }
+  90%, 100% { transform: translateY(var(--board-scroll)); }
 }
 /* ── Video panel: mga event na naka-post sa FB Page ng lungsod ── */
 .welcome-video-card {
@@ -1460,7 +1470,7 @@ img { max-width: 100%; }
   .welcome-board-head { padding-bottom: 8px; margin-bottom: 8px; }
   .welcome-board-head h2 { font-size: 1.15rem; }
   .welcome-board-icon { font-size: 1.4rem; }
-  .welcome-board-body { font-size: .95rem; -webkit-line-clamp: 2; line-clamp: 2; }
+  .welcome-board-body { font-size: .95rem; --board-lines: 2; }
 }
 
 /* ── Patayong anunsyo sa kanang dulo ───────────────────────────

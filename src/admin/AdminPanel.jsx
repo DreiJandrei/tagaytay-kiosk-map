@@ -32,11 +32,11 @@ const BLANK_VIDEO = {
 };
 
 // Hangganan ng haba ng dalawang teksto sa welcome screen. Hindi ito basta
-// bilang: 3 linya lang ang kasya sa announcement card at puputulin ng kiosk
-// ang sobra, at ang marquee ay kailangang mabasa habang gumagalaw. Kaya
-// dito pa lang sa admin pinipigilan — para hindi magsulat ang staff ng
-// hindi naman makikita ng bisita.
-const TEXT_LIMITS = { announcement: 300, advisory: 150 };
+// bilang: 3 linya lang ang taas ng announcement card, kaya ang mas mahaba
+// ay dahan-dahang umaakyat doon (BoardText sa WelcomeScreen.jsx) — at
+// humahaba ang oras nito sa kard. Ang marquee naman ay kailangang mabasa
+// habang gumagalaw. Kaya dito pa lang sa admin pinipigilan.
+const TEXT_LIMITS = { announcement: 1500, advisory: 150 };
 
 // Ilang video/larawan ang puwedeng nakatala, hindi kasama ang archive. Mas
 // marami na ito kaysa sa dating lima dahil naka-iskedyul na: ang nasa iskedyul
@@ -1731,8 +1731,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                 <p className="adm-hint">
                   {annEditor.kind === 'announcement'
                     ? t(
-                        `Capital letters only. Only 3 lines fit on the kiosk — anything past that is cut off, so the limit here is ${annLimit} characters.`,
-                        `Malalaking titik lang. Hanggang 3 linya lang ang kasya sa kiosk — puputulin ang sobra, kaya ${annLimit} na titik lang ang hangganan dito.`,
+                        `Capital letters only. Up to ${annLimit} characters. Only 3 lines fit on the kiosk card at once — longer announcements scroll up slowly and stay on screen longer so the whole text can be read.`,
+                        `Malalaking titik lang. Hanggang ${annLimit} na titik. 3 linya lang ang sabay na kasya sa kard ng kiosk — dahan-dahang aakyat ang mas mahabang anunsyo at mas matagal itong nakalabas para mabasa ang buo.`,
                       )
                     : t(
                         `Capital letters only. One line per message. They are strung together with “•”. Keep it short — the limit is ${annLimit} characters so it can still be read while it scrolls.`,
