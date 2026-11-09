@@ -110,6 +110,25 @@ const deviceLabel = () => (isKioskScreen() ? 'Kiosk' : 'Laptop');
 // ── Pangalan ng tanggapan: bawal ang kapareho ──────────────────
 // Pinaghahambing nang walang pakialam sa malaki/maliit na titik at sa
 // sobrang espasyo: "City Treasurer  office" = "CITY TREASURER OFFICE".
+// Malaking titik ang tina-type sa teksto ng anunsyo at paalala — pero ang
+// bagong tina-type lang, hindi ang buong kahon. Kaya hindi nagagalaw ang
+// teksto ng anunsyo na kinopya (hal. sa Facebook ng lungsod) kapag may
+// idinagdag pang salita sa gitna o dulo nito.
+const upperTyped = (prev, next) => {
+  let head = 0;
+  while (head < prev.length && head < next.length && prev[head] === next[head]) head += 1;
+  let tail = 0;
+  while (
+    tail < prev.length - head && tail < next.length - head
+    && prev[prev.length - 1 - tail] === next[next.length - 1 - tail]
+  ) tail += 1;
+  return next.slice(0, head) + next.slice(head, next.length - tail).toUpperCase() + next.slice(next.length - tail);
+};
+
+// Kinopya ba (paste o hinila papasok) ang pagbabago, at hindi tinype? Ang
+// touchscreen keyboard ay walang inputType, kaya tina-type ang turing dito.
+const isPasted = (e) => /^insertFrom(Paste|Drop)/.test(e.nativeEvent?.inputType || '');
+
 const normalizeTitle = (title) => String(title || '').trim().replace(/\s+/g, ' ').toUpperCase();
 
 // Mga pangalang talagang marami sa gusali — pangalan ng uri ng kwarto,
@@ -748,8 +767,10 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
       id: item?.id || null,
       // Ginugupit din ang lumang teksto na nauna pa sa hangganan — para ang
       // nasa kahon ang mismong maisa-save, walang sorpresang nawawala.
-      // Malalaking titik din ang luma, gaya ng bago.
-      text: (item?.text || '').toUpperCase().slice(0, TEXT_LIMITS[kind]),
+      // Ang anunsyo ay iniiwan kung ano ang titik (baka kinopya); ang
+      // paalala ay malaking titik lang.
+      text: (kind === 'advisory' ? (item?.text || '').toUpperCase() : (item?.text || ''))
+        .slice(0, TEXT_LIMITS[kind]),
       starts_local: toLocalInput(item?.starts_at),
       ends_local: toLocalInput(item?.ends_at),
     };
@@ -763,10 +784,10 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
   // Ginugupit dito, hindi lang sa `maxLength` ng textarea: ang touchscreen
   // keyboard ay direktang nagtatakda ng value, at hindi nito iginagalang
   // ang maxLength. Isang pigil lang ang dinadaanan ng lahat ng pag-type.
-  // Malalaking titik lang ang teksto, gaya ng pangalan ng opisina.
+  // Ang titik ay inaayos na bago pa umabot dito (tingnan ang textarea).
   const changeAnnDraft = (field, value) => setAnnEditor((d) => ({
     ...d,
-    [field]: field === 'text' ? value.toUpperCase().slice(0, annLimit) : value,
+    [field]: field === 'text' ? value.slice(0, annLimit) : value,
   }));
 
   const closeAnnEditor = () => {
@@ -798,9 +819,9 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
     try {
       const items = await saveTextItem(kind, {
         id,
-        // Huling pigil sa haba at sa maliit na titik, sakaling may
-        // nakalusot sa textarea.
-        text: text.toUpperCase().slice(0, TEXT_LIMITS[kind]),
+        // Huling pigil sa haba (at sa maliit na titik ng paalala), sakaling
+        // may nakalusot sa textarea.
+        text: (kind === 'advisory' ? text.toUpperCase() : text).slice(0, TEXT_LIMITS[kind]),
         starts_at: fromLocalInput(startsLocal),
         ends_at: fromLocalInput(endsLocal),
       });
@@ -1700,11 +1721,18 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   maxLength={annLimit}
                   value={annEditor.text}
                   onChange={(e) => {
-                    // Gaya ng Title ng opisina: ibinabalik ang cursor sa
-                    // puwesto nito pagkatapos gawing malaking titik.
+                    // Malaking titik ang tina-type. Sa anunsyo lang,
+                    // iniiwan ang kinopya kung ano ang titik nito; ang
+                    // paalala ay malaking titik lahat. Gaya ng Title ng
+                    // opisina, ibinabalik ang cursor sa puwesto nito.
                     const el = e.target;
                     const { selectionStart: start, selectionEnd: end } = el;
-                    changeAnnDraft('text', el.value);
+                    const keepCase = annEditor.kind === 'announcement' && isPasted(e);
+                    changeAnnDraft('text', keepCase
+                      ? el.value
+                      : annEditor.kind === 'advisory'
+                        ? el.value.toUpperCase()
+                        : upperTyped(annEditor.text, el.value));
                     requestAnimationFrame(() => {
                       try { el.setSelectionRange(start, end); } catch { /* wala nang focus */ }
                     });
@@ -1731,8 +1759,8 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                 <p className="adm-hint">
                   {annEditor.kind === 'announcement'
                     ? t(
-                        `Capital letters only. Up to ${annLimit} characters. Only 3 lines fit on the kiosk card at once — longer announcements scroll up slowly and stay on screen longer so the whole text can be read.`,
-                        `Malalaking titik lang. Hanggang ${annLimit} na titik. 3 linya lang ang sabay na kasya sa kard ng kiosk — dahan-dahang aakyat ang mas mahabang anunsyo at mas matagal itong nakalabas para mabasa ang buo.`,
+                        `Typing is in capital letters; pasted text (e.g. from Facebook) keeps its letters. Up to ${annLimit} characters. Only 3 lines fit on the kiosk card at once — longer announcements scroll up slowly and stay on screen longer so the whole text can be read.`,
+                        `Malaking titik ang tina-type; ang kinopya (hal. mula sa Facebook) ay iniiwan kung ano ang titik. Hanggang ${annLimit} na titik. 3 linya lang ang sabay na kasya sa kard ng kiosk — dahan-dahang aakyat ang mas mahabang anunsyo at mas matagal itong nakalabas para mabasa ang buo.`,
                       )
                     : t(
                         `Capital letters only. One line per message. They are strung together with “•”. Keep it short — the limit is ${annLimit} characters so it can still be read while it scrolls.`,
