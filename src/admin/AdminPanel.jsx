@@ -129,6 +129,12 @@ const upperTyped = (prev, next) => {
 // touchscreen keyboard ay walang inputType, kaya tina-type ang turing dito.
 const isPasted = (e) => /^insertFrom(Paste|Drop)/.test(e.nativeEvent?.inputType || '');
 
+// Ang "bold" at "italic" ng Facebook ay hindi tunay na letra kundi mga
+// simbolong kamukha nito (𝐮𝐧𝐭𝐢𝐥 → until). Hindi sila kayang gawing malaking
+// titik at ibang font ang lumalabas sa kiosk — kaya halo-halo at pangit.
+// Ginagawa silang karaniwang letra, nang hindi binabago ang laki ng titik.
+const plainText = (text) => String(text ?? '').normalize('NFKC');
+
 const normalizeTitle = (title) => String(title || '').trim().replace(/\s+/g, ' ').toUpperCase();
 
 // Mga pangalang talagang marami sa gusali — pangalan ng uri ng kwarto,
@@ -183,6 +189,10 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
   //   { kind, id, text, starts_local, ends_local }, o null kapag sarado.
   const [annEditor, setAnnEditor] = useState(null);
   const [annSnapshot, setAnnSnapshot] = useState('');
+  // Itinataas ng onPaste/onDrop ng textarea, binababa sa kasunod na
+  // onChange. Pangalawang bantay ito sa inputType (isPasted) — may mga
+  // browser na hindi nagbibigay niyon.
+  const annPasted = useRef(false);
 
   // Ang nakatala sa database (`liftSaved`) at ang pinipili pa lang
   // (`liftDraft`), bawat isa ay { elevator, escalator }. Hiwalay sila para
@@ -769,7 +779,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
       // nasa kahon ang mismong maisa-save, walang sorpresang nawawala.
       // Ang anunsyo ay iniiwan kung ano ang titik (baka kinopya); ang
       // paalala ay malaking titik lang.
-      text: (kind === 'advisory' ? (item?.text || '').toUpperCase() : (item?.text || ''))
+      text: (kind === 'advisory' ? plainText(item?.text).toUpperCase() : plainText(item?.text))
         .slice(0, TEXT_LIMITS[kind]),
       starts_local: toLocalInput(item?.starts_at),
       ends_local: toLocalInput(item?.ends_at),
@@ -821,7 +831,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
         id,
         // Huling pigil sa haba (at sa maliit na titik ng paalala), sakaling
         // may nakalusot sa textarea.
-        text: (kind === 'advisory' ? text.toUpperCase() : text).slice(0, TEXT_LIMITS[kind]),
+        text: (kind === 'advisory' ? plainText(text).toUpperCase() : plainText(text)).slice(0, TEXT_LIMITS[kind]),
         starts_at: fromLocalInput(startsLocal),
         ends_at: fromLocalInput(endsLocal),
       });
@@ -1727,16 +1737,20 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                     // opisina, ibinabalik ang cursor sa puwesto nito.
                     const el = e.target;
                     const { selectionStart: start, selectionEnd: end } = el;
-                    const keepCase = annEditor.kind === 'announcement' && isPasted(e);
-                    changeAnnDraft('text', keepCase
-                      ? el.value
-                      : annEditor.kind === 'advisory'
-                        ? el.value.toUpperCase()
-                        : upperTyped(annEditor.text, el.value));
+                    const pasted = annPasted.current || isPasted(e);
+                    annPasted.current = false;
+                    const value = plainText(el.value);
+                    changeAnnDraft('text', annEditor.kind === 'advisory'
+                      ? value.toUpperCase()
+                      : pasted
+                        ? value
+                        : upperTyped(annEditor.text, value));
                     requestAnimationFrame(() => {
                       try { el.setSelectionRange(start, end); } catch { /* wala nang focus */ }
                     });
                   }}
+                  onPaste={() => { annPasted.current = true; }}
+                  onDrop={() => { annPasted.current = true; }}
                   autoCapitalize="characters"
                   placeholder={
                     annEditor.kind === 'announcement'

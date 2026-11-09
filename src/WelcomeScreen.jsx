@@ -119,8 +119,12 @@ export default function WelcomeScreen({ onStart }) {
   // mismo lumalabas at nawawala ang bawat tala — hindi na hihintayin ang
   // susunod na paghila mula sa database.
   const nowMs = now.getTime();
+  // Ginagawang karaniwang letra ang "bold" ng Facebook (𝐮𝐧𝐭𝐢𝐥 → until) sa
+  // mga nai-save na bago pa ito inayos sa Admin Panel — ibang font kasi
+  // ang lumalabas sa mga iyon.
   const liveTexts = (kind) => readTextItems(settings, kind)
-    .filter((item) => item.text?.trim() && isLiveNow(item, nowMs));
+    .filter((item) => item.text?.trim() && isLiveNow(item, nowMs))
+    .map((item) => ({ ...item, text: item.text.normalize('NFKC') }));
   const liveAnnouncements = liveTexts('announcement');
   const liveAdvisories = liveTexts('advisory');
   const advisoryLines = liveAdvisories.flatMap((item) => item.text.split('\n').filter((l) => l.trim()));
