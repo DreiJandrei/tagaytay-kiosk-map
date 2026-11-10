@@ -31,7 +31,7 @@ export default function DirectoryScreen({
   };
 
   const floorLabels = [
-    { num: 1, labelEn: '1st Floor', labelTl: 'Unang Palapag' },
+    { num: 1, labelEn: 'Ground Floor', labelTl: 'Ground Floor' },
     { num: 2, labelEn: '2nd Floor', labelTl: 'Ika-2 na Palapag' },
     { num: 3, labelEn: '3rd Floor', labelTl: 'Ika-3 na Palapag' },
     { num: 4, labelEn: '4th Floor', labelTl: 'Ika-4 na Palapag' },

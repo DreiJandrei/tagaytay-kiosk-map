@@ -1465,7 +1465,7 @@ export default function App() {
                 <div className="floor-banner">
                   <div className="floor-banner-row">
                     <div>
-                      <h2>{lang === 'EN' ? `Floor ${currentFloor} Directory` : `Direktoryo ng Palapag ${currentFloor}`}</h2>
+                      <h2>{lang === 'EN' ? `${floorName(currentFloor, lang)} Directory` : `Direktoryo ng ${floorName(currentFloor, lang)}`}</h2>
                       <span className="floor-banner-sub">
                         {lang === 'EN' ? 'Tap an office to see the way' : 'Pindutin ang opisina para sa daan'}
                       </span>
@@ -1542,6 +1542,15 @@ export default function App() {
                   </span>
                 </div>
 
+                {/* Pareho ng bago magsimula ang gabay: hindi dapat mawala
+                    ang paliwanag tungkol sa tanggapan habang papunta roon. */}
+                {hasText(officeDescription(guide.dest, lang)) && (
+                  <div className="office-about">
+                    <strong><Icon name="info" /> {lang === 'EN' ? 'About this Office' : 'Tungkol sa Opisina'}</strong>
+                    <div className="office-about-body">{officeDescription(guide.dest, lang)}</div>
+                  </div>
+                )}
+
                 {!guide.dest.isDirectionOnly && <OfficeMeta office={guide.dest} lang={lang} />}
 
                 <QrCard link={destinationQrLink} lang={lang} />
@@ -1562,7 +1571,7 @@ export default function App() {
                       className="back-to-list-btn"
                       onClick={() => { setSelectedOfficeKey(null); setRouteStep('idle'); setDestinationData(null); }}
                     >
-                      {lang === 'EN' ? `Floor ${currentFloor} list` : `Palapag ${currentFloor}`}
+                      {lang === 'EN' ? `${floorName(currentFloor, lang)} list` : floorName(currentFloor, lang)}
                     </button>
                   </div>
                 )}

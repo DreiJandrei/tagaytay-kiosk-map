@@ -776,14 +776,15 @@ export default function MapScreen({
               >
                 {/* Sa masikip, pinaikli — "6F" imbes na "6th Floor". Mas
                     mabuting mabasa lahat kaysa maputol ang huli. Ang
-                    unang palapag ay "Ground" lang sa parehong laki. */}
+                    unang palapag ay "Ground" lang sa parehong laki.
+                    Ingles kahit Tagalog ang kiosk: ang "Ika-2 Palapag"
+                    ay hindi kasya at hindi rin ito ang nakasulat sa
+                    gusali. */}
                 {floor === 1
                   ? 'Ground'
                   : isTightBar
                     ? `${floor}F`
-                    : EN
-                      ? `${floor}${floor === 2 ? 'nd' : floor === 3 ? 'rd' : 'th'} Floor`
-                      : `Ika-${floor} Palapag`}
+                    : `${floor}${floor === 2 ? 'nd' : floor === 3 ? 'rd' : 'th'} Floor`}
               </button>
             )
           })}

@@ -7,7 +7,12 @@
 // maling salin.
 // ==============================================================
 
-export const floorName = (n, lang) => (lang === 'TL' ? `Palapag ${n}` : `Floor ${n}`);
+// Ang unang palapag ay "Ground Floor" saanman — sa mapa, sa listahan, at
+// sa badge ng tanggapan.
+export const floorName = (n, lang) => {
+  if (Number(n) === 1) return 'Ground Floor';
+  return lang === 'TL' ? `Palapag ${n}` : `Floor ${n}`;
+};
 
 // "2nd Floor - West" → "Ika-2 Palapag – Kanluran". Ang 1st ay "Ground Floor",
 // gaya ng nasa hanay ng palapag sa mapa.
@@ -45,7 +50,9 @@ const ORDINAL_FLOOR_TL = {
 };
 
 export const localizeBadge = (badge, lang) => {
-  if (lang !== 'TL' || typeof badge !== 'string') return badge;
+  if (typeof badge !== 'string') return badge;
+  // "1st Floor - West Wing" → "Ground Floor - West Wing" kahit Ingles.
+  if (lang !== 'TL') return badge.replace(/^(\s*)1st\s+Floor\b/i, '$1Ground Floor');
   const m = badge.match(/^\s*(\d)(?:st|nd|rd|th)\s+Floor\s*(?:[-–]\s*(.*))?$/i);
   if (!m) return badge;
   const floor = ORDINAL_FLOOR_TL[m[1]] || `Palapag ${m[1]}`;

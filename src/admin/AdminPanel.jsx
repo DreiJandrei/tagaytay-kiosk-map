@@ -1828,7 +1828,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                 <label className="k-label">{t('Select Floor', 'Pumili ng Palapag')}</label>
                 <select className="k-select" value={selectedFloor} onChange={handleFloorChange}>
                   {[1, 2, 3, 4, 5, 6, 7].map(f => (
-                    <option key={f} value={f}>{t(`Floor ${f}`, `Palapag ${f}`)}</option>
+                    <option key={f} value={f}>{f === 1 ? 'Ground Floor' : t(`Floor ${f}`, `Palapag ${f}`)}</option>
                   ))}
                 </select>
               </div>

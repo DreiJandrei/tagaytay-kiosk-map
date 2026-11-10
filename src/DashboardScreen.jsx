@@ -5,8 +5,8 @@ const frequentOfficesConfig = [
   { name: "Mayor's Office", nameTl: "Tanggapan ng Alkalde", floor: 7, floorLabel: "7th Floor", floorLabelTl: "Ika-7 na Palapag", dbKey: "mayor-main" },
   { name: "City Treasurer", nameTl: "Ingat-Yaman ng Lungsod", floor: 3, floorLabel: "3rd Floor", floorLabelTl: "Ika-3 na Palapag", dbKey: "treasure-office" },
   { name: "Building Official (OBO)", nameTl: "Tanggapan ng Paggawa ng Gusali", floor: 3, floorLabel: "3rd Floor", floorLabelTl: "Ika-3 na Palapag", dbKey: "building-official" },
-  { name: "Civil Registrar", nameTl: "Rehistrador Sibil", floor: 1, floorLabel: "Ground Floor", floorLabelTl: "Unang Palapag", dbKey: "tolentino-hall" },
-  { name: "Social Welfare (CSWDO)", nameTl: "Kagalingang Panlipunan", floor: 1, floorLabel: "Ground Floor", floorLabelTl: "Unang Palapag", dbKey: "pio-1" },
+  { name: "Civil Registrar", nameTl: "Rehistrador Sibil", floor: 1, floorLabel: "Ground Floor", floorLabelTl: "Ground Floor", dbKey: "tolentino-hall" },
+  { name: "Social Welfare (CSWDO)", nameTl: "Kagalingang Panlipunan", floor: 1, floorLabel: "Ground Floor", floorLabelTl: "Ground Floor", dbKey: "pio-1" },
   { name: "Health Office", nameTl: "Tanggapan ng Kalusugan", floor: 2, floorLabel: "2nd Floor", floorLabelTl: "Ika-2 na Palapag", dbKey: "library" },
 ];
 
