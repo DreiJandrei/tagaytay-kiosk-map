@@ -170,6 +170,11 @@ export const isWrongCode = (error) =>
   error?.code === 'otp_expired'
   || /expired or is invalid|invalid otp|token has expired/i.test(error?.message || '');
 
+// Hindi naipadala ng Supabase ang email — kadalasan mali ang SMTP sa
+// Dashboard (maling App Password, host, o port).
+export const isEmailSendFailure = (error) =>
+  /error sending .*email/i.test(error?.message || '');
+
 // Naabot ang limitasyon ng Supabase sa pagpapadala ng email.
 export const isEmailRateLimited = (error) =>
   error?.code === 'over_email_send_rate_limit'

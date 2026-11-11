@@ -19,7 +19,7 @@ import './index.css';
 import { QRCodeSVG } from 'qrcode.react';
 import Icon from './components/Icon';
 
-import { getAllOffices, initializeDatabase, incrementSearchCount, loginAdmin, sendAdminCode, verifyAdminCode, isWrongCode, isEmailRateLimited, resetPasswordEmail, logoutAdmin, onAuthChange, changeAdminPassword, getLiftStatuses } from './lib/api';
+import { getAllOffices, initializeDatabase, incrementSearchCount, loginAdmin, sendAdminCode, verifyAdminCode, isWrongCode, isEmailRateLimited, isEmailSendFailure, resetPasswordEmail, logoutAdmin, onAuthChange, changeAdminPassword, getLiftStatuses } from './lib/api';
 import { checkKioskSession, onKioskSessionChange } from './lib/kioskDevice';
 import {
   ADMIN_GUARD_KEY, MAX_LOGIN_ATTEMPTS, FRESH_GUARD,
@@ -665,6 +665,10 @@ export default function App() {
         alert(codeRateLimitMessage());
         return;
       }
+      if (isEmailSendFailure(error)) {
+        alert(codeSendFailureMessage());
+        return;
+      }
       if (!isWrongPassword(error)) {
         // Hindi ito binibilang — hindi kasalanan ng nagta-type ang internet.
         alert(lang === 'EN'
@@ -678,6 +682,17 @@ export default function App() {
       setIsLoggingIn(false);
     }
   };
+
+  // Tama ang password pero hindi naipadala ng Supabase ang email (hal.
+  // mali ang SMTP sa Dashboard). Hindi ito problema sa internet — kaya
+  // hindi "Could not reach the server" ang sinasabi.
+  const codeSendFailureMessage = () => (lang === 'EN'
+    ? 'The password is correct, but the code could not be sent to Gmail.\n\n'
+      + 'Check the email (SMTP) settings in Supabase → Authentication → Emails → SMTP Settings, '
+      + 'then try again.'
+    : 'Tama ang password, pero hindi maipadala ang code sa Gmail.\n\n'
+      + 'Tingnan ang email (SMTP) settings sa Supabase → Authentication → Emails → SMTP Settings, '
+      + 'saka subukan ulit.');
 
   const codeRateLimitMessage = () => (lang === 'EN'
     ? 'Too many codes sent.\n\nSupabase limits how many emails can be sent. Wait a while, then try again.'
@@ -715,6 +730,8 @@ export default function App() {
     } catch (error) {
       alert(isEmailRateLimited(error)
         ? codeRateLimitMessage()
+        : isEmailSendFailure(error)
+        ? codeSendFailureMessage()
         : (lang === 'EN'
           ? 'Could not send the code. Check the internet connection and try again.'
           : 'Hindi maipadala ang code. Tingnan ang koneksyon sa internet at subukan ulit.'));
