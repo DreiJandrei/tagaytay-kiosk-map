@@ -4,10 +4,10 @@
 // Lahat ng puwesto ng kwarto, istruktura at ruta sa mapa. Hindi ito nasa
 // database — nasa database lang ang teksto ng bawat tanggapan.
 //
-// Galing ang mga sukat sa pinagtibay na plano ng bawat palapag (editsss.pdf,
-// Oktubre 2026; mapp.pdf, Nobyembre 2026, para sa mga pader at pinto). Ang
-// Ground Floor ay mula sa bagong guhit na plano (Nobyembre 2026): ang pixel
-// ng larawan, bawas 60 sa x at 100 sa y. Isang bagay lang ang dapat tandaan kapag binago ang puwesto
+// Galing ang mga sukat sa bagong guhit na plano ng bawat palapag (Nobyembre
+// 2026). Ground Floor: ang pixel ng larawan, bawas 60 sa x at 100 sa y. Sa
+// 2nd–7th, pinalaki ang larawan (×1.25 hanggang ×1.9) at inilagay ang gitna
+// ng gusali sa (715, 674), ang gitna ng kahon. Isang bagay lang ang dapat tandaan kapag binago ang puwesto
 // ng kwarto: dapat dumaan pa rin ang ruta sa pagitan ng mga kwarto, hindi sa
 // ibabaw nila.
 //
@@ -104,145 +104,150 @@ export const coordinateMapping = {
   },
   2: {
     "city-eng": {
-      routes: { elevator: "M 928 508 L 928 575 L 508 575 L 508 307 L 228 307 L 228 277", stairs: "M 349 433 L 349 305 L 237 305 L 237 277", escalator: "M 865 663 L 649 663 L 649 307 L 237 307 L 237 277" },
-      style: { width: 168, height: 138, left: 142, top: 139 }, cssClass: ""
+      routes: { elevator: "M 1046 608 L 1046 729 L 694 729 L 694 548 L 238 548 L 238 514", stairs: "M 541 659 L 694 659 L 694 548 L 238 548 L 238 514", escalator: "M 958 860 L 896 860 L 896 729 L 694 729 L 694 548 L 238 548 L 238 514" },
+      style: { width: 258, height: 290, left: 106, top: 222 }, cssClass: ""
     },
     "housing": {
-      routes: { elevator: "M 928 508 L 928 575 L 508 575 L 508 307 L 404 307 L 404 277", stairs: "M 349 433 L 349 305 L 393 305 L 393 277", escalator: "M 865 663 L 649 663 L 649 307 L 417 307 L 417 277" },
-      style: { width: 170, height: 138, left: 317, top: 139 }, cssClass: ""
+      routes: { elevator: "M 1046 608 L 1046 729 L 694 729 L 694 548 L 432 548 L 432 514", stairs: "M 541 659 L 694 659 L 694 548 L 432 548 L 432 514", escalator: "M 958 860 L 896 860 L 896 729 L 694 729 L 694 548 L 432 548 L 432 514" },
+      style: { width: 114, height: 289, left: 375, top: 222 }, cssClass: "", labelVertical: true
     },
     "bac": {
-      routes: { elevator: "M 928 508 L 928 575 L 568 575 L 568 277", stairs: "M 474 470 L 568 470 L 568 277", escalator: "M 865 663 L 649 663 L 649 307 L 569 307 L 569 277" },
-      style: { width: 150, height: 138, left: 494, top: 139, fontSize: '12px' }, cssClass: ""
+      routes: { elevator: "M 1046 608 L 1046 729 L 694 729 L 694 548 L 557 548 L 557 514", stairs: "M 541 659 L 694 659 L 694 548 L 557 548 L 557 514", escalator: "M 958 860 L 896 860 L 896 729 L 694 729 L 694 548 L 557 548 L 557 514" },
+      style: { width: 108, height: 290, left: 501, top: 222 }, cssClass: "", labelVertical: true
     },
     "planning": {
-      routes: { elevator: "M 928 508 L 928 575 L 696 575 L 696 277", stairs: "M 474 470 L 696 470 L 696 277", escalator: "M 865 663 L 697 663 L 697 277" },
-      style: { width: 171, height: 138, left: 656, top: 139 }, cssClass: ""
+      routes: { elevator: "M 1046 608 L 1046 729 L 896 729 L 896 440 L 753 440 L 753 415", stairs: "M 541 659 L 694 659 L 694 440 L 753 440 L 753 415", escalator: "M 958 860 L 896 860 L 896 440 L 753 440 L 753 415" },
+      style: { width: 259, height: 193, left: 621, top: 222 }, cssClass: ""
     },
     "zoning": {
-      routes: { elevator: "M 928 508 L 928 575 L 784 575 L 784 307 L 968 307 L 968 277", stairs: "M 349 433 L 349 305 L 965 305 L 965 277", escalator: "M 865 663 L 781 663 L 781 307 L 965 307 L 965 277" },
-      style: { width: 177, height: 138, left: 834, top: 139, fontSize: '12px' }, cssClass: ""
+      routes: { elevator: "M 1046 608 L 1046 729 L 896 729 L 896 440 L 996 440 L 996 415", stairs: "M 541 659 L 694 659 L 694 440 L 996 440 L 996 415", escalator: "M 958 860 L 896 860 L 896 440 L 996 440 L 996 415" },
+      style: { width: 212, height: 193, left: 884, top: 222 }, cssClass: ""
     },
     "back-ext": {
-      routes: { elevator: "M 928 508 L 928 575 L 784 575 L 784 307 L 1088 307 L 1088 277", stairs: "M 349 433 L 349 305 L 1077 305 L 1077 277", escalator: "M 865 663 L 781 663 L 781 307 L 1077 307 L 1077 277" },
-      style: { width: 126, height: 138, left: 1026, top: 139, fontSize: '12px' }, cssClass: ""
+      routes: { elevator: "M 1046 608 L 1046 729 L 896 729 L 896 440 L 1164 440 L 1164 350", stairs: "M 541 659 L 694 659 L 694 440 L 1164 440 L 1164 350", escalator: "M 958 860 L 896 860 L 896 440 L 1164 440 L 1164 350" },
+      style: { width: 104, height: 125, left: 1106, top: 223, fontSize: '12px' }, cssClass: ""
     },
     "restroom-cr-2": {
-      routes: { elevator: "M 928 508 L 928 575 L 784 575 L 784 307 L 908 307 L 908 334", stairs: "M 349 433 L 349 305 L 909 305 L 909 334", escalator: "M 865 663 L 781 663 L 781 307 L 909 307 L 909 334" },
-      style: { width: 221, height: 94, left: 817, top: 334 }, cssClass: "", isDirectionOnly: true
+      routes: { elevator: "M 1046 608 L 1046 729 L 896 729 L 896 440 L 1048 440 L 1048 472", stairs: "M 541 659 L 694 659 L 694 440 L 1048 440 L 1048 472", escalator: "M 958 860 L 896 860 L 896 440 L 1048 440 L 1048 472" },
+      style: { width: 237, height: 98, left: 927, top: 471 }, cssClass: "", isDirectionOnly: true
     },
     "library": {
-      routes: { elevator: "M 928 508 L 928 595 L 484 595 L 484 666", stairs: "M 349 506 L 349 630 L 453 630 L 453 666", escalator: "M 865 663 L 649 663 L 649 631 L 485 631 L 485 666" },
-      style: { width: 299, height: 191, left: 313, top: 666 }, cssClass: ""
+      routes: { elevator: "M 1046 608 L 1046 729 L 722 729 L 722 910", stairs: "M 541 659 L 722 659 L 722 910", escalator: "M 958 860 L 722 860 L 722 910" },
+      style: { width: 187, height: 140, left: 629, top: 912 }, cssClass: ""
     },
   },
   3: {
-    "building-official": {
-      routes: { elevator: "M 613 524 L 613 593 L 453 593 L 453 489 L 420 489", stairs: "M 263 853 L 263 665 L 455 665 L 455 489 L 420 489" },
-      style: { width: 194, height: 294, left: 226, top: 338 }, cssClass: ""
-    },
     "budget-office": {
-      routes: { elevator: "M 613 524 L 613 593 L 493 593 L 493 321", stairs: "M 263 853 L 263 665 L 479 665 L 479 321" },
-      style: { width: 206, height: 163, left: 442, top: 158 }, cssClass: ""
+      routes: { elevator: "M 707 561 L 707 657 L 558 657 L 558 388 L 606 388 L 606 370", stairs: "M 382 1188 L 440 1188 L 440 972 L 558 972 L 558 388 L 606 388 L 606 370" },
+      style: { width: 352, height: 245, left: 517, top: 120 }, cssClass: ""
     },
     "internal-audit": {
-      routes: { elevator: "M 613 524 L 613 593 L 493 593 L 493 349 L 737 349 L 737 321", stairs: "M 263 853 L 263 665 L 495 665 L 495 349 L 735 349 L 735 321" },
-      style: { width: 148, height: 163, left: 670, top: 158 }, cssClass: ""
+      routes: { elevator: "M 707 561 L 707 657 L 937 657 L 937 370", stairs: "M 382 1188 L 440 1188 L 440 972 L 558 972 L 558 657 L 937 657 L 937 370" },
+      style: { width: 127, height: 245, left: 876, top: 120 }, cssClass: "", labelVertical: true
     },
     "treasure-office": {
-      routes: { elevator: "M 613 524 L 613 625 L 845 625", stairs: "M 263 853 L 263 665 L 811 665 L 811 637 L 845 637" },
-      style: { width: 225, height: 408, left: 845, top: 295 }, cssClass: ""
+      routes: { elevator: "M 707 561 L 707 657 L 961 657 L 961 592 L 1004 592", stairs: "M 382 1188 L 440 1188 L 440 972 L 558 972 L 558 657 L 961 657 L 961 592 L 1004 592" },
+      style: { width: 298, height: 595, left: 1007, top: 120 }, cssClass: ""
+    },
+    "building-official": {
+      routes: { elevator: "M 707 561 L 707 657 L 513 657", stairs: "M 382 1188 L 440 1188 L 440 972 L 558 972 L 558 674 L 513 674" },
+      style: { width: 295, height: 434, left: 217, top: 413 }, cssClass: ""
     },
     "accounting-office": {
-      routes: { elevator: "M 613 524 L 613 669 L 537 669 L 537 700", stairs: "M 263 853 L 263 669 L 503 669 L 503 700" },
-      style: { width: 369, height: 236, left: 452, top: 700 }, cssClass: ""
+      routes: { elevator: "M 707 561 L 707 657 L 801 657 L 801 718", stairs: "M 382 1188 L 440 1188 L 440 972 L 558 972 L 558 657 L 801 657 L 801 718" },
+      style: { width: 391, height: 346, left: 610, top: 720 }, cssClass: ""
     },
     "restroom-cr-3": {
-      routes: { elevator: "M 613 524 L 613 593 L 493 593 L 493 341 L 609 341 L 609 370", stairs: "M 263 853 L 263 665 L 495 665 L 495 341 L 611 341 L 611 370" },
-      style: { width: 195, height: 87, left: 529, top: 370 }, cssClass: "", isDirectionOnly: true
+      routes: { elevator: "M 707 561 L 707 657 L 558 657 L 558 388 L 707 388 L 707 411", stairs: "M 382 1188 L 440 1188 L 440 972 L 558 972 L 558 388 L 707 388 L 707 411" },
+      style: { width: 191, height: 118, left: 610, top: 413 }, cssClass: "", isDirectionOnly: true
     },
   },
   4: {
-    "const-west": {
-      routes: { elevator: "M 632 540 L 632 585 L 464 585 L 464 493 L 429 493", stairs: "M 260 846 L 260 666 L 464 666 L 464 494 L 429 494" },
-      style: { width: 213, height: 294, left: 216, top: 343 }, cssClass: ""
-    },
     "const-north": {
-      routes: { elevator: "M 632 540 L 632 585 L 472 585 L 472 325 L 604 325 L 604 297", stairs: "M 260 846 L 260 666 L 472 666 L 472 326 L 604 326 L 604 297" },
-      style: { width: 375, height: 161, left: 433, top: 136 }, cssClass: ""
+      routes: { elevator: "M 703 565 L 703 653 L 558 653 L 558 393 L 604 393 L 604 372", stairs: "M 380 1191 L 454 1191 L 454 965 L 558 965 L 558 393 L 604 393 L 604 372" },
+      style: { width: 477, height: 248, left: 515, top: 116 }, cssClass: ""
     },
     "const-east": {
-      routes: { elevator: "M 632 540 L 632 587 L 808 587 L 808 625 L 843 625", stairs: "M 260 846 L 260 666 L 476 666 L 476 587 L 808 587 L 808 634 L 843 634" },
-      style: { width: 227, height: 408, left: 843, top: 278 }, cssClass: ""
+      routes: { elevator: "M 703 565 L 703 653 L 956 653 L 956 602 L 996 602", stairs: "M 380 1191 L 454 1191 L 454 965 L 558 965 L 558 828 L 956 828 L 956 602 L 996 602" },
+      style: { width: 308, height: 602, left: 1000, top: 116 }, cssClass: ""
+    },
+    "const-west": {
+      routes: { elevator: "M 703 565 L 703 653 L 508 653", stairs: "M 380 1191 L 454 1191 L 454 965 L 558 965 L 558 677 L 508 677" },
+      style: { width: 294, height: 437, left: 212, top: 417 }, cssClass: ""
     },
     "const-south": {
-      routes: { elevator: "M 632 540 L 632 587 L 744 587 L 744 713", stairs: "M 260 846 L 260 666 L 476 666 L 476 587 L 744 587 L 744 713" },
-      style: { width: 370, height: 235, left: 458, top: 713 }, cssClass: ""
+      routes: { elevator: "M 703 565 L 703 653 L 944 653 L 944 853", stairs: "M 380 1191 L 454 1191 L 454 965 L 558 965 L 558 828 L 944 828 L 944 853" },
+      style: { width: 382, height: 209, left: 610, top: 857 }, cssClass: ""
     },
     "restroom-cr-4": {
-      routes: { elevator: "M 632 540 L 632 585 L 472 585 L 472 349 L 588 349 L 588 377", stairs: "M 260 846 L 260 666 L 472 666 L 472 346 L 588 346 L 588 377" },
-      style: { width: 196, height: 101, left: 508, top: 377 }, cssClass: "", isDirectionOnly: true
+      routes: { elevator: "M 703 565 L 703 653 L 558 653 L 558 393 L 703 393 L 703 412", stairs: "M 380 1191 L 454 1191 L 454 965 L 558 965 L 558 393 L 703 393 L 703 412" },
+      style: { width: 191, height: 118, left: 606, top: 417 }, cssClass: "", isDirectionOnly: true
     },
   },
   5: {
-    "legal-office": {
-      routes: { elevator: "M 646 533 L 646 572 L 458 572 L 458 544 L 420 544", stairs: "M 666 644 L 716 644 L 716 572 L 456 572 L 456 544 L 420 544" },
-      style: { width: 194, height: 286, left: 226, top: 342 }, cssClass: ""
-    },
     "hr-office": {
-      routes: { elevator: "M 646 533 L 646 572 L 490 572 L 490 297", stairs: "M 666 644 L 716 644 L 716 572 L 488 572 L 488 297" },
-      style: { width: 370, height: 164, left: 451, top: 133 }, cssClass: ""
+      routes: { elevator: "M 654 646 L 654 746 L 489 746 L 489 452 L 542 452 L 542 430", stairs: "M 874 861 L 935 861 L 935 452 L 911 452 L 911 430" },
+      style: { width: 531, height: 276, left: 445, top: 147 }, cssClass: ""
     },
     "admin-office": {
-      routes: { elevator: "M 646 533 L 646 572 L 714 572 L 714 616 L 852 616", stairs: "M 666 628 L 852 628" },
-      style: { width: 224, height: 407, left: 852, top: 261 }, cssClass: ""
+      routes: { elevator: "M 654 646 L 654 746 L 935 746 L 935 687 L 977 687", stairs: "M 874 861 L 935 861 L 935 687 L 977 687" },
+      style: { width: 345, height: 676, left: 983, top: 147 }, cssClass: ""
+    },
+    "legal-office": {
+      routes: { elevator: "M 654 646 L 654 746 L 440 746", stairs: "M 874 861 L 935 861 L 935 746 L 440 746" },
+      style: { width: 330, height: 481, left: 107, top: 482 }, cssClass: ""
     },
     "const-south-5": {
-      routes: { elevator: "M 646 533 L 646 580 L 750 580 L 750 710", stairs: "M 666 644 L 752 644 L 752 710" },
-      style: { width: 370, height: 238, left: 463, top: 710 }, cssClass: ""
+      routes: { elevator: "M 654 646 L 654 746 L 498 746 L 498 967", stairs: "M 874 861 L 922 861 L 922 967" },
+      style: { width: 868, height: 231, left: 107, top: 974 }, cssClass: ""
     },
     "restroom-cr-5": {
-      routes: { elevator: "M 646 533 L 646 572 L 482 572 L 482 336 L 602 336 L 602 368", stairs: "M 666 644 L 716 644 L 716 572 L 484 572 L 484 336 L 600 336 L 600 368" },
-      style: { width: 194, height: 97, left: 520, top: 368 }, cssClass: "", isDirectionOnly: true
+      routes: { elevator: "M 654 646 L 654 746 L 489 746 L 489 452 L 654 452 L 654 477", stairs: "M 874 861 L 935 861 L 935 452 L 654 452 L 654 477" },
+      style: { width: 213, height: 131, left: 546, top: 482 }, cssClass: "", isDirectionOnly: true
     },
   },
   6: {
     "wedding-hall": {
-      routes: { elevator: "M 785 406 L 785 481 L 547 481", stairs: "M 821 621 L 867 621 L 867 481 L 547 481" },
-      style: { width: 225, height: 750, left: 322, top: 157 }, cssClass: ""
+      routes: { elevator: "M 922 484 L 922 603 L 672 603", stairs: "M 1182 739 L 1256 739 L 1256 603 L 672 603" },
+      style: { width: 404, height: 587, left: 262, top: 268 }, cssClass: ""
     },
     "conference-hall": {
-      routes: { elevator: "M 785 406 L 785 541 L 937 541 L 937 700", stairs: "M 821 621 L 939 621 L 939 700" },
-      style: { width: 450, height: 213, left: 565, top: 700 }, cssClass: ""
+      routes: { elevator: "M 922 484 L 922 603 L 1236 603 L 1236 862", stairs: "M 1182 739 L 1236 739 L 1236 862" },
+      style: { width: 637, height: 288, left: 680, top: 868 }, cssClass: ""
     },
     "restroom-cr-6": {
-      routes: { elevator: "M 785 406 L 785 469 L 613 469 L 613 197 L 741 197 L 741 225", stairs: "M 821 621 L 1027 621 L 1027 197 L 783 197 L 783 225" },
-      style: { width: 225, height: 108, left: 648, top: 225 }, cssClass: "", isDirectionOnly: true
+      routes: { elevator: "M 922 484 L 922 603 L 733 603 L 733 262 L 922 262 L 922 289", stairs: "M 1182 739 L 1256 739 L 1256 262 L 922 262 L 922 289" },
+      style: { width: 250, height: 153, left: 795, top: 295 }, cssClass: "", isDirectionOnly: true
     },
   },
   7: {
     "mayor-main": {
-      routes: { elevator: "M 816 454 L 816 564 L 604 564 L 604 632 L 581 632", stairs: "M 858 641 L 900 641 L 900 565 L 604 565 L 604 629 L 581 629" },
-      style: { width: 542, height: 765, left: 356, top: 155, clipPath: 'polygon(0% 0%, 100% 0%, 100% 28%, 41.5% 28%, 41.5% 100%, 0% 100%)', '--l-arm': '28%', '--l-leg': '41.5%' }, cssClass: ""
-    },
-    "mayor-receiving": {
-      routes: { elevator: "M 816 454 L 816 564 L 944 564 L 944 720", stairs: "M 858 641 L 944 641 L 944 720" },
-      style: { width: 206, height: 207, left: 816, top: 720 }, cssClass: ""
+      routes: { elevator: "M 910 418 L 910 553 L 636 553", stairs: "M 1180 702 L 1248 702 L 1248 553 L 636 553" },
+      style: { width: 1050, height: 665, left: 117, top: 173, clipPath: 'polygon(0% 0%, 100% 0%, 100% 29.3%, 48.9% 29.3%, 48.9% 100%, 0% 100%)', '--l-arm': '29.3%', '--l-leg': '48.9%' }, cssClass: ""
     },
     "waiting-area": {
-      routes: { elevator: "M 816 454 L 816 564 L 640 564 L 640 720", stairs: "M 858 641 L 900 641 L 900 565 L 640 565 L 640 720" },
-      style: { width: 201, height: 207, left: 598, top: 720 }, cssClass: "", isDirectionOnly: true
+      routes: { elevator: "M 910 418 L 910 553 L 708 553 L 708 836", stairs: "M 1180 702 L 1210 702 L 1210 802 L 708 802 L 708 836" },
+      style: { width: 267, height: 330, left: 642, top: 844 }, cssClass: "", isDirectionOnly: true
+    },
+    "mayor-receiving": {
+      routes: { elevator: "M 910 418 L 910 553 L 1229 553 L 1229 836", stairs: "M 1180 702 L 1229 702 L 1229 836" },
+      style: { width: 389, height: 330, left: 921, top: 844 }, cssClass: ""
     },
   },
 };
 
 // Ang lahat ng hindi tanggapan sa bawat palapag.
 //   look          — 'drawn': guhit na plano (navy na kwarto, kulay-abong sahig,
-//                   maitim na pader). Ground Floor pa lang ang ganito.
+//                   maitim na pader)
 //   frame         — kahon sa paligid ng buong plano, may header na `header` ang
-//                   taas; sa gitna ng header dapat ang `caption`
-//   floor / blank — sahig ng gusali, at ang mga bakanteng puting bahagi
+//                   taas; sa gitna ng header dapat ang `caption`. Iisa ang laki
+//                   sa lahat ng palapag, para hindi gumagalaw ang kahon sa paglipat
+//   floor / blank — sahig ng gusali, at ang mga bakanteng puting bahagi (rect na
+//                   x/y/w/h, o `d` kapag pahilis ang gilid). Sa 2nd–7th, ang puti
+//                   sa ilalim ng Comfort Room ang harap ng elevator
 //   walk          — daan sa labas ng gusali (Ground Floor: papuntang Canteen)
+//   soft          — manipis na kulay-abong pader (paligid ng CR at elevator, at
+//                   ang marka ng pinto sa ilalim ng mga kwarto)
 //   wall / box    — panlabas na pader. Sa Ground Floor, ang puwang sa ilalim,
 //                   sa pagitan ng Information Desk at Guard Post, ang pinto ng
 //                   main entrance; nasa tapat nito ang `entrance`. Ang puwang
@@ -285,96 +290,156 @@ export const floorPlans = {
     ],
   },
   2: {
-    box: {"x":120,"y":110,"w":1059,"h":862},
-    walls: "M 130 127 L 1163 127 M 130 127 L 130 283 M 1163 127 L 1163 283 M 130 283 L 204 283 M 249 283 L 381 283 M 426 283 L 548 283 M 587 283 L 674 283 M 719 283 L 954 283 M 1002 283 L 1070 283 M 1105 283 L 1163 283 M 806 327 L 886 327 M 970 327 L 1050 327 M 806 327 L 806 435 M 1050 327 L 1050 435 M 806 435 L 1050 435 M 313 127 L 313 283 M 490 127 L 490 283 M 651 127 L 651 283 M 831 127 L 831 283 M 1018 127 L 1018 283 M 302 655 L 435 655 M 500 655 L 624 655 M 302 655 L 302 868 M 624 655 L 624 868 M 302 868 L 624 868 M 847 435 L 847 553 M 1005 435 L 1005 553 M 847 553 L 880 553 M 973 553 L 1005 553",
-    caption: { x: 649, y: 110 },
+    look: 'drawn',
+    frame: { x: 56, y: 4, w: 1318, h: 1284, header: 56, r: 18 },
+    floor: "M 99 215 L 1331 215 L 1331 1133 L 99 1133 Z",
+    blank: [
+      { d: "M 99 735 L 622 735 L 622 790 L 534 883 L 534 1133 L 99 1133 Z" },
+      { d: "M 929 930 L 1331 930 L 1331 989 L 929 989 Z" },
+      { d: "M 929 989 L 1331 989 L 1331 1133 L 832 1133 L 926 994 Z" },
+      { d: "M 927 570 L 1163 570 L 1163 674 L 927 674 Z" },
+      { d: "M 769 468 L 868 468 L 868 674 L 769 674 Z" },
+    ],
+    wall: "M 99 215 L 1331 215 L 1331 1133 L 99 1133 Z",
+    walls: "M 99 583 L 627 583 M 99 735 L 622 735 L 622 790 L 534 883 L 534 1133 M 924 788 L 1331 788 M 929 930 L 1331 930 M 929 930 L 929 994 L 832 1133 M 923 989 L 1331 989 M 363 215 L 363 513 M 374 215 L 374 513 M 488 215 L 488 513 M 501 215 L 501 513 M 608 215 L 608 513 M 621 215 L 621 414 M 881 215 L 881 414 M 1096 215 L 1096 414 M 1106 215 L 1106 349 M 1209 215 L 1209 349 M 99 512 L 172 512 M 304 512 L 399 512 M 464 512 L 526 512 M 589 512 L 609 512 M 621 414 L 719 414 M 786 414 L 939 414 M 1052 414 L 1096 414 M 1106 348 L 1136 348 M 1193 348 L 1209 348 M 927 569 L 1163 569",
+    soft: "M 107 516 L 172 516 M 304 516 L 399 516 M 464 516 L 524 516 M 589 516 L 618 516 M 611 418 L 719 418 M 787 418 L 939 418 M 1053 418 L 1107 418 M 368 222 L 368 519 M 494 222 L 494 519 M 613 222 L 613 519 M 1099 353 L 1136 353 M 1194 353 L 1219 353 M 1216 222 L 1216 356 M 1102 222 L 1102 419 M 923 463 L 923 676 M 1167 463 L 1167 676 M 921 465 L 983 465 M 1113 465 L 1171 465 M 921 673 L 983 673 M 1108 673 L 1171 673 M 769 468 L 868 468 L 868 673 L 769 673 L 769 468 M 792 492 L 843 492 L 843 652 L 792 652 L 792 492",
+    caption: { x: 715, y: 32 },
     arrivals: {
-      elevator: { x: 928, y: 553 },
-      stairs: { x: 350, y: 470 },
-      escalator: { x: 760, y: 662 },
+      elevator: { x: 1046, y: 608 },
+      stairs: { x: 541, y: 659 },
+      escalator: { x: 958, y: 860 },
     },
-    passThrough: "M 474 470 L 648 470 L 648 930 L 242 930 L 242 870",
+    passThrough: "M 541 659 L 666 659 L 666 890 L 582 890 L 582 1013",
     structures: [
-      {"type":"stairs","left":212,"top":423,"width":274,"height":93},
-      {"type":"stairs-l","left":215,"top":856,"width":104,"height":104,"armW":52},
-      {"type":"elevator","doors":[873,934],"top":447,"doorW":48,"doorH":61},
-      {"type":"escalator","left":865,"top":618,"width":205,"height":89},
-      {"type":"exit","left":1045,"top":372,"width":134,"height":76},
+      {"type":"stairs","left":167,"top":613,"width":360,"height":95,"arrow":"right"},
+      {"type":"stairs-l","left":549,"top":958,"width":235,"height":167,"arm":65,"foot":61,"arrow":"l"},
+      {"type":"escalator","left":958,"top":812,"width":329,"height":97,"arrow":"left"},
+      {"type":"elevator","doors":[1003,1049],"top":575,"doorW":40,"doorH":32},
+      {"type":"exit","left":1191,"top":595,"width":92,"height":63},
     ],
   },
   3: {
-    box: {"x":160,"y":110,"w":954,"h":864},
-    walls: "M 430 149 L 833 149 M 430 149 L 430 471 M 430 503 L 430 642 M 656 149 L 656 328 M 213 328 L 465 328 M 520 328 L 727 328 M 765 328 L 833 328 M 213 328 L 213 642 M 213 642 L 430 642 M 833 149 L 833 606 M 833 645 L 833 945 M 833 287 L 1082 287 M 1082 287 L 1082 710 M 833 710 L 1082 710 M 517 361 L 591 361 M 665 361 L 736 361 M 517 361 L 517 461 M 736 361 L 736 461 M 517 461 L 736 461 M 539 461 L 539 571 M 691 461 L 691 571 M 539 571 L 572 571 M 665 571 L 691 571 M 439 692 L 484 692 M 555 692 L 833 692 M 439 692 L 439 945 M 439 945 L 833 945",
-    caption: { x: 636, y: 110 },
+    look: 'drawn',
+    frame: { x: 56, y: 4, w: 1318, h: 1284, header: 56, r: 18 },
+    floor: "M 120 112 L 1310 112 L 1310 1236 L 120 1236 Z",
+    blank: [
+      { d: "M 120 112 L 515 112 L 515 368 L 427 368 L 427 411 L 120 411 Z" },
+      { d: "M 427 368 L 513 368 L 513 411 L 427 411 Z" },
+      { d: "M 120 411 L 214 411 L 214 852 L 120 852 Z" },
+      { d: "M 120 852 L 213 852 L 120 931 Z" },
+      { d: "M 1004 716 L 1310 716 L 1310 1236 L 431 1236 L 608 1067 L 1004 1067 Z" },
+      { d: "M 608 531 L 804 531 L 804 595 L 608 595 Z" },
+    ],
+    wall: "M 120 112 L 1310 112 L 1310 1236 L 120 1236 Z",
+    walls: "M 515 112 L 515 368 M 872 112 L 872 368 M 1006 112 L 1006 524 M 1006 657 L 1006 717 M 427 368 L 557 368 M 656 368 L 904 368 M 969 368 L 1006 368 M 427 368 L 427 411 M 120 411 L 512 411 M 214 411 L 214 852 M 510 411 L 510 613 M 510 735 L 510 852 M 120 852 L 512 852 M 120 931 L 213 852 M 1006 716 L 1310 716 M 605 718 L 751 718 M 852 718 L 1004 718 M 608 718 L 608 1067 M 1003 718 L 1003 1067 M 608 1067 L 1004 1067 M 608 1067 L 431 1236 M 609 531 L 801 531",
+    soft: "M 606 406 L 606 596 M 804 406 L 804 596 M 605 409 L 653 409 M 759 409 L 807 409 M 605 593 L 655 593 M 759 593 L 807 593",
+    caption: { x: 715, y: 32 },
     arrivals: {
-      elevator: { x: 613, y: 569 },
-      stairs: { x: 362, y: 921 },
+      elevator: { x: 707, y: 561 },
+      stairs: { x: 382, y: 1188 },
     },
-    passThrough: "M 330 917 L 263 917 L 263 857",
+    passThrough: "M 382 1188 L 171 1188 L 171 1063",
     structures: [
-      {"type":"stairs-l","left":238,"top":843,"width":104,"height":103,"armW":49},
-      {"type":"elevator","doors":[561,617],"top":470,"doorW":48,"doorH":54},
-      {"type":"exit","left":699,"top":464,"width":134,"height":78},
+      {"type":"stairs-l","left":137,"top":1044,"width":245,"height":175,"arm":68,"foot":64,"arrow":"l"},
+      {"type":"elevator","doors":[664,710],"top":537,"doorW":40,"doorH":23},
+      {"type":"exit","left":822,"top":524,"width":96,"height":66},
     ],
   },
   4: {
-    box: {"x":160,"y":110,"w":954,"h":864},
-    walls: "M 423 129 L 817 129 M 423 129 L 423 303 M 817 129 L 817 303 M 423 303 L 585 303 M 656 303 L 817 303 M 833 271 L 1078 271 M 1078 271 L 1078 694 M 833 694 L 1078 694 M 833 271 L 833 616 M 833 655 L 833 694 M 204 336 L 439 336 M 204 336 L 204 642 M 204 642 L 439 642 M 439 336 L 439 474 M 439 510 L 439 642 M 497 371 L 568 371 M 643 371 L 717 371 M 497 371 L 497 481 M 717 371 L 717 481 M 497 481 L 717 481 M 562 481 L 562 571 M 710 481 L 710 571 M 562 571 L 588 571 M 681 571 L 710 571 M 501 603 L 691 603 M 501 603 L 501 700 M 691 603 L 691 623 M 691 684 L 691 700 M 501 700 L 691 700 M 442 708 L 727 708 M 798 708 L 836 708 M 442 708 L 442 955 M 836 708 L 836 955 M 442 955 L 836 955",
-    caption: { x: 636, y: 110 },
+    look: 'drawn',
+    frame: { x: 56, y: 4, w: 1318, h: 1284, header: 56, r: 18 },
+    floor: "M 117 109 L 1313 109 L 1313 1239 L 117 1239 Z",
+    blank: [
+      { d: "M 117 109 L 514 109 L 514 415 L 117 415 Z" },
+      { d: "M 117 415 L 209 415 L 209 857 L 117 857 Z" },
+      { d: "M 117 857 L 209 857 L 117 939 Z" },
+      { d: "M 998 718 L 1313 718 L 1313 1239 L 432 1239 L 607 1069 L 998 1069 Z" },
+      { d: "M 606 536 L 800 536 L 800 597 L 606 597 Z" },
+    ],
+    wall: "M 117 109 L 1313 109 L 1313 1239 L 117 1239 Z",
+    walls: "M 514 109 L 514 370 M 997 109 L 997 543 M 997 660 L 997 1069 M 514 370 L 555 370 M 654 370 L 902 370 M 966 370 L 997 370 M 117 415 L 514 415 M 209 415 L 209 857 M 507 415 L 507 616 M 507 738 L 507 854 M 117 854 L 510 854 M 117 939 L 209 857 M 997 718 L 1313 718 M 607 854 L 919 854 M 970 854 L 997 854 M 607 854 L 607 1069 M 607 1069 L 997 1069 M 607 1069 L 432 1239 M 607 534 L 798 534",
+    soft: "M 603 411 L 603 599 M 802 411 L 802 599 M 603 412 L 651 412 M 755 412 L 803 412 M 603 597 L 651 597 M 757 597 L 803 597",
+    caption: { x: 715, y: 32 },
     arrivals: {
-      elevator: { x: 632, y: 585 },
-      stairs: { x: 362, y: 914 },
+      elevator: { x: 703, y: 565 },
+      stairs: { x: 380, y: 1191 },
     },
-    passThrough: "M 260 846 L 260 666 L 476 666 L 476 587 L 716 587 L 716 654 L 545 654",
+    passThrough: "M 380 1191 L 454 1191 L 454 965 L 558 965 L 558 757 L 636 757",
     structures: [
-      {"type":"stairs","left":519,"top":610,"width":163,"height":84},
-      {"type":"stairs-l","left":235,"top":836,"width":103,"height":104,"armW":49},
-      {"type":"elevator","doors":[580,636],"top":486,"doorW":48,"doorH":54},
-      {"type":"exit","left":699,"top":477,"width":134,"height":78},
+      {"type":"stairs","left":606,"top":707,"width":295,"height":99,"arrow":"right"},
+      {"type":"stairs-l","left":135,"top":1048,"width":245,"height":174,"arm":68,"foot":62,"arrow":"l"},
+      {"type":"elevator","doors":[660,706],"top":541,"doorW":40,"doorH":23},
+      {"type":"exit","left":818,"top":521,"width":96,"height":65},
     ],
   },
   5: {
-    box: {"x":160,"y":110,"w":954,"h":864},
-    walls: "M 439 126 L 833 126 M 439 126 L 439 302 M 833 126 L 833 302 M 439 302 L 472 302 M 539 302 L 833 302 M 840 255 L 1088 255 M 1088 255 L 1088 674 M 840 674 L 1088 674 M 840 255 L 840 606 M 840 645 L 840 674 M 216 329 L 433 329 M 216 329 L 216 639 M 216 639 L 433 639 M 433 329 L 433 526 M 433 558 L 433 639 M 507 361 L 581 361 M 656 361 L 727 361 M 507 361 L 507 474 M 727 361 L 727 474 M 507 474 L 727 474 M 568 474 L 568 558 M 720 474 L 720 558 M 568 558 L 594 558 M 694 558 L 720 558 M 501 594 L 691 594 M 501 594 L 501 694 M 691 594 L 691 613 M 691 674 L 691 694 M 501 694 L 691 694 M 452 703 L 733 703 M 801 703 L 843 703 M 452 703 L 452 955 M 843 703 L 843 955 M 452 955 L 843 955",
-    caption: { x: 636, y: 110 },
+    look: 'drawn',
+    frame: { x: 56, y: 4, w: 1318, h: 1284, header: 56, r: 18 },
+    floor: "M 99 139 L 1331 139 L 1331 1209 L 99 1209 Z",
+    blank: [
+      { d: "M 99 139 L 440 139 L 440 477 L 99 477 Z" },
+      { d: "M 979 828 L 1331 828 L 1331 1209 L 979 1209 Z" },
+      { d: "M 545 615 L 760 615 L 760 681 L 545 681 Z" },
+    ],
+    wall: "M 99 139 L 1331 139 L 1331 1209 L 99 1209 Z",
+    walls: "M 440 139 L 440 429 M 440 429 L 489 429 M 598 429 L 876 429 M 947 429 L 979 429 M 979 139 L 979 623 M 979 752 L 979 1209 M 99 477 L 440 477 M 437 477 L 437 704 M 437 841 L 437 968 M 99 968 L 454 968 M 541 968 L 895 968 M 951 968 L 979 968 M 979 828 L 1331 828 M 547 613 L 758 613",
+    soft: "M 542 474 L 542 686 M 763 474 L 763 686 M 542 475 L 596 475 M 712 475 L 766 475 M 542 683 L 596 683 M 714 683 L 766 683",
+    caption: { x: 715, y: 32 },
     arrivals: {
-      elevator: { x: 646, y: 578 },
-      stairs: { x: 493, y: 618 },
+      elevator: { x: 654, y: 646 },
+      stairs: { x: 874, y: 861 },
     },
-    passThrough: "M 664 644 L 540 644",
+    passThrough: "M 874 861 L 570 861",
     structures: [
-      {"type":"stairs","left":514,"top":600,"width":164,"height":87},
-      {"type":"elevator","doors":[594,650],"top":479,"doorW":48,"doorH":54},
-      {"type":"exit","left":706,"top":474,"width":134,"height":78},
+      {"type":"stairs","left":545,"top":806,"width":329,"height":110,"arrow":"right"},
+      {"type":"elevator","doors":[611,657],"top":620,"doorW":40,"doorH":25},
+      {"type":"exit","left":785,"top":599,"width":107,"height":72},
     ],
   },
   6: {
-    box: {"x":270,"y":110,"w":785,"h":853},
-    walls: "M 309 147 L 558 147 M 309 147 L 309 917 M 558 147 L 558 454 M 558 505 L 558 917 M 309 917 L 1026 917 M 637 219 L 722 219 M 801 219 L 886 219 M 637 219 L 637 342 M 886 219 L 886 342 M 637 342 L 886 342 M 702 342 L 702 447 M 862 342 L 862 447 M 702 447 L 739 447 M 828 447 L 862 447 M 627 566 L 842 566 M 627 566 L 627 679 M 842 566 L 842 590 M 842 655 L 842 679 M 627 679 L 842 679 M 558 692 L 920 692 M 992 692 L 1026 692 M 1026 692 L 1026 917",
-    caption: { x: 662, y: 110 },
+    look: 'drawn',
+    frame: { x: 56, y: 4, w: 1318, h: 1284, header: 56, r: 18 },
+    floor: "M 257 265 L 672 265 L 672 190 L 1323 190 L 1323 1158 L 257 1158 L 257 862 L 107 862 L 107 449 L 257 449 Z",
+    blank: [
+      { d: "M 107 449 L 257 449 L 257 862 L 107 862 Z" },
+      { d: "M 672 190 L 1323 190 L 1323 233 L 672 233 Z" },
+      { d: "M 794 449 L 1049 449 L 1049 529 L 794 529 Z" },
+    ],
+    wall: "M 257 265 L 672 265 L 672 190 L 1323 190 L 1323 1158 L 257 1158 L 257 862 L 107 862 L 107 449 L 257 449 Z",
+    walls: "M 672 233 L 1316 233 M 670 265 L 670 554 M 670 716 L 670 862 M 259 449 L 259 862 M 257 857 L 672 857 M 791 864 L 1204 864 M 1270 864 L 1323 864 M 677 858 L 677 1158 M 796 449 L 1047 449",
+    soft: "M 792 286 L 792 532 M 1051 286 L 1051 532 M 791 287 L 854 287 M 990 287 L 1054 287 M 791 529 L 854 529 M 991 529 L 1054 529",
+    caption: { x: 715, y: 32 },
     arrivals: {
-      elevator: { x: 785, y: 451 },
-      stairs: { x: 578, y: 592 },
+      elevator: { x: 922, y: 484 },
+      stairs: { x: 1182, y: 739 },
     },
-    passThrough: "M 819 621 L 668 621",
+    passThrough: "M 1182 739 L 806 739",
     structures: [
-      {"type":"stairs","left":642,"top":573,"width":191,"height":95},
-      {"type":"elevator","doors":[731,790],"top":348,"doorW":49,"doorH":58},
-      {"type":"exit","left":869,"top":337,"width":146,"height":84},
+      {"type":"stairs","left":794,"top":675,"width":388,"height":127,"arrow":"right"},
+      {"type":"elevator","doors":[879,925],"top":455,"doorW":40,"doorH":28},
+      {"type":"exit","left":1069,"top":432,"width":126,"height":85},
     ],
   },
   7: {
-    box: {"x":270,"y":110,"w":785,"h":869},
-    walls: "M 350 151 L 904 151 M 350 151 L 350 926 M 904 151 L 904 372 M 590 372 L 904 372 M 590 372 L 590 618 M 590 666 L 590 931 M 350 926 L 590 926 M 733 384 L 891 384 M 733 384 L 733 506 M 891 384 L 891 506 M 733 506 L 764 506 M 863 506 L 891 506 M 668 588 L 894 588 M 668 588 L 668 693 M 894 588 L 894 601 M 894 683 L 894 693 M 668 693 L 894 693 M 805 709 L 805 931 M 590 709 L 610 709 M 665 709 L 925 709 M 1000 709 L 1031 709 M 1031 709 L 1031 931 M 590 931 L 1031 931",
-    caption: { x: 662, y: 110 },
+    look: 'drawn',
+    frame: { x: 56, y: 4, w: 1318, h: 1284, header: 56, r: 18 },
+    floor: "M 112 168 L 1318 168 L 1318 1180 L 112 1180 Z",
+    blank: [
+      { d: "M 1172 168 L 1318 168 L 1318 475 L 1062 475 L 1062 371 L 1172 371 Z" },
+      { d: "M 765 380 L 1056 380 L 1056 474 L 765 474 Z" },
+    ],
+    wall: "M 112 168 L 1318 168 L 1318 1180 L 112 1180 Z",
+    walls: "M 1172 168 L 1172 371 M 632 371 L 1172 371 M 1062 371 L 1062 475 M 1062 475 L 1318 475 M 634 371 L 634 493 M 634 605 L 634 838 M 112 838 L 674 838 M 744 838 L 1185 838 M 1271 838 L 1318 838 M 640 838 L 640 1180 M 914 838 L 914 1180 M 763 379 L 1067 379",
+    soft: "M 765 380 L 765 477 M 1056 380 L 1056 477 M 763 474 L 834 474 M 986 474 L 1058 474",
+    caption: { x: 715, y: 32 },
     arrivals: {
-      elevator: { x: 816, y: 499 },
-      stairs: { x: 639, y: 623 },
+      elevator: { x: 910, y: 418 },
+      stairs: { x: 1180, y: 702 },
     },
     structures: [
-      {"type":"stairs","left":686,"top":595,"width":184,"height":91},
-      {"type":"elevator","doors":[761,821],"top":398,"doorW":50,"doorH":56},
-      {"type":"exit","left":898,"top":387,"width":144,"height":83},
+      {"type":"stairs","left":746,"top":629,"width":434,"height":143,"arrow":"right"},
+      {"type":"elevator","doors":[867,913],"top":385,"doorW":40,"doorH":32},
+      {"type":"exit","left":1073,"top":384,"width":118,"height":82},
     ],
   },
 };
@@ -418,12 +483,12 @@ export const pinFor = ({ floor, method, path, label }) => {
     covered.push({ l: left, t: top, r: left + width, b: top + height });
     names.push(nameZone(left + width / 2, top + height / 2));
   };
-  Object.entries(coordinateMapping[floor]).forEach(([key, office]) => {
+  Object.values(coordinateMapping[floor]).forEach((office) => {
     const s = office.style;
-    if (key === 'mayor-main') {
+    if (s['--l-arm']) {
       // Hugis-L: sa mahabang bahagi sa kaliwa ang pangalan (--l-arm, --l-leg).
-      const arm = s.height * 0.28;
-      const leg = s.width * 0.415;
+      const arm = s.height * parseFloat(s['--l-arm']) / 100;
+      const leg = s.width * parseFloat(s['--l-leg']) / 100;
       covered.push({ l: s.left, t: s.top, r: s.left + s.width, b: s.top + arm });
       covered.push({ l: s.left, t: s.top, r: s.left + leg, b: s.top + s.height });
       names.push(nameZone(s.left + leg / 2, s.top + arm + (s.height - arm) / 2));

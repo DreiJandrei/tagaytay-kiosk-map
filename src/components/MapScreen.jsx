@@ -604,6 +604,24 @@ export default function MapScreen({
           </div>
         );
       case 'stairs-l':
+        // Guhit na plano: balangkas na hugis-L, at arrow na pababa sa makitid
+        // na bahagi, tapos pakanan sa ibaba. `arm` ang lapad ng makitid na
+        // bahagi at `foot` ang taas ng nasa ibaba, parehong pixel.
+        if (s.arrow) {
+          const { width: w, height: h, arm, foot } = s;
+          const midX = arm / 2;
+          const midY = h - foot / 2;
+          const head = Math.min(w - 70, arm + 90);
+          return (
+            <div key={i} className="structural-element plan-stairs-l-drawn" style={box}>
+              <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
+                <path className="plan-l-outline" d={`M 1 1 H ${arm} V ${h - foot} H ${w - 1} V ${h - 1} H 1 Z`} />
+                <path className="plan-l-arrow" d={`M ${midX} ${Math.min(24, h * 0.17)} V ${midY} H ${head} M ${head - 12} ${midY - 11} L ${head} ${midY} L ${head - 12} ${midY + 11}`} />
+              </svg>
+              <span className="plan-ramp-label plan-l-label" style={{ left: head + 10, top: midY, right: 6 }}>{EN ? 'STAIRS' : 'HAGDAN'}</span>
+            </div>
+          );
+        }
         // Hugis-L: makitid sa itaas, buong lapad sa ibaba.
         return (
           <div
@@ -846,8 +864,9 @@ export default function MapScreen({
                 {plan.walk && <path className="plan-walk" d={plan.walk} />}
                 <path className="plan-floor-shadow" d={plan.floor} />
                 <path className="plan-floor" d={plan.floor} />
-                {plan.blank?.map((b, i) => (
-                  <rect key={i} className="plan-blank" x={b.x} y={b.y} width={b.w} height={b.h} />
+                {plan.blank?.map((b, i) => (b.d
+                  ? <path key={i} className="plan-blank" d={b.d} />
+                  : <rect key={i} className="plan-blank" x={b.x} y={b.y} width={b.w} height={b.h} />
                 ))}
               </g>
             )}
@@ -855,6 +874,7 @@ export default function MapScreen({
               {plan.wall
                 ? <path className="plan-wall" d={plan.wall} />
                 : <rect className="plan-wall" x={plan.box.x} y={plan.box.y} width={plan.box.w} height={plan.box.h} rx="12" />}
+              {plan.soft && <path className="plan-soft" d={plan.soft} />}
               <path className="plan-partition" d={plan.walls} />
             </g>
           </svg>
