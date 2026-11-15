@@ -169,7 +169,7 @@ export default function MapScreen({
       minX = Math.min(minX, wall.x); maxX = Math.max(maxX, wall.x + wall.width);
       minY = Math.min(minY, wall.y - 44); maxY = Math.max(maxY, wall.y + wall.height);
     }
-    // Sa Ground Floor, lumalampas sa panlabas na pader ang pader ng Canteen.
+    // Kasama rin ang pader ng mga kwarto, kung sakaling lumampas ito sa panlabas.
     const inner = canvas.querySelector('.plan-partition')?.getBBox?.();
     if (inner?.width) {
       minX = Math.min(minX, inner.x); maxX = Math.max(maxX, inner.x + inner.width);
@@ -571,11 +571,27 @@ export default function MapScreen({
     <span className="elevator-out-tag"><Icon name="warning" /> {liftStatusLabel(status, lang)}</span>
   );
 
+  // Hagdan at escalator na may `arrow`: guhit na arrow sa direksyon ng
+  // paglakad pataas, at ang pangalan sa kabilang dulo.
+  const renderRamp = (s, i, kind, label) => (
+    <div
+      key={i}
+      className={`structural-element ${kind}-block plan-ramp`}
+      style={{ left: s.left, top: s.top, width: s.width, height: s.height, flexDirection: s.arrow === 'left' ? 'row-reverse' : 'row' }}
+    >
+      <svg className="plan-ramp-arrow" viewBox="0 0 100 24" style={s.arrow === 'left' ? { transform: 'scaleX(-1)' } : undefined}>
+        <path d="M3 12 H94 M82 2 L95 12 L82 22" />
+      </svg>
+      <span className="plan-ramp-label">{label}</span>
+    </div>
+  );
+
   // Hagdan, elevator, escalator, at iba pang hindi tanggapan sa palapag.
   const renderStructure = (s, i) => {
     const box = { left: s.left, top: s.top, width: s.width, height: s.height };
     switch (s.type) {
       case 'stairs':
+        if (s.arrow) return renderRamp(s, i, 'stairs', EN ? 'STAIRS' : 'HAGDAN');
         return (
           <div key={i} className="structural-element stairs-block" style={box}>
             <div className="stair-lines" /><span className="stair-label">{EN ? 'STAIRS' : 'HAGDAN'}</span>
@@ -594,6 +610,7 @@ export default function MapScreen({
         );
       case 'escalator': {
         const out = escalatorStatus !== 'available';
+        if (s.arrow && !out) return renderRamp(s, i, 'escalator', 'ESCALATOR');
         return (
           <div key={i} className={`structural-element escalator-block${out ? ' is-out' : ''}`} style={box}>
             {out ? <>Escalator{outTag(escalatorStatus)}</> : (
@@ -793,9 +810,20 @@ export default function MapScreen({
 
 
       <div className="map-canvas-container" style={mapTransformStyle}>
-        <div className="mock-map-graphic floor-transition" key={currentFloor}>
+        <div className={`mock-map-graphic floor-transition${plan.look ? ` plan-${plan.look}` : ''}`} key={currentFloor}>
 
           <svg width="1400" height="1300" style={{ position: 'absolute', top: 0, left: 0, zIndex: 1, pointerEvents: 'none' }}>
+            {/* Sahig ng gusali at ang mga bakanteng bahagi, sa ilalim ng pader. */}
+            {plan.floor && (
+              <g className="plan-fill">
+                {plan.walk && <path className="plan-walk" d={plan.walk} />}
+                <path className="plan-floor-shadow" d={plan.floor} />
+                <path className="plan-floor" d={plan.floor} />
+                {plan.blank?.map((b, i) => (
+                  <rect key={i} className="plan-blank" x={b.x} y={b.y} width={b.w} height={b.h} />
+                ))}
+              </g>
+            )}
             <g stroke="#9CA3AF" strokeWidth="2.5" fill="transparent" strokeLinecap="round" strokeLinejoin="round">
               {plan.wall
                 ? <path className="plan-wall" d={plan.wall} />
@@ -823,7 +851,7 @@ export default function MapScreen({
             return (
               <div
                 key={key}
-                className={`room-node ${office.cssClass || ''} ${selectedOfficeKey === key ? 'active-room' : ''}`}
+                className={`room-node ${office.cssClass || ''} ${selectedOfficeKey === key ? 'active-room' : ''}${office.labelVertical ? ' room-node--vertical' : ''}`}
                 // Hindi mapipindot ang kwarto sa dalawang pagkakataon: sa
                 // telepono, larawan lang ito ng isang ruta; at habang nasa
                 // step-by-step, tinatapos muna ang kasalukuyang ruta.

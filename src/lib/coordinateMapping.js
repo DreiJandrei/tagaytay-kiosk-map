@@ -5,7 +5,9 @@
 // database — nasa database lang ang teksto ng bawat tanggapan.
 //
 // Galing ang mga sukat sa pinagtibay na plano ng bawat palapag (editsss.pdf,
-// Oktubre 2026; mapp.pdf, Nobyembre 2026, para sa mga pader at pinto). Isang bagay lang ang dapat tandaan kapag binago ang puwesto
+// Oktubre 2026; mapp.pdf, Nobyembre 2026, para sa mga pader at pinto). Ang
+// Ground Floor ay mula sa bagong guhit na plano (Nobyembre 2026): ang pixel
+// ng larawan, bawas 60 sa x at 100 sa y. Isang bagay lang ang dapat tandaan kapag binago ang puwesto
 // ng kwarto: dapat dumaan pa rin ang ruta sa pagitan ng mga kwarto, hindi sa
 // ibabaw nila.
 //
@@ -16,10 +18,18 @@
 // linya para sa elevator, hagdan, at (sa 2nd Floor) escalator.
 
 export const coordinateMapping = {
+  // Ground Floor: bagong plano (Nobyembre 2026). Ang kiosk ay nasa lobby, sa
+  // itaas ng Information Desk. Tatlong daan mula roon:
+  //   • pataas sa gitnang pasilyo (x 977) — Tolentino Hall at ang mga kwarto
+  //     sa magkabilang gilid nito;
+  //   • pakaliwa sa bukana sa pader (y 881), tapos sa pasilyo sa ilalim ng
+  //     PIO at ng hagdan (y 760) — PIO, Cultural Hall, hagdan, Canteen;
+  //   • sa lobby mismo — Information Desk, Guard Post, elevator, escalator.
   1: {
-    // Sa harap ng pinto dumarating ang elevator (nasa ilalim ng dalawang pinto).
+    // Nasa ilalim ng Comfort Room ang elevator; sa pagitan ng dalawang pinto
+    // humihinto ang linya.
     "elevator-up": {
-      pathData: "M 1047 698 L 1047 626 L 1239 626 L 1239 592",
+      pathData: "M 977 940 L 977 760 L 1082 760 L 1082 711",
       style: { display: 'none' },
       isDirectionOnly: true,
       title: "Elevator to Upper Floors",
@@ -27,64 +37,69 @@ export const coordinateMapping = {
     },
     // Paakyat pakanan ang hagdan: papasok sa kaliwang dulo, tapos pakanan ang lakad.
     "stairs-up": {
-      pathData: "M 1047 698 L 1047 574 L 379 574 L 379 545 L 546 545",
+      pathData: "M 977 940 L 977 881 L 850 881 L 850 760 L 378 760 L 378 694 L 440 694",
       style: { display: 'none' },
       isDirectionOnly: true,
       title: "Stairs to Upper Floors",
       badge: "Vertical Transport"
     },
     "tolentino-hall": {
-      pathData: "M 1047 698 L 1047 252",
-      style: { width: 729, height: 137, left: 596, top: 115 }, cssClass: "theme-amber"
+      pathData: "M 977 940 L 977 396",
+      style: { width: 393, height: 288, left: 748, top: 105 }, cssClass: "theme-amber"
     },
     "cultural-hall": {
       // Sa ilalim ng hall ang pasok, sa pagitan nito at ng hagdan.
-      pathData: "M 1047 698 L 1047 562 L 599 562 L 599 486 L 467 486 L 467 465",
-      style: { width: 353, height: 192, left: 275, top: 273 }, cssClass: "theme-cyan"
+      pathData: "M 977 940 L 977 881 L 850 881 L 850 760 L 720 760 L 720 627 L 548 627 L 548 596",
+      style: { width: 391, height: 197, left: 353, top: 398 }, cssClass: "theme-cyan"
     },
+    // Nasa labas ng gusali: lalabas sa pinto sa kaliwang pader.
     "canteen": {
-      pathData: "M 1047 698 L 1047 578 L 279 578 L 279 686 L 255 686 L 255 719",
-      style: { width: 263, height: 233, left: 24, top: 719 }, cssClass: "theme-blue"
+      pathData: "M 977 940 L 977 881 L 850 881 L 850 760 L 175 760 L 175 983",
+      style: { width: 157, height: 267, left: 97, top: 984 }, cssClass: "theme-blue"
     },
+    // Patayo ang pangalan ng dalawang PIO (labelVertical) — makikitid sila.
     "pio-1": {
-      pathData: "M 1047 698 L 1047 562 L 695 562 L 695 534",
-      style: { width: 84, height: 264, left: 652, top: 270, fontSize: '12px' }, cssClass: "theme-purple", mapLabel: "PIO A"
+      pathData: "M 977 940 L 977 881 L 850 881 L 850 760 L 780 760 L 780 733",
+      style: { width: 66, height: 272, left: 748, top: 460, fontSize: '12px' }, cssClass: "theme-purple",
+      mapLabel: "Public Information Office (A)", labelVertical: true
     },
     "pio-2": {
-      pathData: "M 1047 698 L 1047 562 L 783 562 L 783 534",
-      style: { width: 174, height: 70, left: 741, top: 464, fontSize: '12px' }, cssClass: "theme-purple", mapLabel: "PIO B"
+      pathData: "M 977 940 L 977 881 L 850 881 L 850 733",
+      style: { width: 71, height: 110, left: 816, top: 622, fontSize: '12px' }, cssClass: "theme-purple",
+      mapLabel: "Public Information Office (B)", labelVertical: true
     },
     "csu-office": {
-      pathData: "M 1047 698 L 1047 302 L 1019 302",
-      style: { width: 131, height: 65, left: 888, top: 270, fontSize: '12px' }, cssClass: "theme-teal"
+      pathData: "M 977 940 L 977 427 L 946 427",
+      style: { width: 127, height: 64, left: 818, top: 395, fontSize: '12px' }, cssClass: "theme-teal"
     },
     "barangay-affairs": {
-      pathData: "M 1047 698 L 1047 370 L 1022 370",
-      style: { width: 264, height: 51, left: 758, top: 340, fontSize: '12px' }, cssClass: "theme-teal"
+      pathData: "M 977 940 L 977 505 L 946 505",
+      style: { width: 127, height: 84, left: 818, top: 463, fontSize: '12px' }, cssClass: "theme-teal"
     },
     "tourism-office": {
-      pathData: "M 1047 698 L 1047 426 L 1022 426",
-      style: { width: 264, height: 52, left: 758, top: 402, fontSize: '12px' }, cssClass: "theme-teal"
+      pathData: "M 977 940 L 977 584 L 946 584",
+      style: { width: 127, height: 65, left: 818, top: 552, fontSize: '12px' }, cssClass: "theme-teal"
     },
     "breastfeeding-room": {
-      pathData: "M 1047 698 L 1047 326 L 1121 326",
-      style: { width: 204, height: 75, left: 1121, top: 270 }, cssClass: "theme-cyan"
+      pathData: "M 977 940 L 977 434 L 1009 434",
+      style: { width: 141, height: 73, left: 1010, top: 398, fontSize: '12px' }, cssClass: "theme-cyan"
     },
     "control-unit": {
-      pathData: "M 1047 698 L 1047 458 L 1275 458 L 1275 439",
-      style: { width: 204, height: 76, left: 1121, top: 363, fontSize: '12px' }, cssClass: "theme-cyan"
+      pathData: "M 977 940 L 977 532 L 1009 532",
+      style: { width: 141, height: 114, left: 1010, top: 475 }, cssClass: "theme-cyan"
     },
+    // Sa itaas ang pinto, galing sa maikling pasilyo sa ilalim ng Control Room.
     "restroom-cr": {
-      pathData: "M 1047 698 L 1047 458 L 1223 458 L 1223 478",
-      style: { width: 177, height: 54, left: 1149, top: 478, fontSize: '12px' }, cssClass: "theme-gray", isDirectionOnly: true
+      pathData: "M 977 940 L 977 610 L 1078 610 L 1078 630",
+      style: { width: 140, height: 56, left: 1010, top: 631, fontSize: '12px' }, cssClass: "theme-gray", isDirectionOnly: true
     },
     "info-desk": {
-      pathData: "M 1047 698 L 1047 723",
-      style: { width: 130, height: 105, left: 970, top: 723, fontSize: '12px' }, cssClass: "theme-blue"
+      pathData: "M 977 940 L 977 987",
+      style: { width: 119, height: 161, left: 948, top: 988, fontSize: '12px' }, cssClass: "theme-blue"
     },
     "guard": {
-      pathData: "M 1047 698 L 1131 698 L 1131 782 L 1210 782",
-      style: { width: 97, height: 80, left: 1210, top: 742, fontSize: '12px' }, cssClass: "theme-indigo"
+      pathData: "M 977 940 L 1162 940 L 1162 1069",
+      style: { width: 119, height: 82, left: 1103, top: 1070, fontSize: '12px' }, cssClass: "theme-indigo"
     },
   },
   2: {
@@ -222,9 +237,14 @@ export const coordinateMapping = {
 };
 
 // Ang lahat ng hindi tanggapan sa bawat palapag.
-//   wall / box    — panlabas na pader (hugis-L ang Ground Floor). Sa Ground Floor,
-//                   ang puwang sa ilalim, sa pagitan ng Information Desk at Guard
-//                   Post, ang pinto ng main entrance; nasa tapat nito ang `entrance`
+//   look          — 'drawn': guhit na plano (navy na kwarto, kulay-abong sahig,
+//                   maitim na pader). Ground Floor pa lang ang ganito.
+//   floor / blank — sahig ng gusali, at ang mga bakanteng puting bahagi
+//   walk          — daan sa labas ng gusali (Ground Floor: papuntang Canteen)
+//   wall / box    — panlabas na pader. Sa Ground Floor, ang puwang sa ilalim,
+//                   sa pagitan ng Information Desk at Guard Post, ang pinto ng
+//                   main entrance; nasa tapat nito ang `entrance`. Ang puwang
+//                   sa kaliwang pader ang daan papuntang Canteen
 //   walls         — pader ng mga kwarto (mapp.pdf); ang puwang sa linya ang pinto,
 //                   at doon pumapasok ang ruta ng bawat tanggapan
 //   caption       — kung saan nakasulat ang pangalan ng palapag
@@ -237,18 +257,26 @@ export const coordinateMapping = {
 //                   din nagpapatuloy ang hagdan — ang pag-akyat lang ang guhit.
 export const floorPlans = {
   1: {
-    wall: "M 300 600 L 950 600 L 950 845 L 1114 845 M 1192 845 L 1387 845 L 1387 100 L 254 100 L 254 600 L 262 600",
-    walls: "M 584 107 L 1334 107 M 584 107 L 584 257 M 1334 107 L 1334 257 M 584 257 L 1033 257 M 1107 257 L 1334 257 M 265 264 L 638 264 M 265 264 L 265 466 M 638 264 L 638 466 M 265 466 L 427 466 M 479 466 L 638 466 M 644 264 L 739 264 M 644 264 L 644 539 M 739 264 L 739 539 M 644 539 L 675 539 M 712 539 L 756 539 M 808 539 L 918 539 M 918 458 L 918 539 M 876 264 L 1029 264 M 876 264 L 876 336 M 749 336 L 1029 336 M 749 397 L 1029 397 M 749 336 L 749 458 M 739 458 L 1029 458 M 1029 264 L 1029 287 M 1029 316 L 1029 353 M 1029 382 L 1029 412 M 1029 441 L 1029 458 M 1112 264 L 1334 264 M 1112 264 L 1112 301 M 1112 336 L 1112 348 M 1334 264 L 1334 348 M 1112 348 L 1334 348 M 1112 358 L 1334 358 M 1112 358 L 1112 446 M 1334 358 L 1334 446 M 1112 446 L 1262 446 M 1313 446 L 1334 446 M 1139 471 L 1208 471 M 1267 471 L 1334 471 M 1139 471 L 1139 539 M 1334 471 L 1334 539 M 1139 539 L 1334 539 M 1181 539 L 1181 615 M 1301 539 L 1301 615 M 1181 615 L 1208 615 M 1274 615 L 1301 615 M 15 709 L 209 709 M 270 709 L 297 709 M 15 709 L 15 962 M 297 709 L 297 962 M 15 962 L 297 962",
-    caption: { x: 820, y: 100 },
-    kiosk: {"x":1047,"y":698},
-    escalatorPath: "M 1047 698 L 1047 626 L 1339 626 L 1339 670 L 1313 670",
+    look: 'drawn',
+    floor: "M 350 100 L 1333 100 L 1333 1162 L 941 1162 L 941 1029 L 745 1029 L 745 794 L 350 794 Z",
+    // Daan sa labas, mula sa pinto sa kaliwang pader hanggang sa Canteen.
+    walk: "M 350 735 L 150 735 L 150 984 L 200 984 L 200 785 L 350 785 Z",
+    blank: [
+      { x: 350, y: 100, w: 398, h: 295 },
+      { x: 1143, y: 100, w: 190, h: 295 },
+      { x: 1152, y: 395, w: 181, h: 339 },
+    ],
+    wall: "M 350 735 L 350 100 L 1333 100 L 1333 1162 L 1110 1162 M 1060 1162 L 941 1162 L 941 1029 L 745 1029 L 745 794 L 350 794 L 350 785",
+    walls: "M 350 395 L 962 395 M 992 395 L 1333 395 M 748 100 L 748 395 M 1143 100 L 1143 395 M 745 395 L 745 734 M 350 597 L 523 597 M 573 597 L 745 597 M 745 460 L 818 460 M 818 395 L 818 620 M 814 460 L 814 733 M 818 460 L 944 460 M 818 549 L 944 549 M 814 620 L 944 620 M 887 620 L 887 733 M 745 733 L 763 733 M 797 733 L 831 733 M 869 733 L 944 733 M 944 395 L 944 844 M 944 919 L 944 1029 M 1010 395 L 1010 590 M 1010 630 L 1010 687 M 1152 395 L 1152 734 M 1010 472 L 1152 472 M 1010 589 L 1152 589 M 1010 631 L 1059 631 M 1097 631 L 1152 631 M 1010 686 L 1152 686 M 1011 734 L 1043 734 M 1118 734 L 1333 734",
+    caption: { x: 841, y: 100 },
+    kiosk: {"x":977,"y":940},
+    escalatorPath: "M 977 940 L 1305 940 L 1305 831 L 1279 831",
     structures: [
-      {"type":"stairs","left":351,"top":496,"width":225,"height":63},
-      {"type":"elevator","doors":[1198,1243],"top":547,"doorW":38,"doorH":45},
-      {"type":"escalator","left":1151,"top":639,"width":162,"height":61},
-      {"type":"garden","left":493,"top":624,"width":435,"height":217},
-      {"type":"parking","left":341,"top":859,"width":265,"height":121},
-      {"type":"entrance","left":1062,"top":855,"width":180,"height":30},
+      {"type":"stairs","left":406,"top":656,"width":290,"height":77,"arrow":"right"},
+      {"type":"elevator","doors":[1042,1084],"top":690,"doorW":38,"doorH":20},
+      {"type":"escalator","left":1014,"top":792,"width":264,"height":79,"arrow":"left"},
+      {"type":"exit","left":1250,"top":678,"width":78,"height":50},
+      {"type":"entrance","left":995,"top":1174,"width":180,"height":30},
     ],
   },
   2: {

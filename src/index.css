@@ -4843,6 +4843,106 @@ button:active { transform: scale(.97); }
   vertical-align: -1px;
 }
 
+/* ═══════════ GUHIT NA PLANO (plan-drawn — Ground Floor) ═══════════
+   Navy na kwarto, kulay-abong sahig, puting bakanteng bahagi, at maitim na
+   pader — gaya ng pinagtibay na plano. Pareho sa dark at light theme: ang
+   gusali mismo ang may kulay, hindi ang paligid. Hindi nagbabago ang
+   napiling kwarto (.active-room) at ang ruta, para iisa ang dating ng gabay
+   sa lahat ng palapag. */
+.plan-drawn {
+  --pd-floor: #DCDCDE;
+  --pd-room: #223554;
+  --pd-room-hover: #2D4670;
+  --pd-ink: #1C2526;
+}
+.mock-map-graphic > svg .plan-floor { fill: var(--pd-floor); stroke: none; }
+.mock-map-graphic > svg .plan-blank { fill: #FFFFFF; stroke: none; }
+.mock-map-graphic > svg .plan-walk { fill: var(--pd-floor); fill-opacity: .4; stroke: none; }
+.light-theme .mock-map-graphic > svg .plan-walk { fill-opacity: .75; }
+/* Nasa labas ng gusali ang Canteen, sa madilim na paligid — may liwanag na
+   gilid para hindi ito malunod. */
+.plan-drawn .room-node:not(.active-room) { outline: 1.5px solid rgba(220,220,222,.35); }
+/* Matigas na anino sa ilalim — walang blur, para magaan pa rin ang pag-zoom. */
+.mock-map-graphic > svg .plan-floor-shadow { fill: rgba(2,8,20,.45); stroke: none; transform: translate(0, 10px); }
+.light-theme .mock-map-graphic > svg .plan-floor-shadow { fill: rgba(15,35,70,.12); }
+
+.mock-map-graphic.plan-drawn > svg g { stroke: var(--pd-ink) !important; }
+.mock-map-graphic.plan-drawn > svg g .plan-wall { stroke-width: 4.5; }
+.mock-map-graphic.plan-drawn > svg g .plan-partition { stroke: var(--pd-ink); stroke-width: 2.5; }
+
+/* Kwarto */
+.plan-drawn .room-node:not(.active-room):not(.theme-const) {
+  background: var(--pd-room) !important;
+  border: 2px solid var(--pd-ink) !important;
+  border-radius: 3px !important;
+  color: #FFFFFF !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 2px 0 rgba(0,0,0,.16) !important;
+}
+.plan-drawn .room-node:not(.active-room):not(.theme-const):hover {
+  background: var(--pd-room-hover) !important;
+  border-color: var(--pd-ink) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 20px rgba(15,23,42,.35) !important;
+}
+.plan-drawn .room-label {
+  --label-base: 13px;
+  font-size: 13px !important;
+  line-height: 1.15 !important;
+  text-transform: uppercase;
+  letter-spacing: .7px !important;
+}
+.plan-drawn .room-node[style*="font-size: 12px"] .room-label { letter-spacing: .5px !important; }
+
+/* Patayong pangalan (makikitid na kwarto): binabasa mula ibaba pataas. */
+.room-node.room-node--vertical { padding: 6px 4px !important; }
+.room-node.room-node--vertical .room-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 10.5px !important;
+  letter-spacing: .5px !important;
+  line-height: 1.15 !important;
+}
+
+/* Hagdan at escalator: kahon na kakulay ng sahig, may arrow ng direksyon. */
+.plan-drawn .stairs-block,
+.plan-drawn .escalator-block:not(.is-out) {
+  background: var(--pd-floor) !important;
+  border: 2px solid var(--pd-ink) !important;
+  border-radius: 2px !important;
+  color: var(--pd-ink) !important;
+}
+.plan-ramp { justify-content: space-around; padding: 0 14px; }
+/* Mga baitang — mahina lang, sa ilalim ng arrow. */
+.plan-drawn .structural-element.plan-ramp {
+  background-image: repeating-linear-gradient(90deg, transparent 0 15px, rgba(28,37,38,.07) 15px 17px) !important;
+}
+.plan-ramp-arrow {
+  width: 88px;
+  height: 22px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.plan-ramp-label { font-size: 13px; font-weight: 800; letter-spacing: 1px; }
+
+/* Elevator: maitim na pinto at pangalan, para kita sa kulay-abong sahig. */
+.plan-drawn .elev-door:not(.is-out) {
+  background: linear-gradient(90deg, #4B5563 0 47%, var(--pd-ink) 47% 53%, #4B5563 53%) !important;
+}
+.plan-drawn .plan-elev-label { background: var(--pd-ink); color: #FFFFFF; }
+
+.plan-drawn .entrance-steps {
+  background: repeating-linear-gradient(90deg, var(--pd-floor) 0 14px, #B4B8BF 14px 18px) !important;
+  border: 1.5px solid var(--pd-ink) !important;
+}
+.plan-drawn .plan-exit { outline-color: rgba(28,37,38,.45); }
+
+/* Ruta: maitim na gilid sa ilalim ng linya, para kita ito sa maliwanag na sahig. */
+.plan-drawn .route-underlay { stroke: rgba(15,30,60,.5); stroke-width: 16; }
+
 /* ═══════════ PAG-IISKEDYUL (Admin Panel) ═══════════ */
 .adm-schedule {
   padding: 14px;
