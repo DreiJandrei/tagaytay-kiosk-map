@@ -239,6 +239,8 @@ export const coordinateMapping = {
 // Ang lahat ng hindi tanggapan sa bawat palapag.
 //   look          — 'drawn': guhit na plano (navy na kwarto, kulay-abong sahig,
 //                   maitim na pader). Ground Floor pa lang ang ganito.
+//   frame         — kahon sa paligid ng buong plano, may header na `header` ang
+//                   taas; sa gitna ng header dapat ang `caption`
 //   floor / blank — sahig ng gusali, at ang mga bakanteng puting bahagi
 //   walk          — daan sa labas ng gusali (Ground Floor: papuntang Canteen)
 //   wall / box    — panlabas na pader. Sa Ground Floor, ang puwang sa ilalim,
@@ -258,6 +260,9 @@ export const coordinateMapping = {
 export const floorPlans = {
   1: {
     look: 'drawn',
+    // Ang kahong kinalalagyan ng buong plano, pati ang Canteen; nasa header
+    // nito ang pangalan ng palapag (`caption`).
+    frame: { x: 56, y: 4, w: 1318, h: 1284, header: 56, r: 18 },
     floor: "M 350 100 L 1333 100 L 1333 1162 L 941 1162 L 941 1029 L 745 1029 L 745 794 L 350 794 Z",
     // Daan sa labas, mula sa pinto sa kaliwang pader hanggang sa Canteen.
     walk: "M 350 735 L 150 735 L 150 984 L 200 984 L 200 785 L 350 785 Z",
@@ -268,7 +273,7 @@ export const floorPlans = {
     ],
     wall: "M 350 735 L 350 100 L 1333 100 L 1333 1162 L 1110 1162 M 1060 1162 L 941 1162 L 941 1029 L 745 1029 L 745 794 L 350 794 L 350 785",
     walls: "M 350 395 L 962 395 M 992 395 L 1333 395 M 748 100 L 748 395 M 1143 100 L 1143 395 M 745 395 L 745 734 M 350 597 L 523 597 M 573 597 L 745 597 M 745 460 L 818 460 M 818 395 L 818 620 M 814 460 L 814 733 M 818 460 L 944 460 M 818 549 L 944 549 M 814 620 L 944 620 M 887 620 L 887 733 M 745 733 L 763 733 M 797 733 L 831 733 M 869 733 L 944 733 M 944 395 L 944 844 M 944 919 L 944 1029 M 1010 395 L 1010 590 M 1010 630 L 1010 687 M 1152 395 L 1152 734 M 1010 472 L 1152 472 M 1010 589 L 1152 589 M 1010 631 L 1059 631 M 1097 631 L 1152 631 M 1010 686 L 1152 686 M 1011 734 L 1043 734 M 1118 734 L 1333 734",
-    caption: { x: 841, y: 100 },
+    caption: { x: 715, y: 32 },
     kiosk: {"x":977,"y":940},
     escalatorPath: "M 977 940 L 1305 940 L 1305 831 L 1279 831",
     structures: [

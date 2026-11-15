@@ -4812,6 +4812,7 @@ button:active { transform: scale(.97); }
 
 .plan-entrance {
   position: absolute;
+  z-index: 5; /* sa ibabaw ng kahon ng plano (svg) */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4857,14 +4858,26 @@ button:active { transform: scale(.97); }
 }
 .mock-map-graphic > svg .plan-floor { fill: var(--pd-floor); stroke: none; }
 .mock-map-graphic > svg .plan-blank { fill: #FFFFFF; stroke: none; }
-.mock-map-graphic > svg .plan-walk { fill: var(--pd-floor); fill-opacity: .4; stroke: none; }
-.light-theme .mock-map-graphic > svg .plan-walk { fill-opacity: .75; }
-/* Nasa labas ng gusali ang Canteen, sa madilim na paligid — may liwanag na
-   gilid para hindi ito malunod. */
-.plan-drawn .room-node:not(.active-room) { outline: 1.5px solid rgba(220,220,222,.35); }
+.mock-map-graphic > svg .plan-walk { fill: var(--pd-floor); fill-opacity: .8; stroke: none; }
 /* Matigas na anino sa ilalim — walang blur, para magaan pa rin ang pag-zoom. */
-.mock-map-graphic > svg .plan-floor-shadow { fill: rgba(2,8,20,.45); stroke: none; transform: translate(0, 10px); }
-.light-theme .mock-map-graphic > svg .plan-floor-shadow { fill: rgba(15,35,70,.12); }
+.mock-map-graphic > svg .plan-floor-shadow { fill: rgba(15,35,70,.12); stroke: none; transform: translate(0, 10px); }
+
+/* Kahon ng buong plano: maliwanag na papel na may manipis na grid, at navy
+   na header na kinalalagyan ng pangalan ng palapag. */
+.mock-map-graphic > svg .plan-sheet-shadow { fill: rgba(2,8,20,.4); stroke: none; transform: translate(0, 8px); }
+.light-theme .mock-map-graphic > svg .plan-sheet-shadow { fill: rgba(15,35,70,.12); }
+.mock-map-graphic > svg .plan-sheet-body { fill: #FAFAF8; stroke: none; }
+.mock-map-graphic > svg .plan-sheet-grid { fill: url(#plan-sheet-grid); stroke: none; }
+.mock-map-graphic > svg .plan-sheet-gridline { fill: none; stroke: rgba(28,37,38,.06); stroke-width: 1; }
+.mock-map-graphic > svg .plan-sheet-header { fill: var(--pd-room); stroke: none; }
+.mock-map-graphic > svg .plan-sheet-edge { fill: none; stroke: var(--pd-ink); stroke-width: 2.5; }
+.plan-drawn .map-floor-caption {
+  transform: translate(-50%, -50%);
+  color: #FFFFFF;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 6px;
+}
 
 .mock-map-graphic.plan-drawn > svg g { stroke: var(--pd-ink) !important; }
 .mock-map-graphic.plan-drawn > svg g .plan-wall { stroke-width: 4.5; }

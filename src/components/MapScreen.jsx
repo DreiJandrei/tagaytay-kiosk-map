@@ -175,6 +175,12 @@ export default function MapScreen({
       minX = Math.min(minX, inner.x); maxX = Math.max(maxX, inner.x + inner.width);
       minY = Math.min(minY, inner.y); maxY = Math.max(maxY, inner.y + inner.height);
     }
+    // Kapag may kahon ang plano, ang buong kahon ang ipapakita.
+    const sheet = canvas.querySelector('.plan-sheet')?.getBBox?.();
+    if (sheet?.width) {
+      minX = Math.min(minX, sheet.x); maxX = Math.max(maxX, sheet.x + sheet.width);
+      minY = Math.min(minY, sheet.y); maxY = Math.max(maxY, sheet.y + sheet.height);
+    }
     if (!isFinite(minX) || maxX - minX < 50 || maxY - minY < 50) return null;
     return { minX, minY, maxX, maxY, cx: (minX + maxX) / 2, cy: (minY + maxY) / 2 };
   };
@@ -813,6 +819,27 @@ export default function MapScreen({
         <div className={`mock-map-graphic floor-transition${plan.look ? ` plan-${plan.look}` : ''}`} key={currentFloor}>
 
           <svg width="1400" height="1300" style={{ position: 'absolute', top: 0, left: 0, zIndex: 1, pointerEvents: 'none' }}>
+            {/* Kahon ng buong plano: anino, katawan na may grid, header, gilid. */}
+            {plan.frame && (() => {
+              const { x, y, w, h, header, r } = plan.frame;
+              return (
+                <g className="plan-sheet">
+                  <defs>
+                    <pattern id="plan-sheet-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                      <path d="M 40 0 L 0 0 0 40" className="plan-sheet-gridline" />
+                    </pattern>
+                  </defs>
+                  <rect className="plan-sheet-shadow" x={x} y={y} width={w} height={h} rx={r} />
+                  <rect className="plan-sheet-body" x={x} y={y} width={w} height={h} rx={r} />
+                  <rect className="plan-sheet-grid" x={x} y={y + header} width={w} height={h - header - r} />
+                  <path
+                    className="plan-sheet-header"
+                    d={`M ${x} ${y + header} V ${y + r} A ${r} ${r} 0 0 1 ${x + r} ${y} H ${x + w - r} A ${r} ${r} 0 0 1 ${x + w} ${y + r} V ${y + header} Z`}
+                  />
+                  <rect className="plan-sheet-edge" x={x} y={y} width={w} height={h} rx={r} />
+                </g>
+              );
+            })()}
             {/* Sahig ng gusali at ang mga bakanteng bahagi, sa ilalim ng pader. */}
             {plan.floor && (
               <g className="plan-fill">
