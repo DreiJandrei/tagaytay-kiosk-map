@@ -4918,8 +4918,8 @@ button:active { transform: scale(.97); }
 
 /* ═══════════ GUHIT NA PLANO (plan-drawn — Ground Floor) ═══════════
    Navy na kwarto, kulay-abong sahig, puting bakanteng bahagi, at maitim na
-   pader — gaya ng pinagtibay na plano. Pareho sa dark at light theme: ang
-   gusali mismo ang may kulay, hindi ang paligid. Hindi nagbabago ang
+   pader — gaya ng pinagtibay na plano. Ito ang light mode; may sariling
+   madilim na kulay sa dark mode (tingnan ang .dark-theme sa ibaba). Hindi nagbabago ang
    napiling kwarto (.active-room) at ang ruta, para iisa ang dating ng gabay
    sa lahat ng palapag. */
 .plan-drawn {
@@ -5043,6 +5043,48 @@ button:active { transform: scale(.97); }
 
 /* Ruta: maitim na gilid sa ilalim ng linya, para kita ito sa maliwanag na sahig. */
 .plan-drawn .route-underlay { stroke: rgba(15,30,60,.5); stroke-width: 16; }
+
+/* ── Dark mode ng plano ──────────────────────────────────────────
+   Madilim din ang papel at ang sahig, pero kulay-abong slate — hindi navy
+   — para kita pa rin ang kahon sa navy na likod ng mapa. Baligtad ang
+   pader: maliwanag na guhit sa madilim na sahig. Mas matingkad na asul
+   ang kwarto para hindi ito lumubog sa sahig. Sa light mode, ang dating
+   puting papel pa rin (ang mga tuntunin sa itaas). */
+.dark-theme .plan-drawn {
+  --pd-floor: #2B3546;
+  --pd-room: #24467F;
+  --pd-room-hover: #2E5699;
+  --pd-ink: #A3B1C6;
+}
+.dark-theme .mock-map-graphic > svg .plan-sheet-body { fill: #151D2A; }
+.dark-theme .mock-map-graphic > svg .plan-blank { fill: #151D2A; }
+.dark-theme .mock-map-graphic > svg .plan-sheet-gridline { stroke: rgba(163,177,198,.06); }
+.dark-theme .mock-map-graphic > svg .plan-sheet-header { fill: #1D3A6B; }
+.dark-theme .mock-map-graphic > svg .plan-sheet-edge { stroke: #4A5B76; }
+.dark-theme .mock-map-graphic > svg .plan-floor-shadow { fill: rgba(0,0,0,.35); }
+.dark-theme .mock-map-graphic.plan-drawn > svg g .plan-soft { stroke: #66748A; }
+.dark-theme .plan-drawn .room-node:not(.active-room):not(.theme-const),
+.dark-theme .plan-drawn .room-node.theme-const:not(.active-room) {
+  border-color: #6F86AB !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 2px 0 rgba(0,0,0,.35) !important;
+}
+.dark-theme .plan-drawn .room-node:not(.active-room):not(.theme-const):hover,
+.dark-theme .plan-drawn .room-node.theme-const:not(.active-room):hover {
+  border-color: #93A9CC !important;
+  box-shadow: 0 10px 20px rgba(0,0,0,.45) !important;
+}
+.dark-theme .plan-drawn .structural-element.plan-ramp {
+  background-image: repeating-linear-gradient(90deg, transparent 0 15px, rgba(163,177,198,.08) 15px 17px) !important;
+}
+.dark-theme .plan-drawn .elev-door:not(.is-out) {
+  background: linear-gradient(90deg, #64748B 0 47%, #111827 47% 53%, #64748B 53%) !important;
+}
+.dark-theme .plan-drawn .plan-elev-label { background: #0B111A; color: #E2E8F0; }
+.dark-theme .plan-drawn .entrance-steps {
+  background: repeating-linear-gradient(90deg, var(--pd-floor) 0 14px, #4A5568 14px 18px) !important;
+}
+.dark-theme .plan-drawn .plan-exit { outline-color: rgba(163,177,198,.45); }
+.dark-theme .plan-drawn .route-underlay { stroke: rgba(0,0,0,.5); }
 
 /* ═══════════ PAG-IISKEDYUL (Admin Panel) ═══════════ */
 .adm-schedule {
