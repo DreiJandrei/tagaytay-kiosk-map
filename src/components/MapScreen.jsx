@@ -22,6 +22,14 @@ const FLOOR_CAPTION = {
 const LABEL_MIN = 10;
 const LABEL_MAX = 30;
 
+// Pinakamakitid na viewport ng mapa na kasya pa ang buong pangalan ng
+// palapag sa maliit na ayos ng hanay: CHIP_FULL_REM × laki ng titik +
+// CHIP_FULL_PX. Sinukat sa Chrome: 677px ang hanay sa 100% na teksto at
+// 853px sa 140% (≈ 27.5rem + 237px), dagdag ang 40px na gilid ng
+// `maxWidth` at kaunting luwag.
+const CHIP_FULL_REM = 30;
+const CHIP_FULL_PX = 300;
+
 // Galaw ng camera sa bawat hakbang ng gabay: lapit sa simula ng ruta, sunod
 // sa linya, tapos atras para makita ang buong ruta. Sa huling hakbang, ang
 // buong palapag ang tanaw pagdating sa opisina.
@@ -580,10 +588,17 @@ export default function MapScreen({
     hasUserMoved.current = false;
   };
 
-  // Pitong pindutan sa buong pangalan ay humihingi ng mahigit 1050px.
-  // Sa mas makitid, pinaliliit sila — kung hindi, naipupulupot ang
+  // Pitong pindutan sa buong laki ay humihingi ng mahigit 1050px. Sa mas
+  // makitid, pinaliliit muna sila — buo pa rin ang pangalan ("2nd Floor").
+  // Sa talagang makitid lang pinaiikli sa "2F": kung hindi, naipupulupot ang
   // huling palapag palabas ng gilid at hindi na ito maaabot ng daliri.
+  // Ang hangganan ng pagpapaikli ay sumusunod sa laki ng titik (A+), kaya
+  // rem ang bahagi nito: lumalapad ang pangalan kapag nilakihan ang teksto.
+  const rootPx = typeof window !== 'undefined'
+    ? parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+    : 16;
   const isTightBar = viewportWidth < 1120;
+  const isShortChips = viewportWidth < CHIP_FULL_REM * rootPx + CHIP_FULL_PX;
 
   // Kung aling palapag ang nasa screen. Kapag nagpalit ng palapag ang
   // gabay o ang bisita, hindi laging halata sa plano lang kung nasaan na
@@ -842,8 +857,8 @@ export default function MapScreen({
                 onClick={() => onPickFloor(floor)}
                 disabled={locked}
                 style={{
-                  minWidth: isTightBar ? '86px' : '130px',
-                  padding: isTightBar ? '11px 12px' : '14px 20px',
+                  minWidth: isShortChips ? '86px' : isTightBar ? '0' : '130px',
+                  padding: isShortChips ? '11px 12px' : isTightBar ? '11px 10px' : '14px 20px',
                   borderRadius: '16px',
                   border: isActive ? '2px solid #4F46E5' : '1px solid rgba(255,255,255,0.2)',
                   backgroundColor: isActive ? '#4F46E5' : 'transparent', color: isActive ? '#FFFFFF' : '#E2E8F0',
@@ -852,15 +867,15 @@ export default function MapScreen({
                   whiteSpace: 'nowrap', boxShadow: isActive ? '0 8px 15px rgba(79, 70, 229, 0.4)' : 'none'
                 }}
               >
-                {/* Sa masikip, pinaikli — "6F" imbes na "6th Floor". Mas
-                    mabuting mabasa lahat kaysa maputol ang huli. Ang
-                    unang palapag ay "Ground" lang sa parehong laki.
-                    Ingles kahit Tagalog ang kiosk: ang "Ika-2 Palapag"
-                    ay hindi kasya at hindi rin ito ang nakasulat sa
-                    gusali. */}
+                {/* Sa talagang masikip, pinaikli — "6F" imbes na "6th
+                    Floor". Mas mabuting mabasa lahat kaysa maputol ang
+                    huli. Ang unang palapag ay "Ground" lang sa parehong
+                    laki. Ingles kahit Tagalog ang kiosk: ang "Ika-2
+                    Palapag" ay hindi kasya at hindi rin ito ang nakasulat
+                    sa gusali. */}
                 {floor === 1
                   ? 'Ground'
-                  : isTightBar
+                  : isShortChips
                     ? `${floor}F`
                     : `${floor}${floor === 2 ? 'nd' : floor === 3 ? 'rd' : 'th'} Floor`}
               </button>
