@@ -3428,6 +3428,36 @@ img { max-width: 100%; }
   box-shadow: var(--ui-sh-3);
 }
 .light-theme .kiosk-virtual-keyboard { background: rgba(255,255,255,.97); }
+/* Ang mga kontrol ng mapa ay may z-index na 99999 (luma, para sa Safari)
+   kaya dating nakapatong ang "You are viewing" at ang zoom sa keyboard.
+   Dito sila ikinukulong sa loob ng mapa: anumang z-index nila, nasa
+   ilalim pa rin sila ng keyboard na katabi ng mapa. */
+.map-viewport { isolation: isolate; }
+/* Hindi na buong lapad ng mapa: nakasentro at may hangganan, para kita
+   pa rin ang mapa sa magkabilang gilid at sa itaas. */
+.kiosk-virtual-keyboard {
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+/* Pandak na screen (1366×768, o ang parehong TV na naka-0.8 zoom kaya
+   960px ang taas): mas mababang key, para wala pang kalahati ng mapa ang
+   natatakpan. Malaki pa rin para sa daliri. */
+@media (max-height: 1000px) {
+  .kiosk-virtual-keyboard { gap: 7px; padding: 12px 16px 14px; bottom: 16px; max-width: 820px; }
+  /* Naka-`.kiosk-virtual-keyboard` sa unahan: mas nauna ang mga ito sa
+     file kaysa sa mga orihinal na sukat sa ibaba, kaya kailangang mas
+     tiyak para manaig. */
+  .kiosk-virtual-keyboard .kb-head { margin-bottom: 0; }
+  .kiosk-virtual-keyboard .kb-title { font-size: .78rem; }
+  .kiosk-virtual-keyboard .kb-hide { padding: 6px 14px; font-size: .85rem; }
+  .kiosk-virtual-keyboard .kb-row { gap: 7px; }
+  .kiosk-virtual-keyboard .kb-key { height: 46px; font-size: 1.05rem; }
+  .kiosk-virtual-keyboard .kb-key--back,
+  .kiosk-virtual-keyboard .kb-key--enter,
+  .kiosk-virtual-keyboard .kb-key--shift,
+  .kiosk-virtual-keyboard .kb-key--clear { font-size: .88rem; }
+}
 .kb-head {
   display: flex;
   align-items: center;
