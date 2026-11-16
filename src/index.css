@@ -2273,6 +2273,37 @@ img { max-width: 100%; }
   color: var(--ui-ink-3);
 }
 
+/* Hindi naipupulupot ang tatak: ang mga buton ang umuurong, hindi ito.
+   Dati'y siniksik ito ng mas mahahabang buton sa Tagalog ("Bumalik sa
+   Simula", "Maliwanag") hanggang tatlong linya, at lumampas sa header. */
+.brand { flex-shrink: 0; }
+.brand-text > * { white-space: nowrap; }
+
+/* Makitid na screen (1366×768 na TV na walang zoom): mga 1500px ang
+   kailangan ng buong header sa Tagalog. Dito pinaliliit nang kaunti ang
+   lahat — sinukat na kasya ang Tagalog hanggang 1280px. */
+@media (max-width: 1520px) {
+  .dir-header { gap: 14px; min-height: 92px !important; padding: 12px 18px !important; }
+  .brand { gap: 12px; padding: 4px 8px 4px 4px; }
+  .brand-seal { width: 52px; height: 52px; }
+  .dir-subtitle { font-size: 10px !important; letter-spacing: 1.8px; }
+  .dir-title { font-size: 21px !important; }
+  .brand-tagline { font-size: 10.5px; letter-spacing: 1px; }
+  .hdr-tools { gap: 7px; }
+  .hdr-btn { height: 50px; min-width: 50px; padding: 0 13px; font-size: 14.5px; }
+  .hdr-zoom { height: 50px; }
+  .hdr-zoom-btn { width: 44px; }
+  .hdr-zoom-value { min-width: 78px; padding: 0 6px; }
+  .hdr-zoom-pct { font-size: 17px; }
+  .hdr-zoom-caption { font-size: 9px; }
+  .hdr-zoom-glyph { font-size: 16px; }
+  .hdr-zoom-glyph--lg { font-size: 21px; }
+  .hdr-sep { margin: 0 2px; height: 34px; }
+  .hdr-clock { min-width: 0; height: 50px; padding-left: 4px; }
+  .hdr-clock-time { font-size: 18px; }
+  .hdr-clock-date { font-size: 10px; letter-spacing: .8px; }
+}
+
 /* ═══════════ 3. SIDEBAR AT PAGHAHANAP ═══════════ */
 .map-sidebar {
   width: 450px;
