@@ -1624,6 +1624,13 @@ img { max-width: 100%; }
   animation: fadeIn .8s ease both;
 }
 .welcome-volume:not(:has(button, input)) { display: none; }
+/* Habang may laman ang kahon ng tunog, may puwang sa magkabilang gilid
+   ng opisyal na anunsyo — kung hindi, nakapatong ang bilog na 🔊 sa
+   teksto nito kapag makitid ang screen (1366×768) o may patayong poster
+   sa kanan. Pantay ang dalawang gilid para nakasentro pa rin ito. */
+.welcome-screen:has(.welcome-volume :is(button, input)) .welcome-board {
+  width: calc(100% - 2 * 88px);
+}
 .welcome-volume-slot { display: contents; }
 .welcome-bg-sound { width: 60px; height: 60px; font-size: 1.5rem; }
 /* ── Lakas ng tunog (VolumeControl.jsx) ───────────────────────
@@ -1755,8 +1762,10 @@ img { max-width: 100%; }
   .welcome-help-icon { width: 28px; height: 28px; font-size: 1.1rem; }
 }
 
+/* Nasa ibabaw ng gumagalaw na advisory (z-index 100) — dating natatakpan
+   nito ang pamagat at ang buton ng wika sa itaas ng kard. */
 .howto-overlay {
-  position: absolute; inset: 0; z-index: 20;
+  position: absolute; inset: 0; z-index: 110;
   display: flex; align-items: center; justify-content: center;
   padding: 32px;
   background: rgba(2,10,26,.72);
@@ -1830,6 +1839,14 @@ img { max-width: 100%; }
   width: 36px; border-radius: 50%;
   background: #2563EB; font-size: 1.1rem;
 }
+/* Ang ibang icon: parisukat na may asul na lilim, para pare-pareho ang
+   hanay — dating may tuldok lang ang ilan at "AA" ang isa. */
+.howto-list:not(.is-numbered) .howto-icon {
+  width: 40px; height: 40px; min-width: 40px;
+  border-radius: 12px;
+  background: rgba(37,99,235,.22);
+  color: #93C5FD; font-size: 1.2rem;
+}
 .howto-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .howto-text strong { color: #FFF; font-size: 1.05rem; }
 .howto-text span { font-size: .95rem; line-height: 1.4; color: #CBD5E1; }
@@ -1855,6 +1872,30 @@ img { max-width: 100%; }
   .howto-heading p { font-size: .95rem; }
   .howto-badge { width: 46px; height: 46px; font-size: 1.6rem; }
   .howto-list li { padding: 10px 12px; }
+}
+/* Pandak na screen (1366×768 na TV): kasya ang lahat nang walang scroll —
+   dati'y naputol ang huling kard at kailangang hilahin pataas. */
+@media (max-height: 800px) {
+  .howto-overlay { padding: 14px 24px; }
+  .howto-card { padding: 16px 24px; gap: 12px; }
+  .howto-head { gap: 14px; }
+  .howto-badge { width: 40px; height: 40px; font-size: 1.4rem; }
+  .howto-heading h2 { font-size: 1.25rem; }
+  .howto-heading p { font-size: .88rem; margin-top: 2px; }
+  .howto-lang { padding: 8px 16px; font-size: .9rem; }
+  .howto-body { gap: 12px; }
+  .howto-columns { gap: 14px; }
+  .howto-section h3 { margin-bottom: 6px; font-size: .78rem; }
+  .howto-list { gap: 8px; }
+  .howto-list li { padding: 8px 12px; gap: 10px; }
+  .howto-list.is-numbered li { gap: 6px; }
+  .howto-icon { min-width: 30px; height: 30px; font-size: 1.1rem; }
+  .howto-list.is-numbered .howto-icon { width: 30px; font-size: .95rem; }
+  .howto-list:not(.is-numbered) .howto-icon { width: 34px; height: 34px; min-width: 34px; font-size: 1.05rem; }
+  .howto-text { gap: 2px; }
+  .howto-text strong { font-size: .95rem; }
+  .howto-text span { font-size: .84rem; line-height: 1.35; }
+  .howto-close { padding: 10px 44px; font-size: 1rem; }
 }
 
 @keyframes rise { from { opacity:0; transform: translateY(26px) } to { opacity:1; transform: translateY(0) } }

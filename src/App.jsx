@@ -1343,9 +1343,12 @@ export default function App() {
             <img src={tagaytaySeal} alt="Tagaytay City Seal" />
           </span>
           <span className="brand-text">
-            <span className="dir-subtitle">{lang === 'EN' ? 'Republic of the Philippines' : 'Republika ng Pilipinas'}</span>
+            {/* Pangalan ito ng kiosk, hindi teksto ng gabay — Ingles sa
+                parehong wika, gaya ng "City Government of Tagaytay". Mas
+                mahaba rin ang salin at naipupulupot sa dalawang linya. */}
+            <span className="dir-subtitle">Republic of the Philippines</span>
             <h2 className="dir-title">City Government of Tagaytay</h2>
-            <span className="brand-tagline">{lang === 'EN' ? 'Interactive Directory Kiosk' : 'Interaktibong Gabay sa Opisina'}</span>
+            <span className="brand-tagline">Interactive Directory Kiosk</span>
           </span>
         </div>
 

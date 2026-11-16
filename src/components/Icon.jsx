@@ -27,6 +27,9 @@ const PATHS = {
   garden: <><path d="M12 21v-8" /><path d="M12 13c0-4 2.5-7 7-8 0 4.5-2.5 8-7 8Z" /><path d="M12 15c0-3-2-5.5-6.5-6 0 3.5 2.5 6 6.5 6Z" /></>,
   parking: <><rect x="3.5" y="3.5" width="17" height="17" rx="3" /><path d="M9.5 17V7.5h3.5a3 3 0 0 1 0 6H9.5" /></>,
   exit: <><path d="M14 4h4.5A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5H14" /><path d="M4 12h11" /><path d="m11 8 4 4-4 4" /></>,
+  globe: <><circle cx="12" cy="12" r="9" /><path d="M3 12h18" /><path d="M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3Z" /></>,
+  home: <><path d="M3.5 11 12 4l8.5 7" /><path d="M6 9.5V20h12V9.5" /><path d="M10 20v-5.5h4V20" /></>,
+  swipe: <><path d="M4 8h12" /><path d="m13 5 3 3-3 3" /><path d="M20 16H8" /><path d="m11 13-3 3 3 3" /></>,
 };
 
 export default function Icon({ name, className = '', title }) {
