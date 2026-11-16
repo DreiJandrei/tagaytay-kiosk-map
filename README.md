@@ -146,6 +146,22 @@ pinapalitan ito ng bilang sa itaas — hindi dinadagdag.
 
 Tuwing bubuksan ang mini PC, kusa nang bubukas ang kiosk.
 
+**Kung doble ang tunog o "2F, 3F" ang palapag pagka-restart** — dalawang
+kiosk iyon na magkapatong: ang galing sa `start-kiosk.bat`, at isang
+Chrome na kusang binuksan ng Windows o ng Chrome mismo (walang zoom na
+0.8, kaya maliit ang lahat). Isinasara na ng `start-kiosk.bat` ang ibang
+Chrome bago bumukas, at hindi na ito tumatakbo nang dalawa. Para hindi na
+talaga bumukas ang Chrome na iyon:
+
+1. **Settings → Accounts → Sign-in options →** patayin ang
+   **"Automatically save my restartable apps and restart them when I
+   sign back in"**.
+2. Sa normal na Chrome: **Settings → On startup → Open the New Tab
+   page**, at **Settings → System →** patayin ang **"Continue running
+   background apps when Google Chrome is closed"**.
+3. Sa `shell:startup`, dapat **iisa lang** ang shortcut, at sa
+   `start-kiosk.bat` ito nakaturo — hindi sa Chrome.
+
 **Paano ito ihihinto para sa maintenance**
 
 Gumawa ng file na `stop-kiosk.txt` sa loob ng `kiosk` folder, tapos

@@ -71,6 +71,14 @@ if not defined CHROME (
   exit /b 1
 )
 
+REM --- Isang kiosk lang ---------------------------------------
+REM  Kung may nakabukas nang kiosk (hal. dalawang shortcut sa
+REM  Startup, o na-doble-klik habang tumatakbo na), aalis na lang
+REM  ito. Kung hindi, dalawang kiosk ang magkapatong — doble ang
+REM  tunog ng video, at bawat 3 segundo ay may bagong bintana.
+powershell -NoProfile -Command "if (Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'chrome.exe' -and $_.CommandLine -like '*TagaytayKiosk*' }) { exit 1 }"
+if errorlevel 1 exit /b 0
+
 REM --- Hintayin ang internet ---------------------------------
 REM  Sa startup, madalas hindi pa handa ang network kapag
 REM  tumatakbo na ang shortcut. Sandaling paghihintay lang ito
@@ -86,6 +94,18 @@ if %NETTRIES% lss 30 (
 )
 echo   Walang koneksyon pagkatapos ng isang minuto. Itutuloy pa rin.
 :online
+
+REM --- Isara ang ibang Chrome --------------------------------
+REM  Pagka-restart, may Chrome na kusang bumubukas nang wala ang
+REM  mga setting sa ibaba (Windows na nagbabalik ng mga app, o
+REM  Chrome na nagbabalik ng huling tab). Iyon ang pangalawang
+REM  kiosk na maliit ang lahat ("2F, 3F") at sumasabay ang tunog.
+REM  Walang kiosk na tumatakbo sa puntong ito (tingnan sa itaas),
+REM  kaya ang ibang Chrome lang ang naisasara. Pagkatapos ng
+REM  paghihintay sa internet ito, para abutan pati ang huling
+REM  bumukas.
+taskkill /f /im chrome.exe >nul 2>&1
+timeout /t 2 /nobreak >nul
 
 :loop
 if exist "%~dp0stop-kiosk.txt" goto :end

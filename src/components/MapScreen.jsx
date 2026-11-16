@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { liftStatusLabel } from '../lib/i18n';
 import { floorPlans, routeFor, pinFor } from '../lib/coordinateMapping';
 import Icon from './Icon';
@@ -17,6 +17,10 @@ const FLOOR_CAPTION = {
   EN: ['GROUND FLOOR', 'SECOND FLOOR', 'THIRD FLOOR', 'FOURTH FLOOR', 'FIFTH FLOOR', 'SIXTH FLOOR', 'SEVENTH FLOOR'],
   TL: ['GROUND FLOOR', 'IKALAWANG PALAPAG', 'IKATLONG PALAPAG', 'IKAAPAT NA PALAPAG', 'IKALIMANG PALAPAG', 'IKAANIM NA PALAPAG', 'IKAPITONG PALAPAG'],
 };
+
+// Hangganan ng laki ng pangalan sa loob ng kwarto (px, sa sukat ng canvas).
+const LABEL_MIN = 10;
+const LABEL_MAX = 30;
 
 // Galaw ng camera sa bawat hakbang ng gabay: lapit sa simula ng ruta, sunod
 // sa linya, tapos atras para makita ang buong ruta. Sa huling hakbang, ang
@@ -97,6 +101,35 @@ export default function MapScreen({
 
   const plan = floorPlans[currentFloor];
   const selectedOffice = selectedOfficeKey ? offices?.[selectedOfficeKey] : null;
+
+  // ── Laki ng pangalan sa bawat kwarto ─────────────────────────────
+  // Iba-iba ang laki ng kwarto at ang haba ng pangalan, kaya ang iisang
+  // laki para sa lahat ay maliit sa malalaking kwarto at umaapaw sa
+  // maliliit. Dito sinusukat ang pinakamalaking titik na kasya sa loob ng
+  // bawat kwarto — hindi pinuputol ang salita, kaya kapag hindi kasya ang
+  // pinakamahabang salita sa isang hanay, lumiliit pa. Nasa `--fit` ng
+  // pangalan ang resulta (tingnan ang .plan-drawn sa index.css).
+  const labelsKey = Object.entries(offices || {}).map(([k, o]) => `${k}:${o.mapLabel || o.title}`).join('|');
+  useLayoutEffect(() => {
+    const fit = () => {
+      const canvas = viewportRef.current?.querySelector('.mock-map-graphic.plan-drawn');
+      if (!canvas) return;
+      canvas.querySelectorAll('.room-node .room-label').forEach((label) => {
+        const fits = (px) => {
+          label.style.setProperty('--fit', `${px}px`);
+          return label.scrollWidth <= label.clientWidth + 1 && label.scrollHeight <= label.clientHeight + 1;
+        };
+        let lo = LABEL_MIN, hi = LABEL_MAX;
+        if (fits(hi)) lo = hi;
+        else while (hi - lo > 0.5) { const mid = (lo + hi) / 2; if (fits(mid)) lo = mid; else hi = mid; }
+        // Kaunting luwag: mas makapal ang titik ng napiling kwarto.
+        label.style.setProperty('--fit', `${Math.max(LABEL_MIN, Math.floor(lo * 0.94 * 2) / 2)}px`);
+      });
+    };
+    fit();
+    // Kapag dumating ang font pagkatapos, iba na ang lapad ng titik.
+    document.fonts?.ready.then(fit);
+  }, [currentFloor, labelsKey]);
 
   // ── Kinatatayuan ng bisita at ang linya ──────────────────────────
   // Ang pagbuo ng ruta ay nasa routeFor (coordinateMapping.js). Dito lang
