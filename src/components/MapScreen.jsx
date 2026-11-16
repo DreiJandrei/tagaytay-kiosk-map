@@ -610,16 +610,18 @@ export default function MapScreen({
     <span className="elevator-out-tag"><Icon name="warning" /> {liftStatusLabel(status, lang)}</span>
   );
 
-  // Hagdan at escalator na may `arrow`: guhit na arrow sa direksyon ng
-  // paglakad pataas, at ang pangalan sa kabilang dulo.
+  // Hagdan at escalator na may `arrow`: arrow na nakaturo PATAAS sa screen —
+  // ang ibig sabihin ay "paakyat dito", hindi ang direksyon ng mga baitang
+  // sa plano (pakaliwa o pakanan iyon, at nalilito ang bisita kung saan
+  // aakyat). Katabi ang pangalan.
   const renderRamp = (s, i, kind, label) => (
     <div
       key={i}
       className={`structural-element ${kind}-block plan-ramp`}
-      style={{ left: s.left, top: s.top, width: s.width, height: s.height, flexDirection: s.arrow === 'left' ? 'row-reverse' : 'row' }}
+      style={{ left: s.left, top: s.top, width: s.width, height: s.height }}
     >
-      <svg className="plan-ramp-arrow" viewBox="0 0 100 24" style={s.arrow === 'left' ? { transform: 'scaleX(-1)' } : undefined}>
-        <path d="M3 12 H94 M82 2 L95 12 L82 22" />
+      <svg className="plan-ramp-arrow" viewBox="0 0 24 40">
+        <path d="M12 38 V3 M2 13 L12 2 L22 13" />
       </svg>
       <span className="plan-ramp-label">{label}</span>
     </div>
@@ -637,21 +639,23 @@ export default function MapScreen({
           </div>
         );
       case 'stairs-l':
-        // Guhit na plano: balangkas na hugis-L, at arrow na pababa sa makitid
-        // na bahagi, tapos pakanan sa ibaba. `arm` ang lapad ng makitid na
-        // bahagi at `foot` ang taas ng nasa ibaba, parehong pixel.
+        // Guhit na plano: balangkas na hugis-L, at arrow na sumusunod sa L —
+        // mula sa ibaba pakaliwa, tapos paakyat sa makitid na bahagi, kaya
+        // PATAAS ang dulo nito gaya ng sa ibang hagdan. `arm` ang lapad ng
+        // makitid na bahagi at `foot` ang taas ng nasa ibaba, parehong pixel.
         if (s.arrow) {
           const { width: w, height: h, arm, foot } = s;
           const midX = arm / 2;
           const midY = h - foot / 2;
-          const head = Math.min(w - 70, arm + 90);
+          const tail = Math.min(w - 70, arm + 90);
+          const top = Math.min(14, h * 0.1);
           return (
             <div key={i} className="structural-element plan-stairs-l-drawn" style={box}>
               <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
                 <path className="plan-l-outline" d={`M 1 1 H ${arm} V ${h - foot} H ${w - 1} V ${h - 1} H 1 Z`} />
-                <path className="plan-l-arrow" d={`M ${midX} ${Math.min(24, h * 0.17)} V ${midY} H ${head} M ${head - 12} ${midY - 11} L ${head} ${midY} L ${head - 12} ${midY + 11}`} />
+                <path className="plan-l-arrow" d={`M ${tail} ${midY} H ${midX} V ${top} M ${midX - 11} ${top + 12} L ${midX} ${top} L ${midX + 11} ${top + 12}`} />
               </svg>
-              <span className="plan-ramp-label plan-l-label" style={{ left: head + 10, top: midY, right: 6 }}>{EN ? 'STAIRS' : 'HAGDAN'}</span>
+              <span className="plan-ramp-label plan-l-label" style={{ left: tail + 10, top: midY, right: 6 }}>{EN ? 'STAIRS' : 'HAGDAN'}</span>
             </div>
           );
         }

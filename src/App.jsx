@@ -235,6 +235,8 @@ export default function App() {
   // sa telepono. Hindi naman case-sensitive ang paghahanap; para lang ito
   // kamukha ng karaniwang keyboard.
   const [kbShift, setKbShift] = useState(false);
+  // Ang kahon ng paghahanap — dito binabasa ng keyboard kung nasaan ang cursor.
+  const searchInputRef = useRef(null);
 
   // Kusang nagtatago ang keyboard kapag may pinindot sa labas nito — sa
   // mapa, sa header, kahit saan. Hindi kasama ang kahon ng paghahanap at
@@ -926,9 +928,34 @@ export default function App() {
     });
   };
 
+  // Isinisingit sa kinaroroonan ng cursor, hindi laging sa dulo — para
+  // maitama ang maling titik sa gitna ("toletino" → "tolentino") nang hindi
+  // binubura ang lahat ng kasunod nito.
+  const editSearchAtCaret = (insert, backspace = false) => {
+    const el = searchInputRef.current;
+    const value = el ? el.value : searchQuery;
+    const start = el?.selectionStart ?? value.length;
+    const end = el?.selectionEnd ?? value.length;
+    let next, caret;
+    if (backspace) {
+      if (start !== end) { next = value.slice(0, start) + value.slice(end); caret = start; }
+      else if (start > 0) { next = value.slice(0, start - 1) + value.slice(end); caret = start - 1; }
+      else return;
+    } else {
+      next = value.slice(0, start) + insert + value.slice(end);
+      caret = start + insert.length;
+    }
+    setSearchQuery(next);
+    // Pagkatapos ng render: itinutulak ng React ang cursor sa dulo kapag
+    // pinalitan nito ang value.
+    requestAnimationFrame(() => {
+      try { el?.setSelectionRange(caret, caret); } catch { /* wala nang input */ }
+    });
+  };
+
   const handleVirtualKeyPress = (key) => {
-    if (key === 'BACKSPACE') setSearchQuery(prev => prev.slice(0, -1));
-    else if (key === 'SPACE') setSearchQuery(prev => prev + ' ');
+    if (key === 'BACKSPACE') editSearchAtCaret('', true);
+    else if (key === 'SPACE') editSearchAtCaret(' ');
     else if (key === 'CLEAR') setSearchQuery('');
     else if (key === 'SHIFT') setKbShift(v => !v);
     else if (key === 'ENTER') {
@@ -938,7 +965,7 @@ export default function App() {
       else setShowKeyboard(false);
     } else {
       const isLetter = /^[A-Z]$/.test(key);
-      setSearchQuery(prev => prev + (isLetter && !kbShift ? key.toLowerCase() : key));
+      editSearchAtCaret(isLetter && !kbShift ? key.toLowerCase() : key);
       if (isLetter) setKbShift(false);
     }
   };
@@ -1408,6 +1435,7 @@ export default function App() {
             <div className={`sb-search${showKeyboard ? ' is-active' : ''}`}>
               <span className="sb-search-icon"><Icon name="search" /></span>
               <input
+                ref={searchInputRef}
                 type="text"
                 className="sb-search-input"
                 placeholder={guide
@@ -1682,7 +1710,9 @@ export default function App() {
         )}
 
         {showKeyboard && keyboardNeeded && (
-          <div className="kiosk-virtual-keyboard">
+          // Huwag nakawin ang focus mula sa kahon ng paghahanap kapag
+          // pinindot ang key — doon nakatira ang cursor.
+          <div className="kiosk-virtual-keyboard" onMouseDown={(e) => e.preventDefault()}>
             <div className="kb-head">
               <span className="kb-title"><Icon name="keyboard" /> {lang === 'EN' ? 'Kiosk touchscreen keyboard' : 'Keyboard ng kiosk'}</span>
               <button className="kb-hide" onClick={() => setShowKeyboard(false)}>

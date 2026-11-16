@@ -33,13 +33,21 @@ const SYMBOL_ROWS = [
 ];
 
 // Isinusulat ang bagong halaga sa paraang nakikita ng React.
-const setNativeValue = (el, value) => {
+//
+// Inilalagay ang cursor BAGO ang `input` event. Ang ilang field (Title ng
+// opisina, teksto ng anunsyo) ay bumabasa ng selectionStart sa onChange
+// para ibalik ang cursor pagkatapos gawing malaking titik ang teksto. Ang
+// pagpalit ng value ay nagtutulak ng cursor sa dulo — kung doon pa ito
+// mababasa, doon din ito ibabalik, at doon na mapupunta ang kasunod na titik
+// kahit sa gitna ng salita pumindot ang staff.
+const setNativeValue = (el, value, caret) => {
   const proto = el instanceof HTMLTextAreaElement
     ? HTMLTextAreaElement.prototype
     : HTMLInputElement.prototype;
   const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
   if (setter) setter.call(el, value);
   else el.value = value;
+  try { el.setSelectionRange(caret, caret); } catch { /* hindi lahat ng input type sumusuporta */ }
   el.dispatchEvent(new Event('input', { bubbles: true }));
 };
 
@@ -187,9 +195,15 @@ export default function VirtualKeyboard({ scopeRef, onClose, lang = 'EN' }) {
       caret = start + ch.length;
     }
 
-    setNativeValue(el, next);
+    setNativeValue(el, next, caret);
     el.focus();
-    try { el.setSelectionRange(caret, caret); } catch { /* hindi lahat ng input type sumusuporta */ }
+    const placeCaret = () => {
+      try { el.setSelectionRange(caret, caret); } catch { /* hindi lahat ng input type sumusuporta */ }
+    };
+    placeCaret();
+    // Muli pagkatapos ng render: kapag binago ng field ang teksto (hal.
+    // ginawang malaking titik), itinutulak ulit ng React ang cursor sa dulo.
+    requestAnimationFrame(placeCaret);
 
     if (shift && key.length === 1 && !symbols) setShift(false);   // one-shot shift
   }, [shift, symbols]);
