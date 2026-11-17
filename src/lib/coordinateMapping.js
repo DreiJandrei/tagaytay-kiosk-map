@@ -338,7 +338,10 @@ export const floorPlans = {
       elevator: { x: 707, y: 561 },
       stairs: { x: 382, y: 1188 },
     },
-    passThrough: "M 382 1188 L 171 1188 L 171 1063",
+    // Umiikot sa labas ng hagdan: mula sa dulo ng dinatnan (kanan sa
+    // ibaba), pakanan, paakyat sa gilid, pakaliwa sa itaas, at pababa sa
+    // simula ng susunod na akyat (itaas ng makitid na bahagi).
+    passThrough: "M 382 1188 L 425 1188 L 425 1015 L 171 1015 L 171 1063",
     structures: [
       {"type":"stairs-l","left":137,"top":1044,"width":245,"height":175,"arm":68,"foot":64,"arrow":"l"},
       {"type":"elevator","doors":[664,710],"top":537,"doorW":40,"doorH":23},
@@ -389,7 +392,10 @@ export const floorPlans = {
       elevator: { x: 654, y: 646 },
       stairs: { x: 874, y: 861 },
     },
-    passThrough: "M 874 861 L 570 861",
+    // Umiikot sa labas ng hagdan: mula sa kanang dulo (dinatnan), paakyat
+    // sa itaas nito, pakaliwa, at pababa papasok sa kaliwang dulo — doon
+    // nagsisimula ang susunod na akyat.
+    passThrough: "M 874 861 L 910 861 L 910 750 L 512 750 L 512 861 L 570 861",
     structures: [
       {"type":"stairs","left":545,"top":806,"width":329,"height":110,"arrow":"right"},
       {"type":"elevator","doors":[611,657],"top":620,"doorW":40,"doorH":25},
@@ -413,7 +419,8 @@ export const floorPlans = {
       elevator: { x: 922, y: 484 },
       stairs: { x: 1182, y: 739 },
     },
-    passThrough: "M 1182 739 L 806 739",
+    // Gaya ng sa 5th Floor: umiikot sa itaas ng hagdan papunta sa kaliwang dulo.
+    passThrough: "M 1182 739 L 1225 739 L 1225 625 L 755 625 L 755 739 L 818 739",
     structures: [
       {"type":"stairs","left":794,"top":675,"width":388,"height":127,"arrow":"right"},
       {"type":"elevator","doors":[879,925],"top":455,"doorW":40,"doorH":28},
