@@ -1014,7 +1014,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
         <div className="adm-top">
           <h2>
             <span>
-              Admin Panel
+              System Administrator
               <span className="adm-top-sub">
                 {t('City Government of Tagaytay Kiosk', 'Kiosk ng Pamahalaang Lungsod ng Tagaytay')}
               </span>
@@ -2165,9 +2165,9 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
             </div>
             <p className="adm-hint">
               {t(
-                'Every change made in this Admin Panel, newest first: what was changed, when, and where '
+                'Every change made in this System Administrator, newest first: what was changed, when, and where '
                 + '(on the kiosk or on a laptop). Entries cannot be edited or deleted from here.',
-                'Bawat pagbabagong ginawa sa Admin Panel, pinakabago ang nasa itaas: ano ang binago, '
+                'Bawat pagbabagong ginawa sa System Administrator, pinakabago ang nasa itaas: ano ang binago, '
                 + 'kailan, at saan (sa kiosk o sa laptop). Hindi mabubura o mababago ang mga tala mula rito.',
               )}
             </p>
