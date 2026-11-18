@@ -3219,6 +3219,32 @@ img { max-width: 100%; }
   text-transform: uppercase;
   color: var(--ui-accent);
 }
+/* Gabay sa itaas ng QR: icon ng phone, pamagat, at isang pangungusap. */
+.qr-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--ui-line);
+}
+.qr-head-icon {
+  flex-shrink: 0;
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 12px;
+  background: var(--ui-accent-sf);
+  color: var(--ui-accent);
+  font-size: 1.35rem;
+}
+.qr-head-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.qr-head .qr-title { line-height: 1.2; }
+.qr-sub {
+  font-size: .86rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ui-ink-2);
+}
 .qr-frame {
   padding: 14px;
   border-radius: var(--ui-r-md);

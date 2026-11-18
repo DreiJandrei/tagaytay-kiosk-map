@@ -131,7 +131,19 @@ function QrCard({ link, lang }) {
     : ['Buksan ang camera ng inyong phone.', 'Itutok sa QR code na ito at huwag gumalaw.', 'Pindutin ang link.'];
   return (
     <div className="qr-card">
-      <span className="qr-title">{EN ? 'Scan for live mobile map' : 'I-scan para sa live mobile map'}</span>
+      {/* Gabay sa itaas: ano ang QR at bakit ito ii-scan. Dating "Scan for
+          live mobile map" lang — hindi malinaw sa bisita kung para saan. */}
+      <div className="qr-head">
+        <span className="qr-head-icon" aria-hidden="true"><Icon name="phone" /></span>
+        <span className="qr-head-text">
+          <span className="qr-title">{EN ? 'Take this map on your phone' : 'Dalhin ang mapa sa inyong phone'}</span>
+          <span className="qr-sub">
+            {EN
+              ? 'Scan the code below to see these same directions on your own phone. No app needed.'
+              : 'I-scan ang code sa ibaba para makita ang direksyong ito sa sarili ninyong phone. Hindi kailangan ng app.'}
+          </span>
+        </span>
+      </div>
       <div className="qr-frame">
         <QRCodeSVG value={link} size={130} bgColor={"#ffffff"} fgColor={"#0F172A"} />
       </div>
