@@ -3219,32 +3219,6 @@ img { max-width: 100%; }
   text-transform: uppercase;
   color: var(--ui-accent);
 }
-/* Gabay sa itaas ng QR: icon ng phone, pamagat, at isang pangungusap. */
-.qr-head {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  width: 100%;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--ui-line);
-}
-.qr-head-icon {
-  flex-shrink: 0;
-  width: 40px; height: 40px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 12px;
-  background: var(--ui-accent-sf);
-  color: var(--ui-accent);
-  font-size: 1.35rem;
-}
-.qr-head-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.qr-head .qr-title { line-height: 1.2; }
-.qr-sub {
-  font-size: .86rem;
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--ui-ink-2);
-}
 .qr-frame {
   padding: 14px;
   border-radius: var(--ui-r-md);
@@ -3299,6 +3273,37 @@ img { max-width: 100%; }
   z-index: 99999;
 }
 .screenshot-hint strong { display: block; font-size: 1rem; font-weight: 900; margin-bottom: 2px; }
+
+/* Telepono ng bisita: gabay sa itaas kung para saan ang mapa. Nasa kaliwa,
+   at may puwang sa kanan para sa "You are viewing" na nasa sulok. Sa
+   malapad na screen, nasa sidebar na ang paliwanag kaya nakatago ito. */
+.visitor-guide {
+  position: absolute;
+  top: 16px; left: 16px; right: 128px;
+  z-index: 99999;
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 11px 14px;
+  border-radius: var(--ui-r-md);
+  border: 1px solid var(--ui-line-2);
+  border-left: 4px solid var(--ui-accent);
+  background: rgba(7,18,35,.94);
+  color: #E2E8F0;
+  box-shadow: 0 12px 28px rgba(0,0,0,.3);
+  backdrop-filter: blur(6px);
+  line-height: 1.4;
+}
+.light-theme .visitor-guide { background: rgba(255,255,255,.96); color: var(--ui-ink); }
+.visitor-guide strong {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--ui-accent);
+  font-size: .78rem; font-weight: 900;
+  letter-spacing: .5px; text-transform: uppercase;
+}
+.visitor-guide span { font-size: .84rem; font-weight: 600; }
+.visitor-guide b { font-weight: 900; }
+@media (min-width: 1025px) {
+  .visitor-guide { display: none; }
+}
 
 /* Telepono ng bisita: paalala na larawan lang ng ruta ang mapa. */
 .visitor-reference-note {

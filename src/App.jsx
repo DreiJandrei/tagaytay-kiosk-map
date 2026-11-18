@@ -131,19 +131,7 @@ function QrCard({ link, lang }) {
     : ['Buksan ang camera ng inyong phone.', 'Itutok sa QR code na ito at huwag gumalaw.', 'Pindutin ang link.'];
   return (
     <div className="qr-card">
-      {/* Gabay sa itaas: ano ang QR at bakit ito ii-scan. Dating "Scan for
-          live mobile map" lang — hindi malinaw sa bisita kung para saan. */}
-      <div className="qr-head">
-        <span className="qr-head-icon" aria-hidden="true"><Icon name="phone" /></span>
-        <span className="qr-head-text">
-          <span className="qr-title">{EN ? 'Take this map on your phone' : 'Dalhin ang mapa sa inyong phone'}</span>
-          <span className="qr-sub">
-            {EN
-              ? 'Scan the code below to see these same directions on your own phone. No app needed.'
-              : 'I-scan ang code sa ibaba para makita ang direksyong ito sa sarili ninyong phone. Hindi kailangan ng app.'}
-          </span>
-        </span>
-      </div>
+      <span className="qr-title">{EN ? 'Scan for live mobile map' : 'I-scan para sa live mobile map'}</span>
       <div className="qr-frame">
         <QRCodeSVG value={link} size={130} bgColor={"#ffffff"} fgColor={"#0F172A"} />
       </div>
@@ -1714,6 +1702,22 @@ export default function App() {
           onTakeOver={() => setGuideAuto(false)}
           overlay={guideOverlay}
         />
+
+        {/* Telepono ng bisita: gabay sa itaas kung para saan ang mapang ito.
+            Nakatago ang sidebar sa telepono, kaya mapa lang ang nakikita at
+            hindi alam ng bisita kung ano ito o saan ito papunta. */}
+        {isVisitorView && selectedOffice && (
+          <div className="visitor-guide">
+            <strong><Icon name="info" /> {lang === 'EN' ? 'Your mobile map' : 'Ang inyong mobile map'}</strong>
+            <span>
+              {lang === 'EN' ? (
+                <>This map came from the City Hall kiosk. It shows the way to <b>{selectedOffice.title}</b> ({floorName(visitorRouteFloor, lang)}): start at the white label, then follow the dotted line.</>
+              ) : (
+                <>Galing ang mapang ito sa kiosk ng City Hall. Ipinapakita nito ang daan papunta sa <b>{selectedOffice.title}</b> ({floorName(visitorRouteFloor, lang)}): magsimula sa puting label, tapos sundan ang linyang may tuldok.</>
+              )}
+            </span>
+          </div>
+        )}
 
         {isVisitorView && (
           <div className="screenshot-hint">
