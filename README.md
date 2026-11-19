@@ -110,9 +110,14 @@ hindi dapat matandaan ng pampublikong makina ang password ng admin.
 Tumatalab ito sa lahat ng Chrome sa mini PC. Para bawiin (bilang
 administrator): `reg delete "HKLM\SOFTWARE\Policies\Google\Chrome" /f`.
 
-Isang bagay pang gawin nang kamay: **Settings → Bluetooth & devices →
-Touch → "Three- and four-finger touch gestures" → Off**, para hindi
-makapagpalit ng app ang bisita gamit ang tatlong daliri.
+Pinapatay rin nito ang **tatlo at apat na daliring galaw** sa screen
+(`TouchGestureSetting = 0`). Kung wala ito, ang hagod ng buong kamay ay
+bumabalik sa desktop ng Windows o nagpapalit ng app — palabas ng kiosk.
+Windows ang humahawak niyon, kaya hindi ito kayang harangin ng app.
+Dalawang daliri (pag-zoom ng mapa) lang ang natitira. Pagka-restart,
+tiyakin habang nakakabit ang touch frame: **Settings → Bluetooth &
+devices → Touch → "Three- and four-finger touch gestures"** — dapat Off.
+Lumalabas lang ang "Touch" na iyon kapag may touchscreen na nakakabit.
 
 **2 · Subukan muna**
 

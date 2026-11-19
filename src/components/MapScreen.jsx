@@ -337,16 +337,56 @@ export default function MapScreen({
     if (room?.width) add(room.left, room.top, room.left + room.width, room.top + room.height);
     if (kioskPos) add(kioskPos.x, kioskPos.y, kioskPos.x, kioskPos.y);
     if (!isFinite(box.minX)) return undefined;
+    // Ang hindi dapat matakpan ng kard sa pagdating: ang ruta at ang
+    // PANGALAN ng opisina — hindi ang buong kwarto. Malapad ang ilan (ang
+    // hugis-L ng Mayor's Office ay halos buong lapad ng palapag), at kung
+    // ang buong kwarto ang susukatin, hindi na ito maiuusog nang sapat.
+    const target = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
+    const addTarget = (l, t, r, b) => {
+      target.minX = Math.min(target.minX, l); target.minY = Math.min(target.minY, t);
+      target.maxX = Math.max(target.maxX, r); target.maxY = Math.max(target.maxY, b);
+    };
+    if (path) {
+      const b = path.getBBox();
+      addTarget(b.x, b.y, b.x + b.width, b.y + b.height);
+    }
+    const label = viewportRef.current?.querySelector('.room-node.active-room .room-label');
+    const node = label?.parentElement;
+    if (label && node) {
+      const l = node.offsetLeft + label.offsetLeft, t = node.offsetTop + label.offsetTop;
+      addTarget(l, t, l + label.offsetWidth, t + label.offsetHeight);
+    } else if (room?.width) {
+      addTarget(room.left, room.top, room.left + room.width, room.top + room.height);
+    }
+    if (!isFinite(target.minX)) Object.assign(target, box);
     const PAD = 110;
     box.minX -= PAD; box.minY -= PAD; box.maxX += PAD; box.maxY += PAD;
 
     const { zoom: restZoom } = fitBox(frame, box, 1);
     const rest = { zoom: restZoom, pan: panTo(frame, (box.minX + box.maxX) / 2, (box.minY + box.maxY) / 2, restZoom) };
-    // Ang buong palapag, sa bahaging hindi natatakpan ng kard at ng mga buton.
+    // Ang buong palapag sa pagdating, kasinlaki ng karaniwang tanaw nito.
+    // Dati'y isinisiksik ito sa makitid na bahagi sa kanan ng kard — parang
+    // natatakpan ng kard ang buong kaliwa mula itaas hanggang ibaba, kahit
+    // sa itaas-kaliwa lang ito — kaya sobrang liit ng mapa (≈0.21× sa
+    // 1366px). Ngayon, iniuusog na lang pakanan ang mapa kapag natatakpan
+    // ng kard ang opisina o ang ruta.
     const content = fullViewOnArrival ? measureContent() : null;
     const whole = content && (() => {
-      const { zoom: wholeZoom } = fitBox(frame, content);
-      return { zoom: wholeZoom, pan: panTo(frame, content.cx, content.cy, wholeZoom) };
+      const open = frameFor(size, 16, 190);
+      const { zoom: wholeZoom } = fitBox(open, content);
+      const view = { zoom: wholeZoom, pan: panTo(open, content.cx, content.cy, wholeZoom) };
+      if (card) {
+        const screenX = (x) => view.pan.x + CANVAS_W / 2 + (x - CANVAS_W / 2) * wholeZoom;
+        const screenY = (y) => view.pan.y + CANVAS_H / 2 + (y - CANVAS_H / 2) * wholeZoom;
+        const cardRight = card.offsetLeft + card.offsetWidth + 16;
+        const cardBottom = card.offsetTop + card.offsetHeight + 16;
+        if (screenX(target.minX) < cardRight && screenY(target.minY) < cardBottom) {
+          const need = cardRight - screenX(target.minX);
+          const room = open.left + open.w - screenX(target.maxX);
+          view.pan = { ...view.pan, x: view.pan.x + Math.max(0, Math.min(need, room)) };
+        }
+      }
+      return view;
     })();
     const finalView = whole || rest;
     const length = path ? path.getTotalLength() : 0;

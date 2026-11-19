@@ -46,6 +46,16 @@ REM  kaya dito ito pinapatay, hindi sa app.
 echo Pinapatay ang pag-swipe mula sa gilid ng screen...
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\EdgeUI" /v AllowEdgeSwipe /t REG_DWORD /d 0 /f >nul
 
+REM  TATLO AT APAT NA DALIRI SA SCREEN
+REM  Kapag hinagod ng buong kamay ang screen, Windows ang sumasalo:
+REM  bumabalik sa desktop o nagpapalit ng app, palabas ng kiosk.
+REM  Hindi ito kayang harangin ng Chrome o ng app — dito ito
+REM  pinapatay. Kapareho ito ng Settings > Bluetooth & devices >
+REM  Touch > "Three- and four-finger touch gestures" (Off). Dalawang
+REM  daliri (pag-zoom ng mapa) lang ang natitira.
+echo Pinapatay ang tatlo at apat na daliring galaw sa screen...
+reg add "HKCU\Control Panel\Desktop" /v TouchGestureSetting /t REG_DWORD /d 0 /f >nul
+
 REM  PAGSASARA NG CHROME SA MGA PANLABAS NA DAAN
 REM  Kapag may nagsaksak ng keyboard, ito ang mga daan palabas ng
 REM  kiosk o papasok sa loob nito:
@@ -71,7 +81,8 @@ echo.
 echo   TAPOS NA.
 echo.
 echo   I-RESTART ANG MINI PC para gumana ang pagpatay sa
-echo   pag-swipe mula sa gilid at ang mga patakaran ng Chrome.
+echo   pag-swipe mula sa gilid, sa tatlo at apat na daliri,
+echo   at ang mga patakaran ng Chrome.
 echo.
 echo   Isang bagay pang gawin nang kamay, wala kasi itong
 echo   maaasahang utos sa lahat ng bersyon ng Windows:
@@ -80,7 +91,8 @@ echo     Settings ^> Accounts ^> Sign-in options
 echo       "If you've been away, when should Windows require
 echo        you to sign in again?"  -^>  Never
 echo.
+echo   Pagka-restart, tiyakin habang nakakabit ang touch frame:
 echo     Settings ^> Bluetooth ^& devices ^> Touch
-echo       "Three- and four-finger touch gestures"  -^>  Off
+echo       "Three- and four-finger touch gestures"  -^>  dapat Off
 echo.
 pause
