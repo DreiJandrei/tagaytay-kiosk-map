@@ -1860,7 +1860,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                 <form className="adm-form" onSubmit={handleSaveOffice}>
                   <div className="adm-form--split">
                     <div>
-                      <label className="k-label">{t('Title', 'Pangalan')}</label>
+                      <label className="k-label">{t('Office Name', 'Pangalan ng Tanggapan')}</label>
                       {/* Malalaking titik lang ang pangalan — ginagawa na
                           habang nagta-type, pati sa touchscreen keyboard.
                           Ibinabalik ang cursor sa puwesto nito; kung hindi,
@@ -1884,7 +1884,9 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                       <p className="adm-hint">{t('Capital letters only.', 'Malalaking titik lang.')}</p>
                     </div>
                     <div>
-                      <label className="k-label">{t('Hours', 'Oras')}</label>
+                      {/* Hindi lang oras ang laman nito — pati katayuan ng
+                          tanggapan (sarado dahil inaayos, sa reserbasyon). */}
+                      <label className="k-label">{t('Office Status / Hours', 'Katayuan / Oras ng Tanggapan')}</label>
                       {/* Pinipili, hindi isinusulat — para mabasa ng kiosk
                           kung bukas pa ang tanggapan (tingnan ang
                           effectiveStatus sa schedule.js). */}
@@ -1968,7 +1970,9 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                       <input type="text" className="k-input" value={formHead} onChange={(e) => setFormHead(e.target.value)} placeholder={t('ex. Ms. Juana Dela Cruz', 'hal. Ms. Juana Dela Cruz')} />
                     </div>
                     <div>
-                      <label className="k-label">{t('Status', 'Estado')}</label>
+                      {/* Katayuan ng contact person (nasa pulong, wala sa
+                          opisina) — hindi ng tanggapan; nasa itaas iyon. */}
+                      <label className="k-label">{t('Contact Person Status', 'Katayuan ng Contact Person')}</label>
                       {/* Ang `value` ay nananatiling Ingles — iyon ang nasa
                           database. Ang label lang ang nagsasalin. */}
                       <select className="k-select" value={formStatus} onChange={(e) => setFormStatus(e.target.value)}>
@@ -1989,10 +1993,10 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                       onFrom={setFormStatusFrom}
                       onUntil={setFormStatusUntil}
                       hint={t(
-                        'Blank start = takes effect now. When the end passes, the office goes back to '
+                        'Blank start = takes effect now. When the end passes, the contact person goes back to '
                         + 'Available on its own. Blank end = stays until you change it.',
                         'Blangkong simula = ngayon na. Paglampas ng wakas, kusang babalik sa Available '
-                        + 'ang tanggapan. Blangkong wakas = mananatili hanggang palitan.',
+                        + 'ang contact person. Blangkong wakas = mananatili hanggang palitan.',
                       )}
                     />
                   )}
@@ -2004,7 +2008,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   <div className="adm-form--split adm-form--split-wide">
                     <div>
                       <label className="k-label">
-                        {t('Direct Line', 'Telepono')}
+                        {t('Telephone Number', 'Numero ng Telepono')}
                       </label>
                       <input
                         type="text"
@@ -2016,7 +2020,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                       />
                     </div>
                     <div>
-                      <label className="k-label">{t('Room No.', 'Blg. ng Silid')}</label>
+                      <label className="k-label">{t('Room Number', 'Numero ng Silid')}</label>
                       <input
                         type="text"
                         inputMode="numeric"
@@ -2063,7 +2067,7 @@ export default function AdminPanel({ officeDatabase, onClose, onDataUpdate, lang
                   <button type="submit" className="k-btn k-btn--primary" disabled={isSaving}>
                     {isSaving
                       ? t('Saving…', 'Sine-save…')
-                      : t('Save Office Metadata', 'I-save ang Datos ng Tanggapan')}
+                      : t('Save Office Details', 'I-save ang Detalye ng Tanggapan')}
                   </button>
                 </form>
               )}
