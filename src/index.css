@@ -1707,12 +1707,17 @@ img { max-width: 100%; }
   font-variant-numeric: tabular-nums;
 }
 
-/* City Updates: ang 🎚️ ay kasinlaki ng 🔊 ng kard, at ang slider ay
-   nakalutang sa kanang itaas ng video — hindi itinutulak pababa ang video. */
-.welcome-video-head { position: relative; }
+/* City Updates: ang mga buton ng tunog ay nasa hanay sa ilalim ng video,
+   at ang slider ay nakalutang sa ibabaw ng hanay na iyon (sa ibabang
+   bahagi ng video) — hindi itinutulak ang video, at buo ang pamagat. */
+.welcome-video-controls {
+  position: relative;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+}
 .welcome-video-vol-toggle { width: 52px; height: 52px; font-size: 1.4rem; }
 .welcome-video-vol-panel {
-  position: absolute; top: calc(100% + 10px); right: 0; z-index: 3;
+  position: absolute; bottom: calc(100% + 10px); left: 50%; transform: translateX(-50%); z-index: 3;
+  white-space: nowrap;
   padding: 8px 14px;
   border-radius: 999px;
   border: 2px solid rgba(147,197,253,.5);
@@ -3273,6 +3278,45 @@ img { max-width: 100%; }
   z-index: 99999;
 }
 .screenshot-hint strong { display: block; font-size: 1rem; font-weight: 900; margin-bottom: 2px; }
+
+/* QR ng home screen sa telepono: pitong palapag sa iisang hanay, kasya sa
+   lapad ng telepono nang hindi na kailangang i-scroll. */
+@media (max-width: 1024px) {
+  .bottom-floor-bar.is-phone-picker { gap: 5px !important; padding: 8px !important; justify-content: space-between; }
+  .bottom-floor-bar.is-phone-picker button {
+    flex: 1 1 0;
+    min-width: 0 !important;
+    padding: 10px 2px !important;
+    font-size: .85rem !important;
+  }
+}
+
+/* QR sa home screen ng mapa (sidebar ng kiosk, bago pumili ng opisina). */
+.home-qr {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: var(--ui-r-lg);
+  border: 1px solid var(--ui-line-2);
+  background: linear-gradient(160deg, var(--ui-panel-2) 0%, var(--ui-panel) 100%);
+  box-shadow: var(--ui-sh-1);
+}
+.light-theme .home-qr { background: linear-gradient(160deg, #FFFFFF 0%, #EFF6FF 100%); }
+.home-qr-code {
+  flex-shrink: 0;
+  padding: 7px;
+  border-radius: var(--ui-r-sm);
+  background: #FFFFFF;
+  line-height: 0;
+}
+.home-qr-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.home-qr-title {
+  font-size: .9rem; font-weight: 900;
+  letter-spacing: .5px; text-transform: uppercase;
+  color: var(--ui-accent);
+  line-height: 1.2;
+}
+.home-qr-sub { font-size: .84rem; font-weight: 600; line-height: 1.4; color: var(--ui-ink-2); }
 
 /* Telepono ng bisita: gabay sa itaas kung para saan ang mapa. Nasa kaliwa,
    at may puwang sa kanan para sa "You are viewing" na nasa sulok. Sa
@@ -5088,6 +5132,8 @@ button:active { transform: scale(.97); }
   stroke-linejoin: round;
 }
 .plan-ramp-label { font-size: 13px; font-weight: 800; letter-spacing: 1px; }
+/* U-turn ng hagdan: mas mataas kaysa sa tuwid na arrow, kasya sa kahon. */
+.plan-ramp-arrow--uturn { width: 92px; height: min(38px, calc(100% - 14px)); }
 
 /* Elevator: maitim na pinto at pangalan, para kita sa kulay-abong sahig. */
 .plan-drawn .elev-door:not(.is-out) {

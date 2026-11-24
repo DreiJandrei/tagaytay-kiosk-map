@@ -70,6 +70,9 @@ export default function MapScreen({
   // mahihila, walang mapapalaki, at walang mapipindot na kwarto. Hindi
   // ito para sa kiosk mismo.
   staticView = false,
+  // QR ng home screen sa telepono: larawan pa rin (walang mapipindot na
+  // opisina), pero may hanay ng palapag para malipat-lipat ang bisita.
+  floorPicker = false,
   // Habang nasa step-by-step: hindi mapipindot ang ibang kwarto at palapag.
   // Next, Previous at Done lang ang gumagalaw sa mapa.
   locked = false,
@@ -229,7 +232,8 @@ export default function MapScreen({
   // Ang bahagi ng viewport na hindi natatakpan. Sa ilalim, ang hanay ng
   // palapag; sa gabay, ang kard sa kaliwa at ang mga buton ng zoom sa kanan.
   const frameFor = ({ w, h }, left = 16, right = 16) => {
-    const bottom = staticView || isMobile ? 16 : 128;
+    // May hanay ng palapag sa ilalim ng telepono kapag `floorPicker`.
+    const bottom = floorPicker ? (isMobile ? 96 : 128) : staticView || isMobile ? 16 : 128;
     return { left, top: 16, w: Math.max(200, w - left - right), h: Math.max(200, h - bottom - 16) };
   };
 
@@ -673,9 +677,18 @@ export default function MapScreen({
       className={`structural-element ${kind}-block plan-ramp`}
       style={{ left: s.left, top: s.top, width: s.width, height: s.height, flexDirection: s.arrow === 'left' ? 'row-reverse' : 'row' }}
     >
-      <svg className="plan-ramp-arrow" viewBox="0 0 100 24" style={s.arrow === 'left' ? { transform: 'scaleX(-1)' } : undefined}>
-        <path d="M3 12 H94 M82 2 L95 12 L82 22" />
-      </svg>
+      {kind === 'stairs' ? (
+        // Hagdan: U-turn — paikot ang hagdan. Nagsisimula sa parehong dulo
+        // at direksyon ng dating tuwid na arrow, umiikot, tapos pabalik
+        // sa itaas.
+        <svg className="plan-ramp-arrow plan-ramp-arrow--uturn" viewBox="0 0 100 40" style={s.arrow === 'left' ? { transform: 'scaleX(-1)' } : undefined}>
+          <path d="M4 31 H72 A11.5 11.5 0 0 0 72 8 H30 M40 1 L29 8 L40 15" />
+        </svg>
+      ) : (
+        <svg className="plan-ramp-arrow" viewBox="0 0 100 24" style={s.arrow === 'left' ? { transform: 'scaleX(-1)' } : undefined}>
+          <path d="M3 12 H94 M82 2 L95 12 L82 22" />
+        </svg>
+      )}
       <span className="plan-ramp-label">{label}</span>
     </div>
   );
@@ -874,9 +887,10 @@ export default function MapScreen({
           QR link ay lumalagpas sa 1024, kaya lumalabas doon ang hanay ng
           palapag: ganap na paglilibot sa gusali mula sa isang link na
           isang ruta lang ang ipinangako. Sukat AT tanawin ang sinusuri
-          ngayon. */}
-      {!isMobile && !staticView && (
-        <div className="bottom-floor-bar" style={{
+          ngayon. Ang eksepsiyon: ang QR ng home screen (`floorPicker`),
+          na ang mismong pangako ay ang lahat ng palapag. */}
+      {(floorPicker || (!isMobile && !staticView)) && (
+        <div className={`bottom-floor-bar${floorPicker && isMobile ? ' is-phone-picker' : ''}`} style={{
             position: 'absolute', bottom: '30px', left: '50%', transform: 'translateX(-50%)',
             display: 'flex', gap: isTightBar ? '8px' : '12px', background: 'rgba(15, 23, 42, 0.85)',
             padding: isTightBar ? '10px 14px' : '15px 25px',
@@ -910,7 +924,7 @@ export default function MapScreen({
                     Palapag" ay hindi kasya at hindi rin ito ang nakasulat
                     sa gusali. */}
                 {floor === 1
-                  ? 'Ground'
+                  ? (floorPicker && isMobile ? 'GF' : 'Ground')
                   : isShortChips
                     ? `${floor}F`
                     : `${floor}${floor === 2 ? 'nd' : floor === 3 ? 'rd' : 'th'} Floor`}

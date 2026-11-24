@@ -20,7 +20,7 @@ const CONTENT = {
     screenHead: 'On this screen',
     screen: [
       [<Icon name="volume" />, 'Sound', 'Tap the round sound button at the bottom left to turn the sound on or off.'],
-      [<Icon name="sliders" />, 'Volume', 'Tap the slider button above the sound button to show the slider. Drag it up or down, or press + and −. Tap it again to hide it.'],
+      [<Icon name="volumeLevel" />, 'Volume', 'Tap the volume button above the sound button to show the slider. Drag it up or down, or press + and −. Tap it again to hide it.'],
       [<Icon name="swipe" />, 'More announcements', 'Swipe the announcement card left or right to see the others.'],
     ],
     topHead: 'Buttons at the top of the map',
@@ -46,7 +46,7 @@ const CONTENT = {
     screenHead: 'Sa screen na ito',
     screen: [
       [<Icon name="volume" />, 'Tunog', 'Pindutin ang bilog na buton ng tunog sa kaliwang ibaba para buksan o patayin ang tunog.'],
-      [<Icon name="sliders" />, 'Lakas ng tunog', 'Pindutin ang buton ng slider sa ibabaw ng buton ng tunog para lumabas ang slider. I-drag pataas o pababa, o pindutin ang + at −. Pindutin ulit para itago.'],
+      [<Icon name="volumeLevel" />, 'Lakas ng tunog', 'Pindutin ang buton ng lakas ng tunog sa ibabaw ng buton ng tunog para lumabas ang slider. I-drag pataas o pababa, o pindutin ang + at −. Pindutin ulit para itago.'],
       [<Icon name="swipe" />, 'Iba pang anunsyo', 'I-swipe pakaliwa o pakanan ang kard ng anunsyo para makita ang iba.'],
     ],
     topHead: 'Mga buton sa itaas ng mapa',

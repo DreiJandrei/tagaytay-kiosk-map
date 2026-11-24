@@ -28,7 +28,7 @@ import {
 import { coordinateMapping, mergeOfficeData } from './lib/coordinateMapping';
 import { defaultOfficeData } from './lib/defaultOfficeData';
 import { isRecoveryLink } from './lib/recoveryFlag';
-import { buildVisitorLink, readVisitorLink } from './lib/visitorLink';
+import { buildVisitorLink, buildBrowseLink, readVisitorLink } from './lib/visitorLink';
 import { floorName, localizeBadge, localizeHours, officeDescription, liftStatusLabel } from './lib/i18n';
 import { effectiveStatus, isClosedByHours, formatWhen } from './lib/schedule';
 import { wantsOnScreenKeyboard } from './lib/keyboardUtils';
@@ -191,6 +191,9 @@ export default function App() {
   // mawala ang `route` at maging buong kiosk ang tanawin sa telepono.
   const [visitorLink] = useState(() => readVisitorLink());
   const isVisitorView = visitorLink.isVisitor;
+  // Ang QR sa home screen: lahat ng palapag, walang ruta at walang
+  // mapipindot na opisina (tingnan ang BROWSE_ROUTE sa visitorLink.js).
+  const isBrowseView = isVisitorView && visitorLink.isBrowse;
 
   const [liveOfficeDatabase, setLiveOfficeDatabase] = useState({});
   const [isLoading, setIsLoading] = useState(true);
@@ -449,6 +452,15 @@ export default function App() {
   useEffect(() => {
     if (!isVisitorView || visitorLink.expired) return;
     if (Object.keys(liveOfficeDatabase).length === 0) return;
+
+    // QR ng home screen: Ground Floor muna, at walang napiling opisina.
+    if (visitorLink.isBrowse) {
+      setAppState('map');
+      setCurrentFloor(1);
+      setSelectedOfficeKey(null);
+      setRouteStep('idle');
+      return;
+    }
 
     let foundFloor = null;
     Object.entries(liveOfficeDatabase).forEach(([floorNum, offices]) => {
@@ -879,6 +891,8 @@ export default function App() {
   //    apat na segundo.
   // ==============================================================
   const handlePickFloor = (floor) => {
+    // Sa telepono, ang QR ng home screen lang ang may pagpili ng palapag.
+    if (isBrowseView) { setCurrentFloor(floor); return; }
     if (isVisitorView || guide) return;
     setCurrentFloor(floor);
     setSelectedOfficeKey(null);
@@ -983,6 +997,20 @@ export default function App() {
     [selectedOfficeKey, transportMethod]
   );
 
+  // QR sa home screen ng mapa: lahat ng palapag sa telepono. Nakatayo ito
+  // sa screen nang matagal, kaya binubuo ulit bawat minuto — kung hindi,
+  // paso na ang link pagdating ng bisitang mag-i-scan (LINK_TTL_MS).
+  const [browseStamp, setBrowseStamp] = useState(() => Date.now());
+  useEffect(() => {
+    if (isVisitorView) return undefined;
+    const timer = setInterval(() => setBrowseStamp(Date.now()), 60000);
+    return () => clearInterval(timer);
+  }, [isVisitorView]);
+  const browseQrLink = useMemo(
+    () => (isVisitorView ? '' : buildBrowseLink(browseStamp)),
+    [isVisitorView, browseStamp]
+  );
+
   // Kung masira ang elevator habang nakabukas na ang pagpili ng daan,
   // elevator pa ang palagay — pero hindi iyon ang dapat dalhin ng QR.
   const destinationQrLink = useMemo(
@@ -1000,10 +1028,11 @@ export default function App() {
   // sa telepono.
   const visitorRouteFloor = useMemo(() => {
     if (!isVisitorView) return null;
+    if (visitorLink.isBrowse) return 1;
     const found = Object.entries(liveOfficeDatabase)
       .find(([, offices]) => offices && offices[visitorLink.route]);
     return found ? parseInt(found[0]) : null;
-  }, [isVisitorView, visitorLink.route, liveOfficeDatabase]);
+  }, [isVisitorView, visitorLink.route, visitorLink.isBrowse, liveOfficeDatabase]);
 
   // ==============================================================
   // STEP-BY-STEP NA GABAY
@@ -1372,7 +1401,7 @@ export default function App() {
           >
             {/* Salita, hindi emoji: ang ℹ️ ay hulaan pa ng bisita kung ano
                 ang laman. Ang "About" ay mismong sagot na. */}
-            <span className="hdr-btn-label">{lang === 'EN' ? 'About' : 'Tungkol'}</span>
+            <span className="hdr-btn-label">{lang === 'EN' ? 'About' : 'Tungkol sa Kiosk'}</span>
           </button>
 
           {/* Laki ng teksto, gaya ng zoom sa Word: − at + sa magkabilang
@@ -1509,6 +1538,26 @@ export default function App() {
                 nakasara na rin ang listahan mismo. */}
             {!isVisitorView && !guide && routeStep === 'idle' && !selectedOfficeKey && (
               <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+
+                {/* QR sa home screen: kita agad, bago pa pumili ng opisina.
+                    Mapa ng lahat ng palapag ang bubukas sa telepono. */}
+                {browseQrLink && (
+                  <div className="home-qr">
+                    <div className="home-qr-code">
+                      <QRCodeSVG value={browseQrLink} size={104} bgColor="#ffffff" fgColor="#0F172A" />
+                    </div>
+                    <div className="home-qr-text">
+                      <span className="home-qr-title">
+                        {lang === 'EN' ? 'Floor maps on your phone' : 'Mapa ng palapag sa inyong phone'}
+                      </span>
+                      <span className="home-qr-sub">
+                        {lang === 'EN'
+                          ? 'Scan with your phone camera to view every floor, Ground to 7th. No app needed.'
+                          : 'I-scan gamit ang camera ng phone para makita ang bawat palapag, Ground hanggang 7th. Hindi kailangan ng app.'}
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 <div className="floor-banner">
                   <div className="floor-banner-row">
@@ -1695,6 +1744,7 @@ export default function App() {
           // Kaya ito ang malinaw na senyas na nasa telepono na ito, at
           // larawan lang ng palapag ang dapat lumabas doon.
           staticView={isVisitorView}
+          floorPicker={isBrowseView}
           locked={!!guide}
           followKey={guideFollowKey}
           fullViewOnArrival={isLastGuideStep}
@@ -1718,8 +1768,18 @@ export default function App() {
             </span>
           </div>
         )}
+        {isBrowseView && (
+          <div className="visitor-guide">
+            <strong><Icon name="info" /> {lang === 'EN' ? 'City Hall floor maps' : 'Mapa ng mga palapag ng City Hall'}</strong>
+            <span>
+              {lang === 'EN'
+                ? 'This map came from the City Hall kiosk. Pick a floor below to see where each office is.'
+                : 'Galing ang mapang ito sa kiosk ng City Hall. Pumili ng palapag sa ibaba para makita kung nasaan ang bawat tanggapan.'}
+            </span>
+          </div>
+        )}
 
-        {isVisitorView && (
+        {isVisitorView && !isBrowseView && (
           <div className="screenshot-hint">
             <strong>{lang === 'EN' ? 'Take a screenshot' : 'Mag-screenshot'}</strong>
             <span>{lang === 'EN'

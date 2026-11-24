@@ -50,6 +50,13 @@ const sign = (route, transport, issuedAt) => {
   return h.toString(36);
 };
 
+// Ang QR sa home screen ng mapa: walang opisinang pinili — mapa lang ng
+// lahat ng palapag (Ground hanggang 7th) na malilipat-lipat sa telepono,
+// pero hindi mapipindot ang mga opisina. Kapareho ng ibang link ang tatak
+// at ang pagkapaso; ito lang ang nakasulat na `route`.
+export const BROWSE_ROUTE = '__floors';
+export const buildBrowseLink = (issuedAt = Date.now()) => buildVisitorLink(BROWSE_ROUTE, 'none', issuedAt);
+
 // Ginagamit ng kiosk tuwing may iguguhit na QR.
 export function buildVisitorLink(route, transport, issuedAt = Date.now()) {
   const params = new URLSearchParams({
@@ -77,7 +84,7 @@ export function readVisitorLink(search) {
   const route = params.get('route');
 
   if (!route) {
-    return { isVisitor: false, route: null, transport: 'elevator', expired: false };
+    return { isVisitor: false, isBrowse: false, route: null, transport: 'elevator', expired: false };
   }
 
   const transport = params.get('transport') || 'elevator';
@@ -91,5 +98,5 @@ export function readVisitorLink(search) {
   const age = Date.now() - issuedAt;
   const isFresh = isSigned && age < LINK_TTL_MS && age > -CLOCK_SKEW_MS;
 
-  return { isVisitor: true, route, transport, expired: !isFresh };
+  return { isVisitor: true, isBrowse: route === BROWSE_ROUTE, route, transport, expired: !isFresh };
 }

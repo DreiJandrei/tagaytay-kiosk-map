@@ -20,7 +20,7 @@ export function VolumeToggle({ open, onToggle, className = '', label }) {
       aria-expanded={open}
       aria-label={open ? `Itago ang lakas ng tunog ${label}` : `Ipakita ang lakas ng tunog ${label}`}
     >
-      <Icon name={open ? 'close' : 'sliders'} />
+      <Icon name={open ? 'close' : 'volumeLevel'} />
     </button>
   );
 }

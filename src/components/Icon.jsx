@@ -12,6 +12,9 @@ const PATHS = {
   keyboard: <><rect x="2.5" y="6" width="19" height="12" rx="2" /><path d="M6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01M6.5 14h.01M17.5 14h.01M10 14h4" /></>,
   volume: <><path d="M11 5 6.5 9H3v6h3.5L11 19Z" /><path d="M15.5 9a4 4 0 0 1 0 6" /><path d="M18.5 6.5a8 8 0 0 1 0 11" /></>,
   volumeOff: <><path d="M11 5 6.5 9H3v6h3.5L11 19Z" /><path d="m16 9.5 5 5" /><path d="m21 9.5-5 5" /></>,
+  // Pang-adjust ng lakas: speaker na may pataas na antas sa tabi — ang
+  // nakasanayang larawan ng "volume". Ang `sliders` ay mukhang mixer ng DJ.
+  volumeLevel: <><path d="M9 7.5 5.5 10.5H2.5v3h3L9 16.5Z" /><path d="M13 17v-2.5" /><path d="M16.5 17v-6" /><path d="M20.5 17V7" /></>,
   sliders: <><path d="M5 21v-6M5 11V3M12 21v-9M12 8V3M19 21v-4M19 13V3" /><path d="M2.5 15h5M9.5 8h5M16.5 17h5" /></>,
   close: <><path d="M6 6l12 12" /><path d="M18 6 6 18" /></>,
   check: <path d="m5 12.5 4.5 4.5L19 7.5" />,

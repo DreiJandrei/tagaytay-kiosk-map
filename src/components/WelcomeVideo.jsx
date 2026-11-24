@@ -438,35 +438,6 @@ export default function WelcomeVideo({
     >
       <div className="welcome-video-head">
         <h2>{heading}</h2>
-        {soundAvailable && (
-          <button
-            type="button"
-            className={`welcome-video-sound${soundOn ? ' is-on' : ''}`}
-            onClick={toggleSound}
-            aria-label={soundOn ? 'Patayin ang tunog' : 'Buksan ang tunog'}
-          >
-            <Icon name={soundOn ? 'volume' : 'volumeOff'} />
-          </button>
-        )}
-        {soundOn && onVolumeChange && (
-          <VolumeToggle
-            open={slider.open}
-            onToggle={slider.toggle}
-            className="welcome-video-vol-toggle"
-            label="ng City Updates"
-          />
-        )}
-        {/* Pahiga, nakalutang sa ibabaw ng video sa ilalim ng ulo — hindi
-            nito itinutulak pababa ang video. */}
-        {soundOn && onVolumeChange && slider.open && (
-          <VolumePanel
-            value={volume}
-            onChange={onVolumeChange}
-            onActivity={slider.keepOpen}
-            className="welcome-video-vol-panel"
-            label="ng City Updates"
-          />
-        )}
         {shown.length > 1 && (
           <span className="welcome-video-count">{position + 1}/{shown.length}</span>
         )}
@@ -475,6 +446,40 @@ export default function WelcomeVideo({
       <div className={`welcome-video-frame${portrait ? ' is-portrait' : ''}`}>
         {media}
       </div>
+
+      {/* Tunog: nasa ilalim ng video, hindi sa ulo ng kard. Dati'y katabi
+          ng pamagat, at sa makitid na kard ay naiipit ito ("CITY UPD…")
+          tuwing lumalabas ang buton ng lakas. Nakalutang ang slider sa
+          ibabaw ng hanay na ito — hindi nito itinutulak ang video. */}
+      {soundAvailable && (
+        <div className="welcome-video-controls">
+          <button
+            type="button"
+            className={`welcome-video-sound${soundOn ? ' is-on' : ''}`}
+            onClick={toggleSound}
+            aria-label={soundOn ? 'Patayin ang tunog' : 'Buksan ang tunog'}
+          >
+            <Icon name={soundOn ? 'volume' : 'volumeOff'} />
+          </button>
+          {soundOn && onVolumeChange && (
+            <VolumeToggle
+              open={slider.open}
+              onToggle={slider.toggle}
+              className="welcome-video-vol-toggle"
+              label="ng City Updates"
+            />
+          )}
+          {soundOn && onVolumeChange && slider.open && (
+            <VolumePanel
+              value={volume}
+              onChange={onVolumeChange}
+              onActivity={slider.keepOpen}
+              className="welcome-video-vol-panel"
+              label="ng City Updates"
+            />
+          )}
+        </div>
+      )}
 
       {caption && <p className="welcome-video-caption">{caption}</p>}
 
